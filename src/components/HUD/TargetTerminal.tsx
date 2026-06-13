@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { HealthBar } from './HealthBar';
-import { Dices, Crosshair } from 'lucide-react';
+import { Dices, Crosshair, Trash2 } from 'lucide-react';
 import { state, applyDamageToToken, pushChatMessage, updateTokenProps } from '../../store';
 import { WoDParser } from '../../rules/WoDParser';
 
@@ -35,7 +35,58 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
     updateTokenProps(tokenId, { [field]: value });
   };
 
-  if (!tokenData) return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Carregando ficha...</div>;
+  const handleDelete = () => {
+    if (confirm('Tem certeza que deseja deletar este personagem permanentemente?')) {
+      state.tokens.delete(tokenId);
+      // Ficha will unmount automatically if it's reading state or openSheets handles it.
+      // But we should dispatch an event to close it in App.tsx
+      window.dispatchEvent(new CustomEvent('close-sheet', { detail: { tokenId } }));
+    }
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    if (isGM && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSize = 200; // Small size for token avatars
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height && width > maxSize) {
+          height *= maxSize / width;
+          width = maxSize;
+        } else if (height > maxSize) {
+          width *= maxSize / height;
+          height = maxSize;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
+        handlePropChange('imageUrl', webpDataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  if (!tokenData) return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Ficha não encontrada ou deletada.</div>;
 
   const macros: Macro[] = [
     { id: '1', name: 'Rifle de Plasma', formula: 'Destreza + Armas de Fogo', system: 'WoD', pool: 8, hunger: 1, damage: 25 },
@@ -70,11 +121,15 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
       
       {/* Target Avatar and Glitch Styling */}
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-        <div style={{
-          width: '80px', height: '80px', borderRadius: 'var(--radius-sm)', overflow: 'hidden',
-          border: '2px solid var(--danger)', boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)',
-          position: 'relative'
-        }}>
+        <div 
+          onClick={handleAvatarClick}
+          style={{
+            width: '80px', height: '80px', borderRadius: 'var(--radius-sm)', overflow: 'hidden',
+            border: '2px solid var(--danger)', boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)',
+            position: 'relative', cursor: isGM ? 'pointer' : 'default'
+          }}
+          title={isGM ? "Clique para trocar a imagem" : ""}
+        >
           {/* Scanline overlay */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -83,7 +138,21 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
             pointerEvents: 'none',
             zIndex: 2
           }} />
-          <img src="/omega_sentinel.png" alt="Omega Sentinel" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img 
+            src={tokenData.imageUrl || (tokenId === 'omega_sentinel' ? '/omega_sentinel.png' : '/vite.svg')} 
+            alt="Avatar" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
+          
+          {isGM && (
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
+          )}
         </div>
         
         <div style={{ flex: 1 }}>
@@ -168,7 +237,25 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
           </button>
         ))}
       </div>
+
+      <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%', marginTop: 'auto' }} />
       
+      {isGM && (
+        <button 
+          onClick={handleDelete}
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center',
+            padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)',
+            border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+            transition: 'background 0.2s', marginTop: 'auto'
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+        >
+          <Trash2 size={16} />
+          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Deletar Personagem</span>
+        </button>
+      )}
     </div>
   );
 };

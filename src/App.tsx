@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Settings, Users, MessageSquare, X, Map as MapIcon } from 'lucide-react';
+import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen } from 'lucide-react';
 import { TextTicker } from './components/Chat/TextTicker';
 import { MindMap } from './components/Wiki/MindMap';
 import { GameCanvas } from './engine/GameCanvas';
@@ -10,6 +10,8 @@ import { DiagnosticOverlay } from './components/DiagnosticOverlay';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/HUD/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
+import { NPCPanel } from './components/HUD/NPCPanel';
+import { PlayersLobby } from './components/HUD/PlayersLobby';
 
 // Trigger HMR
 type ViewMode = 'canvas' | 'wiki' | 'theater';
@@ -20,6 +22,8 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
   const [activeModal, setActiveModal] = useState<ModalMode>('none');
   const [showMapSettings, setShowMapSettings] = useState(false);
+  const [showActors, setShowActors] = useState(false);
+  const [showCombatLog, setShowCombatLog] = useState(true); // Default open
   const [openSheets, setOpenSheets] = useState<string[]>([]);
 
   useEffect(() => {
@@ -83,13 +87,16 @@ function App() {
             <button onClick={() => toggleModal('players')} className={`btn-icon ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores">
               <Users size={20} />
             </button>
-            <button onClick={() => setShowMapSettings(!showMapSettings)} className={`btn-icon ${showMapSettings ? 'active' : ''}`} title="Cenário/Mapa">
+            <button className="btn-icon" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário">
               <MapIcon size={20} />
             </button>
-            <button onClick={() => toggleModal('chat')} className={`btn-icon ${activeModal === 'chat' ? 'active' : ''}`} title="Chat">
+            <button className="btn-icon" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
+              <BookOpen size={20} />
+            </button>
+            <button className={`btn-icon ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Combate (Log)">
               <MessageSquare size={20} />
             </button>
-            <button onClick={() => toggleModal('settings')} className={`btn-icon ${activeModal === 'settings' ? 'active' : ''}`} title="Configurações">
+            <button className={`btn-icon ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações">
               <Settings size={20} />
             </button>
           </div>
@@ -115,6 +122,14 @@ function App() {
         {/* Free-Floating Window Layer */}
         {viewMode === 'canvas' && (
           <>
+            {showActors && (
+              <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={() => setShowActors(false)}>
+                <div style={{ height: '400px' }}>
+                  <NPCPanel />
+                </div>
+              </DraggableWindow>
+            )}
+
             {openSheets.map((tokenId, index) => (
               <DraggableWindow 
                 key={tokenId} 
@@ -129,12 +144,14 @@ function App() {
               </DraggableWindow>
             ))}
 
-            <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320}>
-              <CombatLog />
-            </DraggableWindow>
+            {showCombatLog && (
+              <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} onClose={() => setShowCombatLog(false)}>
+                <CombatLog />
+              </DraggableWindow>
+            )}
 
             {showMapSettings && (
-              <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={100} width={300}>
+              <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={100} width={300} onClose={() => setShowMapSettings(false)}>
                 <MapSettingsPanel />
               </DraggableWindow>
             )}

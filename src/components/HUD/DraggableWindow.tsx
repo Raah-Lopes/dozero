@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GripHorizontal, X } from 'lucide-react';
+import { GripHorizontal, X, Minus } from 'lucide-react';
 
 interface DraggableWindowProps {
   id: string;
@@ -11,17 +11,28 @@ interface DraggableWindowProps {
   onClose?: () => void;
 }
 
+// Global counter to track which window is on top
+let globalZIndexCounter = 50;
+
 export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, initialX, initialY, children, width = 'auto', onClose }) => {
   const [pos, setPos] = useState({ x: initialX, y: initialY });
   const [isDragging, setIsDragging] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [zIndex, setZIndex] = useState(() => ++globalZIndexCounter);
   const dragOffset = useRef({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
   const snapThreshold = 20;
 
+  const bringToFront = () => {
+    globalZIndexCounter += 1;
+    setZIndex(globalZIndexCounter);
+  };
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
+    bringToFront();
     
     // Calculate offset from the top-left corner of the window
     if (windowRef.current) {
@@ -94,10 +105,11 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
         pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        zIndex: isDragging ? 100 : 50,
+        zIndex: isDragging ? globalZIndexCounter + 100 : zIndex,
         boxShadow: isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : '',
         transition: isDragging ? 'none' : 'box-shadow 0.2s',
       }}
+      onPointerDownCapture={bringToFront} // Catch any click inside to bring to front
     >
       {/* Drag Handle */}
       <div
@@ -115,31 +127,46 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
           alignItems: 'center',
           touchAction: 'none' // Prevent browser panning
         }}
+        onDoubleClick={() => setIsMinimized(!isMinimized)}
       >
         <div style={{ display: 'flex', gap: '0.5rem', color: 'var(--text-secondary)', alignItems: 'center' }}>
           <GripHorizontal size={14} />
           <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</span>
         </div>
         
-        {onClose && (
+        <div style={{ position: 'absolute', right: '0.25rem', top: '0.25rem', display: 'flex', gap: '0.25rem' }}>
           <button 
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ 
-              position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)',
               background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
             }}
           >
-            <X size={14} />
+            <Minus size={14} />
           </button>
-        )}
+          
+          {onClose && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              style={{ 
+                background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
+              }}
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content Area */}
-      <div style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column' }}>
-        {children}
-      </div>
+      {!isMinimized && (
+        <div style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </div>
+      )}
     </div>
   );
 };
