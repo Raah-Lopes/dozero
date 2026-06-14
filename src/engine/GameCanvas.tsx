@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState } from '../store';
+import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter } from 'pixi.js';
+import { state, updateTokenPosition, toggleTarget, localState, addTensionClock, removeTensionClock, updateTensionClockProps, triggerClockConsequence } from '../store';
 
 const prevHpMap: Record<string, number> = {};
 let lastTokenClickTime = 0;
@@ -11,6 +11,9 @@ export const GameCanvas: React.FC = () => {
 
   useEffect(() => {
     let isDestroyed = false;
+
+    // GM check
+    const isGM = localStorage.getItem('isGM') === 'true';
 
     const initPixi = async () => {
       const app = new Application();
@@ -70,7 +73,7 @@ export const GameCanvas: React.FC = () => {
       });
 
       canvasEl.addEventListener('pointerdown', (e) => {
-        if (e.button === 1 || e.button === 2) { // Middle or Right click
+        if (e.button === 2 || e.button === 1) { // Middle or Right click
           isPanning = true;
           panStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
           canvasEl.style.cursor = 'grabbing';
@@ -120,7 +123,12 @@ export const GameCanvas: React.FC = () => {
 
       // Backgrounds Container (under the grid)
       const bgsContainer = new Container();
+      bgsContainer.sortableChildren = true;
       viewport.addChild(bgsContainer);
+
+      // Gizmo Container for selected backgrounds
+      const gizmoContainer = new Container();
+      viewport.addChild(gizmoContainer);
 
       // Create an infinite grid background
       const grid = new Graphics();
@@ -139,18 +147,15 @@ export const GameCanvas: React.FC = () => {
       grid.stroke();
       viewport.addChild(grid);
 
+      // Tokens Layer
       const tokensContainer = new Container();
       viewport.addChild(tokensContainer);
-
-      // Visual Debugger Container
-      const debugContainer = new Graphics();
-      viewport.addChild(debugContainer);
 
       const tokenSprites: Record<string, { container: Container, glow: Graphics, hpFill: Graphics, targetRing: Graphics }> = {};
       let draggingTokenId: string | null = null;
       let tokenDragOffset = { x: 0, y: 0 };
 
-      const tokenObserver = () => {
+      const syncTokens = () => {
         const tokensState = state.tokens;
 
         // Remove deleted tokens
@@ -262,8 +267,6 @@ export const GameCanvas: React.FC = () => {
               const dx = t.x - tokenSprites[id].container.x;
               const dy = t.y - tokenSprites[id].container.y;
               if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-                // Simple LERP is handled in ticker, we just set target here
-                // For simplicity, just snap for now, LERP requires separate state
                 tokenSprites[id].container.x = t.x;
                 tokenSprites[id].container.y = t.y;
               }
@@ -272,9 +275,9 @@ export const GameCanvas: React.FC = () => {
         });
       };
 
-      state.tokens.observe(tokenObserver);
-      tokenObserver();
-      (app as any)._yjsObserver = tokenObserver;
+      state.tokens.observe(syncTokens);
+      syncTokens();
+      (app as any)._yjsObserver = syncTokens;
 
       const onDragEnd = () => {
         if (!draggingTokenId) return;
@@ -297,9 +300,10 @@ export const GameCanvas: React.FC = () => {
       };
 
       const handleNativeMove = (e: PointerEvent) => {
+        const worldPoint = viewport.toLocal({ x: e.clientX, y: e.clientY });
+
         if (draggingTokenId && tokenSprites[draggingTokenId]) {
           const token = tokenSprites[draggingTokenId].container;
-          const worldPoint = viewport.toLocal({ x: e.clientX, y: e.clientY });
           token.x = worldPoint.x + tokenDragOffset.x;
           token.y = worldPoint.y + tokenDragOffset.y;
         }
@@ -311,17 +315,95 @@ export const GameCanvas: React.FC = () => {
 
       window.addEventListener('pointermove', handleNativeMove);
       window.addEventListener('pointerup', handleNativeUp);
-      
-      // Cleanup for native events
+
+      // Cleanup on unmountive events
+      const prevTokenCleanup = (app as any)._cleanupNativeEvents;
       (app as any)._cleanupNativeEvents = () => {
+        if (prevTokenCleanup) prevTokenCleanup();
         window.removeEventListener('pointermove', handleNativeMove);
         window.removeEventListener('pointerup', handleNativeUp);
       };
 
-      // Dictionary to keep track of generated map sprites
       const bgSprites: Record<string, Sprite> = {};
       let draggingBgId: string | null = null;
-      let bgDragOffset = { x: 0, y: 0 };
+      let groupDragOffsets: Record<string, {x: number, y: number}> = {};
+      
+      // Marquee Selection Logic
+      let isMarquee = false;
+      let marqueeStart = { x: 0, y: 0 };
+      const marqueeGraphics = new Graphics();
+      viewport.addChild(marqueeGraphics);
+
+      // Snap Guides
+      const snapGuidesGraphics = new Graphics();
+      viewport.addChild(snapGuidesGraphics);
+
+      // Background Catcher for Marquee (foolproof way to catch empty space clicks)
+      const bgCatcher = new Graphics();
+      bgCatcher.rect(-100000, -100000, 200000, 200000);
+      bgCatcher.fill({ color: 0x000000, alpha: 0.001 });
+      bgCatcher.eventMode = 'static';
+      viewport.addChildAt(bgCatcher, 0);
+
+      bgCatcher.on('pointerdown', (e) => {
+        if (e.button === 0 && (window as any).__IS_MAP_MENU_OPEN__) {
+           isMarquee = true;
+           const localPos = viewport.toLocal(e.global);
+           marqueeStart = { x: localPos.x, y: localPos.y };
+           marqueeGraphics.clear();
+        }
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (isMarquee) {
+           const rect = canvasEl.getBoundingClientRect();
+           const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+           
+           const w = localPos.x - marqueeStart.x;
+           const h = localPos.y - marqueeStart.y;
+           
+           marqueeGraphics.clear();
+           marqueeGraphics.rect(marqueeStart.x, marqueeStart.y, w, h);
+           marqueeGraphics.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x, alpha: 0.8 });
+           marqueeGraphics.fill({ color: 0xa855f7, alpha: 0.1 });
+        }
+      });
+
+      window.addEventListener('pointerup', (e) => {
+        if (isMarquee) {
+           isMarquee = false;
+           const rect = canvasEl.getBoundingClientRect();
+           const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+           
+           const minX = Math.min(marqueeStart.x, localPos.x);
+           const maxX = Math.max(marqueeStart.x, localPos.x);
+           const minY = Math.min(marqueeStart.y, localPos.y);
+           const maxY = Math.max(marqueeStart.y, localPos.y);
+
+           marqueeGraphics.clear();
+
+           if (maxX - minX > 10 && maxY - minY > 10) {
+             import('../store').then(store => {
+                store.clearBgSelection();
+                Array.from(state.backgrounds.entries()).forEach(([id, bgData]: [string, any]) => {
+                  if (bgData.locked) return;
+                  const sprite = bgSprites[id];
+                  if (!sprite) return;
+                  
+                  const bgMinX = sprite.x - (sprite.width / 2);
+                  const bgMaxX = sprite.x + (sprite.width / 2);
+                  const bgMinY = sprite.y - (sprite.height / 2);
+                  const bgMaxY = sprite.y + (sprite.height / 2);
+
+                  const intersect = !(maxX < bgMinX || minX > bgMaxX || maxY < bgMinY || minY > bgMaxY);
+                  if (intersect) store.toggleBgSelection(id, true);
+                });
+             });
+           } else {
+             import('../store').then(store => store.clearBgSelection());
+           }
+        }
+      });
 
       const mapObserver = () => {
         const bgsState = state.backgrounds;
@@ -346,30 +428,35 @@ export const GameCanvas: React.FC = () => {
             
             // Interaction logic
             sprite.on('pointerdown', (e) => {
-              const currentBg = state.backgrounds.get(id) as any;
-              if (!currentBg) return;
-
-              const isMenuOpen = (window as any).__IS_MAP_MENU_OPEN__ === true;
+              if (e.button !== 0) return; // Only left click
               
-              if (!isMenuOpen) return; // Ignore completely if menu is closed
-
-              if (currentBg.locked) {
-                // If locked, just select it but don't drag
-                window.dispatchEvent(new CustomEvent('bg-select', { detail: { id, multi: e.shiftKey || e.ctrlKey } }));
-                return;
+              if ((window as any).__IS_MAP_MENU_OPEN__) {
+                e.stopPropagation();
+                import('../store').then(s => {
+                  s.toggleBgSelection(id, e.shiftKey || e.ctrlKey);
+                });
+                
+                if (!bg.locked) {
+                  draggingBgId = id;
+                  (window as any).__IS_DRAGGING_MAP__ = true;
+                  window.dispatchEvent(new Event('bg-drag-state'));
+                  groupDragOffsets = {};
+                  const localPoint = viewport.toLocal(e.global);
+                  
+                  const isSelected = localState.selectedBgs.has(id);
+                  if (!isSelected) {
+                    groupDragOffsets[id] = { x: sprite.x - localPoint.x, y: sprite.y - localPoint.y };
+                  } else {
+                    localState.selectedBgs.forEach(selId => {
+                       const selSprite = bgSprites[selId];
+                       const selData = state.backgrounds.get(selId) as any;
+                       if (selSprite && selData && !selData.locked) {
+                          groupDragOffsets[selId] = { x: selSprite.x - localPoint.x, y: selSprite.y - localPoint.y };
+                       }
+                    });
+                  }
+                }
               }
-
-              draggingBgId = id;
-              sprite.cursor = 'grabbing';
-              
-              const localPos = viewport.toLocal(e.global);
-              bgDragOffset = {
-                x: sprite.x - localPos.x,
-                y: sprite.y - localPos.y
-              };
-              
-              // Select it
-              window.dispatchEvent(new CustomEvent('bg-select', { detail: { id, multi: e.shiftKey || e.ctrlKey } }));
             });
 
             bgsContainer.addChild(sprite);
@@ -397,37 +484,267 @@ export const GameCanvas: React.FC = () => {
           bgSprites[id].scale.set(bg.scale ?? 1);
           bgSprites[id].alpha = bg.opacity ?? 1;
           bgSprites[id].visible = !bg.hidden;
+          bgSprites[id].zIndex = bg.zIndex ?? 0;
+        });
+        syncGizmo();
+      };
+
+      // GIZMO LOGIC
+      // Persist gizmo graphics so we don't memory leak every frame
+      const gizmoBox = new Graphics();
+      const gizmoCorners = [new Graphics(), new Graphics(), new Graphics(), new Graphics()];
+      gizmoContainer.addChild(gizmoBox);
+      gizmoCorners.forEach(c => gizmoContainer.addChild(c));
+
+      const syncGizmo = () => {
+        if (localState.selectedBgs.size === 0 || !(window as any).__IS_MAP_MENU_OPEN__) {
+          gizmoContainer.visible = false;
+          return;
+        }
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        const selectedIds = Array.from(localState.selectedBgs);
+        let hasUnlocked = false;
+
+        selectedIds.forEach(id => {
+          const bgData = state.backgrounds.get(id) as any;
+          const sprite = bgSprites[id];
+          if (sprite && bgData && !bgData.locked && !bgData.hidden) {
+            hasUnlocked = true;
+            const hw = sprite.width / 2;
+            const hh = sprite.height / 2;
+            if (sprite.x - hw < minX) minX = sprite.x - hw;
+            if (sprite.y - hh < minY) minY = sprite.y - hh;
+            if (sprite.x + hw > maxX) maxX = sprite.x + hw;
+            if (sprite.y + hh > maxY) maxY = sprite.y + hh;
+          }
+        });
+
+        if (!hasUnlocked) {
+          gizmoContainer.visible = false;
+          return;
+        }
+
+        gizmoContainer.visible = true;
+        gizmoContainer.x = 0;
+        gizmoContainer.y = 0;
+
+        const w = maxX - minX;
+        const h = maxY - minY;
+
+        // Draw bounding box
+        gizmoBox.clear();
+        gizmoBox.rect(minX, minY, w, h);
+        gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
+
+        // Draw aesthetic corners
+        const cornerSize = 8 / viewport.scale.x;
+        const corners = [
+          {x: minX, y: minY, cursor: 'nwse-resize'},
+          {x: maxX, y: minY, cursor: 'nesw-resize'},
+          {x: minX, y: maxY, cursor: 'nesw-resize'},
+          {x: maxX, y: maxY, cursor: 'nwse-resize'}
+        ];
+        
+        corners.forEach((c, idx) => {
+          const corner = gizmoCorners[idx];
+          corner.clear();
+          corner.rect(c.x - cornerSize/2, c.y - cornerSize/2, cornerSize, cornerSize);
+          corner.fill({ color: 0xffffff });
+          corner.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
+          
+          corner.eventMode = 'static';
+          corner.cursor = c.cursor;
+          
+          // Remove all previous event listeners to avoid duplication memory leaks
+          corner.removeAllListeners();
+          
+          // Make bottom-right corner the scaler for ANY number of items!
+          if (idx === 3) {
+            corner.on('pointerdown', (e) => {
+              e.stopPropagation();
+
+              const pivotX = minX;
+              const pivotY = minY;
+              const origW = maxX - minX;
+              const origH = maxY - minY;
+
+              // Filter out locked backgrounds from moving
+              const originalStates = selectedIds
+                .filter(id => !(state.backgrounds.get(id) as any).locked)
+                .map(id => {
+                  const sprite = bgSprites[id];
+                  return {
+                    id,
+                    sprite,
+                    origX: sprite.x,
+                    origY: sprite.y,
+                    origScale: sprite.scale.x
+                  };
+                });
+
+              const onScaleMove = (moveEvent: PointerEvent) => {
+                const rect = canvasEl.getBoundingClientRect();
+                const localPoint = viewport.toLocal({ x: moveEvent.clientX - rect.left, y: moveEvent.clientY - rect.top });
+                
+                const dx = localPoint.x - pivotX;
+                const scaleRatio = Math.max(0.1, dx / origW);
+                
+                originalStates.forEach(item => {
+                  item.sprite.scale.set(item.origScale * scaleRatio);
+                  item.sprite.x = pivotX + (item.origX - pivotX) * scaleRatio;
+                  item.sprite.y = pivotY + (item.origY - pivotY) * scaleRatio;
+                });
+                
+                // Only redraw the box visually, do NOT recreate objects
+                const newW = origW * scaleRatio;
+                const newH = origH * scaleRatio;
+                
+                gizmoBox.clear();
+                gizmoBox.rect(pivotX, pivotY, newW, newH);
+                gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
+                
+                // Hide corners while dragging to avoid lag
+                gizmoCorners.forEach(c => c.visible = false);
+              };
+
+              const onScaleUp = () => {
+                window.removeEventListener('pointermove', onScaleMove);
+                window.removeEventListener('pointerup', onScaleUp);
+                gizmoCorners.forEach(c => c.visible = true);
+                
+                import('../store').then(s => {
+                  originalStates.forEach(item => {
+                    s.updateBackgroundProps(item.id, { 
+                      scale: item.sprite.scale.x,
+                      x: item.sprite.x,
+                      y: item.sprite.y
+                    });
+                  });
+                });
+                syncGizmo();
+              };
+
+              window.addEventListener('pointermove', onScaleMove);
+              window.addEventListener('pointerup', onScaleUp);
+            });
+          }
         });
       };
 
       state.backgrounds.observe(mapObserver);
       window.addEventListener('map-menu-toggle', mapObserver);
+      window.addEventListener('bg-selection-updated', syncGizmo);
+      window.addEventListener('map-menu-toggle', syncGizmo);
+      
       mapObserver(); // initial load
 
       // Cleanup for observers
-      (app as any)._yjsMapObserver = mapObserver;
+      (app as any)._cleanupMapObservers = () => {
+        state.backgrounds.unobserve(mapObserver);
+        window.removeEventListener('map-menu-toggle', mapObserver);
+        window.removeEventListener('bg-selection-updated', syncGizmo);
+        window.removeEventListener('map-menu-toggle', syncGizmo);
+      };
 
       // Add Native Window Dragging for Backgrounds (so they don't get stuck)
       const handleNativeBgMove = (e: PointerEvent) => {
         if (draggingBgId && bgSprites[draggingBgId]) {
           const sprite = bgSprites[draggingBgId];
-          const worldPoint = viewport.toLocal({ x: e.clientX, y: e.clientY });
-          sprite.x = worldPoint.x + bgDragOffset.x;
-          sprite.y = worldPoint.y + bgDragOffset.y;
+          const primaryOffset = groupDragOffsets[draggingBgId];
+          if (!primaryOffset) return;
+
+          const rect = canvasEl.getBoundingClientRect();
+          const worldPoint = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+          
+          let targetX = worldPoint.x + primaryOffset.x;
+          let targetY = worldPoint.y + primaryOffset.y;
+
+          // Snapping Logic
+          const snapThreshold = 15 / viewport.scale.x;
+          const myHWidth = sprite.width / 2;
+          const myHHeight = sprite.height / 2;
+          
+          const myEdges = {
+             left: targetX - myHWidth, right: targetX + myHWidth,
+             top: targetY - myHHeight, bottom: targetY + myHHeight,
+             centerX: targetX, centerY: targetY
+          };
+
+          snapGuidesGraphics.clear();
+          let snappedX: number | null = null;
+          let snappedY: number | null = null;
+
+          for (const [id, otherSprite] of Object.entries(bgSprites)) {
+             if (groupDragOffsets[id]) continue;
+             const otherHWidth = otherSprite.width / 2;
+             const otherHHeight = otherSprite.height / 2;
+             
+             const otherEdges = {
+                left: otherSprite.x - otherHWidth, right: otherSprite.x + otherHWidth,
+                top: otherSprite.y - otherHHeight, bottom: otherSprite.y + otherHHeight,
+                centerX: otherSprite.x, centerY: otherSprite.y
+             };
+
+             // X Snapping
+             if (Math.abs(myEdges.left - otherEdges.right) < snapThreshold) { targetX = otherEdges.right + myHWidth; snappedX = otherEdges.right; }
+             else if (Math.abs(myEdges.right - otherEdges.left) < snapThreshold) { targetX = otherEdges.left - myHWidth; snappedX = otherEdges.left; }
+             else if (Math.abs(myEdges.left - otherEdges.left) < snapThreshold) { targetX = otherEdges.left + myHWidth; snappedX = otherEdges.left; }
+             else if (Math.abs(myEdges.right - otherEdges.right) < snapThreshold) { targetX = otherEdges.right - myHWidth; snappedX = otherEdges.right; }
+             else if (Math.abs(myEdges.centerX - otherEdges.centerX) < snapThreshold) { targetX = otherEdges.centerX; snappedX = otherEdges.centerX; }
+
+             // Y Snapping
+             if (Math.abs(myEdges.top - otherEdges.bottom) < snapThreshold) { targetY = otherEdges.bottom + myHHeight; snappedY = otherEdges.bottom; }
+             else if (Math.abs(myEdges.bottom - otherEdges.top) < snapThreshold) { targetY = otherEdges.top - myHHeight; snappedY = otherEdges.top; }
+             else if (Math.abs(myEdges.top - otherEdges.top) < snapThreshold) { targetY = otherEdges.top + myHHeight; snappedY = otherEdges.top; }
+             else if (Math.abs(myEdges.bottom - otherEdges.bottom) < snapThreshold) { targetY = otherEdges.bottom - myHHeight; snappedY = otherEdges.bottom; }
+             else if (Math.abs(myEdges.centerY - otherEdges.centerY) < snapThreshold) { targetY = otherEdges.centerY; snappedY = otherEdges.centerY; }
+          }
+          
+          if (snappedX !== null) {
+            snapGuidesGraphics.moveTo(snappedX, -100000);
+            snapGuidesGraphics.lineTo(snappedX, 100000);
+            snapGuidesGraphics.stroke({ color: 0xec4899, width: 2 / viewport.scale.x, alpha: 0.8 });
+          }
+          if (snappedY !== null) {
+            snapGuidesGraphics.moveTo(-100000, snappedY);
+            snapGuidesGraphics.lineTo(100000, snappedY);
+            snapGuidesGraphics.stroke({ color: 0xec4899, width: 2 / viewport.scale.x, alpha: 0.8 });
+          }
+
+          const dx = targetX - sprite.x;
+          const dy = targetY - sprite.y;
+
+          Object.keys(groupDragOffsets).forEach(selId => {
+            const selSprite = bgSprites[selId];
+            if (selSprite) {
+              selSprite.x += dx;
+              selSprite.y += dy;
+            }
+          });
+
+          syncGizmo();
         }
       };
 
       const handleNativeBgUp = () => {
         if (draggingBgId && bgSprites[draggingBgId]) {
-          const sprite = bgSprites[draggingBgId];
-          sprite.cursor = 'grab';
-          // Save to Yjs
-          state.backgrounds.set(draggingBgId, {
-            ...(state.backgrounds.get(draggingBgId) as any),
-            x: sprite.x,
-            y: sprite.y
+          (window as any).__IS_DRAGGING_MAP__ = false;
+          window.dispatchEvent(new Event('bg-drag-state'));
+          snapGuidesGraphics.clear();
+          Object.keys(groupDragOffsets).forEach(selId => {
+            const selSprite = bgSprites[selId];
+            if (selSprite) {
+              selSprite.cursor = 'grab';
+              state.backgrounds.set(selId, {
+                ...(state.backgrounds.get(selId) as any),
+                x: selSprite.x,
+                y: selSprite.y
+              });
+            }
           });
           draggingBgId = null;
+          groupDragOffsets = {};
         }
       };
 
@@ -507,6 +824,8 @@ export const GameCanvas: React.FC = () => {
             }
             prevHpMap[id] = currentHp;
 
+          tokenData.container.visible = true;
+
           // Target ring rotation and visibility
           const isTargeted = localState.targets.has(id);
           tokenData.targetRing.visible = isTargeted;
@@ -546,9 +865,8 @@ export const GameCanvas: React.FC = () => {
           if ((appRef.current as any)._yjsObserver) {
             state.tokens.unobserve((appRef.current as any)._yjsObserver);
           }
-          if ((appRef.current as any)._yjsMapObserver) {
-            state.backgrounds.unobserve((appRef.current as any)._yjsMapObserver);
-            window.removeEventListener('map-menu-toggle', (appRef.current as any)._yjsMapObserver);
+          if ((appRef.current as any)._cleanupMapObservers) {
+            (appRef.current as any)._cleanupMapObservers();
           }
           appRef.current.destroy(true);
         } catch (e) {

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { state, addBackground, removeBackground, updateBackgroundProps } from '../../store';
+import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection } from '../../store';
 import type { BackgroundData } from '../../store';
 import { Map as MapIcon, ImagePlus, Trash2, AlignCenter, AlignHorizontalSpaceAround, Eye, EyeOff } from 'lucide-react';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(localState.selectedBgs));
 
   useEffect(() => {
     const observer = () => {
@@ -13,8 +13,15 @@ export const MapSettingsPanel: React.FC = () => {
       setBackgrounds(bgs);
     };
 
+    const selObserver = () => {
+      setSelectedIds(new Set(localState.selectedBgs));
+    };
+
     state.backgrounds.observe(observer);
+    window.addEventListener('bg-selection-updated', selObserver);
+    
     observer();
+    selObserver();
 
     // Set global flag so GameCanvas knows if Map menu is open
     (window as any).__IS_MAP_MENU_OPEN__ = true;
@@ -42,8 +49,7 @@ export const MapSettingsPanel: React.FC = () => {
       window.dispatchEvent(new Event('map-menu-toggle'));
       
       state.backgrounds.unobserve(observer);
-      window.removeEventListener('bg-select', handleSelect);
-      window.removeEventListener('bg-clear-select', handleClearSelect);
+      window.removeEventListener('bg-selection-updated', selObserver);
     };
   }, []);
 
@@ -92,51 +98,10 @@ export const MapSettingsPanel: React.FC = () => {
     }
   };
 
-  const alignCenter = () => {
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    const bgs = Array.from(state.backgrounds.values()) as BackgroundData[];
-    bgs.forEach(bg => {
-      state.backgrounds.set(bg.id, { ...bg, x: cx, y: cy });
-    });
-  };
-
-  const alignSideBySide = () => {
-    const bgs = Array.from(state.backgrounds.values()) as BackgroundData[];
-    if (bgs.length === 0) return;
-
-    let currentX = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-
-    bgs.forEach((bg, index) => {
-      // Offset by half width to align from left to right properly if anchor is center
-      if (index > 0) {
-        currentX += (bgs[index - 1].width / 2) + (bg.width / 2);
-      }
-      state.backgrounds.set(bg.id, { ...bg, x: currentX, y: cy });
-    });
-  };
-
-  const alignTop = () => {
-    const bgs = backgrounds.filter(bg => selectedIds.has(bg.id));
-    if (bgs.length < 2) return;
-    const minY = Math.min(...bgs.map(bg => bg.y - bg.height/2));
-    bgs.forEach(bg => {
-      state.backgrounds.set(bg.id, { ...bg, y: minY + bg.height/2 });
-    });
-  };
-
-  const alignBottom = () => {
-    const bgs = backgrounds.filter(bg => selectedIds.has(bg.id));
-    if (bgs.length < 2) return;
-    const maxY = Math.max(...bgs.map(bg => bg.y + bg.height/2));
-    bgs.forEach(bg => {
-      state.backgrounds.set(bg.id, { ...bg, y: maxY - bg.height/2 });
-    });
-  };
-
   const selectAll = () => {
-    setSelectedIds(new Set(backgrounds.map(b => b.id)));
+    backgrounds.forEach(b => {
+      if (!localState.selectedBgs.has(b.id)) toggleBgSelection(b.id, true);
+    });
   };
 
   const toggleLockSelected = () => {
@@ -152,25 +117,6 @@ export const MapSettingsPanel: React.FC = () => {
       if (selectedIds.has(bg.id)) updateBackgroundProps(bg.id, { hidden: isAnyVisible });
     });
   };
-
-  const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    backgrounds.forEach(bg => {
-      if (selectedIds.has(bg.id)) updateBackgroundProps(bg.id, { scale: val });
-    });
-  };
-
-  const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    backgrounds.forEach(bg => {
-      if (selectedIds.has(bg.id)) updateBackgroundProps(bg.id, { opacity: val });
-    });
-  };
-
-  // Get current values from the first selected item for sliders
-  const firstSelected = backgrounds.find(bg => selectedIds.has(bg.id));
-  const currentScale = firstSelected?.scale ?? 1;
-  const currentOpacity = firstSelected?.opacity ?? 1;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -200,49 +146,30 @@ export const MapSettingsPanel: React.FC = () => {
 
       <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%' }} />
 
-      {/* Alignment Tools (Only show if multiple selected or use default) */}
+      {/* Action Buttons for Selection */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <MapIcon size={16} /> Ferramentas Magnéticas
+          <MapIcon size={16} /> Ações
         </label>
         
         {selectedIds.size > 0 ? (
-          <div style={{ padding: '0.5rem', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+          <div style={{ padding: '0.5rem', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, width: '100%' }}>
               {selectedIds.size} Mapa(s) Selecionado(s)
             </span>
-            <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-              <button onClick={alignTop} className="btn-icon" title="Alinhar pelo Topo" style={{ border: '1px solid var(--glass-border)' }}>↑</button>
-              <button onClick={alignBottom} className="btn-icon" title="Alinhar pela Base" style={{ border: '1px solid var(--glass-border)' }}>↓</button>
-              <button onClick={alignSideBySide} className="btn-icon" title="Lado a Lado" style={{ border: '1px solid var(--glass-border)' }}>↔</button>
-              <button onClick={alignCenter} className="btn-icon" title="Centro Absoluto" style={{ border: '1px solid var(--glass-border)' }}>⌖</button>
-              <div style={{ flex: 1 }} />
-              <button onClick={toggleHideSelected} className="btn-icon" title="Ocultar/Mostrar" style={{ border: '1px solid var(--glass-border)' }}>
-                {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.hidden) ? <Eye size={14} /> : <EyeOff size={14} color="var(--danger)" />}
-              </button>
-              <button onClick={toggleLockSelected} className="btn" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
-                {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.locked) ? 'Travar 🔒' : 'Destravar 🔓'}
-              </button>
-            </div>
-            
-            {/* Sliders for Scale and Opacity */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Tamanho (Zoom)</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)' }}>{currentScale.toFixed(2)}x</span>
-              </div>
-              <input type="range" min="0.1" max="5" step="0.1" value={currentScale} onChange={handleScaleChange} />
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Opacidade</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)' }}>{Math.round(currentOpacity * 100)}%</span>
-              </div>
-              <input type="range" min="0.1" max="1" step="0.1" value={currentOpacity} onChange={handleOpacityChange} />
-            </div>
+            <button onClick={toggleHideSelected} className="btn-icon" title="Ocultar/Mostrar" style={{ border: '1px solid var(--glass-border)', padding: '0.5rem' }}>
+              {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.hidden) ? <Eye size={14} /> : <EyeOff size={14} color="var(--danger)" />}
+            </button>
+            <button onClick={toggleLockSelected} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
+              {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.locked) ? 'Travar Tudo 🔒' : 'Destravar Tudo 🔓'}
+            </button>
+            <button onClick={clearBgSelection} className="btn-icon" title="Limpar Seleção" style={{ border: '1px solid var(--glass-border)', marginLeft: 'auto' }}>
+              X
+            </button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={selectAll} className="btn" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem' }}>Selecionar Todos</button>
+            <button onClick={selectAll} className="btn" style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem' }}>Selecionar Todos na Cena</button>
           </div>
         )}
       </div>
@@ -259,13 +186,10 @@ export const MapSettingsPanel: React.FC = () => {
             {backgrounds.map((bg, idx) => (
               <div 
                 key={bg.id} 
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('bg-select', { detail: { id: bg.id, multi: true } }));
-                }}
                 style={{ 
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
                   background: selectedIds.has(bg.id) ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255,255,255,0.05)', 
-                  padding: '0.5rem', borderRadius: '4px', cursor: 'pointer',
+                  padding: '0.5rem', borderRadius: '4px',
                   border: selectedIds.has(bg.id) ? '1px solid var(--accent-primary)' : '1px solid transparent'
                 }}
               >

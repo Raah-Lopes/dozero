@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords } from 'lucide-react';
+import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid } from 'lucide-react';
 import { MindMap } from './components/Wiki/MindMap';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
@@ -13,13 +13,19 @@ import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
 import { PlayersLobby } from './components/HUD/PlayersLobby';
 import { CombatTracker } from './components/HUD/CombatTracker';
+import { MapContextMenu } from './components/HUD/MapContextMenu';
+import { ClockConfigModal } from './components/HUD/ClockConfigModal';
+import { WidgetHubModal } from './components/HUD/WidgetHubModal';
+import { TensionClockManager } from './components/HUD/TensionClockManager';
+import { state, addTensionClock } from './store';
 
 // Trigger HMR
 type ViewMode = 'canvas' | 'wiki' | 'theater';
-type ModalMode = 'none' | 'players' | 'settings' | 'chat';
+type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets';
 
 function App() {
   const [isReady, setIsReady] = useState(true);
+  const [editingClockId, setEditingClockId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
   const [activeModal, setActiveModal] = useState<ModalMode>('none');
   const [showMapSettings, setShowMapSettings] = useState(false);
@@ -37,7 +43,14 @@ function App() {
       });
     };
     window.addEventListener('token-dblclick', handleDblClick);
-    return () => window.removeEventListener('token-dblclick', handleDblClick);
+    
+    const handleOpenClockConfig = () => setActiveModal('clockConfig');
+    window.addEventListener('open-clock-config', handleOpenClockConfig);
+
+    return () => {
+      window.removeEventListener('token-dblclick', handleDblClick);
+      window.removeEventListener('open-clock-config', handleOpenClockConfig);
+    }
   }, []);
 
   if (!isReady) {
@@ -58,6 +71,7 @@ function App() {
       {viewMode === 'canvas' && (
         <div className="canvas-layer" id="canvas-container">
           <GameCanvas />
+          <MapContextMenu />
         </div>
       )}
 
@@ -87,8 +101,8 @@ function App() {
 
             {/* Right side: Tools */}
             <div className="glass-panel" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem' }}>
-              <button onClick={() => setViewMode('wiki')} className={`btn-icon ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki">
-                <MessageSquare size={20} />
+              <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki">
+                <BookOpen size={20} />
               </button>
               <button onClick={() => toggleModal('players')} className={`btn-icon ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores">
                 <Users size={20} />
@@ -99,8 +113,8 @@ function App() {
               <button className="btn-icon" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
                 <BookOpen size={20} />
               </button>
-              <button className={`btn-icon ${showCombatTracker ? 'active' : ''}`} onClick={() => setShowCombatTracker(!showCombatTracker)} title="Rastreador de Combate (Iniciativa)">
-                <Swords size={20} />
+              <button className={`btn-icon ${activeModal === 'widgets' ? 'active' : ''}`} onClick={() => toggleModal('widgets')} title="Hub de Widgets">
+                <LayoutGrid size={20} />
               </button>
               <button className={`btn-icon ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Combate (Log)">
                 <MessageSquare size={20} />
@@ -129,11 +143,23 @@ function App() {
           </DraggableWindow>
         )}
 
+        <TensionClockManager onEditClock={(id) => {
+          setEditingClockId(id);
+          setActiveModal('clockConfig');
+        }} />
+
         {/* Modal Layer */}
         {activeModal !== 'none' && (
            <div style={{ position: 'absolute', top: '90px', right: 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
              {activeModal === 'players' && <PlayersLobby onClose={() => setActiveModal('none')} />}
              {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
+             {activeModal === 'widgets' && (
+               <WidgetHubModal 
+                 onClose={() => setActiveModal('none')} 
+                 onOpenTracker={() => { setShowCombatTracker(!showCombatTracker); setActiveModal('none'); }} 
+                 onOpenClockConfig={() => setActiveModal('clockConfig')} 
+               />
+             )}
              {activeModal === 'chat' && (
                <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -146,44 +172,92 @@ function App() {
            </div>
         )}
 
-        {/* Free-Floating Window Layer */}
-        {viewMode === 'canvas' && (
-          <>
-            {showActors && (
-              <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={() => setShowActors(false)}>
-                <div style={{ height: '400px' }}>
-                  <NPCPanel />
-                </div>
-              </DraggableWindow>
-            )}
-
-            {openSheets.map((tokenId, index) => (
-              <DraggableWindow 
-                key={tokenId} 
-                id={`sheet-${tokenId}`} 
-                title="Ficha do Personagem" 
-                initialX={20 + (index * 40)} 
-                initialY={100 + (index * 40)} 
-                width={340}
-                onClose={() => setOpenSheets(prev => prev.filter(id => id !== tokenId))}
-              >
-                <TargetTerminal tokenId={tokenId} isGM={true} />
-              </DraggableWindow>
-            ))}
-
-            {showCombatLog && (
-              <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={() => setShowCombatLog(false)}>
-                <CombatLog />
-              </DraggableWindow>
-            )}
-
-            {showMapSettings && (
-              <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={200} width={300} onClose={() => setShowMapSettings(false)}>
-                <MapSettingsPanel />
-              </DraggableWindow>
-            )}
-          </>
+        {/* Clock Config Modal (Must be outside the right-aligned container because it is a DraggableWindow) */}
+        {activeModal === 'clockConfig' && (
+           <ClockConfigModal 
+             existingClock={editingClockId ? state.clocks.get(editingClockId) as TensionClock : undefined}
+             onClose={() => {
+               setActiveModal('none');
+               setEditingClockId(null);
+             }} 
+             onConfirm={(config, isEdit) => {
+               if (isEdit && editingClockId) {
+                 // Atualizar relógio existente
+                 const current = state.clocks.get(editingClockId) as TensionClock;
+                 if (current) {
+                   const now = Date.now();
+                   // Se estava pausado, não mexemos no tempo de fim até ele ser despausado.
+                   // Mas como o usuário editou a duração, precisamos refazer as contas:
+                   // Se mudou a duração, o novo endTime será agora + nova duração
+                   updateTensionClockProps(editingClockId, {
+                     label: config.label,
+                     durationMs: config.durationMs,
+                     endTime: now + config.durationMs,
+                     pausedRemainingMs: undefined, // retoma ou reseta
+                     isRunning: true,
+                     hpMod: config.hpMod,
+                     mpMod: config.mpMod
+                   });
+                   state.chat.push([{ text: `RELÓGIO MODIFICADO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
+                 }
+               } else {
+                 // Criar novo
+                 const id = 'clock_' + Date.now();
+                 state.chat.push([{ text: `CRIANDO RELÓGIO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
+                 addTensionClock({
+                   id,
+                   x: 0,
+                   y: 0,
+                   label: config.label,
+                   durationMs: config.durationMs,
+                   endTime: Date.now() + config.durationMs,
+                   isRunning: true,
+                   hpMod: config.hpMod,
+                   mpMod: config.mpMod
+                 });
+               }
+               setActiveModal('none');
+               setEditingClockId(null);
+             }} 
+           />
         )}
+
+        {/* Free-Floating Window Layer */}
+        <>
+          {showActors && (
+            <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={() => setShowActors(false)}>
+              <div style={{ height: '400px' }}>
+                <NPCPanel />
+              </div>
+            </DraggableWindow>
+          )}
+
+          {openSheets.map((tokenId, index) => (
+            <DraggableWindow 
+              key={tokenId} 
+              id={`sheet-${tokenId}`} 
+              title="Ficha do Personagem" 
+              initialX={20 + (index * 40)} 
+              initialY={100 + (index * 40)} 
+              width={340}
+              onClose={() => setOpenSheets(prev => prev.filter(id => id !== tokenId))}
+            >
+              <TargetTerminal tokenId={tokenId} isGM={true} />
+            </DraggableWindow>
+          ))}
+
+          {showCombatLog && (
+            <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={() => setShowCombatLog(false)}>
+              <CombatLog />
+            </DraggableWindow>
+          )}
+
+          {showMapSettings && (
+            <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={200} width={300} onClose={() => setShowMapSettings(false)}>
+              <MapSettingsPanel />
+            </DraggableWindow>
+          )}
+        </>
 
       </div>
 

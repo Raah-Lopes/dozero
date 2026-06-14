@@ -23,7 +23,21 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
   const getInitialPrefs = () => {
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+         const parsed = JSON.parse(saved);
+         // Clamping to screen bounds to prevent invisible windows
+         const screenW = window.innerWidth;
+         const screenH = window.innerHeight;
+         
+         // Protection against NaN or corrupted values
+         if (typeof parsed.x !== 'number' || typeof parsed.y !== 'number' || 
+             isNaN(parsed.x) || isNaN(parsed.y) ||
+             parsed.x < -100 || parsed.x > screenW - 50 || 
+             parsed.y < -50 || parsed.y > screenH - 50) {
+            return { x: initialX, y: initialY, w: width, h: height };
+         }
+         return parsed;
+      }
     } catch (e) {}
     return { x: initialX, y: initialY, w: width, h: height };
   };
@@ -129,17 +143,17 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
         left: pos.x,
         top: pos.y,
         width: size.w,
-        height: size.h,
+        height: isMinimized ? 'auto' : size.h,
         pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
         zIndex: isDragging ? globalZIndexCounter + 100 : zIndex,
         boxShadow: variant === 'default' ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : '') : 'none',
         transition: isDragging ? 'none' : 'box-shadow 0.2s',
-        resize: variant === 'default' ? 'both' : 'none',
+        resize: (variant === 'default' && !isMinimized) ? 'both' : 'none',
         overflow: 'hidden',
         minWidth: variant === 'default' ? '250px' : 'auto',
-        minHeight: variant === 'default' ? '100px' : 'auto',
+        minHeight: (variant === 'default' && !isMinimized) ? '100px' : 'auto',
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front
