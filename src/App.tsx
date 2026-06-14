@@ -5,6 +5,7 @@ import { MindMap } from './components/Wiki/MindMap';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
 import { SettingsModal } from './components/HUD/SettingsModal';
+import { DiceOverlay } from './components/HUD/DiceOverlay';
 import { DiagnosticOverlay } from './components/DiagnosticOverlay';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/HUD/TargetTerminal';
@@ -187,6 +188,7 @@ function App() {
       </div>
 
       <DiagnosticOverlay />
+      <DiceOverlay />
     </div>
   );
 }

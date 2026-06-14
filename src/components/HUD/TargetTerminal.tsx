@@ -143,6 +143,15 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
       }
 
       pushChatMessage(messageHtml, result.successes >= 3 && !result.isMessyCritical, result.isBestialFailure || result.isMessyCritical);
+
+      // Trigger cinematic Dice Overlay
+      window.dispatchEvent(new CustomEvent('dice-roll', {
+        detail: {
+          title: macro.name,
+          result: result.isBestialFailure ? 'FALHA CRÍTICA' : result.isMessyCritical ? 'CRÍTICO CAÓTICO' : `${result.successes} SUCESSOS`,
+          type: result.isBestialFailure || result.isMessyCritical ? 'attack' : result.successes >= 3 ? 'success' : 'utility'
+        }
+      }));
     }
   };
 
@@ -153,6 +162,15 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
     if (!isNaN(finalValue)) {
       addCombatParticipant(tokenId, tokenData.name, finalValue, tokenData.imageUrl);
       pushChatMessage(`<b>${tokenData.name}</b> rolou Iniciativa: <b>${finalValue}</b>`, false, false);
+      
+      // Trigger cinematic Dice Overlay
+      window.dispatchEvent(new CustomEvent('dice-roll', {
+        detail: {
+          title: 'Iniciativa',
+          result: finalValue.toString(),
+          type: 'utility'
+        }
+      }));
     }
   };
 

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { Application, Graphics, Rectangle, Assets, Sprite, Container } from 'pixi.js';
+import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState } from '../store';
+
+const prevHpMap: Record<string, number> = {};
+let lastTokenClickTime = 0;
 
 export const GameCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -146,7 +149,6 @@ export const GameCanvas: React.FC = () => {
       const tokenSprites: Record<string, { container: Container, glow: Graphics, hpFill: Graphics, targetRing: Graphics }> = {};
       let draggingTokenId: string | null = null;
       let tokenDragOffset = { x: 0, y: 0 };
-      let lastTokenClickTime = 0;
 
       const tokenObserver = () => {
         const tokensState = state.tokens;
@@ -470,6 +472,40 @@ export const GameCanvas: React.FC = () => {
             tokenData.glow.fill({ color: 0x06b6d4, alpha: 0.4 });
             tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
           }
+            
+            // HP Change Detection (Floating Text)
+            const currentHp = tState.hp;
+            const previousHp = prevHpMap[id];
+            
+            if (previousHp !== undefined && currentHp !== previousHp) {
+              const diff = currentHp - previousHp;
+              const color = diff < 0 ? 0xff0000 : 0x22c55e;
+              const sign = diff > 0 ? '+' : '';
+              
+              const floatText = new Text({ 
+                text: `${sign}${diff}`, 
+                style: { fontFamily: 'Inter', fontSize: 32, fill: color, fontWeight: '900', stroke: { color: 0x000000, width: 5 } } 
+              });
+              floatText.anchor.set(0.5);
+              floatText.x = tokenData.container.x;
+              floatText.y = tokenData.container.y - 40;
+              tokensContainer.addChild(floatText);
+              
+              let life = 1.5;
+              const ticker = app.ticker;
+              const animateText = () => {
+                life -= ticker.deltaTime * 0.02;
+                floatText.y -= ticker.deltaTime * 1.5;
+                floatText.alpha = Math.max(0, life);
+                if (life <= 0) {
+                  ticker.remove(animateText);
+                  if (floatText.parent) floatText.parent.removeChild(floatText);
+                  floatText.destroy();
+                }
+              };
+              ticker.add(animateText);
+            }
+            prevHpMap[id] = currentHp;
 
           // Target ring rotation and visibility
           const isTargeted = localState.targets.has(id);
