@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container } from 'pixi.js';
-import { state, updateTokenPosition } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState } from '../store';
 
 export const GameCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -143,7 +143,7 @@ export const GameCanvas: React.FC = () => {
       const debugContainer = new Graphics();
       viewport.addChild(debugContainer);
 
-      const tokenSprites: Record<string, { container: Container, glow: Graphics, hpFill: Graphics }> = {};
+      const tokenSprites: Record<string, { container: Container, glow: Graphics, hpFill: Graphics, targetRing: Graphics }> = {};
       let draggingTokenId: string | null = null;
       let tokenDragOffset = { x: 0, y: 0 };
       let lastTokenClickTime = 0;
@@ -213,12 +213,25 @@ export const GameCanvas: React.FC = () => {
             hpBarFill.fill(0xef4444);
             token.addChild(hpBarFill);
 
+            // Target Ring (Hidden by default)
+            const targetRing = new Graphics();
+            targetRing.circle(0, 0, 36);
+            targetRing.stroke({ width: 4, color: 0xef4444, alpha: 0.8 });
+            targetRing.visible = false;
+            token.addChild(targetRing);
+
             token.eventMode = 'static';
             token.cursor = 'pointer';
             token.hitArea = new Rectangle(-30, -30, 60, 60);
 
             token.on('pointerdown', (e) => {
               e.stopPropagation();
+
+              // Right click to target
+              if (e.button === 2) {
+                toggleTarget(id);
+                return;
+              }
               
               const now = Date.now();
               if (now - lastTokenClickTime < 300) {
@@ -233,8 +246,11 @@ export const GameCanvas: React.FC = () => {
               tokenDragOffset = { x: token.x - localPos.x, y: token.y - localPos.y };
             });
 
+            // Prevent context menu on right click on tokens
+            token.on('rightdown', (e) => e.stopPropagation());
+
             tokensContainer.addChild(token);
-            tokenSprites[id] = { container: token, glow, hpFill: hpBarFill };
+            tokenSprites[id] = { container: token, glow, hpFill: hpBarFill, targetRing };
             
             token.x = t.x;
             token.y = t.y;
@@ -431,8 +447,36 @@ export const GameCanvas: React.FC = () => {
           const tState = state.tokens.get(id) as any;
           if (!tState) return;
 
+          // Combat Turn Highlight logic
+          const combatIsActive = state.combat.get('isActive') as boolean;
+          const participants = state.combat.get('participants') as any[] || [];
+          const turnIndex = state.combat.get('turnIndex') as number || 0;
+          let isCurrentTurn = false;
+          if (combatIsActive && participants.length > 0 && participants[turnIndex]) {
+            isCurrentTurn = participants[turnIndex].tokenId === id;
+          }
+
           // Pulse glow effect
-          tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
+          if (isCurrentTurn) {
+            // Strong yellow/gold glow for current turn
+            tokenData.glow.clear();
+            tokenData.glow.circle(0, 0, 40);
+            tokenData.glow.fill({ color: 0xeab308, alpha: 0.6 + Math.abs(Math.sin(Date.now() / 200)) * 0.4 });
+            tokenData.glow.alpha = 1;
+          } else {
+            // Default cyan subtle glow
+            tokenData.glow.clear();
+            tokenData.glow.circle(0, 0, 40);
+            tokenData.glow.fill({ color: 0x06b6d4, alpha: 0.4 });
+            tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
+          }
+
+          // Target ring rotation and visibility
+          const isTargeted = localState.targets.has(id);
+          tokenData.targetRing.visible = isTargeted;
+          if (isTargeted) {
+             tokenData.targetRing.rotation += 0.05;
+          }
 
           // Update Mini HP Bar live
           const hpPercent = Math.max(0, tState.hp / tState.maxHp);

@@ -45,7 +45,33 @@ export const state = {
   chat: doc.getArray('chat'),
   wiki: doc.getMap('wiki'),
   backgrounds: doc.getMap('backgrounds'),
+  combat: doc.getMap('combat'),
 };
+
+// =========================================================================
+// EPHEMERAL LOCAL STATE (Not synced to other players, just for this client)
+// =========================================================================
+export const localState = {
+  targets: new Set<string>()
+};
+
+export function toggleTarget(tokenId: string) {
+  if (localState.targets.has(tokenId)) {
+    localState.targets.delete(tokenId);
+  } else {
+    localState.targets.add(tokenId);
+  }
+  // Dispatch event so UI can react
+  window.dispatchEvent(new Event('targets-updated'));
+}
+
+export function getTargets(): string[] {
+  return Array.from(localState.targets);
+}
+export function clearTargets() {
+  localState.targets.clear();
+  window.dispatchEvent(new Event('targets-updated'));
+}
 
 export interface BackgroundData {
   id: string;
@@ -92,6 +118,13 @@ export function removeBackground(id: string) {
 
 // Initialize mock state ONLY if the database is truly empty after loading
 indexeddbProvider.on('synced', () => {
+  // Inicializa mapa de combate se vazio
+  if (!state.combat.has('isActive')) {
+    state.combat.set('isActive', false);
+    state.combat.set('turnIndex', 0);
+    state.combat.set('participants', []);
+  }
+
   // Limpeza do personagem antigo
   if (state.tokens.has('goblin_boss')) {
     state.tokens.delete('goblin_boss');
@@ -100,8 +133,6 @@ indexeddbProvider.on('synced', () => {
   const sentinel = state.tokens.get('omega_sentinel') as any;
   if (!sentinel) {
     state.tokens.set('omega_sentinel', { id: 'omega_sentinel', name: 'Sentinela Ômega', hp: 150, maxHp: 150, mana: 50, maxMana: 50, x: 800, y: 400 });
-  } else {
-    state.tokens.set('omega_sentinel', { ...sentinel, x: 800, y: 400 });
   }
 });
 
@@ -144,5 +175,60 @@ export function updateTokenPosition(tokenId: string, x: number, y: number) {
       state.tokens.set(tokenId, { ...token, x, y });
     }
   }
+}
+
+// =========================================================================
+// COMBAT TRACKER HELPERS
+// =========================================================================
+export interface CombatParticipant {
+  tokenId: string;
+  name: string;
+  initiative: number;
+  imageUrl?: string;
+}
+
+export function addCombatParticipant(tokenId: string, name: string, initiative: number, imageUrl?: string) {
+  const participants = (state.combat.get('participants') as CombatParticipant[]) || [];
+  const existingIndex = participants.findIndex(p => p.tokenId === tokenId);
+  
+  let newParticipants = [...participants];
+  if (existingIndex >= 0) {
+    newParticipants[existingIndex].initiative = initiative;
+    if (imageUrl) newParticipants[existingIndex].imageUrl = imageUrl;
+  } else {
+    newParticipants.push({ tokenId, name, initiative, imageUrl });
+  }
+
+  // Sort descending by initiative
+  newParticipants.sort((a, b) => b.initiative - a.initiative);
+  
+  state.combat.set('participants', newParticipants);
+}
+
+export function removeCombatParticipant(tokenId: string) {
+  const participants = (state.combat.get('participants') as CombatParticipant[]) || [];
+  const newParticipants = participants.filter(p => p.tokenId !== tokenId);
+  state.combat.set('participants', newParticipants);
+  
+  // Adjust turnIndex if needed
+  let turnIndex = state.combat.get('turnIndex') as number;
+  if (turnIndex >= newParticipants.length && newParticipants.length > 0) {
+    state.combat.set('turnIndex', 0);
+  }
+}
+
+export function nextCombatTurn() {
+  const participants = (state.combat.get('participants') as CombatParticipant[]) || [];
+  if (participants.length === 0) return;
+  
+  let turnIndex = state.combat.get('turnIndex') as number;
+  turnIndex = (turnIndex + 1) % participants.length;
+  state.combat.set('turnIndex', turnIndex);
+}
+
+export function clearCombat() {
+  state.combat.set('participants', []);
+  state.combat.set('turnIndex', 0);
+  state.combat.set('isActive', false);
 }
 

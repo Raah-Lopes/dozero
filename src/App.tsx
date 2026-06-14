@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen } from 'lucide-react';
-import { TextTicker } from './components/Chat/TextTicker';
+import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords } from 'lucide-react';
 import { MindMap } from './components/Wiki/MindMap';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
@@ -12,6 +11,7 @@ import { TargetTerminal } from './components/HUD/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
 import { PlayersLobby } from './components/HUD/PlayersLobby';
+import { CombatTracker } from './components/HUD/CombatTracker';
 
 // Trigger HMR
 type ViewMode = 'canvas' | 'wiki' | 'theater';
@@ -24,6 +24,7 @@ function App() {
   const [showMapSettings, setShowMapSettings] = useState(false);
   const [showActors, setShowActors] = useState(false);
   const [showCombatLog, setShowCombatLog] = useState(true); // Default open
+  const [showCombatTracker, setShowCombatTracker] = useState(false);
   const [openSheets, setOpenSheets] = useState<string[]>([]);
 
   useEffect(() => {
@@ -69,40 +70,65 @@ function App() {
       <div className="hud-layer" style={{ pointerEvents: 'none' }}>
         
         {/* Top HUD Area */}
-        <div className="top-bar" style={{ pointerEvents: 'auto' }}>
-          <div className="glass-panel" style={{ padding: '0.75rem 1.25rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', color: 'white', boxShadow: '0 0 10px var(--accent-glow)' }}>
-              GM
+        <div style={{ pointerEvents: 'none', display: 'flex', flexDirection: 'column', width: '100%' }}>
+          
+          <div className="top-bar" style={{ pointerEvents: 'auto', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
+            {/* Left side: GM Profile */}
+            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', color: 'white', fontSize: '0.8rem', boxShadow: '0 0 10px var(--accent-glow)' }}>
+                GM
+              </div>
+              <div>
+                <h2 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--text-primary)' }}>Mestre</h2>
+                <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '500' }}>Edição Ativa</span>
+              </div>
             </div>
-            <div>
-              <h2 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>O Mestre Preguiçoso</h2>
-              <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '500' }}>Modo Edição Ativo</span>
-            </div>
-          </div>
 
-          <div className="glass-panel" style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem' }}>
-            <button onClick={() => setViewMode('wiki')} className={`btn-icon ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki">
-              <MessageSquare size={20} />
-            </button>
-            <button onClick={() => toggleModal('players')} className={`btn-icon ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores">
-              <Users size={20} />
-            </button>
-            <button className="btn-icon" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário">
-              <MapIcon size={20} />
-            </button>
-            <button className="btn-icon" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
-              <BookOpen size={20} />
-            </button>
-            <button className={`btn-icon ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Combate (Log)">
-              <MessageSquare size={20} />
-            </button>
-            <button className={`btn-icon ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações">
-              <Settings size={20} />
-            </button>
+            {/* Right side: Tools */}
+            <div className="glass-panel" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem' }}>
+              <button onClick={() => setViewMode('wiki')} className={`btn-icon ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki">
+                <MessageSquare size={20} />
+              </button>
+              <button onClick={() => toggleModal('players')} className={`btn-icon ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores">
+                <Users size={20} />
+              </button>
+              <button className="btn-icon" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário">
+                <MapIcon size={20} />
+              </button>
+              <button className="btn-icon" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
+                <BookOpen size={20} />
+              </button>
+              <button className={`btn-icon ${showCombatTracker ? 'active' : ''}`} onClick={() => setShowCombatTracker(!showCombatTracker)} title="Rastreador de Combate (Iniciativa)">
+                <Swords size={20} />
+              </button>
+              <button className={`btn-icon ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Combate (Log)">
+                <MessageSquare size={20} />
+              </button>
+              <button className={`btn-icon ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações">
+                <Settings size={20} />
+              </button>
+            </div>
           </div>
         </div>
+        
+        {/* Ribbon Combat Tracker */}
+        {showCombatTracker && (
+          <DraggableWindow 
+            id="tracker" 
+            title="Iniciativa" 
+            initialX={window.innerWidth / 2 - 200} 
+            initialY={100} 
+            width="auto" 
+            height="auto" 
+            variant="bare"
+            windowStyle={{ alignItems: 'center' }}
+            onClose={() => setShowCombatTracker(false)}
+          >
+            <CombatTracker />
+          </DraggableWindow>
+        )}
 
-        {/* Modals Layer (Absolute positioning within HUD) */}
+        {/* Modal Layer */}
         {activeModal !== 'none' && (
            <div style={{ position: 'absolute', top: '90px', right: 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
              {activeModal === 'players' && <PlayersLobby onClose={() => setActiveModal('none')} />}
@@ -145,34 +171,18 @@ function App() {
             ))}
 
             {showCombatLog && (
-              <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} onClose={() => setShowCombatLog(false)}>
+              <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={() => setShowCombatLog(false)}>
                 <CombatLog />
               </DraggableWindow>
             )}
 
             {showMapSettings && (
-              <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={100} width={300} onClose={() => setShowMapSettings(false)}>
+              <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={200} width={300} onClose={() => setShowMapSettings(false)}>
                 <MapSettingsPanel />
               </DraggableWindow>
             )}
           </>
         )}
-
-        {/* Bottom HUD Area */}
-        <div className="bottom-bar" style={{ pointerEvents: 'auto', position: 'relative' }}>
-           {viewMode === 'theater' && (
-             <TextTicker text="Os portões de obsidiana se abrem lentamente, revelando um abismo sem fim. Rolem iniciativa." speed={40} />
-           )}
-
-           <div className="glass-panel" style={{ padding: '0.75rem', display: 'flex', gap: '1rem', zIndex: 20, borderRadius: 'var(--radius-lg)' }}>
-             <button onClick={() => setViewMode('canvas')} className={viewMode === 'canvas' ? 'btn btn-primary' : 'btn'} style={{ background: viewMode !== 'canvas' ? 'transparent' : '', color: viewMode !== 'canvas' ? 'var(--text-secondary)' : '' }}>
-               Arena de Combate
-             </button>
-             <button onClick={() => setViewMode('theater')} className={viewMode === 'theater' ? 'btn btn-primary' : 'btn'} style={{ background: viewMode !== 'theater' ? 'transparent' : '', color: viewMode !== 'theater' ? 'var(--text-secondary)' : '' }}>
-               Modo Teatro da Mente
-             </button>
-           </div>
-        </div>
 
       </div>
 

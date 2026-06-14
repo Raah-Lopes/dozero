@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { HealthBar } from './HealthBar';
-import { Dices, Crosshair, Trash2 } from 'lucide-react';
-import { state, applyDamageToToken, pushChatMessage, updateTokenProps } from '../../store';
+import { Dices, Crosshair, Trash2, Plus, Edit2, Swords } from 'lucide-react';
+import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, addCombatParticipant } from '../../store';
 import { WoDParser } from '../../rules/WoDParser';
 
 interface Macro {
@@ -88,31 +88,71 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
 
   if (!tokenData) return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Ficha não encontrada ou deletada.</div>;
 
-  const macros: Macro[] = [
-    { id: '1', name: 'Rifle de Plasma', formula: 'Destreza + Armas de Fogo', system: 'WoD', pool: 8, hunger: 1, damage: 25 },
-    { id: '2', name: 'Sobrecarga Cibernética', formula: 'Inteligência + Tecnologia', system: 'WoD', pool: 6, hunger: 2, damage: 40 },
-  ];
+  const macros: Macro[] = tokenData.macros || [];
+
+  const handleAddMacro = () => {
+    const newMacro: Macro = {
+      id: 'm_' + Date.now().toString(),
+      name: 'Novo Ataque',
+      formula: 'Atributo + Habilidade',
+      system: 'WoD',
+      pool: 5,
+      hunger: 0,
+      damage: 10
+    };
+    updateTokenProps(tokenId, { macros: [...macros, newMacro] });
+  };
+
+  const handleEditMacro = (macroId: string, updates: Partial<Macro>) => {
+    const updatedMacros = macros.map(m => m.id === macroId ? { ...m, ...updates } : m);
+    updateTokenProps(tokenId, { macros: updatedMacros });
+  };
+
+  const handleDeleteMacro = (macroId: string) => {
+    const updatedMacros = macros.filter(m => m.id !== macroId);
+    updateTokenProps(tokenId, { macros: updatedMacros });
+  };
 
   const handleRoll = (macro: Macro) => {
     if (macro.system === 'WoD') {
       const result = WoDParser.rollV5(macro.pool, macro.hunger, 3);
+      const targetsIds = getTargets();
       
-      let messageHtml = `<b>${macro.name}</b><br/>
+      let targetNames = "ninguém (Nenhum alvo selecionado)";
+      if (targetsIds.length > 0) {
+        targetNames = targetsIds.map(id => (state.tokens.get(id) as any)?.name || 'Desconhecido').join(', ');
+      }
+
+      let messageHtml = `<b>${tokenData.name}</b> ataca <b>${targetNames}</b> com <b>${macro.name}</b><br/>
         Sucessos: <b>${result.successes}</b> <br/>
         <span style="color:var(--text-secondary); font-size: 0.75rem">Dados: [${result.diceResult.normal.join(', ')}] | Estresse: [${result.diceResult.hunger.join(', ')}]</span>`;
         
       if (result.isMessyCritical) {
-        messageHtml += `<br/><b style="color: var(--danger)">CRÍTICO CAÓTICO!</b> (Seus implantes sofrem curto-circuito)`;
+        messageHtml += `<br/><b style="color: var(--danger)">CRÍTICO CAÓTICO!</b> (Perdeu o controle do ataque)`;
       } else if (result.isBestialFailure) {
-        messageHtml += `<br/><b style="color: var(--danger)">FALHA CRÍTICA!</b> (O recuo da arma te derruba)`;
+        messageHtml += `<br/><b style="color: var(--danger)">FALHA CRÍTICA!</b> (Desastre iminente)`;
       } else if (result.successes >= 3) {
-        messageHtml += `<br/><b style="color: var(--success)">Acerto Crítico!</b> Causou ${macro.damage} de dano ao alvo.`;
-        applyDamageToToken(tokenId, macro.damage);
+        if (targetsIds.length > 0) {
+          messageHtml += `<br/><b style="color: var(--success)">Acerto Crítico!</b> Causou ${macro.damage} de dano!`;
+          targetsIds.forEach(targetId => applyDamageToToken(targetId, macro.damage));
+        } else {
+          messageHtml += `<br/><b style="color: var(--warning)">Acerto Crítico!</b> (Mas nenhum alvo estava na mira para receber os ${macro.damage} de dano).`;
+        }
       } else {
-        messageHtml += `<br/><b>Falhou!</b> Os escudos do Sentinela absorveram o impacto.`;
+        messageHtml += `<br/><b>Falhou!</b> O ataque não penetrou as defesas.`;
       }
 
       pushChatMessage(messageHtml, result.successes >= 3 && !result.isMessyCritical, result.isBestialFailure || result.isMessyCritical);
+    }
+  };
+
+  const handleRollInitiative = () => {
+    // Basic 1d20 + nothing initiative for now.
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const finalValue = parseInt(prompt(`Iniciativa para ${tokenData.name}:`, roll.toString()) || '0');
+    if (!isNaN(finalValue)) {
+      addCombatParticipant(tokenId, tokenData.name, finalValue, tokenData.imageUrl);
+      pushChatMessage(`<b>${tokenData.name}</b> rolou Iniciativa: <b>${finalValue}</b>`, false, false);
     }
   };
 
@@ -190,6 +230,17 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
               </div>
             )}
           </div>
+          
+          <button 
+            onClick={handleRollInitiative}
+            style={{ 
+              marginTop: '0.5rem', width: '100%', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              background: 'rgba(234, 179, 8, 0.1)', color: 'var(--warning)', border: '1px solid rgba(234, 179, 8, 0.3)',
+              borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 'bold'
+            }}
+          >
+            <Swords size={16} /> Rolar Iniciativa
+          </button>
         </div>
       </div>
 
@@ -197,44 +248,81 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
 
       {/* Attack Protocols */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-primary)' }}>
-          <Dices size={16} />
-          <h4 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Protocolos de Combate</h4>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--accent-primary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Dices size={16} />
+            <h4 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Ataques & Macros</h4>
+          </div>
+          {isGM && (
+            <button onClick={handleAddMacro} className="btn-icon" style={{ padding: '0.2rem', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)', background: 'transparent' }} title="Criar Novo Ataque">
+              <Plus size={14} />
+            </button>
+          )}
         </div>
 
+        {macros.length === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Nenhum ataque configurado.</span>}
+
         {macros.map((macro) => (
-          <button
-            key={macro.id}
-            onClick={() => handleRoll(macro)}
-            style={{
-              padding: '0.75rem',
-              background: 'rgba(0, 0, 0, 0.3)',
-              border: '1px solid var(--glass-border)',
-              borderLeft: '3px solid var(--accent-primary)',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              textAlign: 'left',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.2s ease',
-              fontFamily: 'monospace'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)';
-              e.currentTarget.style.borderColor = 'var(--accent-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)';
-              e.currentTarget.style.borderColor = 'var(--glass-border)';
-            }}
-          >
-            <span style={{ fontWeight: 600 }}>&gt; {macro.name}</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', background: 'rgba(168, 85, 247, 0.1)', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
-              [{macro.formula}]
-            </span>
-          </button>
+          <div key={macro.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0, 0, 0, 0.3)', border: '1px solid var(--glass-border)', borderLeft: '3px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', padding: '0.5rem' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {isGM ? (
+                <input 
+                  type="text" 
+                  value={macro.name} 
+                  onChange={e => handleEditMacro(macro.id, { name: e.target.value })}
+                  style={{ background: 'transparent', border: 'none', borderBottom: '1px dashed var(--text-secondary)', color: 'var(--text-primary)', fontWeight: 600, width: '150px' }} 
+                />
+              ) : (
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>&gt; {macro.name}</span>
+              )}
+              
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => handleRoll(macro)}
+                  style={{
+                    padding: '0.25rem 0.5rem', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px',
+                    color: 'white', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 'bold'
+                  }}
+                >
+                  ROLAR
+                </button>
+                {isGM && (
+                  <button onClick={() => handleDeleteMacro(macro.id)} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {isGM && (
+              <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  Dados:
+                  <input type="number" value={macro.pool} onChange={e => handleEditMacro(macro.id, { pool: parseInt(e.target.value) || 0 })} style={{ width: '30px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white' }} />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  Fome/Estresse:
+                  <input type="number" value={macro.hunger} onChange={e => handleEditMacro(macro.id, { hunger: parseInt(e.target.value) || 0 })} style={{ width: '30px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white' }} />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  Dano Base:
+                  <input type="number" value={macro.damage} onChange={e => handleEditMacro(macro.id, { damage: parseInt(e.target.value) || 0 })} style={{ width: '30px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white' }} />
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', width: '100%' }}>
+                  Fórmula:
+                  <input type="text" value={macro.formula} onChange={e => handleEditMacro(macro.id, { formula: e.target.value })} style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white' }} />
+                </label>
+              </div>
+            )}
+            
+            {!isGM && (
+               <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)' }}>
+                 [{macro.formula}] - {macro.pool} Dados | {macro.damage} Dano
+               </span>
+            )}
+
+          </div>
         ))}
       </div>
 

@@ -41,3 +41,75 @@
   justify-content: center;
   align-items: flex-end;
 }
+
+/* Container Queries for Draggable Windows */
+.combat-tracker-layout {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+.combat-tracker-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+.combat-tracker-divider {
+  width: 1px;
+  height: 80%;
+}
+.combat-tracker-list {
+  display: flex;
+  align-items: center;
+}
+.combat-tracker-next-btn {
+  min-width: 140px;
+}
+
+.combat-avatar {
+  width: clamp(40px, 15cqw, 70px);
+  height: clamp(40px, 15cqw, 70px);
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.combat-name {
+  font-size: clamp(0.7rem, 3cqw, 0.9rem);
+  max-width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+@container windowcontainer (max-width: 500px) {
+  .combat-tracker-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .combat-tracker-controls {
+    flex-direction: row;
+    min-width: auto;
+  }
+  .combat-tracker-controls > button {
+    flex: 1;
+  }
+  .combat-tracker-controls > div {
+    flex: 1;
+  }
+  .combat-tracker-divider {
+    width: 100% !important;
+    height: 1px !important;
+  }
+  .combat-tracker-list {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .combat-tracker-next-btn {
+    min-width: auto;
+    width: 100%;
+  }
+}
