@@ -26,7 +26,9 @@ type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'wid
 function App() {
   const [isReady, setIsReady] = useState(true);
   const [editingClockId, setEditingClockId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('canvas');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    return (localStorage.getItem('dozero_viewMode') as ViewMode) || 'canvas';
+  });
   const [activeModal, setActiveModal] = useState<ModalMode>('none');
   const [showMapSettings, setShowMapSettings] = useState(false);
   const [showActors, setShowActors] = useState(false);
@@ -38,6 +40,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('showCombatLog', showCombatLog.toString());
   }, [showCombatLog]);
+
+  useEffect(() => {
+    localStorage.setItem('dozero_viewMode', viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     const handleDblClick = (e: any) => {

@@ -19,8 +19,54 @@ function buildFsTree(dir: string, baseDir: string, tree: any[] = []) {
     } else {
       tree.push({ path: relativePath, type: 'blob', mode: '100644', size: stat.size });
     }
-  }
+}
   return tree;
+}
+
+// Helper to build graph data
+function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[] = []) {
+  if (!fs.existsSync(dir)) return { nodes, links };
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    if (file === '.git' || file === 'node_modules' || file === 'ANEXOS') continue;
+    
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    
+    if (stat.isDirectory()) {
+      buildGraph(fullPath, baseDir, nodes, links);
+    } else if (file.endsWith('.md')) {
+      const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
+      const id = relativePath;
+      const name = file.replace('.md', '');
+      const content = fs.readFileSync(fullPath, 'utf-8');
+      
+      // Buscar avatar (primeira imagem)
+      let avatar = null;
+      const imgRegex = /!\[.*?\]\((.*?)\)|!\[\[(.*?)\]\]/;
+      const imgMatch = imgRegex.exec(content);
+      if (imgMatch) {
+        let extracted = imgMatch[1] || imgMatch[2];
+        if (extracted) {
+          avatar = extracted.replace(/\\/g, '').split('|')[0].trim();
+        }
+      }
+
+      nodes.push({ id, name, path: relativePath, group: path.dirname(relativePath), avatar });
+      
+      // MDXEditor pode escapar os colchetes gerando \[\[nome\]\]
+      // Regex captura opcionalmente "Rótulo::" antes do link
+      const regex = /(?:([^\[\]\n]+?)\s*::\s*)?(?:\\?\[){2}(.*?)(?:\\?\]){2}/g;
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        let label = match[1] ? match[1].trim() : undefined;
+        let targetName = match[2].split('|')[0]; // Handle [[Target|Alias]]
+        targetName = targetName.split('#')[0]; // Handle [[Target#Section]]
+        links.push({ source: id, target: targetName.trim(), label });
+      }
+    }
+  }
+  return { nodes, links };
 }
 
 export function wikiLocalApi(): Plugin {
@@ -36,6 +82,9 @@ export function wikiLocalApi(): Plugin {
         const sendResponse = (status: number, data: any) => {
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
           res.statusCode = status;
           res.end(JSON.stringify(data));
         };
@@ -61,6 +110,11 @@ export function wikiLocalApi(): Plugin {
           if (req.method === 'GET' && pathname === '/api/wiki/tree') {
             const tree = buildFsTree(repoPath, repoPath);
             return sendResponse(200, { tree });
+          }
+
+          if (req.method === 'GET' && pathname === '/api/wiki/graph') {
+            const graphData = buildGraph(repoPath, repoPath);
+            return sendResponse(200, graphData);
           }
           
           if (req.method === 'GET' && pathname === '/api/wiki/file') {
@@ -89,6 +143,36 @@ export function wikiLocalApi(): Plugin {
             res.setHeader('Access-Control-Allow-Origin', '*');
             res.statusCode = 200;
             return fs.createReadStream(full).pipe(res);
+          }
+
+          if (req.method === 'GET' && pathname === '/api/wiki/search') {
+            const query = url.searchParams.get('q');
+            if (!query) return sendResponse(400, { error: 'query required' });
+            
+            const results: string[] = [];
+            const queryLower = query.toLowerCase();
+            
+            function searchRecursive(dir: string) {
+              if (!fs.existsSync(dir)) return;
+              const files = fs.readdirSync(dir);
+              for (const file of files) {
+                if (file === '.git' || file === 'node_modules' || file === 'ANEXOS') continue;
+                const fullP = path.join(dir, file);
+                const stat = fs.statSync(fullP);
+                if (stat.isDirectory()) {
+                  searchRecursive(fullP);
+                } else if (file.endsWith('.md')) {
+                  const content = fs.readFileSync(fullP, 'utf-8');
+                  if (content.toLowerCase().includes(queryLower) || file.toLowerCase().includes(queryLower)) {
+                    const relativePath = path.relative(repoPath, fullP).replace(/\\/g, '/');
+                    results.push(relativePath);
+                  }
+                }
+              }
+            }
+            
+            searchRecursive(repoPath);
+            return sendResponse(200, { results });
           }
 
           if (req.method === 'POST' && pathname === '/api/wiki/save') {
@@ -134,6 +218,62 @@ export function wikiLocalApi(): Plugin {
             return sendResponse(200, { success: true });
           }
 
+          if (req.method === 'POST' && pathname === '/api/wiki/rename') {
+            const { oldPath, newName } = body;
+            const repo = body.repoPath || url.searchParams.get('repoPath');
+            if (!oldPath || !newName || !repo) return sendResponse(400, { error: 'Missing parameters' });
+            
+            const oldFull = path.join(repo, oldPath);
+            if (!fs.existsSync(oldFull)) return sendResponse(404, { error: 'File not found' });
+            
+            const dir = path.dirname(oldFull);
+            const newFull = path.join(dir, newName.endsWith('.md') ? newName : newName + '.md');
+            
+            fs.renameSync(oldFull, newFull);
+            
+            const oldBaseName = path.basename(oldPath, '.md');
+            const newBaseName = path.basename(newFull, '.md');
+            
+            function updateLinksRecursive(directory: string) {
+              const files = fs.readdirSync(directory);
+              for (const file of files) {
+                if (file === '.git' || file === 'node_modules' || file === 'ANEXOS') continue;
+                const fullP = path.join(directory, file);
+                const stat = fs.statSync(fullP);
+                if (stat.isDirectory()) {
+                  updateLinksRecursive(fullP);
+                } else if (file.endsWith('.md')) {
+                  let content = fs.readFileSync(fullP, 'utf-8');
+                  const regex = /(?:\\?\[){2}(.*?)(?:\\?\]){2}/g;
+                  let modified = false;
+                  
+                  const newContent = content.replace(regex, (match, inner) => {
+                    let parts = inner.split('|');
+                    let target = parts[0];
+                    let alias = parts[1];
+                    let cleanTarget = target.trim();
+                    if (cleanTarget.toLowerCase().endsWith('.md')) cleanTarget = cleanTarget.slice(0, -3);
+                    
+                    if (cleanTarget.toLowerCase() === oldBaseName.toLowerCase()) {
+                       modified = true;
+                       let newInner = newBaseName;
+                       if (alias) newInner += '|' + alias;
+                       
+                       if (match.startsWith('\\[')) return `\\[\\[${newInner}\\]\\]`;
+                       return `[[${newInner}]]`;
+                    }
+                    return match;
+                  });
+
+                  if (modified) fs.writeFileSync(fullP, newContent);
+                }
+              }
+            }
+            
+            updateLinksRecursive(repo);
+            return sendResponse(200, { success: true });
+          }
+
           if (req.method === 'DELETE' && pathname === '/api/wiki/file') {
             const filepath = body.path;
             if (!filepath) return sendResponse(400, { error: 'path required' });
@@ -170,13 +310,39 @@ export function wikiLocalApi(): Plugin {
             const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
             const buffer = Buffer.from(base64Data, 'base64');
             
-            const safeName = Date.now() + '_' + filename.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const fullPath = path.join(anexosDir, safeName);
+            // Deduplicação Inteligente: Verifica se a imagem exata já existe
+            const files = fs.readdirSync(anexosDir);
+            for (const file of files) {
+              const existingPath = path.join(anexosDir, file);
+              const stat = fs.statSync(existingPath);
+              // Para máxima performance, primeiro comparamos o tamanho em bytes
+              if (stat.size === buffer.length) {
+                const existingBuffer = fs.readFileSync(existingPath);
+                if (existingBuffer.equals(buffer)) {
+                  // A imagem é idêntica! Não criamos duplicata, apenas retornamos o link existente.
+                  return sendResponse(200, { url: `http://localhost:5174/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=ANEXOS/${file}` });
+                }
+              }
+            }
+            
+            const baseSafeName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+            let finalSafeName = baseSafeName;
+            let fullPath = path.join(anexosDir, finalSafeName);
+            
+            let counter = 1;
+            const ext = path.extname(baseSafeName);
+            const base = path.basename(baseSafeName, ext);
+            
+            while (fs.existsSync(fullPath)) {
+              finalSafeName = `${base}_${counter}${ext}`;
+              fullPath = path.join(anexosDir, finalSafeName);
+              counter++;
+            }
             
             fs.writeFileSync(fullPath, buffer);
             
-            // Return URL that triggers our media endpoint
-            return sendResponse(200, { url: `http://localhost:5174/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=ANEXOS/${safeName}` });
+            // Return URL that triggers our media endpoint (using relative path to avoid localhost network issues)
+            return sendResponse(200, { url: `/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=ANEXOS/${finalSafeName}` });
           }
 
           if (req.method === 'GET' && pathname === '/api/wiki/media') {

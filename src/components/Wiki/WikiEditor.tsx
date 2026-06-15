@@ -23,9 +23,10 @@ interface WikiEditorProps {
   onChange: (md: string) => void;
   onSave?: () => void;
   editorRef?: React.RefObject<MDXEditorMethods>;
+  activeFile?: string;
 }
 
-export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSave, editorRef }) => {
+export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSave, editorRef, activeFile }) => {
   const internalRef = useRef<MDXEditorMethods>(null);
   const ref = editorRef || internalRef;
 
@@ -54,6 +55,18 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
               // Converter a imagem para WebP para enviar pela nossa API
               const { base64, filename } = await convertImageToWebP(file);
               
+              let finalFilename = filename;
+              if (activeFile) {
+                const baseName = activeFile.split('/').pop()?.replace('.md', '') || '';
+                if (baseName) {
+                  const extIndex = filename.lastIndexOf('.');
+                  const ext = extIndex !== -1 ? filename.substring(extIndex) : '';
+                  const nameWithoutExt = extIndex !== -1 ? filename.substring(0, extIndex) : filename;
+                  const shortOriginal = nameWithoutExt.substring(0, 4);
+                  finalFilename = `${baseName}_${shortOriginal}${ext}`;
+                }
+              }
+
               // Enviar para o servidor local
               const config = getWikiConfig();
               const repoPath = config.repoUrl || 'D:/wikidozero';
@@ -63,7 +76,7 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   repoPath,
-                  filename: filename,
+                  filename: finalFilename,
                   base64
                 })
               });

@@ -197,34 +197,64 @@
 }
 
 /* Dropdowns e Selects (não dialogs) */
-[data-radix-popper-content-wrapper]:not(:has([role="dialog"])):not(:has(.mdxeditor-dialog)),
-.mdxeditor-select-content,
-[role="listbox"],
-[role="menu"] {
+[data-radix-popper-content-wrapper]:not([data-state="closed"]):not(:has([role="dialog"])):not(:has(.mdxeditor-dialog)),
+.mdxeditor-select-content:not([data-state="closed"]),
+[role="listbox"]:not([data-state="closed"]),
+[role="menu"]:not([data-state="closed"]) {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--glass-border) !important;
   z-index: 999999 !important;
 }
 
+/* Forçar ocultação completa se estiver fechado ou inativo (apenas em popups, overlays e caixas de diálogo) */
+[data-radix-popper-content-wrapper][data-state="closed"],
+.mdxeditor-popup-container[data-state="closed"],
+.mdxeditor-dialog[data-state="closed"],
+[role="dialog"][data-state="closed"],
+[class*="dialogOverlay"][data-state="closed"],
+[class*="dialogContent"][data-state="closed"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ocultar recipientes vazios da mdxeditor */
+.mdxeditor-popup-container:empty,
+[class*="popupContainer"]:empty {
+  display: none !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
 /* Neutralizar o Posicionamento Automático do Radix Popper para Dialogs */
-[data-radix-popper-content-wrapper]:has([role="dialog"]),
-[data-radix-popper-content-wrapper]:has(.mdxeditor-dialog) {
+[data-radix-popper-content-wrapper]:not([data-state="closed"]):has([role="dialog"]),
+[data-radix-popper-content-wrapper]:not([data-state="closed"]):has(.mdxeditor-dialog) {
+  position: fixed !important;
   transform: none !important;
   top: 0 !important;
   left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   pointer-events: none !important; /* Deixa cliques passarem pro fundo */
-  background: rgba(0, 0, 0, 0.4) !important; /* Overlay de fundo */
+  background: rgba(0, 0, 0, 0.6) !important; /* Overlay de fundo */
   border: none !important;
+  z-index: 999999 !important;
 }
 
 /* Estilização Premium para a Caixinha de Imagens do Editor (Dialogs Radix/MDXEditor) */
-[role="dialog"], .mdxeditor-popup-container, .mdxeditor-dialog {
+[role="dialog"]:not([data-state="closed"]), 
+.mdxeditor-popup-container:not([data-state="closed"]), 
+.mdxeditor-dialog:not([data-state="closed"]) {
   pointer-events: auto !important; /* Reativa cliques dentro da dialog */
   position: relative !important;
   top: auto !important;
@@ -240,7 +270,10 @@
   padding: 1.5rem !important;
   color: var(--text-primary) !important;
   font-family: inherit !important;
+  width: 100% !important;
   min-width: 340px !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
   animation: dialog-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
@@ -304,6 +337,16 @@
   color: var(--text-secondary) !important;
   margin-bottom: 0.4rem !important;
   margin-top: 1rem !important;
+}
+
+/* Ocultar campos Alt e Title no diálogo de inserção de imagem */
+[role="dialog"] div:has(> label[for="alt"]),
+.mdxeditor-popup-container div:has(> label[for="alt"]),
+.mdxeditor-dialog div:has(> label[for="alt"]),
+[role="dialog"] div:has(> label[for="title"]),
+.mdxeditor-popup-container div:has(> label[for="title"]),
+.mdxeditor-dialog div:has(> label[for="title"]) {
+  display: none !important;
 }
 
 [role="dialog"] input, .mdxeditor-dialog input {

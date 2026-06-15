@@ -9,6 +9,7 @@ import {
   RefreshCw, Plus, FilePlus, FolderPlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
+import { WikiGraph } from './WikiGraph';
 import { getWikiConfig } from '../../store';
 import './wiki.css';
 
@@ -173,6 +174,8 @@ export const WikiViewer: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
+  
   const editorRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -338,11 +341,12 @@ export const WikiViewer: React.FC = () => {
 
   const [justSaved, setJustSaved] = useState(false);
 
-  const handleSave = async (textToSave?: string) => {
+  const handleSave = async (textToSave?: string | any) => {
     if (!activeFile) return;
     setSaving(true);
     try {
-      await saveMarkdownContent(activeFile, textToSave ?? content);
+      const finalContent = typeof textToSave === 'string' ? textToSave : content;
+      await saveMarkdownContent(activeFile, finalContent);
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2000);
     } catch (e: any) {
@@ -390,40 +394,47 @@ export const WikiViewer: React.FC = () => {
     <div className="wiki-container animate-fade-in">
       {/* Sidebar */}
       <div className="wiki-sidebar">
-        <div className="wiki-sidebar-header" style={{ flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+        <div className="wiki-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
               <BookOpen size={18} color="var(--accent-primary)" />
               Sua Wiki Local
             </div>
-            <div style={{ display: 'flex', gap: '0.2rem' }}>
-              <button className="btn-icon" onClick={handleCreateFile} title="Novo Arquivo">
-                <FilePlus size={14} />
-              </button>
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
               <button className="btn-icon" onClick={handleCreateFolder} title="Nova Pasta">
-                <FolderPlus size={14} />
+                <FolderPlus size={16} />
               </button>
-              <button className="btn-icon" onClick={handleUploadClick} title="Importar Imagem (Abre Pastas do Computador)">
-                <ImagePlus size={14} />
+              <button className="btn-icon" onClick={handleCreateFile} title="Novo Pergaminho">
+                <FilePlus size={16} />
               </button>
-              <input 
+              <button className="btn-icon" onClick={handleUploadClick} disabled={syncing} title="Fazer Upload de Arquivo">
+                <UploadCloud size={16} className={syncing ? 'spin' : ''} />
+              </button>
+              <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar com GitHub">
+                <RefreshCw size={16} className={syncing ? 'spin' : ''} />
+              </button>
+            </div>
+            <input 
                 type="file" 
                 ref={fileInputRef} 
                 style={{ display: 'none' }} 
                 accept="image/*" 
                 onChange={handleFileChange} 
-              />
-              <button className="btn-icon" onClick={loadTree} title="Recarregar Pasta">
-                <RefreshCw size={14} className={loadingTree ? 'spin' : ''} />
-              </button>
-            </div>
+            />
           </div>
+          
           <button 
-            onClick={handlePush} 
-            disabled={syncing}
-            style={{ width: '100%', padding: '0.5rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 'bold' }}>
-            <UploadCloud size={16} className={syncing ? 'spin' : ''} />
-            {syncing ? 'Sincronizando...' : 'Fazer Push para o Git'}
+            onClick={() => setShowGraph(!showGraph)} 
+            style={{ 
+              width: '100%', padding: '0.6rem', 
+              background: showGraph ? 'var(--accent-primary)' : 'rgba(168, 85, 247, 0.1)', 
+              color: showGraph ? 'white' : 'var(--accent-primary)',
+              border: showGraph ? 'none' : '1px solid rgba(168, 85, 247, 0.3)',
+              borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', 
+              justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 'bold',
+              transition: 'all 0.2s'
+            }}>
+            <BookOpen size={16} /> {showGraph ? 'Voltar aos Pergaminhos' : 'Abrir Cérebro (Grafo)'}
           </button>
         </div>
         <div className="wiki-sidebar-content">
@@ -453,8 +464,10 @@ export const WikiViewer: React.FC = () => {
       </div>
 
       {/* Main Content Viewer */}
-      <div className="wiki-content-area">
-        {activeFile ? (
+      <div className="wiki-content-area" style={{ position: 'relative' }}>
+        {showGraph ? (
+          <WikiGraph onNodeClick={(path) => { setActiveFile(path); setShowGraph(false); }} />
+        ) : activeFile ? (
           activeFile.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? (
             <div className="wiki-empty-state">
               <ImagePlus size={64} color="var(--glass-border)" />
@@ -485,6 +498,7 @@ export const WikiViewer: React.FC = () => {
                 markdown={content} 
                 onChange={handleEditorChange} 
                 onSave={() => handleSave()} 
+                activeFile={activeFile}
               />
               
               {/* Dicas de Formatação Markdown (Cheat Sheet) */}
@@ -514,6 +528,7 @@ export const WikiViewer: React.FC = () => {
                       <div className="cheat-item" onClick={() => insertCheat('1. Item numerado\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>1. Item numerado</code> → 1. Item numerado</div>
                       <div className="cheat-item" onClick={() => insertCheat('[Link](http...) ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>[Link](http...)</code> → <span style={{ color: 'var(--accent-secondary)' }}>Link</span></div>
                       <div className="cheat-item" onClick={() => insertCheat('![Imagem](url)\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>![Imagem](url)</code> → (Insere Imagem)</div>
+                      <div className="cheat-item" onClick={() => insertCheat('[[Link da Wiki]] ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>[[Nome da Nota]]</code> → Link para o Cérebro</div>
                       <div className="cheat-item" onClick={() => insertCheat('> Citação\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>&gt; Citação</code> → <span style={{ borderLeft: '3px solid var(--accent-primary)', paddingLeft: '0.5rem', color: 'var(--text-secondary)' }}>Citação</span></div>
                     </div>
                   </div>
@@ -524,8 +539,8 @@ export const WikiViewer: React.FC = () => {
         ) : (
           <div className="wiki-empty-state">
             <BookOpen size={64} color="var(--glass-border)" />
-            <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>Bem-vindo à Biblioteca</h2>
-            <p>Selecione um documento na barra lateral para começar a ler.</p>
+            <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>Bem-vindo ao Conhecimento</h2>
+            <p>Selecione um pergaminho ou pasta à esquerda para começar a leitura, ou abra o <strong style={{color: 'var(--accent-primary)', cursor: 'pointer'}} onClick={() => setShowGraph(true)}>Cérebro</strong>.</p>
           </div>
         )}
       </div>

@@ -46,7 +46,7 @@ export async function fetchMarkdownContent(path: string): Promise<string> {
   }
 
   let repoPath = config.repoUrl || 'D:/wikidozero';
-  const url = `/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}`;
+  const url = `/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}&t=${Date.now()}`;
   
   const response = await fetch(url);
   
