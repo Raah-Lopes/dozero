@@ -15,9 +15,10 @@ export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }
     // Observa mudanças (Yjs)
     const observer = () => {
       const rawClocks = Array.from(state.clocks.values());
-      const updatedClocks = rawClocks.filter(c => c && c.id); // Apenas valida se tem ID
-      console.log('[DEBUG] TensionClockManager observer detectou mudança. Total raw:', rawClocks.length, 'Validos:', updatedClocks.length, updatedClocks);
-      setClocks(updatedClocks as TensionClock[]);
+      const updatedClocks = rawClocks.filter((c): c is TensionClock => 
+        c && typeof c.id === 'string' && typeof c.durationMs === 'number'
+      );
+      setClocks(updatedClocks);
     };
 
     state.clocks.observe(observer);
@@ -48,7 +49,7 @@ export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }
     return () => clearInterval(interval);
   }, [isGM]);
 
-  console.log('[DEBUG] TensionClockManager renderizando widgets para', clocks.length, 'relógios');
+  if (!isGM && clocks.length === 0) return null;
 
   return (
     <>

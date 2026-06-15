@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection } from '../../store';
-import type { BackgroundData } from '../../store';
-import { Map as MapIcon, ImagePlus, Trash2, AlignCenter, AlignHorizontalSpaceAround, Eye, EyeOff } from 'lucide-react';
+import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection, getMapConfig, updateMapConfig } from '../../store';
+import type { BackgroundData, MapConfig } from '../../store';
+import { Map as MapIcon, ImagePlus, Trash2, AlignCenter, AlignHorizontalSpaceAround, Eye, EyeOff, Grid } from 'lucide-react';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(localState.selectedBgs));
+  const [mapConfig, setMapConfig] = useState<MapConfig>(getMapConfig());
 
   useEffect(() => {
     const observer = () => {
@@ -13,14 +14,20 @@ export const MapSettingsPanel: React.FC = () => {
       setBackgrounds(bgs);
     };
 
+    const mapConfigObserver = () => {
+      setMapConfig(getMapConfig());
+    };
+
     const selObserver = () => {
       setSelectedIds(new Set(localState.selectedBgs));
     };
 
     state.backgrounds.observe(observer);
+    state.mapConfig.observe(mapConfigObserver);
     window.addEventListener('bg-selection-updated', selObserver);
     
     observer();
+    mapConfigObserver();
     selObserver();
 
     // Set global flag so GameCanvas knows if Map menu is open
@@ -49,6 +56,7 @@ export const MapSettingsPanel: React.FC = () => {
       window.dispatchEvent(new Event('map-menu-toggle'));
       
       state.backgrounds.unobserve(observer);
+      state.mapConfig.unobserve(mapConfigObserver);
       window.removeEventListener('bg-selection-updated', selObserver);
     };
   }, []);
@@ -121,6 +129,68 @@ export const MapSettingsPanel: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
+      {/* Grid Configuration Section */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Grid size={16} /> Configurações do Grid
+        </label>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+          {/* Tipo de Grid */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Tipo Geométrico</span>
+            <select 
+              value={mapConfig.gridType} 
+              onChange={e => updateMapConfig({ gridType: e.target.value as MapConfig['gridType'] })}
+              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.25rem', borderRadius: '4px', fontSize: '0.75rem' }}
+            >
+              <option value="square">Quadrados</option>
+              <option value="hex_v">Hexágonos (Verticais)</option>
+              <option value="hex_h">Hexágonos (Horizontais)</option>
+              <option value="dots_square">Pontos (Quadrado)</option>
+              <option value="dots_hex">Pontos (Hexagonal)</option>
+            </select>
+          </div>
+          
+          {/* Tamanho */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Tamanho ({mapConfig.gridSize}px)</span>
+            <input 
+              type="range" 
+              min="20" max="200" step="10"
+              value={mapConfig.gridSize} 
+              onChange={e => updateMapConfig({ gridSize: parseInt(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
+          
+          {/* Cor */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor das Linhas</span>
+            <input 
+              type="color" 
+              value={mapConfig.gridColor} 
+              onChange={e => updateMapConfig({ gridColor: e.target.value })}
+              style={{ width: '100%', height: '24px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer' }}
+            />
+          </div>
+          
+          {/* Opacidade */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Opacidade ({Math.round(mapConfig.gridAlpha * 100)}%)</span>
+            <input 
+              type="range" 
+              min="0" max="1" step="0.1"
+              value={mapConfig.gridAlpha} 
+              onChange={e => updateMapConfig({ gridAlpha: parseFloat(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%' }} />
+
       {/* Upload Section */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

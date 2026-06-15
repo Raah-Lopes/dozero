@@ -23,18 +23,15 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[DEBUG] ClockConfigModal: handleSubmit disparado!');
     const parsedMin = parseFloat(minutes) || 0;
     const parsedSec = parseFloat(seconds) || 0;
     
     const totalMs = (parsedMin * 60 * 1000) + (parsedSec * 1000);
     
     if (totalMs <= 0) {
-      console.error('[DEBUG] ClockConfigModal: Tempo inválido, abortando.');
       return;
     }
 
-    console.log('[DEBUG] ClockConfigModal: chamando onConfirm...');
     onConfirm({
       label,
       durationMs: totalMs,

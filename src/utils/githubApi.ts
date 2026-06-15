@@ -1,0 +1,115 @@
+import { getWikiConfig } from '../store';
+
+export interface GithubTreeItem {
+  path: string;
+  mode: string;
+  type: 'blob' | 'tree';
+  sha?: string;
+  size?: number;
+  url?: string;
+}
+
+export interface GithubTreeResponse {
+  tree: GithubTreeItem[];
+}
+
+export async function fetchRepositoryTree(): Promise<GithubTreeItem[]> {
+  const config = getWikiConfig();
+  if (!config.repoUrl) {
+    throw new Error("Repositório não configurado.");
+  }
+
+  // O repoUrl agora pode apontar para a pasta local como D:/wikidozero
+  // Mas vamos tentar passar como repoPath. Se for URL do Github, o usuário terá que configurar a pasta.
+  let repoPath = config.repoUrl;
+  if (repoPath.includes('github.com')) {
+    // Para simplificar, forçamos o usuário a colocar o caminho da pasta local no Settings
+    // Ex: "D:/wikidozero"
+    throw new Error("O sistema agora é Local-First. Configure o caminho da sua pasta local (ex: D:/wikidozero) nas configurações em vez da URL do GitHub.");
+  }
+
+  const url = `/api/wiki/tree?repoPath=${encodeURIComponent(repoPath)}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Falha ao conectar no repositório local (Erro ${response.status}). Verifique se a pasta existe.`);
+  }
+  
+  const data: GithubTreeResponse = await response.json();
+  return data.tree;
+}
+
+export async function fetchMarkdownContent(path: string): Promise<string> {
+  const config = getWikiConfig();
+  if (!config.repoUrl) {
+    throw new Error("Repositório não configurado.");
+  }
+
+  let repoPath = config.repoUrl;
+  const url = `/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}`;
+  
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Falha ao carregar arquivo local: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.content;
+}
+
+export async function saveMarkdownContent(path: string, content: string): Promise<void> {
+  const config = getWikiConfig();
+  let repoPath = config.repoUrl;
+  
+  const response = await fetch('/api/wiki/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath, path, content })
+  });
+
+  if (!response.ok) throw new Error("Erro ao salvar arquivo");
+}
+
+export async function createFolder(path: string): Promise<void> {
+  const config = getWikiConfig();
+  let repoPath = config.repoUrl;
+  
+  const response = await fetch('/api/wiki/folder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath, path })
+  });
+
+  if (!response.ok) throw new Error("Erro ao criar pasta");
+}
+
+export async function deleteFileOrFolder(path: string): Promise<void> {
+  const config = getWikiConfig();
+  let repoPath = config.repoUrl;
+  
+  const response = await fetch('/api/wiki/file', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath, path })
+  });
+
+  if (!response.ok) throw new Error("Erro ao deletar arquivo");
+}
+
+export async function pushToGithub(): Promise<void> {
+  const config = getWikiConfig();
+  let repoPath = config.repoUrl;
+  
+  const response = await fetch('/api/wiki/push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Erro ao sincronizar com GitHub");
+  }
+}
+

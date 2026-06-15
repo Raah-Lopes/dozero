@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Save, Globe } from 'lucide-react';
+import { getWikiConfig, updateWikiConfig, state } from '../../store';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -9,13 +10,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const [livekitUrl, setLivekitUrl] = useState(localStorage.getItem('livekitUrl') || '');
   const [livekitToken, setLivekitToken] = useState(localStorage.getItem('livekitToken') || '');
   const [rulesEngine, setRulesEngine] = useState(localStorage.getItem('rulesEngine') || 'wod_v5');
+  const [isGM, setIsGM] = useState(localStorage.getItem('isGM') === 'true');
+  const [wikiRepo, setWikiRepo] = useState('');
+  const [wikiBranch, setWikiBranch] = useState('main');
+  const [wikiToken, setWikiToken] = useState('');
+
+  useEffect(() => {
+    const config = getWikiConfig();
+    setWikiRepo(config.repoUrl || '');
+    setWikiBranch(config.branch || 'main');
+    setWikiToken(config.token || '');
+  }, []);
 
   const handleSave = () => {
     localStorage.setItem('livekitUrl', livekitUrl);
     localStorage.setItem('livekitToken', livekitToken);
     localStorage.setItem('rulesEngine', rulesEngine);
-    // In a real implementation, we'd trigger a reload or context update here
-    alert('Configurações salvas!');
+    localStorage.setItem('isGM', isGM ? 'true' : 'false');
+    
+    // Save Wiki Config to Global Yjs State
+    updateWikiConfig({
+      repoUrl: wikiRepo,
+      branch: wikiBranch,
+      token: wikiToken
+    });
+
+    // Forçar recarregamento para aplicar o isGM globalmente
+    window.location.reload();
   };
 
   return (
@@ -29,6 +50,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
         
+        {/* GM Mode Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px' }}>
+          <input 
+            type="checkbox" 
+            id="isGM_toggle"
+            checked={isGM}
+            onChange={(e) => setIsGM(e.target.checked)}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+          <label htmlFor="isGM_toggle" style={{ fontSize: '0.9rem', color: '#fca5a5', cursor: 'pointer', fontWeight: 'bold' }}>
+            Habilitar Modo Mestre (GM)
+          </label>
+        </div>
+
         {/* Rules Engine Selection */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Motor de Regras (Agnóstico)</label>
@@ -65,6 +100,49 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             style={{ padding: '0.75rem', borderRadius: '6px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'white' }} 
           />
         </div>
+        
+        <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%', margin: '0.5rem 0' }} />
+
+        {/* Wiki GitHub Configuration */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '-0.5rem' }}>
+          <Globe size={18} color="var(--text-secondary)" />
+          <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)' }}>Wiki Descentralizada (Git)</h4>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Repositório (Autor/Repo)</label>
+          <input 
+            type="text" 
+            placeholder="Ex: Raah-Lopes/rpg-obsidian-mestre-guiado" 
+            value={wikiRepo}
+            onChange={e => setWikiRepo(e.target.value)}
+            style={{ padding: '0.75rem', borderRadius: '6px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'white' }} 
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Branch</label>
+            <input 
+              type="text" 
+              placeholder="main" 
+              value={wikiBranch}
+              onChange={e => setWikiBranch(e.target.value)}
+              style={{ padding: '0.75rem', borderRadius: '6px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'white' }} 
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 2 }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Token de Acesso (Privado)</label>
+            <input 
+              type="password" 
+              placeholder="github_pat_..." 
+              value={wikiToken}
+              onChange={e => setWikiToken(e.target.value)}
+              style={{ padding: '0.75rem', borderRadius: '6px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'white' }} 
+            />
+          </div>
+        </div>
+
       </div>
 
       <button 

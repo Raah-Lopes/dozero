@@ -47,6 +47,8 @@ export const state = {
   backgrounds: doc.getMap('backgrounds'),
   combat: doc.getMap('combat'),
   clocks: doc.getMap('clocks'),
+  mapConfig: doc.getMap('mapConfig'),
+  wikiConfig: doc.getMap('wikiConfig'),
 };
 
 // =========================================================================
@@ -284,6 +286,54 @@ export interface TensionClock {
   hpMod: string; // Ex: '-80%', '+10'
   mpMod: string; // Ex: '-5'
   pausedRemainingMs?: number; // Guarda o tempo exato em que foi pausado
+}
+
+export interface MapConfig {
+  gridSize: number;
+  gridType: 'square' | 'hex_v' | 'hex_h' | 'dots_square' | 'dots_hex';
+  gridColor: string; // Hex string ex: '#1e293b'
+  gridAlpha: number;
+}
+
+export function getMapConfig(): MapConfig {
+  const current = state.mapConfig.get('global');
+  if (current) {
+    return current as MapConfig;
+  }
+  return {
+    gridSize: 50,
+    gridType: 'square',
+    gridColor: '#1e293b',
+    gridAlpha: 0.5
+  };
+}
+
+export function updateMapConfig(config: Partial<MapConfig>) {
+  const current = getMapConfig();
+  state.mapConfig.set('global', { ...current, ...config });
+}
+
+export interface WikiConfig {
+  repoUrl: string; // ex: 'Raah-Lopes/rpg-obsidian-mestre-guiado'
+  branch: string;  // ex: 'main'
+  token: string;   // Optional personal access token
+}
+
+export function getWikiConfig(): WikiConfig {
+  const current = state.wikiConfig.get('global');
+  if (current) {
+    return current as WikiConfig;
+  }
+  return {
+    repoUrl: '',
+    branch: 'main',
+    token: ''
+  };
+}
+
+export function updateWikiConfig(config: Partial<WikiConfig>) {
+  const current = getWikiConfig();
+  state.wikiConfig.set('global', { ...current, ...config });
 }
 
 export function addTensionClock(clock: TensionClock) {

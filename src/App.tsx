@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid } from 'lucide-react';
-import { MindMap } from './components/Wiki/MindMap';
+import { WikiViewer } from './components/Wiki/WikiViewer';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
 import { SettingsModal } from './components/HUD/SettingsModal';
 import { DiceOverlay } from './components/HUD/DiceOverlay';
-import { DiagnosticOverlay } from './components/DiagnosticOverlay';
+
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/HUD/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
@@ -17,7 +17,7 @@ import { MapContextMenu } from './components/HUD/MapContextMenu';
 import { ClockConfigModal } from './components/HUD/ClockConfigModal';
 import { WidgetHubModal } from './components/HUD/WidgetHubModal';
 import { TensionClockManager } from './components/HUD/TensionClockManager';
-import { state, addTensionClock } from './store';
+import { state, addTensionClock, updateTensionClockProps } from './store';
 
 // Trigger HMR
 type ViewMode = 'canvas' | 'wiki' | 'theater';
@@ -30,9 +30,13 @@ function App() {
   const [activeModal, setActiveModal] = useState<ModalMode>('none');
   const [showMapSettings, setShowMapSettings] = useState(false);
   const [showActors, setShowActors] = useState(false);
-  const [showCombatLog, setShowCombatLog] = useState(true); // Default open
+  const [showCombatLog, setShowCombatLog] = useState(() => localStorage.getItem('showCombatLog') !== 'false'); // Default open unless explicitly closed
   const [showCombatTracker, setShowCombatTracker] = useState(false);
   const [openSheets, setOpenSheets] = useState<string[]>([]);
+
+  useEffect(() => {
+    localStorage.setItem('showCombatLog', showCombatLog.toString());
+  }, [showCombatLog]);
 
   useEffect(() => {
     const handleDblClick = (e: any) => {
@@ -77,7 +81,7 @@ function App() {
 
       {viewMode === 'wiki' && (
         <div className="canvas-layer" style={{ zIndex: 5 }}>
-           <MindMap />
+           <WikiViewer />
         </div>
       )}
 
@@ -88,16 +92,8 @@ function App() {
         <div style={{ pointerEvents: 'none', display: 'flex', flexDirection: 'column', width: '100%' }}>
           
           <div className="top-bar" style={{ pointerEvents: 'auto', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
-            {/* Left side: GM Profile */}
-            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', color: 'white', fontSize: '0.8rem', boxShadow: '0 0 10px var(--accent-glow)' }}>
-                GM
-              </div>
-              <div>
-                <h2 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--text-primary)' }}>Mestre</h2>
-                <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '500' }}>Edição Ativa</span>
-              </div>
-            </div>
+            {/* Left side: (Empty to push tools to right if needed, or we can just justify-end) */}
+            <div style={{ flex: 1 }}></div>
 
             {/* Right side: Tools */}
             <div className="glass-panel" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem' }}>
@@ -261,7 +257,16 @@ function App() {
 
       </div>
 
-      <DiagnosticOverlay />
+      {/* GM Profile (Moved to Bottom Left) */}
+      <div className="glass-panel" style={{ position: 'absolute', bottom: 'var(--hud-padding)', left: 'var(--hud-padding)', pointerEvents: 'auto', padding: '0.5rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', zIndex: 10 }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', color: 'white', fontSize: '0.8rem', boxShadow: '0 0 10px var(--accent-glow)' }}>
+          GM
+        </div>
+        <div>
+          <h2 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--text-primary)' }}>Mestre</h2>
+          <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '500' }}>Edição Ativa</span>
+        </div>
+      </div>
       <DiceOverlay />
     </div>
   );

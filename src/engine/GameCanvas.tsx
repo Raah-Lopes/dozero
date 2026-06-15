@@ -1,6 +1,57 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, addTensionClock, removeTensionClock, updateTensionClockProps, triggerClockConsequence } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, addTensionClock, removeTensionClock, updateTensionClockProps, triggerClockConsequence, getMapConfig } from '../store';
+
+function hexRound(q: number, r: number) {
+  let s = -q - r;
+  let rq = Math.round(q);
+  let rr = Math.round(r);
+  let rs = Math.round(s);
+  const q_diff = Math.abs(rq - q);
+  const r_diff = Math.abs(rr - r);
+  const s_diff = Math.abs(rs - s);
+  if (q_diff > r_diff && q_diff > s_diff) rq = -rr - rs;
+  else if (r_diff > s_diff) rr = -rq - rs;
+  return { q: rq, r: rr };
+}
+
+function pixelToHex(x: number, y: number, type: 'hex_h' | 'hex_v', size: number) {
+  let q: number, r: number;
+  if (type === 'hex_h') { // flat-top
+    q = (2/3 * x) / size;
+    r = (-1/3 * x + Math.sqrt(3)/3 * y) / size;
+  } else { // pointy-top
+    q = (Math.sqrt(3)/3 * x - 1/3 * y) / size;
+    r = (2/3 * y) / size;
+  }
+  return hexRound(q, r);
+}
+
+function hexToPixel(q: number, r: number, type: 'hex_h' | 'hex_v', size: number) {
+  let x: number, y: number;
+  if (type === 'hex_h') { // flat-top
+    x = size * (3/2 * q);
+    y = size * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
+  } else { // pointy-top
+    x = size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+    y = size * (3/2 * r);
+  }
+  return { x, y };
+}
+
+function snapToGrid(x: number, y: number, config: any) {
+  if (config.gridType === 'square' || config.gridType === 'dots_square') {
+    return {
+      x: Math.round(x / config.gridSize) * config.gridSize,
+      y: Math.round(y / config.gridSize) * config.gridSize
+    };
+  } else if (config.gridType === 'hex_h' || config.gridType === 'hex_v' || config.gridType === 'dots_hex') {
+    const hexType = (config.gridType === 'hex_h') ? 'hex_h' : 'hex_v';
+    const hex = pixelToHex(x, y, hexType, config.gridSize);
+    return hexToPixel(hex.q, hex.r, hexType, config.gridSize);
+  }
+  return { x, y };
+}
 
 const prevHpMap: Record<string, number> = {};
 let lastTokenClickTime = 0;
@@ -110,9 +161,10 @@ export const GameCanvas: React.FC = () => {
           const worldPoint = viewport.toLocal({ x: dropX, y: dropY });
           
           // Snap to grid
-          const gridSize = 50;
-          const snapX = Math.round(worldPoint.x / gridSize) * gridSize;
-          const snapY = Math.round(worldPoint.y / gridSize) * gridSize;
+          const config = getMapConfig();
+          const snapped = snapToGrid(worldPoint.x, worldPoint.y, config);
+          const snapX = snapped.x;
+          const snapY = snapped.y;
           
           updateTokenPosition(tokenId, snapX, snapY);
         }
@@ -132,20 +184,88 @@ export const GameCanvas: React.FC = () => {
 
       // Create an infinite grid background
       const grid = new Graphics();
-      grid.setStrokeStyle({ width: 1, color: 0x1e293b, alpha: 0.5 });
-      
-      const gridSize = 50;
-      const gridRange = 10000;
-      for (let i = -gridRange; i < gridRange; i += gridSize) {
-        grid.moveTo(i, -gridRange);
-        grid.lineTo(i, gridRange);
-      }
-      for (let j = -gridRange; j < gridRange; j += gridSize) {
-        grid.moveTo(-gridRange, j);
-        grid.lineTo(gridRange, j);
-      }
-      grid.stroke();
       viewport.addChild(grid);
+
+      const drawGrid = () => {
+        grid.clear();
+        const config = getMapConfig();
+        if (config.gridAlpha <= 0) return;
+        
+        let colorNum = 0x1e293b;
+        if (config.gridColor.startsWith('#')) {
+           colorNum = parseInt(config.gridColor.replace('#', '0x'), 16);
+        }
+
+        const size = config.gridSize;
+        const range = 2500; // Limits grid to 5000x5000 bounds to prevent WebGL buffer overflow
+        
+        if (config.gridType === 'square') {
+          grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.gridAlpha });
+          for (let i = -range; i < range; i += size) {
+            grid.moveTo(i, -range);
+            grid.lineTo(i, range);
+          }
+          for (let j = -range; j < range; j += size) {
+            grid.moveTo(-range, j);
+            grid.lineTo(range, j);
+          }
+          grid.stroke();
+        } else if (config.gridType === 'dots_square') {
+          const radius = Math.max(2, size * 0.05);
+          for (let i = -range; i < range; i += size) {
+            for (let j = -range; j < range; j += size) {
+               grid.rect(i - radius, j - radius, radius * 2, radius * 2);
+            }
+          }
+          grid.fill({ color: colorNum, alpha: config.gridAlpha });
+        } else if (config.gridType === 'hex_v' || config.gridType === 'hex_h') {
+          grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.gridAlpha });
+          const type = config.gridType;
+          const stepX = (type === 'hex_v') ? size * Math.sqrt(3) : size * 1.5;
+          const stepY = (type === 'hex_v') ? size * 1.5 : size * Math.sqrt(3);
+          
+          const drawnHexes = new Set<string>();
+          for (let i = -range; i < range; i += stepX) {
+            for (let j = -range; j < range; j += stepY) {
+               const { q, r } = pixelToHex(i, j, type, size);
+               const key = `${q},${r}`;
+               if (drawnHexes.has(key)) continue;
+               drawnHexes.add(key);
+
+               const center = hexToPixel(q, r, type, size);
+               for (let angle_i = 0; angle_i < 6; angle_i++) {
+                 const angle_deg = type === 'hex_v' ? 60 * angle_i - 30 : 60 * angle_i;
+                 const angle_rad = Math.PI / 180 * angle_deg;
+                 const px = center.x + size * Math.cos(angle_rad);
+                 const py = center.y + size * Math.sin(angle_rad);
+                 if (angle_i === 0) grid.moveTo(px, py);
+                 else grid.lineTo(px, py);
+               }
+               grid.closePath();
+            }
+          }
+          grid.stroke();
+        } else if (config.gridType === 'dots_hex') {
+          const radius = Math.max(2, size * 0.05);
+          const stepX = size * Math.sqrt(3);
+          const stepY = size * 1.5;
+          const drawnHexes = new Set<string>();
+          for (let i = -range; i < range; i += stepX) {
+            for (let j = -range; j < range; j += stepY) {
+               const { q, r } = pixelToHex(i, j, 'hex_v', size);
+               const key = `${q},${r}`;
+               if (drawnHexes.has(key)) continue;
+               drawnHexes.add(key);
+
+               const center = hexToPixel(q, r, 'hex_v', size);
+               grid.rect(center.x - radius, center.y - radius, radius * 2, radius * 2);
+            }
+          }
+          grid.fill({ color: colorNum, alpha: config.gridAlpha });
+        }
+      };
+
+      drawGrid();
 
       // Tokens Layer
       const tokensContainer = new Container();
@@ -277,6 +397,11 @@ export const GameCanvas: React.FC = () => {
 
       state.tokens.observe(syncTokens);
       syncTokens();
+      const mapConfigObserver = () => {
+        drawGrid();
+      };
+      state.mapConfig.observe(mapConfigObserver);
+
       (app as any)._yjsObserver = syncTokens;
 
       const onDragEnd = () => {
@@ -289,9 +414,10 @@ export const GameCanvas: React.FC = () => {
         draggingTokenId = null; 
         token.alpha = 1;
 
-        const gridSize = 50;
-        let snapX = Math.round(token.x / gridSize) * gridSize;
-        let snapY = Math.round(token.y / gridSize) * gridSize;
+        const config = getMapConfig();
+        const snapped = snapToGrid(token.x, token.y, config);
+        let snapX = snapped.x;
+        let snapY = snapped.y;
         
         token.x = snapX;
         token.y = snapY;
@@ -559,76 +685,82 @@ export const GameCanvas: React.FC = () => {
           // Remove all previous event listeners to avoid duplication memory leaks
           corner.removeAllListeners();
           
-          // Make bottom-right corner the scaler for ANY number of items!
-          if (idx === 3) {
-            corner.on('pointerdown', (e) => {
-              e.stopPropagation();
+          // Adicionar o evento de resize para todos os cantos
+          corner.on('pointerdown', (e) => {
+            e.stopPropagation();
 
-              const pivotX = minX;
-              const pivotY = minY;
-              const origW = maxX - minX;
-              const origH = maxY - minY;
+            let pivotX: number, pivotY: number, dirX: number;
+            if (idx === 0) { pivotX = maxX; pivotY = maxY; dirX = -1; } // Top-Left
+            else if (idx === 1) { pivotX = minX; pivotY = maxY; dirX = 1; } // Top-Right
+            else if (idx === 2) { pivotX = maxX; pivotY = minY; dirX = -1; } // Bottom-Left
+            else { pivotX = minX; pivotY = minY; dirX = 1; } // Bottom-Right
 
-              // Filter out locked backgrounds from moving
-              const originalStates = selectedIds
-                .filter(id => !(state.backgrounds.get(id) as any).locked)
-                .map(id => {
-                  const sprite = bgSprites[id];
-                  return {
-                    id,
-                    sprite,
-                    origX: sprite.x,
-                    origY: sprite.y,
-                    origScale: sprite.scale.x
-                  };
-                });
+            const origW = maxX - minX;
+            const origH = maxY - minY;
 
-              const onScaleMove = (moveEvent: PointerEvent) => {
-                const rect = canvasEl.getBoundingClientRect();
-                const localPoint = viewport.toLocal({ x: moveEvent.clientX - rect.left, y: moveEvent.clientY - rect.top });
-                
-                const dx = localPoint.x - pivotX;
-                const scaleRatio = Math.max(0.1, dx / origW);
-                
+            // Filter out locked backgrounds from moving
+            const originalStates = selectedIds
+              .filter(id => !(state.backgrounds.get(id) as any).locked)
+              .map(id => {
+                const sprite = bgSprites[id];
+                return {
+                  id,
+                  sprite,
+                  origX: sprite.x,
+                  origY: sprite.y,
+                  origScale: sprite.scale.x
+                };
+              });
+
+            const onScaleMove = (moveEvent: PointerEvent) => {
+              const rect = canvasEl.getBoundingClientRect();
+              const localPoint = viewport.toLocal({ x: moveEvent.clientX - rect.left, y: moveEvent.clientY - rect.top });
+              
+              const dx = localPoint.x - pivotX;
+              const scaleRatio = Math.max(0.1, (dx * dirX) / origW);
+              
+              originalStates.forEach(item => {
+                item.sprite.scale.set(item.origScale * scaleRatio);
+                item.sprite.x = pivotX + (item.origX - pivotX) * scaleRatio;
+                item.sprite.y = pivotY + (item.origY - pivotY) * scaleRatio;
+              });
+              
+              const newW = origW * scaleRatio;
+              const newH = origH * scaleRatio;
+              
+              let newMinX, newMinY;
+              if (idx === 0) { newMinX = pivotX - newW; newMinY = pivotY - newH; }
+              else if (idx === 1) { newMinX = pivotX; newMinY = pivotY - newH; }
+              else if (idx === 2) { newMinX = pivotX - newW; newMinY = pivotY; }
+              else { newMinX = pivotX; newMinY = pivotY; }
+              
+              gizmoBox.clear();
+              gizmoBox.rect(newMinX, newMinY, newW, newH);
+              gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
+              
+              gizmoCorners.forEach(c => c.visible = false);
+            };
+
+            const onScaleUp = () => {
+              window.removeEventListener('pointermove', onScaleMove);
+              window.removeEventListener('pointerup', onScaleUp);
+              gizmoCorners.forEach(c => c.visible = true);
+              
+              import('../store').then(s => {
                 originalStates.forEach(item => {
-                  item.sprite.scale.set(item.origScale * scaleRatio);
-                  item.sprite.x = pivotX + (item.origX - pivotX) * scaleRatio;
-                  item.sprite.y = pivotY + (item.origY - pivotY) * scaleRatio;
-                });
-                
-                // Only redraw the box visually, do NOT recreate objects
-                const newW = origW * scaleRatio;
-                const newH = origH * scaleRatio;
-                
-                gizmoBox.clear();
-                gizmoBox.rect(pivotX, pivotY, newW, newH);
-                gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
-                
-                // Hide corners while dragging to avoid lag
-                gizmoCorners.forEach(c => c.visible = false);
-              };
-
-              const onScaleUp = () => {
-                window.removeEventListener('pointermove', onScaleMove);
-                window.removeEventListener('pointerup', onScaleUp);
-                gizmoCorners.forEach(c => c.visible = true);
-                
-                import('../store').then(s => {
-                  originalStates.forEach(item => {
-                    s.updateBackgroundProps(item.id, { 
-                      scale: item.sprite.scale.x,
-                      x: item.sprite.x,
-                      y: item.sprite.y
-                    });
+                  s.updateBackgroundProps(item.id, { 
+                    scale: item.sprite.scale.x,
+                    x: item.sprite.x,
+                    y: item.sprite.y
                   });
                 });
-                syncGizmo();
-              };
+              });
+              syncGizmo();
+            };
 
-              window.addEventListener('pointermove', onScaleMove);
-              window.addEventListener('pointerup', onScaleUp);
-            });
-          }
+            window.addEventListener('pointermove', onScaleMove);
+            window.addEventListener('pointerup', onScaleUp);
+          });
         });
       };
 

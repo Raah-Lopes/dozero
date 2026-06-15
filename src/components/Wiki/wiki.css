@@ -1,0 +1,137 @@
+.wiki-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+.wiki-sidebar {
+  width: 300px;
+  min-width: 250px;
+  max-width: 400px;
+  background: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.wiki-sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wiki-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.wiki-tree-node {
+  margin-left: 1rem;
+}
+
+.wiki-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.wiki-tree-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.wiki-tree-item.active {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--accent-primary);
+}
+
+.wiki-content-area {
+  flex: 1;
+  padding: 2rem 4rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.wiki-markdown {
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.wiki-markdown h1, .wiki-markdown h2, .wiki-markdown h3 {
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.5rem;
+  margin-top: 2rem;
+  color: var(--accent-primary);
+}
+
+.wiki-markdown a {
+  color: var(--accent-secondary);
+  text-decoration: none;
+}
+
+.wiki-markdown a:hover {
+  text-decoration: underline;
+}
+
+.wiki-markdown pre {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  border: 1px solid var(--glass-border);
+}
+
+.wiki-markdown code {
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
+.wiki-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.wiki-markdown th, .wiki-markdown td {
+  border: 1px solid var(--glass-border);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.wiki-markdown th {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wiki-markdown img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.wiki-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  gap: 1rem;
+}
