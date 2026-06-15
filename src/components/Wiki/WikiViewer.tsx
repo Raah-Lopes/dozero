@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, pushToGithub } from '../../utils/githubApi';
+import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub } from '../../utils/githubApi';
+import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
-import { Folder, FileText, ChevronRight, ChevronDown, RefreshCw, AlertCircle, BookOpen, FilePlus, FolderPlus, UploadCloud, Save } from 'lucide-react';
+import { 
+  Folder, FileText, ChevronRight, ChevronDown, 
+  RefreshCw, Plus, FilePlus, FolderPlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus
+} from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
+import { getWikiConfig } from '../../store';
 import './wiki.css';
 
 interface TreeNode {
@@ -45,49 +50,110 @@ const TreeView: React.FC<{
   node: TreeNode; 
   level: number; 
   activePath: string | null;
-  onSelect: (path: string) => void 
-}> = ({ node, level, activePath, onSelect }) => {
+  onSelect: (path: string) => void;
+  onMove: (oldPath: string, newPath: string) => void;
+  onRename: (oldPath: string, newName: string) => void;
+  onDropExternal: (files: FileList, targetPath: string) => void;
+}> = ({ node, level, activePath, onSelect, onMove, onRename, onDropExternal }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const isDir = node.type === 'tree';
   const isActive = activePath === node.path;
-
-  // Render children se for root (level = 0) ou se a pasta estiver aberta
   const hasChildren = Object.keys(node.children).length > 0;
 
   if (level === 0) {
     return (
       <div className="wiki-tree-root">
         {Object.values(node.children).map(child => (
-          <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} onSelect={onSelect} />
+          <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} onSelect={onSelect} onMove={onMove} onRename={onRename} onDropExternal={onDropExternal} />
         ))}
       </div>
     );
   }
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', node.path);
+    e.stopPropagation();
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isDir) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!isDir) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!isDir) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    // Check if dragging external OS files
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onDropExternal(e.dataTransfer.files, node.path);
+      return;
+    }
+
+    const draggedPath = e.dataTransfer.getData('text/plain');
+    if (draggedPath && draggedPath !== node.path && !draggedPath.startsWith(node.path + '/')) {
+      onMove(draggedPath, node.path);
+    }
+  };
+
   return (
     <div className="wiki-tree-node" style={{ marginLeft: level === 1 ? 0 : '1rem' }}>
       <div 
-        className={`wiki-tree-item ${isActive ? 'active' : ''}`}
+        className={`wiki-tree-item ${isActive ? 'active' : ''} ${isDragOver ? 'drag-over' : ''}`}
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         onClick={() => {
           if (isDir) setIsOpen(!isOpen);
           else onSelect(node.path);
         }}
       >
-        {isDir ? (
-          <>
-            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            <Folder size={14} color="var(--accent-secondary)" />
-          </>
-        ) : (
-          <FileText size={14} color="var(--text-secondary)" style={{ marginLeft: '14px' }} />
-        )}
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{node.name}</span>
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1, overflow: 'hidden', gap: '0.3rem' }}>
+          {isDir ? (
+            <>
+              {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              <Folder size={14} color="var(--accent-secondary)" />
+            </>
+          ) : (
+            <FileText size={14} color="var(--text-secondary)" style={{ marginLeft: '14px' }} />
+          )}
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{node.name}</span>
+        </div>
+        
+        {/* Rename Button */}
+        <button 
+          className="wiki-tree-rename-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            const newName = prompt("Renomear para:", node.name);
+            if (newName && newName !== node.name) {
+              onRename(node.path, newName);
+            }
+          }}
+          title="Renomear"
+        >
+          <Edit2 size={12} />
+        </button>
       </div>
       
       {isDir && isOpen && hasChildren && (
         <div className="wiki-tree-children">
           {Object.values(node.children).map(child => (
-            <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} onSelect={onSelect} />
+            <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} onSelect={onSelect} onMove={onMove} onRename={onRename} onDropExternal={onDropExternal} />
           ))}
         </div>
       )}
@@ -106,6 +172,90 @@ export const WikiViewer: React.FC = () => {
 
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showCheatSheet, setShowCheatSheet] = useState(false);
+  const editorRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setSyncing(true);
+      
+      const { base64, filename } = await convertImageToWebP(file);
+
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/wikidozero';
+      
+      const res = await fetch('/api/wiki/save-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoPath, filename: filename, base64 })
+      });
+      
+      if (!res.ok) throw new Error("Erro ao salvar imagem localmente");
+      await loadTree();
+    } catch (err: any) {
+      console.error(err);
+      alert("Falha ao importar imagem: " + err.message);
+    } finally {
+      setSyncing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDropExternal = async (files: FileList, targetFolder: string) => {
+    setSyncing(true);
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/wikidozero';
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        if (file.name.endsWith('.md')) {
+          const text = await file.text();
+          await saveMarkdownContent(`${targetFolder}/${file.name}`, text);
+        } 
+        else if (file.type.startsWith('image/')) {
+          const { base64, filename } = await convertImageToWebP(file);
+          
+          // O save-image salva no ANEXOS sempre. 
+          // Se quiseríamos salvar na pasta atual, teríamos que mudar a API.
+          // Por enquanto, enviamos normal:
+          const res = await fetch('/api/wiki/save-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ repoPath, filename, base64 })
+          });
+          if (!res.ok) throw new Error(`Falha ao salvar ${filename}`);
+        } else {
+          console.warn(`Tipo de arquivo não suportado: ${file.name}`);
+        }
+      }
+      await loadTree();
+    } catch (err: any) {
+      alert("Erro ao importar arquivos: " + err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const insertCheat = (md: string) => {
+    if (editorRef.current) {
+      editorRef.current.insertMarkdown(md);
+      // force auto-save after injection by artificially triggering onChange
+      const currentMarkdown = editorRef.current.getMarkdown();
+      handleEditorChange(currentMarkdown);
+    }
+  };
 
   const loadTree = async () => {
     setLoadingTree(true);
@@ -117,6 +267,33 @@ export const WikiViewer: React.FC = () => {
       setErrorTree(err.message);
     } finally {
       setLoadingTree(false);
+    }
+  };
+
+  const handleMove = async (oldPath: string, newFolderPath: string) => {
+    const filename = oldPath.split('/').pop() || '';
+    const newPath = newFolderPath ? `${newFolderPath}/${filename}` : filename;
+    try {
+      await moveFileOrFolder(oldPath, newPath);
+      if (activeFile === oldPath) setActiveFile(newPath);
+      loadTree();
+    } catch (e: any) {
+      alert("Erro ao mover: " + e.message);
+    }
+  };
+
+  const handleRename = async (oldPath: string, newName: string) => {
+    const folder = oldPath.substring(0, oldPath.lastIndexOf('/'));
+    const isMd = oldPath.endsWith('.md');
+    // limpa extensao caso o usuario tenha digitado no prompt
+    const cleanName = newName.replace('.md', ''); 
+    const newPath = folder ? `${folder}/${cleanName}${isMd ? '.md' : ''}` : `${cleanName}${isMd ? '.md' : ''}`;
+    try {
+      await moveFileOrFolder(oldPath, newPath);
+      if (activeFile === oldPath) setActiveFile(newPath);
+      loadTree();
+    } catch (e: any) {
+      alert("Erro ao renomear: " + e.message);
     }
   };
 
@@ -159,16 +336,32 @@ export const WikiViewer: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
+  const [justSaved, setJustSaved] = useState(false);
+
+  const handleSave = async (textToSave?: string) => {
     if (!activeFile) return;
     setSaving(true);
     try {
-      await saveMarkdownContent(activeFile, content);
+      await saveMarkdownContent(activeFile, textToSave ?? content);
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
     } catch (e: any) {
-      alert("Erro ao salvar: " + e.message);
+      console.error("Erro no auto-save: ", e);
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveTimeoutRef = useRef<number | null>(null);
+
+  const handleEditorChange = (md: string) => {
+    setContent(md);
+    
+    // Auto-save debounce (salva automaticamente 1 segundo após o usuário parar de digitar)
+    if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = window.setTimeout(() => {
+      handleSave(md);
+    }, 1000);
   };
 
   useEffect(() => {
@@ -210,6 +403,16 @@ export const WikiViewer: React.FC = () => {
               <button className="btn-icon" onClick={handleCreateFolder} title="Nova Pasta">
                 <FolderPlus size={14} />
               </button>
+              <button className="btn-icon" onClick={handleUploadClick} title="Importar Imagem (Abre Pastas do Computador)">
+                <ImagePlus size={14} />
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                accept="image/*" 
+                onChange={handleFileChange} 
+              />
               <button className="btn-icon" onClick={loadTree} title="Recarregar Pasta">
                 <RefreshCw size={14} className={loadingTree ? 'spin' : ''} />
               </button>
@@ -236,7 +439,15 @@ export const WikiViewer: React.FC = () => {
             </div>
           )}
           {!errorTree && (
-            <TreeView node={tree} level={0} activePath={activeFile} onSelect={setActiveFile} />
+            <TreeView 
+            node={tree} 
+            level={0} 
+            activePath={activeFile} 
+            onSelect={setActiveFile} 
+            onMove={handleMove} 
+            onRename={handleRename}
+            onDropExternal={handleDropExternal}
+          />
           )}
         </div>
       </div>
@@ -244,7 +455,14 @@ export const WikiViewer: React.FC = () => {
       {/* Main Content Viewer */}
       <div className="wiki-content-area">
         {activeFile ? (
-          loadingContent ? (
+          activeFile.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? (
+            <div className="wiki-empty-state">
+              <ImagePlus size={64} color="var(--glass-border)" />
+              <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>Visualização de Imagem Indisponível</h2>
+              <p>O arquivo <strong>{activeFile}</strong> é uma imagem e já está salvo no seu HD.</p>
+              <p>Para usá-lo, crie um arquivo de texto e use o botão de Inserir Imagem do editor para selecioná-lo!</p>
+            </div>
+          ) : loadingContent ? (
             <div className="wiki-empty-state">
               <RefreshCw size={32} className="spin" color="var(--accent-primary)" />
               <p>Carregando Pergaminho...</p>
@@ -258,15 +476,49 @@ export const WikiViewer: React.FC = () => {
                   disabled={saving}
                   style={{ background: 'var(--accent-secondary)', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
                   <Save size={14} />
-                  {saving ? 'Salvando...' : 'Salvar Local'}
+                  {saving ? 'Salvando...' : (justSaved ? '✅ Salvo!' : 'Salvar Local')}
                 </button>
               </div>
               <WikiEditor 
+                editorRef={editorRef}
                 key={activeFile} // Force remount when file changes so Editor gets fresh markdown
                 markdown={content} 
-                onChange={(md) => setContent(md)} 
-                onSave={handleSave} 
+                onChange={handleEditorChange} 
+                onSave={() => handleSave()} 
               />
+              
+              {/* Dicas de Formatação Markdown (Cheat Sheet) */}
+              <div style={{ marginTop: '1rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
+                <button 
+                  onClick={() => setShowCheatSheet(!showCheatSheet)}
+                  className="glass-panel hover-glow"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', cursor: 'pointer', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', background: 'transparent', borderRadius: '4px', fontSize: '0.85rem' }}
+                >
+                  <FileText size={14} />
+                  {showCheatSheet ? 'Esconder Dicas de Formatação' : 'Mostrar Dicas de Formatação (Markdown)'}
+                </button>
+                
+                {showCheatSheet && (
+                  <div className="glass-panel animate-fade-in" style={{ marginTop: '1rem', padding: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', fontSize: '0.85rem', color: 'var(--text-primary)', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+                    <div className="cheat-sheet-col">
+                      <h4 style={{ color: 'var(--accent-primary)', marginTop: 0, marginBottom: '1rem' }}>Títulos & Textos</h4>
+                      <div className="cheat-item" onClick={() => insertCheat('# Título 1\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}># Título 1</code> → <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Título 1</span></div>
+                      <div className="cheat-item" onClick={() => insertCheat('## Título 2\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>## Título 2</code> → <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Título 2</span></div>
+                      <div className="cheat-item" onClick={() => insertCheat('**Negrito** ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>**Negrito**</code> → <b>Negrito</b></div>
+                      <div className="cheat-item" onClick={() => insertCheat('*Itálico* ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>*Itálico*</code> → <i>Itálico</i></div>
+                      <div className="cheat-item" onClick={() => insertCheat('~~Tachado~~ ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>~~Tachado~~</code> → <strike>Tachado</strike></div>
+                    </div>
+                    <div className="cheat-sheet-col">
+                      <h4 style={{ color: 'var(--accent-primary)', marginTop: 0, marginBottom: '1rem' }}>Listas & Outros</h4>
+                      <div className="cheat-item" onClick={() => insertCheat('- Item de lista\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>- Item de lista</code> → • Item de lista</div>
+                      <div className="cheat-item" onClick={() => insertCheat('1. Item numerado\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>1. Item numerado</code> → 1. Item numerado</div>
+                      <div className="cheat-item" onClick={() => insertCheat('[Link](http...) ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>[Link](http...)</code> → <span style={{ color: 'var(--accent-secondary)' }}>Link</span></div>
+                      <div className="cheat-item" onClick={() => insertCheat('![Imagem](url)\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>![Imagem](url)</code> → (Insere Imagem)</div>
+                      <div className="cheat-item" onClick={() => insertCheat('> Citação\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>&gt; Citação</code> → <span style={{ borderLeft: '3px solid var(--accent-primary)', paddingLeft: '0.5rem', color: 'var(--text-secondary)' }}>Citação</span></div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )
         ) : (

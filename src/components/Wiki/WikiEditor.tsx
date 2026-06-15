@@ -6,24 +6,28 @@ import {
   quotePlugin,
   thematicBreakPlugin,
   markdownShortcutPlugin,
-  MDXEditorMethods,
   toolbarPlugin,
   UndoRedo, BoldItalicUnderlineToggles,
   BlockTypeSelect, CreateLink,
-  InsertImage, InsertTable,
+  InsertImage, InsertTable, ListsToggle, CodeToggle, InsertThematicBreak,
   tablePlugin, imagePlugin, linkPlugin, linkDialogPlugin,
   diffSourcePlugin, DiffSourceToggleWrapper
 } from '@mdxeditor/editor';
+import type { MDXEditorMethods } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
+import { getWikiConfig } from '../../store';
+import { convertImageToWebP } from '../../utils/imageUtils';
 
 interface WikiEditorProps {
   markdown: string;
   onChange: (md: string) => void;
   onSave?: () => void;
+  editorRef?: React.RefObject<MDXEditorMethods>;
 }
 
-export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSave }) => {
-  const ref = useRef<MDXEditorMethods>(null);
+export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSave, editorRef }) => {
+  const internalRef = useRef<MDXEditorMethods>(null);
+  const ref = editorRef || internalRef;
 
   return (
     <div className="wiki-mdx-container" 
@@ -36,6 +40,7 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
       <MDXEditor
         ref={ref}
         markdown={markdown}
+        className="dark-theme dark-editor dozero-mdx"
         onChange={onChange}
         plugins={[
           headingsPlugin(),
@@ -44,11 +49,43 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
           thematicBreakPlugin(),
           markdownShortcutPlugin(),
           tablePlugin(),
-          imagePlugin({ imageUploadHandler: async (file: File) => {
-              // Em um sistema real poderíamos fazer upload pro backend. 
-              // Por enquanto, criamos uma URL temporária pra imagem não quebrar imediatamente.
-              return URL.createObjectURL(file);
-          } }),
+          imagePlugin({ 
+            imageUploadHandler: async (file: File) => {
+              // Converter a imagem para WebP para enviar pela nossa API
+              const { base64, filename } = await convertImageToWebP(file);
+              
+              // Enviar para o servidor local
+              const config = getWikiConfig();
+              const repoPath = config.repoUrl || 'D:/wikidozero';
+              
+              const res = await fetch('/api/wiki/save-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  repoPath,
+                  filename: filename,
+                  base64
+                })
+              });
+              
+              if (!res.ok) throw new Error("Erro ao salvar imagem");
+              const data = await res.json();
+              
+              // Retornar a URL que o editor vai inserir no markdown (ex: ANEXOS/foto.png)
+              return data.url;
+            },
+            imagePreviewHandler: async (url: string) => {
+              // Quando o editor for renderizar a imagem, dizemos para buscar da nossa API crua
+              const config = getWikiConfig();
+              const repoPath = config.repoUrl || 'D:/wikidozero';
+              // Se já for uma URL externa (http), deixa passar direto
+              if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+                return url;
+              }
+              // Caso contrário, busca na API raw do nosso servidor
+              return `/api/wiki/raw?path=${encodeURIComponent(url)}&repoPath=${encodeURIComponent(repoPath)}`;
+            }
+          }),
           linkPlugin(),
           linkDialogPlugin(),
           diffSourcePlugin({ diffMarkdown: markdown, viewMode: 'rich-text' }),
@@ -56,11 +93,18 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
             toolbarContents: () => (
               <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '0.5rem' }}>
                 <UndoRedo />
+                <div style={{ width: '1px', height: '24px', background: 'var(--glass-border)', margin: '0 4px' }} />
                 <BoldItalicUnderlineToggles />
+                <CodeToggle />
+                <div style={{ width: '1px', height: '24px', background: 'var(--glass-border)', margin: '0 4px' }} />
+                <ListsToggle />
+                <div style={{ width: '1px', height: '24px', background: 'var(--glass-border)', margin: '0 4px' }} />
                 <BlockTypeSelect />
+                <div style={{ width: '1px', height: '24px', background: 'var(--glass-border)', margin: '0 4px' }} />
                 <CreateLink />
                 <InsertImage />
                 <InsertTable />
+                <InsertThematicBreak />
                 <div style={{ flex: 1 }}></div>
                 <DiffSourceToggleWrapper>
                   <span style={{ fontSize: '0.8rem', padding: '0 8px' }}>Código-Fonte</span>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid } from 'lucide-react';
+import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid, Wrench } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
@@ -32,6 +32,7 @@ function App() {
   const [showActors, setShowActors] = useState(false);
   const [showCombatLog, setShowCombatLog] = useState(() => localStorage.getItem('showCombatLog') !== 'false'); // Default open unless explicitly closed
   const [showCombatTracker, setShowCombatTracker] = useState(false);
+  const [showToolsDropdown, setShowToolsDropdown] = useState(false);
   const [openSheets, setOpenSheets] = useState<string[]>([]);
 
   useEffect(() => {
@@ -71,19 +72,27 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Background Layers depending on mode */}
-      {viewMode === 'canvas' && (
+      {/* PÁGINA DEDICADA DA WIKI */}
+      <div style={{ display: viewMode === 'wiki' ? 'block' : 'none', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1000, background: 'var(--bg-primary)' }}>
+        {viewMode === 'wiki' && <WikiViewer />}
+        <div style={{ position: 'fixed', top: '15px', right: '15px', zIndex: 99999 }}>
+          <button 
+            onClick={() => setViewMode('canvas')} 
+            className="glass-panel hover-glow" 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', cursor: 'pointer', border: '1px solid var(--accent-primary)', color: 'white', background: 'rgba(20,20,20,0.85)', borderRadius: '8px', pointerEvents: 'auto', fontWeight: 'bold', transition: 'all 0.2s' }}
+          >
+            <Swords size={18} color="var(--accent-primary)" /> 
+            Voltar para a Mesa
+          </button>
+        </div>
+      </div>
+
+      {/* PÁGINA DA MESA (HUD + MAPA) */}
+      <div style={{ display: viewMode === 'canvas' ? 'block' : 'none', width: '100%', height: '100%' }}>
         <div className="canvas-layer" id="canvas-container">
           <GameCanvas />
           <MapContextMenu />
         </div>
-      )}
-
-      {viewMode === 'wiki' && (
-        <div className="canvas-layer" style={{ zIndex: 5 }}>
-           <WikiViewer />
-        </div>
-      )}
 
       {/* Layer 10: React HUD */}
       <div className="hud-layer" style={{ pointerEvents: 'none' }}>
@@ -96,28 +105,41 @@ function App() {
             <div style={{ flex: 1 }}></div>
 
             {/* Right side: Tools */}
-            <div className="glass-panel" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem' }}>
-              <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki">
-                <BookOpen size={20} />
-              </button>
-              <button onClick={() => toggleModal('players')} className={`btn-icon ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores">
-                <Users size={20} />
-              </button>
-              <button className="btn-icon" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário">
-                <MapIcon size={20} />
-              </button>
-              <button className="btn-icon" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
-                <BookOpen size={20} />
-              </button>
-              <button className={`btn-icon ${activeModal === 'widgets' ? 'active' : ''}`} onClick={() => toggleModal('widgets')} title="Hub de Widgets">
-                <LayoutGrid size={20} />
-              </button>
-              <button className={`btn-icon ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Combate (Log)">
-                <MessageSquare size={20} />
-              </button>
-              <button className={`btn-icon ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações">
-                <Settings size={20} />
-              </button>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+              {showToolsDropdown && (
+                <div className="glass-panel animate-fade-in" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem' }}>
+                  <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki">
+                    <BookOpen size={20} />
+                  </button>
+                  <button onClick={() => toggleModal('players')} className={`btn-icon ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores">
+                    <Users size={20} />
+                  </button>
+                  <button className="btn-icon" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário">
+                    <MapIcon size={20} />
+                  </button>
+                  <button className="btn-icon" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
+                    <BookOpen size={20} />
+                  </button>
+                  <button className={`btn-icon ${activeModal === 'widgets' ? 'active' : ''}`} onClick={() => toggleModal('widgets')} title="Hub de Widgets">
+                    <LayoutGrid size={20} />
+                  </button>
+                  <button className={`btn-icon ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Combate (Log)">
+                    <MessageSquare size={20} />
+                  </button>
+                  <button className={`btn-icon ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações">
+                    <Wrench size={20} />
+                  </button>
+                </div>
+              )}
+              <div className="glass-panel" style={{ padding: '0.5rem' }}>
+                <button 
+                  className={`btn-icon ${showToolsDropdown ? 'active' : ''}`} 
+                  onClick={() => setShowToolsDropdown(!showToolsDropdown)} 
+                  title="Ferramentas"
+                >
+                  <Settings size={20} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -268,6 +290,8 @@ function App() {
         </div>
       </div>
       <DiceOverlay />
+      
+      </div> {/* Fim da div da PÁGINA DA MESA */}
     </div>
   );
 }

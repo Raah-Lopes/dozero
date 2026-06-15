@@ -73,6 +73,24 @@ export function wikiLocalApi(): Plugin {
             return sendResponse(200, { content });
           }
 
+          if (req.method === 'GET' && pathname === '/api/wiki/raw') {
+            const filepath = url.searchParams.get('path');
+            if (!filepath) return sendResponse(400, { error: 'path required' });
+            const full = path.join(repoPath, filepath);
+            if (!fs.existsSync(full)) return sendResponse(404, { error: 'file not found' });
+            
+            const ext = path.extname(full).toLowerCase();
+            const mimeTypes: Record<string, string> = {
+              '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', 
+              '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml'
+            };
+            
+            res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.statusCode = 200;
+            return fs.createReadStream(full).pipe(res);
+          }
+
           if (req.method === 'POST' && pathname === '/api/wiki/save') {
             const filepath = body.path;
             const content = body.content;
@@ -94,6 +112,25 @@ export function wikiLocalApi(): Plugin {
             if (!fs.existsSync(full)) {
               fs.mkdirSync(full, { recursive: true });
             }
+            return sendResponse(200, { success: true });
+          }
+
+          if (req.method === 'POST' && pathname === '/api/wiki/move') {
+            const oldPath = body.oldPath;
+            const newPath = body.newPath;
+            if (!oldPath || !newPath) return sendResponse(400, { error: 'oldPath and newPath required' });
+            
+            const fullOld = path.join(repoPath, oldPath);
+            const fullNew = path.join(repoPath, newPath);
+            
+            if (!fs.existsSync(fullOld)) {
+              return sendResponse(404, { error: 'Source not found' });
+            }
+            
+            const dirNew = path.dirname(fullNew);
+            if (!fs.existsSync(dirNew)) fs.mkdirSync(dirNew, { recursive: true });
+            
+            fs.renameSync(fullOld, fullNew);
             return sendResponse(200, { success: true });
           }
 
@@ -120,6 +157,50 @@ export function wikiLocalApi(): Plugin {
               return sendResponse(200, { success: true, stdout });
             });
             return; // Wait for callback
+          }
+
+          if (req.method === 'POST' && pathname === '/api/wiki/save-image') {
+            const { filename, base64 } = body;
+            if (!filename || !base64) return sendResponse(400, { error: 'filename and base64 required' });
+            
+            const anexosDir = path.join(repoPath, 'ANEXOS');
+            if (!fs.existsSync(anexosDir)) fs.mkdirSync(anexosDir, { recursive: true });
+            
+            // Remove data:image/png;base64, prefix
+            const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
+            const buffer = Buffer.from(base64Data, 'base64');
+            
+            const safeName = Date.now() + '_' + filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const fullPath = path.join(anexosDir, safeName);
+            
+            fs.writeFileSync(fullPath, buffer);
+            
+            // Return URL that triggers our media endpoint
+            return sendResponse(200, { url: `http://localhost:5174/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=ANEXOS/${safeName}` });
+          }
+
+          if (req.method === 'GET' && pathname === '/api/wiki/media') {
+            const filepath = url.searchParams.get('path');
+            if (!filepath) return sendResponse(400, { error: 'path required' });
+            
+            const full = path.join(repoPath, filepath);
+            if (!fs.existsSync(full)) return sendResponse(404, { error: 'file not found' });
+            
+            const ext = path.extname(full).toLowerCase();
+            const mimeTypes: Record<string, string> = {
+              '.png': 'image/png',
+              '.jpg': 'image/jpeg',
+              '.jpeg': 'image/jpeg',
+              '.gif': 'image/gif',
+              '.webp': 'image/webp'
+            };
+            
+            res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.statusCode = 200;
+            const stream = fs.createReadStream(full);
+            stream.pipe(res);
+            return;
           }
 
           sendResponse(404, { error: 'Route not found' });

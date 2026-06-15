@@ -21,7 +21,7 @@ export async function fetchRepositoryTree(): Promise<GithubTreeItem[]> {
 
   // O repoUrl agora pode apontar para a pasta local como D:/wikidozero
   // Mas vamos tentar passar como repoPath. Se for URL do Github, o usuário terá que configurar a pasta.
-  let repoPath = config.repoUrl;
+  let repoPath = config.repoUrl || 'D:/wikidozero';
   if (repoPath.includes('github.com')) {
     // Para simplificar, forçamos o usuário a colocar o caminho da pasta local no Settings
     // Ex: "D:/wikidozero"
@@ -45,7 +45,7 @@ export async function fetchMarkdownContent(path: string): Promise<string> {
     throw new Error("Repositório não configurado.");
   }
 
-  let repoPath = config.repoUrl;
+  let repoPath = config.repoUrl || 'D:/wikidozero';
   const url = `/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}`;
   
   const response = await fetch(url);
@@ -60,7 +60,7 @@ export async function fetchMarkdownContent(path: string): Promise<string> {
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl;
+  let repoPath = config.repoUrl || 'D:/wikidozero';
   
   const response = await fetch('/api/wiki/save', {
     method: 'POST',
@@ -73,7 +73,7 @@ export async function saveMarkdownContent(path: string, content: string): Promis
 
 export async function createFolder(path: string): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl;
+  let repoPath = config.repoUrl || 'D:/wikidozero';
   
   const response = await fetch('/api/wiki/folder', {
     method: 'POST',
@@ -84,9 +84,22 @@ export async function createFolder(path: string): Promise<void> {
   if (!response.ok) throw new Error("Erro ao criar pasta");
 }
 
+export async function moveFileOrFolder(oldPath: string, newPath: string): Promise<void> {
+  const config = getWikiConfig();
+  let repoPath = config.repoUrl || 'D:/wikidozero';
+  
+  const response = await fetch('/api/wiki/move', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath, oldPath, newPath })
+  });
+
+  if (!response.ok) throw new Error("Erro ao mover/renomear arquivo");
+}
+
 export async function deleteFileOrFolder(path: string): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl;
+  let repoPath = config.repoUrl || 'D:/wikidozero';
   
   const response = await fetch('/api/wiki/file', {
     method: 'DELETE',
@@ -99,7 +112,7 @@ export async function deleteFileOrFolder(path: string): Promise<void> {
 
 export async function pushToGithub(): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl;
+  let repoPath = config.repoUrl || 'D:/wikidozero';
   
   const response = await fetch('/api/wiki/push', {
     method: 'POST',

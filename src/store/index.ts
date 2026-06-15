@@ -325,7 +325,7 @@ export function getWikiConfig(): WikiConfig {
     return current as WikiConfig;
   }
   return {
-    repoUrl: '',
+    repoUrl: 'D:/wikidozero',
     branch: 'main',
     token: ''
   };

@@ -90,16 +90,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           />
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <form onSubmit={e => e.preventDefault()} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>LiveKit Access Token</label>
           <input 
             type="password" 
+            autoComplete="new-password"
             placeholder="eyJh..." 
             value={livekitToken}
             onChange={e => setLivekitToken(e.target.value)}
             style={{ padding: '0.75rem', borderRadius: '6px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'white' }} 
           />
-        </div>
+        </form>
         
         <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%', margin: '0.5rem 0' }} />
 
@@ -131,16 +132,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               style={{ padding: '0.75rem', borderRadius: '6px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'white' }} 
             />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 2 }}>
+          <form onSubmit={e => e.preventDefault()} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 2 }}>
             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Token de Acesso (Privado)</label>
             <input 
               type="password" 
+              autoComplete="new-password"
               placeholder="github_pat_..." 
               value={wikiToken}
               onChange={e => setWikiToken(e.target.value)}
               style={{ padding: '0.75rem', borderRadius: '6px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'white' }} 
             />
-          </div>
+          </form>
         </div>
 
       </div>
