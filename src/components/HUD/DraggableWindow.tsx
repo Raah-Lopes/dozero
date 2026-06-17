@@ -11,13 +11,14 @@ interface DraggableWindowProps {
   height?: string | number;
   windowStyle?: React.CSSProperties;
   variant?: 'default' | 'bare';
+  dragAnywhere?: boolean;
   onClose?: () => void;
 }
 
 // Global counter to track which window is on top
 let globalZIndexCounter = 50;
 
-export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', onClose }) => {
+export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', dragAnywhere = false, onClose }) => {
   const storageKey = `window_prefs_${id}`;
   
   const getInitialPrefs = () => {
@@ -60,6 +61,11 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON' || target.tagName === 'SELECT' || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('button') || target.closest('select')) {
+      bringToFront();
+      return; // Do not initiate drag on interactive elements
+    }
     e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
     bringToFront();
@@ -157,6 +163,10 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front
+      onPointerDown={dragAnywhere ? handlePointerDown : undefined}
+      onPointerMove={dragAnywhere ? handlePointerMove : undefined}
+      onPointerUp={dragAnywhere ? handlePointerUp : undefined}
+      onPointerCancel={dragAnywhere ? handlePointerUp : undefined}
       onMouseUp={() => {
         // Save size when native resize ends
         if (!isDragging && windowRef.current) {

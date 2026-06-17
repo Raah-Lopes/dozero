@@ -49,6 +49,7 @@ export const state = {
   clocks: doc.getMap('clocks'),
   mapConfig: doc.getMap('mapConfig'),
   wikiConfig: doc.getMap('wikiConfig'),
+  campaigns: doc.getMap('campaigns'),
 };
 
 // =========================================================================
@@ -57,6 +58,7 @@ export const state = {
 export const localState = {
   targets: new Set<string>(),
   selectedBgs: new Set<string>(),
+  selectedTokens: new Set<string>(),
 };
 
 export function toggleTarget(tokenId: string) {
@@ -67,6 +69,45 @@ export function toggleTarget(tokenId: string) {
   }
   // Dispatch event so UI can react
   window.dispatchEvent(new Event('targets-updated'));
+}
+
+export function getTargets(): string[] {
+  return Array.from(localState.targets);
+}
+export function clearTargets() {
+  localState.targets.clear();
+  window.dispatchEvent(new Event('targets-updated'));
+}
+
+export function toggleTokenSelection(tokenId: string, multi: boolean) {
+  if (!localState.selectedTokens) localState.selectedTokens = new Set<string>();
+
+  if (!multi) localState.selectedTokens.clear();
+  
+  if (localState.selectedTokens.has(tokenId)) {
+    localState.selectedTokens.delete(tokenId);
+  } else {
+    localState.selectedTokens.add(tokenId);
+  }
+  window.dispatchEvent(new Event('token-selection-updated'));
+}
+
+export function selectTokensBulk(tokenIds: string[]) {
+  if (!localState.selectedTokens) localState.selectedTokens = new Set<string>();
+  localState.selectedTokens.clear();
+  tokenIds.forEach(id => localState.selectedTokens.add(id));
+  window.dispatchEvent(new Event('token-selection-updated'));
+}
+
+export function clearTokenSelection() {
+  if (!localState.selectedTokens) localState.selectedTokens = new Set<string>();
+  localState.selectedTokens.clear();
+  window.dispatchEvent(new Event('token-selection-updated'));
+}
+
+export function getSelectedTokens(): string[] {
+  if (!localState.selectedTokens) return [];
+  return Array.from(localState.selectedTokens);
 }
 
 export function toggleBgSelection(id: string, multi: boolean) {
@@ -101,14 +142,6 @@ export function toggleBgSelection(id: string, multi: boolean) {
 export function clearBgSelection() {
   localState.selectedBgs.clear();
   window.dispatchEvent(new Event('bg-selection-updated'));
-}
-
-export function getTargets(): string[] {
-  return Array.from(localState.targets);
-}
-export function clearTargets() {
-  localState.targets.clear();
-  window.dispatchEvent(new Event('targets-updated'));
 }
 
 export interface BackgroundData {
@@ -413,4 +446,56 @@ export function triggerClockConsequence(id: string) {
       }
     }
   }
+}
+
+// =========================================================================
+// CAMPAIGN MANAGER
+// =========================================================================
+
+export interface CampaignArc {
+  id: string;
+  name: string;
+  description: string;
+  status: 'planned' | 'active' | 'completed';
+  /** Caminho relativo do arquivo .md na wiki, ex: "Campanhas/Minha Camp/Arcos/Arco 1.md" */
+  filePath?: string;
+}
+
+export interface CampaignSession {
+  id: string;
+  date: string;
+  summary: string;
+  status: 'upcoming' | 'completed';
+  /** Caminho relativo do arquivo .md na wiki, ex: "Campanhas/Minha Camp/Sessoes/2026-06-17_Sessao-01.md" */
+  filePath?: string;
+}
+
+export interface CampaignData {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  status: 'active' | 'hiatus' | 'completed';
+  /** Pasta raiz desta campanha na wiki, ex: "Campanhas/Minha Campanha" */
+  folderPath?: string;
+  /** Arquivo de visão geral, ex: "Campanhas/Minha Campanha/_campanha.md" */
+  overviewPath?: string;
+  arcs: CampaignArc[];
+  sessions: CampaignSession[];
+}
+
+export function createCampaign(campaign: Omit<CampaignData, 'id'>) {
+  const id = `campaign_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  state.campaigns.set(id, { ...campaign, id });
+}
+
+export function updateCampaign(id: string, updates: Partial<CampaignData>) {
+  const c = state.campaigns.get(id) as CampaignData | undefined;
+  if (c) {
+    state.campaigns.set(id, { ...c, ...updates });
+  }
+}
+
+export function deleteCampaign(id: string) {
+  state.campaigns.delete(id);
 }

@@ -110,6 +110,27 @@ export async function deleteFileOrFolder(path: string): Promise<void> {
   if (!response.ok) throw new Error("Erro ao deletar arquivo");
 }
 
+/**
+ * Ensures a folder exists in the wiki. Idempotent — safe to call even if it already exists.
+ * @param folderPath relative path inside the wiki root, e.g. "Campanhas/Minha Camp/Arcos"
+ */
+export async function ensureWikiFolder(folderPath: string): Promise<void> {
+  return createFolder(folderPath);
+}
+
+/**
+ * Loads a markdown file from the wiki. Returns null if the file doesn't exist (404).
+ * @param filePath relative path inside the wiki root, e.g. "Campanhas/Minha Camp/_campanha.md"
+ */
+export async function loadMarkdownFile(filePath: string): Promise<string | null> {
+  try {
+    return await fetchMarkdownContent(filePath);
+  } catch (err: any) {
+    if (err.message?.includes('404') || err.message?.includes('not found')) return null;
+    throw err;
+  }
+}
+
 export async function pushToGithub(): Promise<void> {
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/wikidozero';

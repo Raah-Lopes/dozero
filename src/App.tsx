@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid, Wrench } from 'lucide-react';
+import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid, Wrench, Library } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
@@ -17,6 +17,11 @@ import { MapContextMenu } from './components/HUD/MapContextMenu';
 import { ClockConfigModal } from './components/HUD/ClockConfigModal';
 import { WidgetHubModal } from './components/HUD/WidgetHubModal';
 import { TensionClockManager } from './components/HUD/TensionClockManager';
+import { OracleWidgetV2 } from './components/HUD/OracleWidgetV2';
+import { NPCGeneratorWidget } from './components/HUD/NPCGeneratorWidget';
+import { LocationGeneratorWidget } from './components/HUD/LocationGeneratorWidget';
+import { EncounterWidget } from './components/HUD/EncounterWidget';
+import { CampaignManagerWidget } from './components/HUD/CampaignManagerWidget';
 import { state, addTensionClock, updateTensionClockProps } from './store';
 
 // Trigger HMR
@@ -34,8 +39,14 @@ function App() {
   const [showActors, setShowActors] = useState(false);
   const [showCombatLog, setShowCombatLog] = useState(() => localStorage.getItem('showCombatLog') !== 'false'); // Default open unless explicitly closed
   const [showCombatTracker, setShowCombatTracker] = useState(false);
+  const [showOracleV2, setShowOracleV2] = useState(false);
+  const [showNPCGenerator, setShowNPCGenerator] = useState(false);
+  const [showLocationGenerator, setShowLocationGenerator] = useState(false);
+  const [showEncounterGenerator, setShowEncounterGenerator] = useState(false);
+  const [showCampaignManager, setShowCampaignManager] = useState(false);
   const [showToolsDropdown, setShowToolsDropdown] = useState(false);
   const [openSheets, setOpenSheets] = useState<string[]>([]);
+  const [wikiInitialFile, setWikiInitialFile] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem('showCombatLog', showCombatLog.toString());
@@ -58,9 +69,20 @@ function App() {
     const handleOpenClockConfig = () => setActiveModal('clockConfig');
     window.addEventListener('open-clock-config', handleOpenClockConfig);
 
+    // Evento disparado pelo CampaignManagerWidget para abrir um arquivo na Wiki
+    const handleOpenWikiFile = (e: Event) => {
+      const path = (e as CustomEvent).detail?.path || (e as CustomEvent).detail?.filePath;
+      if (path) {
+        setWikiInitialFile(path);
+        setViewMode('wiki');
+      }
+    };
+    window.addEventListener('open-wiki-file', handleOpenWikiFile);
+
     return () => {
       window.removeEventListener('token-dblclick', handleDblClick);
       window.removeEventListener('open-clock-config', handleOpenClockConfig);
+      window.removeEventListener('open-wiki-file', handleOpenWikiFile);
     }
   }, []);
 
@@ -80,7 +102,7 @@ function App() {
     <div className="app-container">
       {/* PÁGINA DEDICADA DA WIKI */}
       <div style={{ display: viewMode === 'wiki' ? 'block' : 'none', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1000, background: 'var(--bg-primary)' }}>
-        {viewMode === 'wiki' && <WikiViewer />}
+        {viewMode === 'wiki' && <WikiViewer initialFile={wikiInitialFile} />}
         <div style={{ position: 'fixed', top: '15px', right: '15px', zIndex: 99999 }}>
           <button 
             onClick={() => setViewMode('canvas')} 
@@ -114,26 +136,26 @@ function App() {
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
               {showToolsDropdown && (
                 <div className="glass-panel animate-fade-in" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem' }}>
-                  <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki">
+                  <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon theme-cyan ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki da Campanha">
                     <BookOpen size={20} />
                   </button>
-                  <button onClick={() => toggleModal('players')} className={`btn-icon ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores">
+                  <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores e Lobby">
                     <Users size={20} />
                   </button>
-                  <button className="btn-icon" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário">
+                  <button className="btn-icon theme-blue" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário e Grade">
                     <MapIcon size={20} />
                   </button>
-                  <button className="btn-icon" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
-                    <BookOpen size={20} />
+                  <button className="btn-icon theme-amber" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
+                    <Library size={20} />
                   </button>
-                  <button className={`btn-icon ${activeModal === 'widgets' ? 'active' : ''}`} onClick={() => toggleModal('widgets')} title="Hub de Widgets">
+                  <button className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`} onClick={() => toggleModal('widgets')} title="Hub de Widgets (Ferramentas GM)">
                     <LayoutGrid size={20} />
                   </button>
-                  <button className={`btn-icon ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Combate (Log)">
+                  <button className={`btn-icon theme-red ${showCombatLog ? 'active' : ''}`} onClick={() => setShowCombatLog(!showCombatLog)} title="Registro de Rolagens (Log)">
                     <MessageSquare size={20} />
                   </button>
-                  <button className={`btn-icon ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações">
-                    <Wrench size={20} />
+                  <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações do Sistema">
+                    <Settings size={20} />
                   </button>
                 </div>
               )}
@@ -150,17 +172,16 @@ function App() {
           </div>
         </div>
         
-        {/* Ribbon Combat Tracker */}
+        {/* Combat Tracker Widget */}
         {showCombatTracker && (
           <DraggableWindow 
             id="tracker" 
             title="Iniciativa" 
-            initialX={window.innerWidth / 2 - 200} 
-            initialY={100} 
-            width="auto" 
-            height="auto" 
-            variant="bare"
-            windowStyle={{ alignItems: 'center' }}
+            initialX={window.innerWidth - 360} 
+            initialY={80} 
+            width={340} 
+            height={500} 
+            variant="default"
             onClose={() => setShowCombatTracker(false)}
           >
             <CombatTracker />
@@ -182,6 +203,11 @@ function App() {
                  onClose={() => setActiveModal('none')} 
                  onOpenTracker={() => { setShowCombatTracker(!showCombatTracker); setActiveModal('none'); }} 
                  onOpenClockConfig={() => setActiveModal('clockConfig')} 
+                 onOpenOracleV2={() => { setShowOracleV2(!showOracleV2); setActiveModal('none'); }}
+                 onOpenNPCGenerator={() => { setShowNPCGenerator(!showNPCGenerator); setActiveModal('none'); }}
+                 onOpenLocationGenerator={() => { setShowLocationGenerator(!showLocationGenerator); setActiveModal('none'); }}
+                 onOpenEncounterGenerator={() => { setShowEncounterGenerator(!showEncounterGenerator); setActiveModal('none'); }}
+                 onOpenCampaignManager={() => { setShowCampaignManager(!showCampaignManager); setActiveModal('none'); }}
                />
              )}
              {activeModal === 'chat' && (
@@ -281,6 +307,18 @@ function App() {
               <MapSettingsPanel />
             </DraggableWindow>
           )}
+
+          {showOracleV2 && (
+            <OracleWidgetV2 onClose={() => setShowOracleV2(false)} />
+          )}
+
+          {showNPCGenerator && <NPCGeneratorWidget onClose={() => setShowNPCGenerator(false)} />}
+        
+          {showLocationGenerator && <LocationGeneratorWidget onClose={() => setShowLocationGenerator(false)} />}
+
+          {showEncounterGenerator && <EncounterWidget onClose={() => setShowEncounterGenerator(false)} />}
+
+          {showCampaignManager && <CampaignManagerWidget onClose={() => setShowCampaignManager(false)} />}
         </>
 
       </div>

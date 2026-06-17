@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, addTensionClock, removeTensionClock, updateTensionClockProps, triggerClockConsequence, getMapConfig } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, addTensionClock, removeTensionClock, updateTensionClockProps, triggerClockConsequence, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection } from '../store';
 
 function hexRound(q: number, r: number) {
   let s = -q - r;
@@ -100,9 +100,20 @@ export const GameCanvas: React.FC = () => {
       viewport.y = window.innerHeight / 2;
       app.stage.addChild(viewport);
 
-      // Camera Controls
+      // UI Overlay for Selection
+      const uiLayer = new Container();
+      app.stage.addChild(uiLayer);
+      
+      const selectionBox = new Graphics();
+      selectionBox.visible = false;
+      uiLayer.addChild(selectionBox);
+
+      // Camera & Selection Controls
       let isPanning = false;
       let panStart = { x: 0, y: 0 };
+      
+      let isSelecting = false;
+      let selectionStart = { x: 0, y: 0 };
       
       canvasEl.addEventListener('wheel', (e) => {
         e.preventDefault();
@@ -135,11 +146,42 @@ export const GameCanvas: React.FC = () => {
           viewport.x = e.clientX - panStart.x;
           viewport.y = e.clientY - panStart.y;
         }
+        if (isSelecting) {
+          const width = e.clientX - selectionStart.x;
+          const height = e.clientY - selectionStart.y;
+          selectionBox.clear();
+          selectionBox.rect(selectionStart.x, selectionStart.y, width, height);
+          selectionBox.fill({ color: 0x0ea5e9, alpha: 0.15 });
+          selectionBox.stroke({ width: 1, color: 0x0ea5e9, alpha: 0.8 });
+        }
       });
       window.addEventListener('pointerup', (e) => {
         if (e.button === 1 || e.button === 2) {
           isPanning = false;
           canvasEl.style.cursor = 'default';
+        }
+        if (isSelecting) {
+          isSelecting = false;
+          selectionBox.visible = false;
+          
+          const selectRect = new Rectangle(
+            Math.min(selectionStart.x, e.clientX),
+            Math.min(selectionStart.y, e.clientY),
+            Math.abs(e.clientX - selectionStart.x),
+            Math.abs(e.clientY - selectionStart.y)
+          );
+          
+          const toSelect: string[] = [];
+          for (const id in tokenSprites) {
+            const t = tokenSprites[id].container;
+            const globalPos = t.getGlobalPosition();
+            if (selectRect.contains(globalPos.x, globalPos.y)) {
+              toSelect.push(id);
+            }
+          }
+          if (toSelect.length > 0) {
+            selectTokensBulk(toSelect);
+          }
         }
       });
 
@@ -267,13 +309,12 @@ export const GameCanvas: React.FC = () => {
 
       drawGrid();
 
-      // Tokens Layer
-      const tokensContainer = new Container();
-      viewport.addChild(tokensContainer);
-
-      const tokenSprites: Record<string, { container: Container, glow: Graphics, hpFill: Graphics, targetRing: Graphics }> = {};
       let draggingTokenId: string | null = null;
-      let tokenDragOffset = { x: 0, y: 0 };
+      let tokenDragOffsets: Record<string, {x: number, y: number}> = {};
+      let tokenStartPositions: Record<string, {x: number, y: number}> = {};
+      let tokensContainer = new Container();
+      viewport.addChild(tokensContainer);
+      let tokenSprites: Record<string, { container: Container, glow: Graphics, hpFill: Graphics, targetRing: Graphics, selectionRing: Graphics }> = {};
 
       const syncTokens = () => {
         const tokensState = state.tokens;
@@ -340,6 +381,13 @@ export const GameCanvas: React.FC = () => {
             hpBarFill.fill(0xef4444);
             token.addChild(hpBarFill);
 
+            // Selection Ring
+            const selectionRing = new Graphics();
+            selectionRing.circle(0, 0, 32);
+            selectionRing.stroke({ width: 3, color: 0x0ea5e9, alpha: 0.8 });
+            selectionRing.visible = false;
+            token.addChild(selectionRing);
+
             // Target Ring (Hidden by default)
             const targetRing = new Graphics();
             targetRing.circle(0, 0, 36);
@@ -366,24 +414,46 @@ export const GameCanvas: React.FC = () => {
               }
               lastTokenClickTime = now;
 
+              const selected = getSelectedTokens();
+              if (!selected.includes(id)) {
+                if (!e.shiftKey) clearTokenSelection();
+                toggleTokenSelection(id, false);
+              }
+
               draggingTokenId = id;
-              token.alpha = 0.5;
+              tokenDragOffsets = {};
               
               const localPos = viewport.toLocal(e.global);
-              tokenDragOffset = { x: token.x - localPos.x, y: token.y - localPos.y };
+              const currentSelected = getSelectedTokens();
+              currentSelected.forEach(selId => {
+                const selToken = tokenSprites[selId]?.container;
+                if (selToken) {
+                  selToken.alpha = 0.5;
+                  tokenDragOffsets[selId] = { x: selToken.x - localPos.x, y: selToken.y - localPos.y };
+                  tokenStartPositions[selId] = { x: selToken.x, y: selToken.y };
+                }
+              });
             });
 
             // Prevent context menu on right click on tokens
             token.on('rightdown', (e) => e.stopPropagation());
 
             tokensContainer.addChild(token);
-            tokenSprites[id] = { container: token, glow, hpFill: hpBarFill, targetRing };
+            tokenSprites[id] = { container: token, glow, hpFill: hpBarFill, targetRing, selectionRing };
             
             token.x = t.x;
             token.y = t.y;
           } else {
             // If not dragging, animate to new position (or just set it)
-            if (draggingTokenId !== id) {
+            let isBeingDragged = false;
+            if (draggingTokenId) {
+               const selected = getSelectedTokens();
+               if (selected.includes(id)) {
+                  isBeingDragged = true;
+               }
+            }
+
+            if (!isBeingDragged) {
               const dx = t.x - tokenSprites[id].container.x;
               const dy = t.y - tokenSprites[id].container.y;
               if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
@@ -402,36 +472,69 @@ export const GameCanvas: React.FC = () => {
       };
       state.mapConfig.observe(mapConfigObserver);
 
+      const updateSelectionVisuals = () => {
+        const selected = getSelectedTokens();
+        for (const id in tokenSprites) {
+          if (tokenSprites[id] && tokenSprites[id].selectionRing) {
+            tokenSprites[id].selectionRing.visible = selected.includes(id);
+          }
+        }
+      };
+      window.addEventListener('token-selection-updated', updateSelectionVisuals);
+
       (app as any)._yjsObserver = syncTokens;
 
       const onDragEnd = () => {
         if (!draggingTokenId) return;
-        const id = draggingTokenId;
-        const tokenData = tokenSprites[id];
-        if (!tokenData) return;
+        const leaderId = draggingTokenId;
+        draggingTokenId = null;
         
-        const token = tokenData.container;
-        draggingTokenId = null; 
-        token.alpha = 1;
-
+        const currentSelected = getSelectedTokens();
         const config = getMapConfig();
-        const snapped = snapToGrid(token.x, token.y, config);
-        let snapX = snapped.x;
-        let snapY = snapped.y;
         
-        token.x = snapX;
-        token.y = snapY;
+        const leaderToken = tokenSprites[leaderId]?.container;
+        if (!leaderToken) return;
 
-        updateTokenPosition(id, snapX, snapY);
+        const leaderStart = tokenStartPositions[leaderId];
+        const leaderSnapped = snapToGrid(leaderToken.x, leaderToken.y, config);
+        
+        const deltaX = leaderStart ? (leaderSnapped.x - leaderStart.x) : 0;
+        const deltaY = leaderStart ? (leaderSnapped.y - leaderStart.y) : 0;
+
+        currentSelected.forEach(selId => {
+          const tokenData = tokenSprites[selId];
+          if (!tokenData) return;
+          const token = tokenData.container;
+          token.alpha = 1;
+          
+          if (selId === leaderId) {
+             token.x = leaderSnapped.x;
+             token.y = leaderSnapped.y;
+          } else {
+             const startPos = tokenStartPositions[selId];
+             if (startPos) {
+                token.x = startPos.x + deltaX;
+                token.y = startPos.y + deltaY;
+             }
+          }
+          
+          updateTokenPosition(selId, token.x, token.y);
+        });
       };
 
       const handleNativeMove = (e: PointerEvent) => {
         const worldPoint = viewport.toLocal({ x: e.clientX, y: e.clientY });
 
-        if (draggingTokenId && tokenSprites[draggingTokenId]) {
-          const token = tokenSprites[draggingTokenId].container;
-          token.x = worldPoint.x + tokenDragOffset.x;
-          token.y = worldPoint.y + tokenDragOffset.y;
+        if (draggingTokenId) {
+          const currentSelected = getSelectedTokens();
+          currentSelected.forEach(selId => {
+            const selToken = tokenSprites[selId]?.container;
+            const offset = tokenDragOffsets[selId];
+            if (selToken && offset) {
+              selToken.x = worldPoint.x + offset.x;
+              selToken.y = worldPoint.y + offset.y;
+            }
+          });
         }
       };
 
@@ -448,6 +551,7 @@ export const GameCanvas: React.FC = () => {
         if (prevTokenCleanup) prevTokenCleanup();
         window.removeEventListener('pointermove', handleNativeMove);
         window.removeEventListener('pointerup', handleNativeUp);
+        window.removeEventListener('token-selection-updated', updateSelectionVisuals);
       };
 
       const bgSprites: Record<string, Sprite> = {};
@@ -472,11 +576,19 @@ export const GameCanvas: React.FC = () => {
       viewport.addChildAt(bgCatcher, 0);
 
       bgCatcher.on('pointerdown', (e) => {
-        if (e.button === 0 && (window as any).__IS_MAP_MENU_OPEN__) {
-           isMarquee = true;
-           const localPos = viewport.toLocal(e.global);
-           marqueeStart = { x: localPos.x, y: localPos.y };
-           marqueeGraphics.clear();
+        if (e.button === 0) {
+          if ((window as any).__IS_MAP_MENU_OPEN__) {
+             isMarquee = true;
+             const localPos = viewport.toLocal(e.global);
+             marqueeStart = { x: localPos.x, y: localPos.y };
+             marqueeGraphics.clear();
+          } else {
+             isSelecting = true;
+             selectionStart = { x: e.global.x, y: e.global.y };
+             selectionBox.clear();
+             selectionBox.visible = true;
+             if (!e.shiftKey) clearTokenSelection();
+          }
         }
       });
 
@@ -972,7 +1084,15 @@ export const GameCanvas: React.FC = () => {
           tokenData.hpFill.fill(0xef4444);
           
           // LERP position if someone else moved it
-          if (draggingTokenId !== id) {
+          let isBeingDragged = false;
+          if (draggingTokenId) {
+             const selected = getSelectedTokens();
+             if (selected.includes(id)) {
+                isBeingDragged = true;
+             }
+          }
+
+          if (!isBeingDragged) {
              const dx = tState.x - tokenData.container.x;
              const dy = tState.y - tokenData.container.y;
              if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {

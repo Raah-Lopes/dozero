@@ -162,12 +162,17 @@ const TreeView: React.FC<{
   );
 };
 
-export const WikiViewer: React.FC = () => {
+interface WikiViewerProps {
+  /** Arquivo a abrir imediatamente (ex: enviado pelo CampaignManagerWidget) */
+  initialFile?: string | null;
+}
+
+export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   const [treeItems, setTreeItems] = useState<GithubTreeItem[]>([]);
   const [loadingTree, setLoadingTree] = useState(false);
   const [errorTree, setErrorTree] = useState<string | null>(null);
 
-  const [activeFile, setActiveFile] = useState<string | null>(null);
+  const [activeFile, setActiveFile] = useState<string | null>(initialFile || null);
   const [content, setContent] = useState<string>('');
   const [loadingContent, setLoadingContent] = useState(false);
 
@@ -303,7 +308,7 @@ export const WikiViewer: React.FC = () => {
   const handleCreateFile = async () => {
     const name = prompt("Nome do novo arquivo (sem .md):");
     if (!name) return;
-    const currentFolder = activeFile ? activeFile.substring(0, activeFile.lastIndexOf('/')) : 'Campanhadozero';
+    const currentFolder = activeFile ? activeFile.substring(0, activeFile.lastIndexOf('/')) : '[1] 🏕️ Campanha Principal';
     const newPath = currentFolder ? `${currentFolder}/${name}.md` : `${name}.md`;
     try {
       await saveMarkdownContent(newPath, `# ${name}\n\nEscreva sua lore aqui...`);
@@ -317,7 +322,7 @@ export const WikiViewer: React.FC = () => {
   const handleCreateFolder = async () => {
     const name = prompt("Nome da nova pasta:");
     if (!name) return;
-    const currentFolder = activeFile ? activeFile.substring(0, activeFile.lastIndexOf('/')) : 'Campanhadozero';
+    const currentFolder = activeFile ? activeFile.substring(0, activeFile.lastIndexOf('/')) : '[1] 🏕️ Campanha Principal';
     const newPath = currentFolder ? `${currentFolder}/${name}` : `${name}`;
     try {
       await createFolder(newPath);
@@ -371,6 +376,24 @@ export const WikiViewer: React.FC = () => {
   useEffect(() => {
     loadTree();
   }, []);
+
+  // Escuta eventos de navegação do CampaignManagerWidget (quando já montado)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const path = (e as CustomEvent).detail?.path || (e as CustomEvent).detail?.filePath;
+      if (path) setActiveFile(path);
+    };
+    window.addEventListener('open-wiki-file', handler);
+    return () => window.removeEventListener('open-wiki-file', handler);
+  }, []);
+
+  // Se initialFile mudar (ou WikiViewer for remontado com arquivo via CampaignManager)
+  useEffect(() => {
+    if (initialFile) {
+      setActiveFile(initialFile);
+      setShowGraph(false);
+    }
+  }, [initialFile]);
 
   useEffect(() => {
     if (!activeFile) return;

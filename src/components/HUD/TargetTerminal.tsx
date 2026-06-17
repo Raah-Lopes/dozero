@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { HealthBar } from './HealthBar';
-import { Dices, Crosshair, Trash2, Plus, Edit2, Swords } from 'lucide-react';
+import { Dices, Crosshair, Trash2, Plus, Edit2, Swords, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, addCombatParticipant } from '../../store';
 import { WoDParser } from '../../rules/WoDParser';
+import { useWiki } from '../../hooks/useWiki';
 
 interface Macro {
   id: string;
@@ -16,6 +17,8 @@ interface Macro {
 
 export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ tokenId, isGM = true }) => {
   const [tokenData, setTokenData] = useState<any>(null);
+  const [showWikiStats, setShowWikiStats] = useState(false);
+  const { index, isLoading: isWikiLoading } = useWiki();
 
   useEffect(() => {
     const observer = () => {
@@ -87,6 +90,15 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
   };
 
   if (!tokenData) return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Ficha não encontrada ou deletada.</div>;
+
+  // Busca a página da wiki automaticamente pelo nome do personagem, ou usa o link manual se existir
+  const tokenNameRaw = (tokenData.name || '').trim().toLowerCase();
+  const wikiEntry = index.find(e => {
+    if (tokenData.wikiSlug && e.slug === tokenData.wikiSlug) return true;
+    const titleMatch = (e.metadata.titulo || '').toLowerCase().trim() === tokenNameRaw;
+    const slugMatch = e.slug.toLowerCase().trim() === tokenNameRaw;
+    return titleMatch || slugMatch;
+  }) || null;
 
   const macros: Macro[] = tokenData.macros || [];
 
@@ -260,6 +272,46 @@ export const TargetTerminal: React.FC<{ tokenId: string; isGM?: boolean }> = ({ 
             <Swords size={16} /> Rolar Iniciativa
           </button>
         </div>
+      </div>
+
+      <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%' }} />
+
+      {/* Wiki Integration Section */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--accent-primary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BookOpen size={16} />
+            <h4 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Propriedades da Wiki</h4>
+          </div>
+        </div>
+
+
+
+        {wikiEntry && (
+          <div style={{ background: 'rgba(15, 23, 42, 0.4)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+            <button 
+              onClick={() => setShowWikiStats(!showWikiStats)}
+              style={{ width: '100%', padding: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Ver Atributos</span>
+              {showWikiStats ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+            
+            {showWikiStats && (
+              <div style={{ padding: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem' }}>
+                {Object.entries(wikiEntry.metadata).map(([key, value]) => {
+                  if (key === 'tags' || typeof value === 'object') return null; // Ignora arrays puros e objetos complexos na renderização
+                  return (
+                    <div key={key} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.2)', padding: '0.4rem', borderRadius: '4px', borderLeft: '2px solid var(--accent-primary)' }}>
+                      <span style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', fontSize: '0.65rem' }}>{key}</span>
+                      <span style={{ color: 'white', fontWeight: 600 }}>{String(value)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%' }} />

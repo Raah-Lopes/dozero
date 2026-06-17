@@ -332,7 +332,14 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
   }, [onNodeClick, linkingSourceNode, fetchGraph]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'transparent', position: 'relative' }}>
+    <div ref={containerRef} style={{ 
+      width: '100%', 
+      height: '100%', 
+      backgroundColor: 'transparent',
+      backgroundImage: 'radial-gradient(rgba(128, 128, 128, 0.4) 1.5px, transparent 1.5px)',
+      backgroundSize: '24px 24px',
+      position: 'relative' 
+    }}>
       
       <div style={{ position: 'absolute', top: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.85)', padding: '0.6rem 1.2rem', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.4)', backdropFilter: 'blur(8px)', width: '350px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
         <Search size={18} color="var(--accent-primary)" />

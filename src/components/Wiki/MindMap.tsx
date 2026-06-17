@@ -4,6 +4,7 @@ import {
   MiniMap,
   Controls,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   addEdge
@@ -41,7 +42,7 @@ export const MindMap: React.FC = () => {
       >
         <Controls />
         <MiniMap />
-        <Background gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={2} color="#808080" />
       </ReactFlow>
     </div>
   );

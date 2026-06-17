@@ -10,11 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dice-roller/rpg-dice-roller": "^5.5.1",
+    "@google/generative-ai": "^0.24.1",
     "@livekit/components-react": "^2.9.21",
     "@livekit/components-styles": "^1.2.0",
     "@mdxeditor/editor": "^4.0.3",
     "@pixi/react": "^8.0.5",
+    "@vitalets/google-translate-api": "^9.2.1",
     "@xyflow/react": "^12.11.0",
+    "gray-matter": "^4.0.3",
     "livekit-client": "^2.19.2",
     "lucide-react": "^1.18.0",
     "pixi.js": "^8.19.0",
