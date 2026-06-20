@@ -175,6 +175,32 @@ export function wikiLocalApi(): Plugin {
             return sendResponse(200, { results });
           }
 
+          if (req.method === 'POST' && pathname === '/api/wiki/init') {
+            const templatePath = path.resolve('template_wiki');
+            if (!fs.existsSync(templatePath)) return sendResponse(500, { error: 'Template folder not found' });
+            
+            function copyRecursiveSync(src: string, dest: string) {
+              const exists = fs.existsSync(src);
+              const stats = exists && fs.statSync(src);
+              if (stats && stats.isDirectory()) {
+                if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+                fs.readdirSync(src).forEach((childItemName) => {
+                  copyRecursiveSync(path.join(src, childItemName), path.join(dest, childItemName));
+                });
+              } else {
+                fs.copyFileSync(src, dest);
+              }
+            }
+
+            try {
+              if (!fs.existsSync(repoPath)) fs.mkdirSync(repoPath, { recursive: true });
+              copyRecursiveSync(templatePath, repoPath);
+              return sendResponse(200, { success: true });
+            } catch (e: any) {
+              return sendResponse(500, { error: e.message });
+            }
+          }
+
           if (req.method === 'POST' && pathname === '/api/wiki/save') {
             const filepath = body.path;
             const content = body.content;

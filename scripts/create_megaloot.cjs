@@ -1,5 +1,5 @@
 const fs = require('fs');
-const path = 'D:/wikidozero/MegaLoot.md';
+const path = 'D:/DOZERO/wikidozero/MegaLoot.md';
 
 const content = `# 💰 Mega Loot
 

@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const content = fs.readFileSync('D:/wikidozero/MegaOraculo.md', 'utf-8');
+const content = fs.readFileSync('D:/DOZERO/wikidozero/MegaOraculo.md', 'utf-8');
 const lines = content.split('\n');
 
 const categoriesMap = {};

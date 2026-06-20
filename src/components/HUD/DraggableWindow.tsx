@@ -16,9 +16,10 @@ interface DraggableWindowProps {
 }
 
 // Global counter to track which window is on top
-let globalZIndexCounter = 50;
+// Starts at 9999999 to ensure windows stay on top of ANY hardcoded zIndex (like 99999 in WikiViewer)
+let globalZIndexCounter = 9999999;
 
-export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', dragAnywhere = false, onClose }) => {
+export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', dragAnywhere = true, onClose }) => {
   const storageKey = `window_prefs_${id}`;
   
   const getInitialPrefs = () => {
@@ -34,13 +35,14 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
          if (typeof parsed.x !== 'number' || typeof parsed.y !== 'number' || 
              isNaN(parsed.x) || isNaN(parsed.y) ||
              parsed.x < -100 || parsed.x > screenW - 50 || 
-             parsed.y < -50 || parsed.y > screenH - 50) {
-            return { x: initialX, y: initialY, w: width, h: height };
+             parsed.y < 0 || parsed.y > screenH - 50) {
+            return { x: initialX, y: Math.max(0, initialY), w: width, h: height };
          }
+         if (parsed.y < 0) parsed.y = 0;
          return parsed;
       }
     } catch (e) {}
-    return { x: initialX, y: initialY, w: width, h: height };
+    return { x: initialX, y: Math.max(0, initialY), w: width, h: height };
   };
 
   const initialPrefs = getInitialPrefs();
@@ -62,10 +64,39 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === 'BUTTON' || target.tagName === 'SELECT' || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('button') || target.closest('select')) {
+    
+    // Do not initiate drag on interactive elements
+    if (
+      target.tagName === 'BUTTON' || 
+      target.tagName === 'SELECT' || 
+      target.tagName === 'INPUT' || 
+      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'A' ||
+      target.closest('button') || 
+      target.closest('select') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      target.closest('a') ||
+      target.closest('.interactive') ||
+      target.getAttribute('role') === 'button'
+    ) {
       bringToFront();
-      return; // Do not initiate drag on interactive elements
+      return;
     }
+
+    // Do not drag if we are inside a scrollable container
+    let current: HTMLElement | null = target;
+    while (current && windowRef.current && current !== windowRef.current) {
+      const style = window.getComputedStyle(current);
+      const isScrollableY = (style.overflowY === 'auto' || style.overflowY === 'scroll') && current.scrollHeight > current.clientHeight;
+      const isScrollableX = (style.overflowX === 'auto' || style.overflowX === 'scroll') && current.scrollWidth > current.clientWidth;
+      if (isScrollableY || isScrollableX) {
+        bringToFront();
+        return;
+      }
+      current = current.parentElement;
+    }
+
     e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
     bringToFront();
@@ -88,6 +119,11 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
 
     if (!windowRef.current) return;
     const rect = windowRef.current.getBoundingClientRect();
+
+    // Prevent dragging above top of viewport
+    if (newY < 0) {
+      newY = 0;
+    }
 
     // 1. Snapping to screen edges
     if (Math.abs(newX) < snapThreshold) newX = 0;
@@ -120,6 +156,9 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
       if (Math.abs(newY - sRect.top) < snapThreshold) newY = sRect.top;
     });
 
+    // Final safety check for y
+    if (newY < 0) newY = 0;
+
     setPos({ x: newX, y: newY });
   };
 
@@ -130,9 +169,10 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
     // Save pos when drag ends
     if (windowRef.current) {
       const rect = windowRef.current.getBoundingClientRect();
+      const finalY = Math.max(0, pos.y);
       localStorage.setItem(storageKey, JSON.stringify({
         x: pos.x,
-        y: pos.y,
+        y: finalY,
         w: rect.width,
         h: rect.height
       }));

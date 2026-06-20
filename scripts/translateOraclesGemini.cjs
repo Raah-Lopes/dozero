@@ -11,7 +11,7 @@ const model = genAI.getGenerativeModel({
   }
 });
 
-const WIKI_DIR = 'D:/wikidozero';
+const WIKI_DIR = 'D:/DOZERO/wikidozero';
 const ORACLES_DIR = path.join(WIKI_DIR, 'Oracles');
 const JSON_FILES = ['Ironsmith-Expanded-Oracles.JSON', 'Starsmith-Expanded-Oracles.json'];
 

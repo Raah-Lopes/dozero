@@ -25,7 +25,7 @@ export class OracleParserV2 {
     if (this.cachedCategories) return this.cachedCategories;
 
     try {
-      const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent('D:/wikidozero')}&path=${encodeURIComponent('[2] 🔮 Matrizes do VTT/MegaOraculo.md')}`);
+      const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent('D:/DOZERO/wikidozero')}&path=${encodeURIComponent('[2] 🔮 Matrizes do VTT/MegaOraculo.md')}`);
       if (!res.ok) throw new Error('Falha ao carregar o Mega Oráculo');
       
       const fileData = await res.json();

@@ -9,13 +9,13 @@ export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }
 
   useEffect(() => {
     // Carrega iniciais ignorando corrompidos
-    const validClocks = Array.from(state.clocks.values()).filter(c => c && typeof c.endTime === 'number' && !isNaN(c.endTime));
-    setClocks(validClocks);
+    const validClocks = Array.from(state.clocks.values()).filter((c: any) => c && typeof c.endTime === 'number' && !isNaN(c.endTime));
+    setClocks(validClocks as TensionClock[]);
 
     // Observa mudanças (Yjs)
     const observer = () => {
       const rawClocks = Array.from(state.clocks.values());
-      const updatedClocks = rawClocks.filter((c): c is TensionClock => 
+      const updatedClocks = rawClocks.filter((c: any): c is TensionClock => 
         c && typeof c.id === 'string' && typeof c.durationMs === 'number'
       );
       setClocks(updatedClocks);
@@ -36,7 +36,7 @@ export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }
       const now = Date.now();
       const currentClocks = Array.from(state.clocks.values());
 
-      currentClocks.forEach(c => {
+      currentClocks.forEach((c: any) => {
         if (c.isRunning) {
           const remaining = Math.max(0, c.endTime - now);
           if (remaining <= 0) {

@@ -68,5 +68,5 @@ content += `# 📊 Estatísticas e Combate\n\n`;
 content += `## Nível de Ameaça\ndados: 1d100\n\n| Dado | Resultado |\n|---|---|\n| 1-30 | Nv 1 (Minion/Aldeão) |\n| 31-60 | Nv 2 (Capanga/Soldado) |\n| 61-80 | Nv 3 (Veterano/Ameaça Real) |\n| 81-95 | Nv 4 (Elite/Chefe Menor) |\n| 96-100 | Nv 5 (Chefe Absoluto) |\n\n`;
 content += `## Estilo de Combate (Atributos)\ndados: 1d100\n\n| Dado | Resultado |\n|---|---|\n| 1-20 | Brutamontes (+FOR, -INT) |\n| 21-40 | Furtivo/Ágil (+DES, -FOR) |\n| 41-60 | Estrategista/Mago (+INT, -FOR) |\n| 61-80 | Diplomata/Líder (+CAR, -DES) |\n| 81-100 | Equilibrado (Médio em tudo) |\n\n`;
 
-fs.writeFileSync('D:/wikidozero/MegaNPCs.md', content, 'utf8');
+fs.writeFileSync('D:/DOZERO/wikidozero/MegaNPCs.md', content, 'utf8');
 console.log('MegaNPCs.md generated!');

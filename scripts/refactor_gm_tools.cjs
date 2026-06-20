@@ -1,5 +1,5 @@
 const fs = require('fs');
-const path = 'D:/wikidozero/MegaOraculo.md';
+const path = 'D:/DOZERO/wikidozero/MegaOraculo.md';
 
 let content = fs.readFileSync(path, 'utf8');
 

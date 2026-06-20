@@ -7,6 +7,7 @@ export function useWiki() {
   const [index, setIndex] = useState<WikiEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
 
   useEffect(() => {
     async function init() {
@@ -24,18 +25,31 @@ export function useWiki() {
     }
 
     init();
-  }, []);
+
+    const handleUpdate = () => {
+      WikiIndexer.clearCache();
+      setRefreshCount(prev => prev + 1);
+    };
+    window.addEventListener('wiki-updated', handleUpdate);
+    return () => window.removeEventListener('wiki-updated', handleUpdate);
+  }, [refreshCount]);
 
   // Expondo uma função construtora do motor de buscas memoizada
   const query = useMemo(() => {
     return () => new WikiQuery(index);
   }, [index]);
 
+  const refresh = () => {
+    WikiIndexer.clearCache();
+    setRefreshCount(prev => prev + 1);
+  };
+
   return {
     index,       // Todos os arquivos puros para exibir listas não filtradas
     query,       // Motor de busca (ex: query().where('tipo', 'magia').get())
     isLoading,   // Estado de carregamento do índice
-    error
+    error,
+    refresh      // Função para forçar recarregamento
   };
 }
 

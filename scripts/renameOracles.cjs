@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const translate = require('@vitalets/google-translate-api');
 
-const ORACLES_DIR = 'D:/wikidozero/Oracles';
+const ORACLES_DIR = 'D:/DOZERO/wikidozero/Oracles';
 
 const folderTranslations = {
   'Ask_the_Oracle': 'Pergunte_ao_Oraculo',

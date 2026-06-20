@@ -19,7 +19,7 @@ export interface OracleTable {
 
 export class OracleParser {
   // O caminho da base de oráculos do Obsidian do usuário
-  static ORACLES_PATH = 'D:/wikidozero/Oracles';
+  static ORACLES_PATH = 'D:/DOZERO/wikidozero/Oracles';
   private static cachedCategories: OracleCategory[] | null = null;
 
   static async loadCategories(): Promise<OracleCategory[]> {
@@ -62,7 +62,7 @@ export class OracleParser {
       // 2. Carregar e parsear os JSONs na raiz
       const jsonFiles = ['Ironsmith-Expanded-Oracles.JSON', 'Starsmith-Expanded-Oracles.json'];
       for (const jf of jsonFiles) {
-        const fileRes = await fetch(`http://localhost:5174/api/wiki/file?repoPath=${encodeURIComponent('D:/wikidozero')}&path=${encodeURIComponent(jf)}`);
+        const fileRes = await fetch(`http://localhost:5174/api/wiki/file?repoPath=${encodeURIComponent('D:/DOZERO/wikidozero')}&path=${encodeURIComponent(jf)}`);
         if (fileRes.ok) {
           try {
              const fileData = await fileRes.json();

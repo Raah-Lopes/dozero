@@ -69,7 +69,7 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
 
               // Enviar para o servidor local
               const config = getWikiConfig();
-              const repoPath = config.repoUrl || 'D:/wikidozero';
+              const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
               
               const res = await fetch('/api/wiki/save-image', {
                 method: 'POST',
@@ -90,7 +90,7 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
             imagePreviewHandler: async (url: string) => {
               // Quando o editor for renderizar a imagem, dizemos para buscar da nossa API crua
               const config = getWikiConfig();
-              const repoPath = config.repoUrl || 'D:/wikidozero';
+              const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
               // Se já for uma URL externa (http), deixa passar direto
               if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
                 return url;

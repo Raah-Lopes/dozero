@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const translate = require('@vitalets/google-translate-api');
 
-const WIKI_DIR = 'D:/wikidozero';
+const WIKI_DIR = 'D:/DOZERO/wikidozero';
 const ORACLES_DIR = path.join(WIKI_DIR, 'Oracles');
 const JSON_FILES = ['Ironsmith-Expanded-Oracles.JSON', 'Starsmith-Expanded-Oracles.json'];
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Swords, Timer, Dice3, FileText, Eye, CloudSun, UserPlus, Map, Skull, BookOpen } from 'lucide-react';
+import { X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -10,9 +10,19 @@ interface Props {
   onOpenLocationGenerator: () => void;
   onOpenEncounterGenerator: () => void;
   onOpenCampaignManager: () => void;
+  onOpenMindMap: () => void;
+  onOpenAutomatedDice: () => void;
+  onOpenCharacterRoster: () => void;
+  onOpenChronos: () => void;
+  onOpenLoreMachine: () => void;
+  onOpenDLCManager: () => void;
+  onOpenWorldEngine: () => void;
+  onOpenEntityForge: () => void;
+  onOpenStronghold: () => void;
+  onOpenArsenalMestre: () => void;
 }
 
-export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager }) => {
+export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre }) => {
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '550px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -64,6 +74,9 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
             .theme-amber { color: #fcd34d; border-color: rgba(245, 158, 11, 0.5); }
             .theme-amber:hover { background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
 
+            .theme-yellow { color: #fef08a; border-color: rgba(234, 179, 8, 0.5); }
+            .theme-yellow:hover { background: rgba(234, 179, 8, 0.2); border-color: #eab308; box-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+
             .theme-purple { color: #f0abfc; border-color: rgba(217, 70, 239, 0.5); }
             .theme-purple:hover { background: rgba(217, 70, 239, 0.2); border-color: #d946ef; box-shadow: 0 0 15px rgba(217, 70, 239, 0.5); }
 
@@ -78,6 +91,9 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
 
             .theme-indigo { color: #c4b5fd; border-color: rgba(139, 92, 246, 0.5); }
             .theme-indigo:hover { background: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+
+            .theme-pink { color: #f9a8d4; border-color: rgba(236, 72, 153, 0.5); }
+            .theme-pink:hover { background: rgba(236, 72, 153, 0.2); border-color: #ec4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); }
           `}
         </style>
         {/* Gestão de Mesa */}
@@ -108,6 +124,47 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
 
         <button onClick={onOpenCampaignManager} title="Gestor de Campanhas (Planejamento)" className="widget-btn theme-indigo">
           <BookOpen size={32} />
+        </button>
+
+        <button onClick={onOpenMindMap} title="Painel de Conspiração (Mapa Mental)" className="widget-btn theme-pink">
+          <Network size={32} />
+        </button>
+
+        {/* Novos Widgets */}
+        <button onClick={onOpenAutomatedDice} title="Dados Automáticos (Combate)" className="widget-btn theme-red">
+          <Dices size={32} />
+        </button>
+
+        <button onClick={onOpenCharacterRoster} title="Lista de Personagens" className="widget-btn theme-green">
+          <Users size={32} />
+        </button>
+
+        <button onClick={onOpenChronos} title="Motor Chronos (Simulador de Tempo)" className="widget-btn theme-yellow">
+          <Sun size={32} />
+        </button>
+
+        <button onClick={onOpenLoreMachine} title="Máquina de Lores (Gerador Procedural)" className="widget-btn theme-purple">
+          <Sparkles size={32} />
+        </button>
+
+        <button onClick={onOpenDLCManager} title="Gerenciador de Módulos (DLCs)" className="widget-btn theme-orange">
+          <ToyBrick size={32} />
+        </button>
+
+        <button onClick={onOpenWorldEngine} title="Motor de Mundo (Geopolítica)" className="widget-btn theme-indigo">
+          <Globe size={32} />
+        </button>
+
+        <button onClick={onOpenEntityForge} title="Forja de Entidades" className="widget-btn theme-red">
+          <Anvil size={32} />
+        </button>
+
+        <button onClick={onOpenStronghold} title="Fortaleza da Party" className="widget-btn theme-green">
+          <Castle size={32} />
+        </button>
+
+        <button onClick={onOpenArsenalMestre} title="Arsenal do Mestre (Gerenciador GM)" className="widget-btn theme-amber">
+          <Shield size={32} />
         </button>
       </div>
     </div>

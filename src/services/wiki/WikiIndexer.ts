@@ -1,45 +1,28 @@
 import type { WikiEntry } from './WikiQuery';
 import { getWikiConfig } from '../../store';
 
+import * as yaml from 'js-yaml';
+
 function parseFrontmatter(content: string) {
-  const trimmed = content.trim();
-  // Aceita ---, ***, ou vários hífens no início e fim, ignorando espaços em branco residuais na linha
-  const match = trimmed.match(/^(?:---|[*]{3,}|[-]{3,})[ \t]*\r?\n([\s\S]*?)\r?\n(?:---|[*]{3,}|[-]{3,})[ \t]*\r?\n([\s\S]*)$/);
-  if (!match) return { data: {}, content: trimmed };
-  
-  const yamlText = match[1];
-  const markdownContent = match[2];
-  
-  const data: Record<string, any> = {};
-  yamlText.split('\n').forEach(line => {
-    const colonIdx = line.indexOf(':');
-    if (colonIdx > -1) {
-      let key = line.slice(0, colonIdx).trim().replace(/\\_/g, '_');
-      let val = line.slice(colonIdx + 1).trim();
-      
-      // Remove possíveis escapes de chaves inseridos pelo editor Markdown
-      val = val.replace(/\\\[/g, '[').replace(/\\\]/g, ']').replace(/\\_/g, '_');
-      
-      if (val.startsWith('[') && val.endsWith(']')) {
-        data[key] = val.slice(1, -1).split(',').map(s => s.trim());
-      } else {
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-          val = val.slice(1, -1);
-        }
-        if (!isNaN(Number(val)) && val !== '') {
-           data[key] = Number(val);
-        } else {
-           data[key] = val;
-        }
-      }
+  try {
+    const parts = content.split('---');
+    if (parts.length >= 3 && content.trim().startsWith('---')) {
+      const data = yaml.load(parts[1]) as any;
+      return { data: data || {}, content: parts.slice(2).join('---') };
     }
-  });
-  
-  return { data, content: markdownContent };
+    return { data: {}, content };
+  } catch (e) {
+    console.error("Erro ao fazer parse do Frontmatter usando js-yaml:", e);
+    return { data: {}, content };
+  }
 }
 
 export class WikiIndexer {
   private static index: WikiEntry[] | null = null;
+
+  static clearCache() {
+    this.index = null;
+  }
 
   static async buildIndex(): Promise<WikiEntry[]> {
     if (this.index) {
@@ -48,7 +31,7 @@ export class WikiIndexer {
 
     const entries: WikiEntry[] = [];
     const config = getWikiConfig();
-    const repoPath = config.repoUrl; // ex: D:/wikidozero
+    const repoPath = config.repoUrl; // ex: D:/DOZERO/wikidozero
 
     try {
       // Faz a busca na API local do projeto configurada no vite-plugins

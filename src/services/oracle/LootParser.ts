@@ -7,7 +7,7 @@ export class LootParser {
     if (this.cachedCategories) return this.cachedCategories;
 
     try {
-      const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent('D:/wikidozero')}&path=${encodeURIComponent('[2] 🔮 Matrizes do VTT/MegaLoot.md')}`);
+      const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent('D:/DOZERO/wikidozero')}&path=${encodeURIComponent('[2] 🔮 Matrizes do VTT/MegaLoot.md')}`);
       if (!res.ok) throw new Error('Falha ao carregar o Mega Loot');
       
       const fileData = await res.json();

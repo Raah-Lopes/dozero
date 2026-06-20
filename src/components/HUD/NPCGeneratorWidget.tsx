@@ -84,7 +84,36 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose 
         const fileName = `${npcData.nome.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.md`;
         const path = `[1] 🏕️ Campanha Principal/NPCs/${fileName}`;
         
-        let md = `---\ntags: [npc, generated, ${npcData.racaReal}]\n---\n\n`;
+        let md = `---\n`;
+        md += `tipo: NPC\n`;
+        md += `nome: "${npcData.nome}"\n`;
+        md += `HP: ${npcData.hp}\n`;
+        md += `HP_max: ${npcData.hp}\n`;
+        md += `PM: 10\n`;
+        md += `PM_max: 10\n`;
+        md += `energia: 100\n`;
+        md += `energia_max: 100\n`;
+        md += `sanidade: 100\n`;
+        md += `sanidade_max: 100\n`;
+        md += `fome: 0\n`;
+        md += `fome_max: 100\n`;
+        md += `sede: 0\n`;
+        md += `sede_max: 100\n`;
+        md += `cansaco: 0\n`;
+        md += `cansaco_max: 100\n`;
+        md += `defesa: 10\n`;
+        md += `Nivel: 1\n`;
+        md += `Ouro: 0\n`;
+        md += `Riquezas: 0\n`;
+        md += `status_efeitos: []\n`;
+        md += `armas: []\n`;
+        md += `poderes: []\n`;
+        md += `pocoes: []\n`;
+        md += `maldicoes: []\n`;
+        md += `objetos_campanha: []\n`;
+        md += `inventario: []\n`;
+        md += `tags: [npc, generated, ${npcData.racaReal}]\n`;
+        md += `---\n\n`;
         md += `# 👤 ${npcData.nome}\n\n`;
         md += `> **${npcData.sexo} | ${npcData.racaReal} | ${npcData.idade} | ${npcData.papel}**\n>\n`;
         md += `> *Disposição:* ${npcData.disposicao}\n\n`;
@@ -104,7 +133,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose 
         md += `### Notas do Mestre\n`;
         md += `(Adicione as anotações sobre como os jogadores conheceram esta entidade aqui)\n`;
 
-        await saveMarkdownContent(path, md, `Gerado NPC: ${npcData.nome}`);
+        await saveMarkdownContent(path, md);
         alert(`✅ Ficha de ${npcData.nome} criada com sucesso em [1] 🏕️ Campanha Principal/NPCs/!`);
       } catch (e) {
         console.error(e);

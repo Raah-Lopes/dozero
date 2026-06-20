@@ -84,9 +84,14 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
   const fetchGraph = useCallback(async () => {
     try {
       const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/wikidozero';
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       const res = await fetch(`/api/wiki/graph?repoPath=${encodeURIComponent(repoPath)}&t=${Date.now()}`);
       const json = await res.json();
+
+      if (!res.ok || !json.nodes) {
+        console.error('Erro na API do Grafo:', json);
+        return;
+      }
 
       const nameToId: Record<string, string> = {};
       json.nodes.forEach((n: NodeData) => {
@@ -137,7 +142,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
     const timer = setTimeout(async () => {
       try {
         const config = getWikiConfig();
-        const repoPath = config.repoUrl || 'D:/wikidozero';
+        const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
         const res = await fetch(`/api/wiki/search?repoPath=${encodeURIComponent(repoPath)}&q=${encodeURIComponent(searchQuery)}`);
         const json = await res.json();
         if (json.results) setSearchResults(json.results);
@@ -193,7 +198,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
 
     try {
       const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/wikidozero';
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       
       const res = await fetch(`/api/wiki/rename`, {
         method: 'POST',
@@ -218,7 +223,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
 
     try {
       const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/wikidozero';
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       
       const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(link.source.id)}&t=${Date.now()}`);
       if (!res.ok) throw new Error("Erro ao ler arquivo");
@@ -266,7 +271,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
     
     try {
       const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/wikidozero';
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       
       await fetch(`/api/wiki/save`, {
         method: 'POST',
@@ -289,7 +294,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
         if (linkingSourceNode.id !== node.id) {
           try {
             const config = getWikiConfig();
-            const repoPath = config.repoUrl || 'D:/wikidozero';
+            const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
             
             const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(linkingSourceNode.id)}&t=${Date.now()}`);
             const fileData = await res.json();
@@ -498,9 +503,10 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
             
             if (typeof start !== 'object' || typeof end !== 'object') return;
 
-            const textPos = Object.assign(...['x', 'y'].map(c => ({
-              [c]: start[c] + (end[c] - start[c]) / 2
-            })));
+            const textPos = {
+              x: start.x + (end.x - start.x) / 2,
+              y: start.y + (end.y - start.y) / 2
+            } as any;
             
             const relLink = { x: end.x - start.x, y: end.y - start.y };
             let textAngle = Math.atan2(relLink.y, relLink.x);
@@ -572,7 +578,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
                   img.src = avatarUrl;
                 } else {
                   const config = getWikiConfig();
-                  const repoPath = config.repoUrl || 'D:/wikidozero';
+                  const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
                   img.src = `/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(avatarUrl)}`;
                 }
                 node.img = img;

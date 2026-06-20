@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WIKI_DIR = 'D:/wikidozero';
+const WIKI_DIR = 'D:/DOZERO/wikidozero';
 const ORACLES_DIR = path.join(WIKI_DIR, 'Oracles');
 const JSON_FILES = ['Ironsmith-Expanded-Oracles.JSON', 'Starsmith-Expanded-Oracles.json'];
 const OUTPUT_FILE = path.join(WIKI_DIR, 'MegaOraculo.md');

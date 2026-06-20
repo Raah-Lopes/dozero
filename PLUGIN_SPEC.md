@@ -168,7 +168,7 @@ await deleteFileOrFolder('Pasta/arquivo.md');
 
 // Obter caminho raiz configurado pelo usuário
 const config = getWikiConfig();
-const wikiRoot = config.repoUrl; // Ex: "D:/wikidozero"
+const wikiRoot = config.repoUrl; // Ex: "D:/DOZERO/wikidozero"
 ```
 
 ### Endpoints REST disponíveis (baixo nível, prefira as funções acima)

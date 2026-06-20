@@ -26,7 +26,11 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
         const fileName = `${locData.nome.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.md`;
         const path = `[1] 🏕️ Campanha Principal/Locais/${fileName}`;
         
-        let md = `---\ntags: [local, generated]\n---\n\n`;
+        let md = `---\n`;
+        md += `tipo: Local\n`;
+        md += `nome: "${locData.nome}"\n`;
+        md += `tags: [local, generated]\n`;
+        md += `---\n\n`;
         md += `# 🏰 ${locData.nome}\n\n`;
         md += `> **Tamanho:** ${locData.tamanho}\n>\n`;
         md += `> *Ameaça/Perigo:* ${locData.perigo}\n\n`;
@@ -39,7 +43,7 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
         md += `### Notas do Mestre\n`;
         md += `(Adicione as anotações detalhadas sobre este local aqui)\n`;
 
-        await saveMarkdownContent(path, md, `Gerado Local: ${locData.nome}`);
+        await saveMarkdownContent(path, md);
         alert(`✅ Ficha de ${locData.nome} criada com sucesso em [1] 🏕️ Campanha Principal/Locais/!`);
       } catch (e) {
         console.error(e);

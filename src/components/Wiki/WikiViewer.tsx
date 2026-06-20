@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub } from '../../utils/githubApi';
+import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub, initializeWikiTemplate } from '../../utils/githubApi';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
 import { 
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
 import { WikiGraph } from './WikiGraph';
+import { FrontmatterPanel } from './FrontmatterPanel';
 import { getWikiConfig } from '../../store';
 import './wiki.css';
 
@@ -174,6 +175,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
 
   const [activeFile, setActiveFile] = useState<string | null>(initialFile || null);
   const [content, setContent] = useState<string>('');
+  const [frontmatter, setFrontmatter] = useState<string>('');
   const [loadingContent, setLoadingContent] = useState(false);
 
   const [syncing, setSyncing] = useState(false);
@@ -200,7 +202,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       const { base64, filename } = await convertImageToWebP(file);
 
       const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/wikidozero';
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       
       const res = await fetch('/api/wiki/save-image', {
         method: 'POST',
@@ -223,7 +225,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
     setSyncing(true);
     try {
       const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/wikidozero';
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -350,7 +352,8 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
     if (!activeFile) return;
     setSaving(true);
     try {
-      const finalContent = typeof textToSave === 'string' ? textToSave : content;
+      const mdContent = typeof textToSave === 'string' ? textToSave : content;
+      const finalContent = frontmatter ? `---\n${frontmatter}\n---\n${mdContent}` : mdContent;
       await saveMarkdownContent(activeFile, finalContent);
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2000);
@@ -401,9 +404,17 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       setLoadingContent(true);
       try {
         const text = await fetchMarkdownContent(activeFile);
-        setContent(text);
+        const match = text.trim().match(/^(?:---|[*]{3,}|[-]{3,})[ \t]*\r?\n([\s\S]*?)\r?\n(?:---|[*]{3,}|[-]{3,})[ \t]*\r?\n([\s\S]*)$/);
+        if (match) {
+          setFrontmatter(match[1]);
+          setContent(match[2]);
+        } else {
+          setFrontmatter('');
+          setContent(text);
+        }
       } catch (err: any) {
         setContent(`*Erro ao carregar arquivo:* ${err.message}`);
+        setFrontmatter('');
       } finally {
         setLoadingContent(false);
       }
@@ -468,8 +479,26 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
             </div>
           )}
           {!errorTree && !loadingTree && treeItems.length === 0 && (
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', padding: '1rem', textAlign: 'center' }}>
-              Repositório vazio ou não configurado. Vá nas configurações do sistema para definir seu repositório.
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', padding: '1rem', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <p>O seu cérebro de campanha está vazio.</p>
+              <button 
+                onClick={async () => {
+                  try {
+                    setSyncing(true);
+                    await initializeWikiTemplate();
+                    await loadTree();
+                  } catch (e: any) {
+                    alert("Erro ao inicializar template: " + e.message);
+                  } finally {
+                    setSyncing(false);
+                  }
+                }}
+                disabled={syncing}
+                className="glass-panel hover-glow"
+                style={{ padding: '0.5rem', cursor: 'pointer', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#c084fc', borderRadius: '6px', fontWeight: 'bold' }}
+              >
+                Inicializar Template Padrão
+              </button>
             </div>
           )}
           {!errorTree && (
@@ -515,6 +544,17 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                   {saving ? 'Salvando...' : (justSaved ? '✅ Salvo!' : 'Salvar Local')}
                 </button>
               </div>
+              
+              <FrontmatterPanel 
+                rawYaml={frontmatter} 
+                onChange={(newYaml) => {
+                  setFrontmatter(newYaml);
+                  // Auto-save when frontmatter changes
+                  if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
+                  saveTimeoutRef.current = window.setTimeout(() => handleSave(), 500);
+                }} 
+              />
+
               <WikiEditor 
                 editorRef={editorRef}
                 key={activeFile} // Force remount when file changes so Editor gets fresh markdown
@@ -543,7 +583,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                       <div className="cheat-item" onClick={() => insertCheat('## Título 2\n')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>## Título 2</code> → <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Título 2</span></div>
                       <div className="cheat-item" onClick={() => insertCheat('**Negrito** ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>**Negrito**</code> → <b>Negrito</b></div>
                       <div className="cheat-item" onClick={() => insertCheat('*Itálico* ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>*Itálico*</code> → <i>Itálico</i></div>
-                      <div className="cheat-item" onClick={() => insertCheat('~~Tachado~~ ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>~~Tachado~~</code> → <strike>Tachado</strike></div>
+                      <div className="cheat-item" onClick={() => insertCheat('~~Tachado~~ ')} title="Clique para inserir"><code style={{ color: 'var(--text-secondary)' }}>~~Tachado~~</code> → <del>Tachado</del></div>
                     </div>
                     <div className="cheat-sheet-col">
                       <h4 style={{ color: 'var(--accent-primary)', marginTop: 0, marginBottom: '1rem' }}>Listas & Outros</h4>

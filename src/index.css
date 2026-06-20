@@ -202,3 +202,9 @@ h1, h2, h3, h4, h5, h6 {
 .theme-slate { color: #cbd5e1; border-color: rgba(100, 116, 139, 0.5); }
 .theme-slate:hover, .btn-icon.theme-slate:hover { background: rgba(100, 116, 139, 0.2); border-color: #64748b; box-shadow: 0 0 15px rgba(100, 116, 139, 0.5); color: #cbd5e1; }
 .btn-icon.active.theme-slate { background: #64748b; border-color: #475569; color: #fff; box-shadow: 0 0 15px #64748b; }
+
+/* Teatro da Mente — violet cinematic */
+.theme-violet { color: #c4b5fd; border-color: rgba(139, 92, 246, 0.5); }
+.theme-violet:hover, .btn-icon.theme-violet:hover { background: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); color: #c4b5fd; }
+.btn-icon.active.theme-violet { background: #8b5cf6; border-color: #7c3aed; color: #fff; box-shadow: 0 0 18px #8b5cf6, 0 0 40px rgba(139,92,246,0.3); }
+

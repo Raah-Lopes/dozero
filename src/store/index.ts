@@ -50,6 +50,11 @@ export const state = {
   mapConfig: doc.getMap('mapConfig'),
   wikiConfig: doc.getMap('wikiConfig'),
   campaigns: doc.getMap('campaigns'),
+  theater: doc.getMap('theater'),
+  chronos: doc.getMap('chronos'),
+  dlcs: doc.getMap('dlcs'),
+  world: doc.getMap('world'),
+  stronghold: doc.getMap('stronghold'),
 };
 
 // =========================================================================
@@ -207,6 +212,24 @@ indexeddbProvider.on('synced', () => {
   if (!sentinel) {
     state.tokens.set('omega_sentinel', { id: 'omega_sentinel', name: 'Sentinela Ômega', hp: 150, maxHp: 150, mana: 50, maxMana: 50, x: 800, y: 400 });
   }
+  if (!state.world.has('factions')) {
+    state.world.set('factions', [
+      { id: 'f1', name: 'A Coroa Imperial', power: 50, influence: 50 },
+      { id: 'f2', name: 'O Sindicato das Sombras', power: 40, influence: 60 }
+    ]);
+  }
+  if (!state.world.has('settlements')) {
+    state.world.set('settlements', [
+      { id: 's1', name: 'A Capital', corruption: 20, economy: 80 }
+    ]);
+  }
+  if (!state.stronghold.has('data')) {
+    state.stronghold.set('data', {
+      name: 'Refúgio de Arcanus',
+      treasury: 500,
+      upgrades: [] // ex: 'cozinha', 'poco', 'camas', 'altar'
+    });
+  }
 });
 
 export function connectProvider() {
@@ -231,6 +254,18 @@ export function applyDamageToToken(tokenId: string, damage: number) {
   }
 }
 
+// Helper para Forja de Entidades: Instanciar um novo token
+export function addTokenFromMarkdown(tokenData: any) {
+  const id = `token_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  state.tokens.set(id, {
+    id,
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+    ...tokenData
+  });
+  pushChatMessage(`⚡ <b>${tokenData.name || 'Entidade Desconhecida'}</b> foi forjado(a) e adicionado(a) à mesa!`, true, false);
+}
+
 // Helper to update token properties flexibly from Character Sheet
 export function updateTokenProps(tokenId: string, props: Partial<any>) {
   const token = state.tokens.get(tokenId) as any;
@@ -253,11 +288,21 @@ export function updateTokenPosition(tokenId: string, x: number, y: number) {
 // =========================================================================
 // COMBAT TRACKER HELPERS
 // =========================================================================
+export interface CombatCondition {
+  id: string;
+  name: string;
+  durationTurns: number;
+  type: 'damage' | 'heal' | 'buff' | 'debuff';
+  value?: number;
+  icon?: string;
+}
+
 export interface CombatParticipant {
   tokenId: string;
   name: string;
   initiative: number;
   imageUrl?: string;
+  conditions?: CombatCondition[];
 }
 
 export function addCombatParticipant(tokenId: string, name: string, initiative: number, imageUrl?: string) {
@@ -269,13 +314,34 @@ export function addCombatParticipant(tokenId: string, name: string, initiative: 
     newParticipants[existingIndex].initiative = initiative;
     if (imageUrl) newParticipants[existingIndex].imageUrl = imageUrl;
   } else {
-    newParticipants.push({ tokenId, name, initiative, imageUrl });
+    newParticipants.push({ tokenId, name, initiative, imageUrl, conditions: [] });
   }
 
   // Sort descending by initiative
   newParticipants.sort((a, b) => b.initiative - a.initiative);
   
   state.combat.set('participants', newParticipants);
+}
+
+export function addConditionToParticipant(tokenId: string, condition: CombatCondition) {
+  const participants = (state.combat.get('participants') as CombatParticipant[]) || [];
+  const newParticipants = [...participants];
+  const idx = newParticipants.findIndex(p => p.tokenId === tokenId);
+  if (idx >= 0) {
+    if (!newParticipants[idx].conditions) newParticipants[idx].conditions = [];
+    newParticipants[idx].conditions!.push(condition);
+    state.combat.set('participants', newParticipants);
+  }
+}
+
+export function removeConditionFromParticipant(tokenId: string, conditionId: string) {
+  const participants = (state.combat.get('participants') as CombatParticipant[]) || [];
+  const newParticipants = [...participants];
+  const idx = newParticipants.findIndex(p => p.tokenId === tokenId);
+  if (idx >= 0 && newParticipants[idx].conditions) {
+    newParticipants[idx].conditions = newParticipants[idx].conditions!.filter(c => c.id !== conditionId);
+    state.combat.set('participants', newParticipants);
+  }
 }
 
 export function removeCombatParticipant(tokenId: string) {
@@ -295,6 +361,52 @@ export function nextCombatTurn() {
   if (participants.length === 0) return;
   
   let turnIndex = state.combat.get('turnIndex') as number;
+  const currentParticipant = participants[turnIndex];
+
+  // Process Conditions for current participant BEFORE moving to the next
+  if (currentParticipant && currentParticipant.conditions && currentParticipant.conditions.length > 0) {
+    let newConditions = [...currentParticipant.conditions];
+    const token = state.tokens.get(currentParticipant.tokenId) as any;
+    
+    if (token) {
+      let hpChange = 0;
+      let logMessages: string[] = [];
+
+      newConditions = newConditions.filter(cond => {
+        if (cond.type === 'damage' && cond.value) {
+          hpChange -= cond.value;
+          logMessages.push(`💀 <b>${cond.name}</b> causou ${cond.value} de dano a ${currentParticipant.name}.`);
+        } else if (cond.type === 'heal' && cond.value) {
+          hpChange += cond.value;
+          logMessages.push(`💚 <b>${cond.name}</b> curou ${cond.value} PV de ${currentParticipant.name}.`);
+        }
+
+        cond.durationTurns -= 1;
+        if (cond.durationTurns <= 0) {
+          logMessages.push(`⏳ O efeito de <b>${cond.name}</b> acabou em ${currentParticipant.name}.`);
+          return false; // Remove condition
+        }
+        return true; // Keep condition
+      });
+
+      // Apply HP change
+      if (hpChange !== 0) {
+        const newHp = Math.max(0, Math.min(token.maxHp || 9999, (token.hp || 0) + hpChange));
+        state.tokens.set(currentParticipant.tokenId, { ...token, hp: newHp });
+      }
+
+      // Send logs to chat
+      logMessages.forEach(msg => {
+        state.chat.push([{ text: msg, timestamp: Date.now(), isCritical: false, isFailure: false }]);
+      });
+
+      // Save back conditions
+      const newParticipants = [...participants];
+      newParticipants[turnIndex].conditions = newConditions;
+      state.combat.set('participants', newParticipants);
+    }
+  }
+
   turnIndex = (turnIndex + 1) % participants.length;
   state.combat.set('turnIndex', turnIndex);
 }
@@ -355,10 +467,16 @@ export interface WikiConfig {
 export function getWikiConfig(): WikiConfig {
   const current = state.wikiConfig.get('global');
   if (current) {
-    return current as WikiConfig;
+    const config = current as WikiConfig;
+    if (config.repoUrl === 'D:/wikidozero') {
+      config.repoUrl = 'D:/DOZERO/wikidozero';
+      // Avoid infinite loop / side effects by just returning the corrected value
+      // User can save again in settings later
+    }
+    return config;
   }
   return {
-    repoUrl: 'D:/wikidozero',
+    repoUrl: 'D:/DOZERO/wikidozero',
     branch: 'main',
     token: ''
   };
@@ -498,4 +616,359 @@ export function updateCampaign(id: string, updates: Partial<CampaignData>) {
 
 export function deleteCampaign(id: string) {
   state.campaigns.delete(id);
+}
+
+// =========================================================================
+// TEATRO DA MENTE — TIPOS E HELPERS
+// =========================================================================
+
+export type MoodType = 'neutral' | 'suspense' | 'horror' | 'adventure' | 'victory' | 'sadness' | 'mystery' | 'combat';
+export type WeatherType = 'clear' | 'rain' | 'storm' | 'fog' | 'snow' | 'fire' | 'darkness';
+export type TimeOfDay = 'dawn' | 'day' | 'dusk' | 'night';
+export type NarrativeStatus = 'intact' | 'hurt' | 'wounded' | 'critical' | 'dead';
+export type DistanceZone = 'melee' | 'close' | 'medium' | 'far' | 'extreme';
+export type DiaryEntryType = 'scene' | 'combat' | 'clock' | 'objective' | 'condition' | 'narrative';
+
+export interface TheaterObjective {
+  id: string;
+  text: string;
+  completed: boolean;
+  secret: boolean;
+}
+
+export interface SceneAsset {
+  id: string;
+  title: string;
+  url: string; // Base64 data or web URL
+  description?: string;
+  link?: string; // Path to a Wiki page or custom URL
+  type?: 'npc' | 'monster' | 'location' | 'prop' | 'other';
+}
+
+export interface TheaterScene {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  imageUrl?: string;
+  mood: MoodType;
+  weather: WeatherType;
+  timeOfDay: TimeOfDay;
+  objectives: TheaterObjective[];
+  tags: string[];
+  assets?: SceneAsset[];
+}
+
+export interface TheaterEnemy {
+  id: string;
+  name: string;
+  status: NarrativeStatus;
+  conditions: string[];
+  isElite: boolean;
+  isBoss: boolean;
+  notes: string;
+}
+
+export interface DiaryEntry {
+  id: string;
+  timestamp: number;
+  type: DiaryEntryType;
+  text: string;
+}
+
+export interface DistanceEntry {
+  id: string;
+  entityA: string;
+  entityB: string;
+  zone: DistanceZone;
+}
+
+export interface TheaterStateData {
+  currentSceneId: string;
+  scenes: TheaterScene[];
+  enemies: TheaterEnemy[];
+  castConditions: Record<string, string[]>;
+  mood: MoodType;
+  weather: WeatherType;
+  timeOfDay: TimeOfDay;
+  diaryEntries: DiaryEntry[];
+  distanceMap: DistanceEntry[];
+}
+
+const THEATER_DEFAULT: TheaterStateData = {
+  currentSceneId: '',
+  scenes: [],
+  enemies: [],
+  castConditions: {},
+  mood: 'neutral',
+  weather: 'clear',
+  timeOfDay: 'day',
+  diaryEntries: [],
+  distanceMap: [],
+};
+
+export function getTheaterState(): TheaterStateData {
+  const current = state.theater.get('global');
+  if (current) return current as TheaterStateData;
+  return { ...THEATER_DEFAULT };
+}
+
+export function updateTheaterState(updates: Partial<TheaterStateData>) {
+  const current = getTheaterState();
+  state.theater.set('global', { ...current, ...updates });
+}
+
+export function addTheaterDiaryEntry(entry: Omit<DiaryEntry, 'id'>) {
+  const current = getTheaterState();
+  const newEntry: DiaryEntry = { ...entry, id: `diary_${Date.now()}` };
+  const entries = [...current.diaryEntries.slice(-200), newEntry];
+  state.theater.set('global', { ...current, diaryEntries: entries });
+}
+
+export function addTheaterScene(scene: Omit<TheaterScene, 'id'>): string {
+  const current = getTheaterState();
+  const id = `scene_${Date.now()}`;
+  const newScene: TheaterScene = { ...scene, id };
+  state.theater.set('global', { ...current, scenes: [...current.scenes, newScene] });
+  return id;
+}
+
+export function updateTheaterScene(id: string, updates: Partial<TheaterScene>) {
+  const current = getTheaterState();
+  const scenes = current.scenes.map(s => s.id === id ? { ...s, ...updates } : s);
+  state.theater.set('global', { ...current, scenes });
+}
+
+export function removeTheaterScene(id: string) {
+  const current = getTheaterState();
+  const scenes = current.scenes.filter(s => s.id !== id);
+  const currentSceneId = current.currentSceneId === id ? (scenes[0]?.id || '') : current.currentSceneId;
+  state.theater.set('global', { ...current, scenes, currentSceneId });
+}
+
+export function addTheaterEnemy(enemy: Omit<TheaterEnemy, 'id'>): string {
+  const current = getTheaterState();
+  const id = `enemy_${Date.now()}`;
+  const newEnemy: TheaterEnemy = { ...enemy, id };
+  state.theater.set('global', { ...current, enemies: [...current.enemies, newEnemy] });
+  return id;
+}
+
+export function updateTheaterEnemy(id: string, updates: Partial<TheaterEnemy>) {
+  const current = getTheaterState();
+  const enemies = current.enemies.map(e => e.id === id ? { ...e, ...updates } : e);
+  state.theater.set('global', { ...current, enemies });
+}
+
+export function removeTheaterEnemy(id: string) {
+  const current = getTheaterState();
+  state.theater.set('global', { ...current, enemies: current.enemies.filter(e => e.id !== id) });
+}
+
+export function setTheaterMood(mood: MoodType) {
+  updateTheaterState({ mood });
+  addTheaterDiaryEntry({ timestamp: Date.now(), type: 'narrative', text: `🎭 Atmosfera alterada: ${mood}` });
+}
+
+export function setTheaterWeather(weather: WeatherType) {
+  updateTheaterState({ weather });
+  addTheaterDiaryEntry({ timestamp: Date.now(), type: 'narrative', text: `🌦️ Clima alterado: ${weather}` });
+}
+
+export function toggleCastCondition(personagemId: string, conditionId: string) {
+  const current = getTheaterState();
+  const existing = current.castConditions[personagemId] || [];
+  const hasCondition = existing.includes(conditionId);
+  const updated = hasCondition
+    ? existing.filter(c => c !== conditionId)
+    : [...existing, conditionId];
+  state.theater.set('global', {
+    ...current,
+    castConditions: { ...current.castConditions, [personagemId]: updated },
+  });
+}
+
+// =========================================================================
+// CHRONOS ENGINE (A Campanha Viva)
+// =========================================================================
+export interface ChronosState {
+  day: number;
+  month: number;
+  year: number;
+  timeOfDay: 'Manhã' | 'Tarde' | 'Noite' | 'Madrugada';
+  season: 'Primavera' | 'Verão' | 'Outono' | 'Inverno';
+}
+
+export function initChronos() {
+  if (!state.chronos.get('global')) {
+    state.chronos.set('global', {
+      day: 1,
+      month: 1,
+      year: 1450,
+      timeOfDay: 'Manhã',
+      season: 'Primavera'
+    });
+  }
+}
+
+export function getChronosState(): ChronosState {
+  return (state.chronos.get('global') as ChronosState) || { day: 1, month: 1, year: 1450, timeOfDay: 'Manhã', season: 'Primavera' };
+}
+
+export function advanceDay() {
+  const current = getChronosState();
+  const times = ['Manhã', 'Tarde', 'Noite', 'Madrugada'];
+  
+  let newDay = current.day + 1;
+  let newMonth = current.month;
+  let newYear = current.year;
+  let newSeason = current.season;
+
+  if (newDay > 30) {
+    newDay = 1;
+    newMonth += 1;
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear += 1;
+    }
+    // Update Season
+    if (newMonth >= 3 && newMonth <= 5) newSeason = 'Outono';
+    else if (newMonth >= 6 && newMonth <= 8) newSeason = 'Inverno';
+    else if (newMonth >= 9 && newMonth <= 11) newSeason = 'Primavera';
+    else newSeason = 'Verão';
+  }
+
+  state.chronos.set('global', { ...current, day: newDay, month: newMonth, year: newYear, season: newSeason, timeOfDay: 'Manhã' });
+  
+  // LOGICA DE CONSEQUENCIAS (FOME/SEDE)
+  pushChatMessage(`🌅 <b>Um novo dia amanheceu!</b> (${newDay}/${newMonth}/${newYear}) - ${newSeason}`, true, false);
+  
+  const tokens = Array.from(state.tokens.entries()) as [string, any][];
+  let famintos = 0;
+  
+  for (const [id, token] of tokens) {
+    if (token.hp > 0 && token.isPlayer !== false) { // Apenas heróis
+      let hunger = token.hunger || 0;
+      let thirst = token.thirst || 0;
+      let sanity = token.sanity !== undefined ? token.sanity : 100;
+
+      // Todo dia aumenta a fome e sede
+      hunger = Math.min(100, hunger + 25);
+      thirst = Math.min(100, thirst + 25);
+      
+      let newHp = token.hp;
+      if (hunger >= 100) newHp -= 5;
+      if (thirst >= 100) newHp -= 5;
+
+      newHp = Math.max(0, newHp);
+      
+      if (hunger >= 100 || thirst >= 100) {
+        famintos++;
+      }
+
+      state.tokens.set(id, { ...token, hp: newHp, hunger, thirst, sanity });
+    }
+  }
+
+  if (famintos > 0) {
+    pushChatMessage(`💀 ${famintos} aventureiros estão sofrendo danos reais por Fome ou Sede Extrema (100%)!`, false, true);
+  }
+
+  // LOGICA DO MOTOR DE MUNDO (FACÇÕES E CORRUPÇÃO)
+  // Roda a simulação a cada 7 dias (Semanas)
+  if (newDay % 7 === 0) {
+    const factions = state.world.get('factions') as any[] || [];
+    const settlements = state.world.get('settlements') as any[] || [];
+    
+    if (factions.length > 0) {
+      pushChatMessage(`🌐 <b>O Mundo Gira:</b> Uma semana se passou. Movimentos geopolíticos ocorrem nas sombras...`, true, false);
+      
+      const newFactions = factions.map(f => {
+        // Flutuação aleatória de poder (-5 a +5)
+        const shift = Math.floor(Math.random() * 11) - 5;
+        return { ...f, power: Math.max(0, Math.min(100, f.power + shift)) };
+      });
+      state.world.set('factions', newFactions);
+
+      // Sindicato vs Coroa
+      const sindicato = newFactions.find(f => f.id === 'f2');
+      const coroa = newFactions.find(f => f.id === 'f1');
+      
+      if (sindicato && coroa && sindicato.power > coroa.power) {
+        // Corrupção aumenta
+        const newSettlements = settlements.map(s => {
+          if (s.id === 's1') return { ...s, corruption: Math.min(100, s.corruption + 5) };
+          return s;
+        });
+        state.world.set('settlements', newSettlements);
+        pushChatMessage(`🗡️ O Sindicato das Sombras expandiu seu poder! A Corrupção na Capital aumentou!`, false, true);
+      } else if (coroa && sindicato && coroa.power > sindicato.power) {
+        const newSettlements = settlements.map(s => {
+          if (s.id === 's1') return { ...s, economy: Math.min(100, s.economy + 5) };
+          return s;
+        });
+        state.world.set('settlements', newSettlements);
+        pushChatMessage(`🛡️ A Coroa Imperial impôs ordem. A economia da Capital floresceu esta semana.`, false, false);
+      }
+    }
+  }
+}
+
+export function advanceTimeOfDay() {
+  const current = getChronosState();
+  const times: ("Manhã" | "Tarde" | "Noite" | "Madrugada")[] = ['Manhã', 'Tarde', 'Noite', 'Madrugada'];
+  const idx = times.indexOf(current.timeOfDay);
+  const nextIdx = idx + 1;
+
+  if (nextIdx >= times.length) {
+    advanceDay();
+  } else {
+    state.chronos.set('global', { ...current, timeOfDay: times[nextIdx] });
+    pushChatMessage(`⏳ O tempo passou... Agora é <b>${times[nextIdx]}</b>.`, false, false);
+  }
+}
+
+export function restAtStronghold() {
+  const strongholdData = state.stronghold.get('data') as any;
+  if (!strongholdData) return;
+
+  const upgrades = strongholdData.upgrades || [];
+  
+  // Efeitos da base
+  const hasKitchen = upgrades.includes('cozinha');
+  const hasWell = upgrades.includes('poco');
+  const hasBeds = upgrades.includes('camas');
+  const hasAltar = upgrades.includes('altar');
+
+  const tokens = Array.from(state.tokens.entries()) as [string, any][];
+  let herois = 0;
+
+  for (const [id, token] of tokens) {
+    if (token.hp > 0 && token.isPlayer !== false) {
+      herois++;
+      let hunger = token.hunger || 0;
+      let thirst = token.thirst || 0;
+      let sanity = token.sanity !== undefined ? token.sanity : 100;
+      let hp = token.hp;
+      let mana = token.mana || 0;
+
+      // Cozinha reduz fome a zero. Se nao, reduz 50
+      hunger = hasKitchen ? 0 : Math.max(0, hunger - 50);
+      // Poço reduz sede a zero. Se nao, reduz 50
+      thirst = hasWell ? 0 : Math.max(0, thirst - 50);
+      // Camas curam HP cheio. Se nao, cura 20
+      hp = hasBeds ? (token.maxHp || 100) : Math.min(token.maxHp || 100, hp + 20);
+      // Altar restaura sanidade a 100.
+      sanity = hasAltar ? 100 : sanity;
+
+      state.tokens.set(id, { ...token, hp, hunger, thirst, sanity, mana });
+    }
+  }
+
+  if (herois > 0) {
+    pushChatMessage(`🏰 <b>A party descansou em ${strongholdData.name}.</b><br/><span style="color:var(--text-secondary);font-size:0.8rem">(${hasKitchen ? '🍲 Cozinha' : ''} ${hasWell ? '💧 Poço' : ''} ${hasBeds ? '🛏️ Camas' : ''} ${hasAltar ? '✨ Altar' : ''})</span>`, true, false);
+  }
+
+  // Avança o tempo
+  advanceTimeOfDay();
 }

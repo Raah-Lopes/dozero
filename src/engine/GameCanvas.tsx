@@ -194,7 +194,8 @@ export const GameCanvas: React.FC = () => {
       canvasEl.addEventListener('drop', (e) => {
         e.preventDefault();
         const tokenId = e.dataTransfer?.getData('tokenId');
-        if (tokenId) {
+        const wikiPath = e.dataTransfer?.getData('wikiPath');
+        if (tokenId || wikiPath) {
           const rect = canvasEl.getBoundingClientRect();
           const dropX = e.clientX - rect.left;
           const dropY = e.clientY - rect.top;
@@ -205,10 +206,18 @@ export const GameCanvas: React.FC = () => {
           // Snap to grid
           const config = getMapConfig();
           const snapped = snapToGrid(worldPoint.x, worldPoint.y, config);
-          const snapX = snapped.x;
-          const snapY = snapped.y;
           
-          updateTokenPosition(tokenId, snapX, snapY);
+          if (tokenId) {
+            updateTokenPosition(tokenId, snapped.x, snapped.y);
+          } else if (wikiPath) {
+            window.dispatchEvent(new CustomEvent('spawn-token-from-wiki', {
+              detail: {
+                wikiPath,
+                x: snapped.x,
+                y: snapped.y
+              }
+            }));
+          }
         }
       });
 
@@ -314,7 +323,63 @@ export const GameCanvas: React.FC = () => {
       let tokenStartPositions: Record<string, {x: number, y: number}> = {};
       let tokensContainer = new Container();
       viewport.addChild(tokensContainer);
-      let tokenSprites: Record<string, { container: Container, glow: Graphics, hpFill: Graphics, targetRing: Graphics, selectionRing: Graphics }> = {};
+
+      interface TokenSpriteRecord {
+        container: Container;
+        glow: Graphics;
+        hpFill: Graphics;
+        targetRing: Graphics;
+        selectionRing: Graphics;
+        visualHash: string;
+        hpBarY: number;
+      }
+      let tokenSprites: Record<string, TokenSpriteRecord> = {};
+
+      const conditionEmojis: Record<string, string> = {
+        fogo: '🔥',
+        gelo: '❄️',
+        queda: '🤕',
+        envenenado: '🤢',
+        cego: '👁️',
+        sono: '💤',
+        sangrando: '🩸',
+        confuso: '😵',
+        morto: '💀'
+      };
+
+      const drawTokenShape = (
+        g: Graphics,
+        shape: string,
+        size: number,
+        isFill: boolean,
+        colorVal: number,
+        strokeWidth: number = 0,
+        strokeAlpha: number = 1
+      ) => {
+        g.clear();
+        if (shape === 'hexagon') {
+          g.moveTo(size, 0);
+          for (let i = 1; i <= 6; i++) {
+            const angle = (i * Math.PI) / 3;
+            g.lineTo(size * Math.cos(angle), size * Math.sin(angle));
+          }
+          g.closePath();
+        } else if (shape === 'square') {
+          g.roundRect(-size, -size, size * 2, size * 2, size * 0.25);
+        } else if (shape === 'standee') {
+          const w = size * 0.85;
+          const h = size * 1.3;
+          g.roundRect(-w, -h, w * 2, h * 2, size * 0.2);
+        } else {
+          g.circle(0, 0, size);
+        }
+
+        if (isFill) {
+          g.fill(colorVal);
+        } else {
+          g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
+        }
+      };
 
       const syncTokens = () => {
         const tokensState = state.tokens;
@@ -334,14 +399,37 @@ export const GameCanvas: React.FC = () => {
           // Only render tokens that have been placed on the map (x,y > -1000)
           if (t.x < -1000 || t.y < -1000) return;
 
+          const shape = t.tokenShape || 'circle';
+          const scale = t.sizeScale ?? 1;
+          const borderColHex = t.borderColor ? t.borderColor.replace('#', '0x') : '0x06b6d4';
+          const borderCol = parseInt(borderColHex, 16);
+          const glowColHex = t.borderColor ? t.borderColor.replace('#', '0x') : '0x0ea5e9';
+          const glowCol = parseInt(glowColHex, 16);
+          const hpBarMode = t.hpBarMode || 'always';
+          const showName = t.showName || false;
+          const activeConditions = t.status_efeitos || [];
+
+          const visualHash = `${shape}_${t.borderColor || ''}_${t.imageUrl || ''}_${scale}_${showName}_${hpBarMode}_${t.name || ''}_${activeConditions.join(',')}`;
+
+          // If visual state changed, destroy and recreate
+          if (tokenSprites[id] && tokenSprites[id].visualHash !== visualHash) {
+            tokensContainer.removeChild(tokenSprites[id].container);
+            tokenSprites[id].container.destroy({ children: true });
+            delete tokenSprites[id];
+          }
+
           if (!tokenSprites[id]) {
             const token = new Container();
             
             // Base background and border
             const tokenBorder = new Graphics();
-            tokenBorder.circle(0, 0, 26);
-            tokenBorder.fill(0x020617);
-            tokenBorder.stroke({ width: 3, color: 0x06b6d4, alpha: 0.9 });
+            drawTokenShape(tokenBorder, shape, 26, true, 0x020617);
+            drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9);
+            if (shape === 'standee') {
+              tokenBorder.ellipse(0, 26 * 1.3, 26 * 0.9, 26 * 0.2);
+              tokenBorder.fill(0x020617);
+              tokenBorder.stroke({ width: 3, color: borderCol, alpha: 0.9 });
+            }
             token.addChild(tokenBorder);
 
             // Async load portrait image (Support custom imageUrl)
@@ -351,12 +439,19 @@ export const GameCanvas: React.FC = () => {
               if (isDestroyed || !tokenSprites[id]) return;
               const sprite = new Sprite(texture);
               sprite.anchor.set(0.5);
-              sprite.width = 50;
-              sprite.height = 50;
+              
+              if (shape === 'standee') {
+                sprite.width = 44;
+                sprite.height = 66;
+                sprite.y = -2;
+              } else {
+                sprite.width = 50;
+                sprite.height = 50;
+                sprite.y = 0;
+              }
               
               const mask = new Graphics();
-              mask.circle(0, 0, 24);
-              mask.fill(0xffffff);
+              drawTokenShape(mask, shape, 24, true, 0xffffff);
               sprite.mask = mask;
 
               token.addChild(mask);
@@ -365,35 +460,115 @@ export const GameCanvas: React.FC = () => {
 
             // Pulsing Neon Glow
             const glow = new Graphics();
-            glow.circle(0, 0, 30);
-            glow.stroke({ width: 6, color: 0x0ea5e9, alpha: 1 });
+            drawTokenShape(glow, shape, 30, false, glowCol, 6, 1);
+            if (shape === 'standee') {
+              glow.ellipse(0, 30 * 1.3, 30 * 0.9, 30 * 0.2);
+              glow.stroke({ width: 6, color: glowCol, alpha: 1 });
+            }
             token.addChild(glow);
 
             // Attached Mini HP Bar
+            const hpBarY = shape === 'standee' ? 48 : 35;
+            const hpBarContainer = new Container();
+
             const hpBarBg = new Graphics();
-            hpBarBg.rect(-20, 35, 40, 6);
+            hpBarBg.rect(-20, hpBarY, 40, 6);
             hpBarBg.fill(0x000000);
             hpBarBg.stroke({ width: 1, color: 0x1e293b });
-            token.addChild(hpBarBg);
+            hpBarContainer.addChild(hpBarBg);
 
             const hpBarFill = new Graphics();
-            hpBarFill.rect(-19, 36, 38, 4);
+            hpBarFill.rect(-19, hpBarY + 1, 38, 4);
             hpBarFill.fill(0xef4444);
-            token.addChild(hpBarFill);
+            hpBarContainer.addChild(hpBarFill);
+
+            token.addChild(hpBarContainer);
+
+            // HP Bar visibility triggers
+            hpBarContainer.visible = hpBarMode === 'always';
+            token.on('pointerover', () => {
+              if (hpBarMode === 'hover') hpBarContainer.visible = true;
+            });
+            token.on('pointerout', () => {
+              if (hpBarMode === 'hover') hpBarContainer.visible = false;
+            });
 
             // Selection Ring
             const selectionRing = new Graphics();
-            selectionRing.circle(0, 0, 32);
-            selectionRing.stroke({ width: 3, color: 0x0ea5e9, alpha: 0.8 });
+            drawTokenShape(selectionRing, shape, 32, false, glowCol, 3, 0.8);
+            if (shape === 'standee') {
+              selectionRing.ellipse(0, 32 * 1.3, 32 * 0.9, 32 * 0.2);
+              selectionRing.stroke({ width: 3, color: glowCol, alpha: 0.8 });
+            }
             selectionRing.visible = false;
             token.addChild(selectionRing);
 
             // Target Ring (Hidden by default)
             const targetRing = new Graphics();
-            targetRing.circle(0, 0, 36);
-            targetRing.stroke({ width: 4, color: 0xef4444, alpha: 0.8 });
+            drawTokenShape(targetRing, shape, 36, false, 0xef4444, 4, 0.8);
+            if (shape === 'standee') {
+              targetRing.ellipse(0, 36 * 1.3, 36 * 0.9, 36 * 0.2);
+              targetRing.stroke({ width: 4, color: 0xef4444, alpha: 0.8 });
+            }
             targetRing.visible = false;
             token.addChild(targetRing);
+
+            // Name Label
+            if (showName) {
+              const nameLabel = new Text({
+                text: t.name || 'Sem Nome',
+                style: {
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                  fontSize: 10,
+                  fill: 0xffffff,
+                  align: 'center',
+                  fontWeight: 'bold'
+                }
+              });
+              nameLabel.anchor.set(0.5);
+              const labelY = hpBarY + 14;
+              nameLabel.y = labelY;
+              
+              const nameBg = new Graphics();
+              const textWidth = Math.max(30, nameLabel.width);
+              nameBg.roundRect(-textWidth / 2 - 4, labelY - 7, textWidth + 8, 14, 4);
+              nameBg.fill(0x0f172a);
+              nameBg.stroke({ width: 1, color: 0x334155 });
+              
+              token.addChild(nameBg);
+              token.addChild(nameLabel);
+            }
+
+            // Active Condition Badges
+            if (activeConditions.length > 0) {
+              const badgeContainer = new Container();
+              const badgeX = shape === 'standee' ? -22 : -26;
+              const badgeY = shape === 'standee' ? -36 : -26;
+              badgeContainer.x = badgeX;
+              badgeContainer.y = badgeY;
+              
+              let currentX = 0;
+              activeConditions.forEach((effId: string) => {
+                const emoji = conditionEmojis[effId];
+                if (!emoji) return;
+                
+                const emojiText = new Text({
+                  text: emoji,
+                  style: {
+                    fontSize: 10
+                  }
+                });
+                emojiText.anchor.set(0.5);
+                emojiText.x = currentX;
+                
+                badgeContainer.addChild(emojiText);
+                currentX += 11;
+              });
+              token.addChild(badgeContainer);
+            }
+
+            // Set scale
+            token.scale.set(scale);
 
             token.eventMode = 'static';
             token.cursor = 'pointer';
@@ -439,7 +614,15 @@ export const GameCanvas: React.FC = () => {
             token.on('rightdown', (e) => e.stopPropagation());
 
             tokensContainer.addChild(token);
-            tokenSprites[id] = { container: token, glow, hpFill: hpBarFill, targetRing, selectionRing };
+            tokenSprites[id] = { 
+              container: token, 
+              glow, 
+              hpFill: hpBarFill, 
+              targetRing, 
+              selectionRing,
+              visualHash,
+              hpBarY
+            };
             
             token.x = t.x;
             token.y = t.y;
@@ -880,6 +1063,18 @@ export const GameCanvas: React.FC = () => {
       window.addEventListener('map-menu-toggle', mapObserver);
       window.addEventListener('bg-selection-updated', syncGizmo);
       window.addEventListener('map-menu-toggle', syncGizmo);
+
+      const handleFocusToken = (e: any) => {
+        const { tokenId } = e.detail;
+        if (!tokenId) return;
+        const token = state.tokens.get(tokenId) as any;
+        if (token && token.x > -1000 && token.y > -1000) {
+          const scale = viewport.scale.x;
+          viewport.x = window.innerWidth / 2 - token.x * scale;
+          viewport.y = window.innerHeight / 2 - token.y * scale;
+        }
+      };
+      window.addEventListener('focus-token', handleFocusToken);
       
       mapObserver(); // initial load
 
@@ -889,6 +1084,7 @@ export const GameCanvas: React.FC = () => {
         window.removeEventListener('map-menu-toggle', mapObserver);
         window.removeEventListener('bg-selection-updated', syncGizmo);
         window.removeEventListener('map-menu-toggle', syncGizmo);
+        window.removeEventListener('focus-token', handleFocusToken);
       };
 
       // Add Native Window Dragging for Backgrounds (so they don't get stuck)
@@ -1078,9 +1274,10 @@ export const GameCanvas: React.FC = () => {
           }
 
           // Update Mini HP Bar live
-          const hpPercent = Math.max(0, tState.hp / tState.maxHp);
+          const hpPercent = Math.max(0, tState.hp / (tState.maxHp || 1));
+          const hpY = tokenData.hpBarY !== undefined ? tokenData.hpBarY + 1 : 36;
           tokenData.hpFill.clear();
-          tokenData.hpFill.rect(-19, 36, 38 * hpPercent, 4);
+          tokenData.hpFill.rect(-19, hpY, 38 * hpPercent, 4);
           tokenData.hpFill.fill(0xef4444);
           
           // LERP position if someone else moved it

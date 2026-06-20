@@ -1,4 +1,5 @@
 import { getWikiConfig } from '../store';
+import { WikiIndexer } from '../services/wiki/WikiIndexer';
 
 export interface GithubTreeItem {
   path: string;
@@ -13,19 +14,38 @@ export interface GithubTreeResponse {
   tree: GithubTreeItem[];
 }
 
+export async function initializeWikiTemplate(): Promise<void> {
+  const config = getWikiConfig();
+  if (!config.repoUrl) {
+    throw new Error("Repositório não configurado.");
+  }
+  const repoPath = config.repoUrl;
+  
+  const response = await fetch('/api/wiki/init', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath })
+  });
+  
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Erro ao inicializar template");
+  }
+}
+
 export async function fetchRepositoryTree(): Promise<GithubTreeItem[]> {
   const config = getWikiConfig();
   if (!config.repoUrl) {
     throw new Error("Repositório não configurado.");
   }
 
-  // O repoUrl agora pode apontar para a pasta local como D:/wikidozero
+  // O repoUrl agora pode apontar para a pasta local como D:/DOZERO/wikidozero
   // Mas vamos tentar passar como repoPath. Se for URL do Github, o usuário terá que configurar a pasta.
-  let repoPath = config.repoUrl || 'D:/wikidozero';
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   if (repoPath.includes('github.com')) {
     // Para simplificar, forçamos o usuário a colocar o caminho da pasta local no Settings
-    // Ex: "D:/wikidozero"
-    throw new Error("O sistema agora é Local-First. Configure o caminho da sua pasta local (ex: D:/wikidozero) nas configurações em vez da URL do GitHub.");
+    // Ex: "D:/DOZERO/wikidozero"
+    throw new Error("O sistema agora é Local-First. Configure o caminho da sua pasta local (ex: D:/DOZERO/wikidozero) nas configurações em vez da URL do GitHub.");
   }
 
   const url = `/api/wiki/tree?repoPath=${encodeURIComponent(repoPath)}`;
@@ -45,7 +65,7 @@ export async function fetchMarkdownContent(path: string): Promise<string> {
     throw new Error("Repositório não configurado.");
   }
 
-  let repoPath = config.repoUrl || 'D:/wikidozero';
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   const url = `/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}&t=${Date.now()}`;
   
   const response = await fetch(url);
@@ -60,7 +80,7 @@ export async function fetchMarkdownContent(path: string): Promise<string> {
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl || 'D:/wikidozero';
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
   const response = await fetch('/api/wiki/save', {
     method: 'POST',
@@ -69,11 +89,14 @@ export async function saveMarkdownContent(path: string, content: string): Promis
   });
 
   if (!response.ok) throw new Error("Erro ao salvar arquivo");
+
+  WikiIndexer.clearCache();
+  window.dispatchEvent(new Event('wiki-updated'));
 }
 
 export async function createFolder(path: string): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl || 'D:/wikidozero';
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
   const response = await fetch('/api/wiki/folder', {
     method: 'POST',
@@ -82,11 +105,14 @@ export async function createFolder(path: string): Promise<void> {
   });
 
   if (!response.ok) throw new Error("Erro ao criar pasta");
+
+  WikiIndexer.clearCache();
+  window.dispatchEvent(new Event('wiki-updated'));
 }
 
 export async function moveFileOrFolder(oldPath: string, newPath: string): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl || 'D:/wikidozero';
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
   const response = await fetch('/api/wiki/move', {
     method: 'POST',
@@ -95,11 +121,14 @@ export async function moveFileOrFolder(oldPath: string, newPath: string): Promis
   });
 
   if (!response.ok) throw new Error("Erro ao mover/renomear arquivo");
+
+  WikiIndexer.clearCache();
+  window.dispatchEvent(new Event('wiki-updated'));
 }
 
 export async function deleteFileOrFolder(path: string): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl || 'D:/wikidozero';
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
   const response = await fetch('/api/wiki/file', {
     method: 'DELETE',
@@ -108,6 +137,9 @@ export async function deleteFileOrFolder(path: string): Promise<void> {
   });
 
   if (!response.ok) throw new Error("Erro ao deletar arquivo");
+
+  WikiIndexer.clearCache();
+  window.dispatchEvent(new Event('wiki-updated'));
 }
 
 /**
@@ -133,7 +165,7 @@ export async function loadMarkdownFile(filePath: string): Promise<string | null>
 
 export async function pushToGithub(): Promise<void> {
   const config = getWikiConfig();
-  let repoPath = config.repoUrl || 'D:/wikidozero';
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
   const response = await fetch('/api/wiki/push', {
     method: 'POST',

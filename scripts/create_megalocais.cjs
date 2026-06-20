@@ -1,5 +1,5 @@
 const fs = require('fs');
-const path = 'D:/wikidozero/MegaLocais.md';
+const path = 'D:/DOZERO/wikidozero/MegaLocais.md';
 
 const content = `# 🗺️ Forja de Mundos
 
