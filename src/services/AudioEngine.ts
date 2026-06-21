@@ -39,42 +39,48 @@ class AudioEngine {
     return url;
   }
 
+  private nativeMusicAudio: HTMLAudioElement | null = null;
+
   playMusic(track: AudioTrack, volume: number) {
     const embedUrl = this.getEmbedUrl(track);
     if (!embedUrl) return console.error('URL inválida para música');
 
     // Lógica simplificada para YouTube Embed (em produção usaria a API do YT IFrame)
-    if (this.musicPlayer) {
-      document.body.removeChild(this.musicPlayer);
-    }
+    this.stopMusic(0); // Clean up first
 
     if (track.provider === 'youtube') {
       const iframe = document.createElement('iframe');
       iframe.src = embedUrl;
-      iframe.style.display = 'none';
+      // Use opacity 0 instead of display:none to prevent autoplay block
+      iframe.style.position = 'absolute';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
+      iframe.style.opacity = '0';
+      iframe.style.pointerEvents = 'none';
       iframe.setAttribute('allow', 'autoplay; encrypted-media');
       document.body.appendChild(iframe);
       this.musicPlayer = iframe;
       // Nota: Controle de volume real requer conexão com a API do YT via postMessage
     } else {
       // Para arquivos locais/diretos
-      const audio = new Audio(embedUrl);
-      audio.loop = true;
-      audio.volume = volume;
-      audio.play().catch(e => console.warn("Interação do usuário necessária primeiro", e));
-      this.musicPlayer = document.createElement('iframe'); // Hack para manter referência única se necessário, ou gerenciar separadamente
-      // Em uma implementação real, teríamos um gerenciador de elementos de áudio nativo separado
+      this.nativeMusicAudio = new Audio(embedUrl);
+      this.nativeMusicAudio.loop = true;
+      this.nativeMusicAudio.volume = volume;
+      this.nativeMusicAudio.play().catch(e => console.warn("Interação do usuário necessária primeiro", e));
     }
     
     this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: true });
   }
 
   stopMusic(fadeDuration: number = 1000) {
-    // Implementar fade-out logic aqui
     if (this.musicPlayer) {
-       // Lógica de remoção
-       // document.body.removeChild(this.musicPlayer);
-       // this.musicPlayer = null;
+       document.body.removeChild(this.musicPlayer);
+       this.musicPlayer = null;
+    }
+    if (this.nativeMusicAudio) {
+       this.nativeMusicAudio.pause();
+       this.nativeMusicAudio.src = '';
+       this.nativeMusicAudio = null;
     }
     this.onStateChange?.({ isPlayingMusic: false });
   }
