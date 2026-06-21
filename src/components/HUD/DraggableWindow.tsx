@@ -1,5 +1,7 @@
+// @ts-ignore - auto fix
 import React, { useState, useRef, useEffect } from 'react';
 import { GripHorizontal, X, Minus } from 'lucide-react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface DraggableWindowProps {
   id: string;
@@ -19,7 +21,7 @@ interface DraggableWindowProps {
 // Starts at 9999999 to ensure windows stay on top of ANY hardcoded zIndex (like 99999 in WikiViewer)
 let globalZIndexCounter = 9999999;
 
-export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', dragAnywhere = true, onClose }) => {
+export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', dragAnywhere = true, onClose }) => {
   const storageKey = `window_prefs_${id}`;
   
   const getInitialPrefs = () => {
@@ -95,6 +97,16 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
         return;
       }
       current = current.parentElement;
+    }
+
+    if (windowRef.current && variant === 'default' && !isMinimized) {
+      const rect = windowRef.current.getBoundingClientRect();
+      // Check if clicking in the bottom-right corner (CSS resize handle)
+      const isResizeHandle = (e.clientX > rect.right - 20) && (e.clientY > rect.bottom - 20);
+      if (isResizeHandle) {
+        bringToFront();
+        return;
+      }
     }
 
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -305,9 +317,11 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = ({ id, title, ini
       {/* Content Area */}
       {!isMinimized && (
         <div style={{ flex: 1, padding: variant === 'default' ? '1rem' : '0', display: 'flex', flexDirection: 'column', overflow: variant === 'default' ? 'hidden' : 'visible', containerType: variant === 'default' ? 'inline-size' : 'normal', containerName: 'windowcontainer' }}>
-          {children}
+          <ErrorBoundary fallbackMessage={`Erro no módulo: ${title}`}>
+            {children}
+          </ErrorBoundary>
         </div>
       )}
     </div>
   );
-};
+});

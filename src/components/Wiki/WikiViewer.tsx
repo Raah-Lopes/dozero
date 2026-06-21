@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub, initializeWikiTemplate } from '../../utils/githubApi';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
 import { 
   Folder, FileText, ChevronRight, ChevronDown, 
-  RefreshCw, Plus, FilePlus, FolderPlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus
+  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
 import { WikiGraph } from './WikiGraph';

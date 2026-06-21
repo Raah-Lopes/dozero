@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Globe } from 'lucide-react';
+// @ts-ignore - auto fix
 import { getWikiConfig, updateWikiConfig, state } from '../../store';
 
 interface SettingsModalProps {

@@ -147,7 +147,7 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
           <Sparkles size={32} />
         </button>
 
-        <button onClick={onOpenDLCManager} title="Gerenciador de Módulos (DLCs)" className="widget-btn theme-orange">
+        <button onClick={onOpenDLCManager} title="Gerenciador de Complementos" className="widget-btn theme-orange">
           <ToyBrick size={32} />
         </button>
 

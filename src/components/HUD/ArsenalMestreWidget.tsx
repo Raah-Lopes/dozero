@@ -6,9 +6,8 @@ import { saveMarkdownContent, loadMarkdownFile } from '../../utils/githubApi';
 import { pushChatMessage } from '../../store';
 import * as yaml from 'js-yaml';
 import { 
-  ShieldAlert, Sword, Shield, Zap, Sparkles, Heart, HeartPulse, 
-  Coins, Plus, CheckCircle, Trash2, Eye, EyeOff, UserMinus, UserCheck, 
-  Skull, Compass, Backpack, X 
+  Sword, Plus, Trash2, UserMinus, UserCheck, 
+     X 
 } from 'lucide-react';
 
 interface FichaPersonagem {
@@ -111,7 +110,7 @@ const CATALOGO_ITEMS: ItemCatalogo[] = [
 ];
 
 export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { index, isLoading, triggerRefresh } = useWiki();
+  const { index, refresh } = useWiki();
   const [personagens, setPersonagens] = useState<FichaPersonagem[]>([]);
   const [selectedChar, setSelectedChar] = useState<FichaPersonagem | null>(null);
   const [activeTab, setActiveTab] = useState<'pools' | 'atributos' | 'catalogo'>('pools');
@@ -314,7 +313,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
         const body = textParts.slice(2).join('---');
 
         await saveMarkdownContent(ficha.caminhoArquivo, novaFront + body);
-        triggerRefresh?.();
+        refresh?.();
       }
     } catch (e) {
       console.error("Falha ao salvar propriedades:", e);
@@ -462,7 +461,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
       await saveMarkdownContent(path, novaFront + body);
 
       pushChatMessage(`📦 <b>Mestre</b> concedeu o item/poder <b>${item.nome}</b> para <b>${selectedChar.nome}</b>.`, false, false);
-      triggerRefresh?.();
+      refresh?.();
       alert(`Item "${item.nome}" distribuído com sucesso para ${selectedChar.nome}!`);
     } catch (e) {
       console.error(e);

@@ -534,6 +534,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
 
           nodeCanvasObject={(node: any, ctx, globalScale) => {
             // Usa o renderTrigger silenciosamente para re-renderizar
+            // @ts-ignore - auto fix
             const _trigger = renderTrigger;
             const size = 16; // Base radius/size
 

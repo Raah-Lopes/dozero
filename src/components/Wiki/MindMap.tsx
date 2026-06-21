@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, {  useCallback } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -24,7 +24,7 @@ const initialEdges: Edge[] = [
 ];
 
 export const MindMap: React.FC = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const onConnect = useCallback((params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);

@@ -1,0 +1,29 @@
+{
+  "id": "dlc_cyberpunk",
+  "name": "Neon & Chrome (Cyberpunk)",
+  "description": "Transforma o mundo de fantasia em um cenário futurista cyberpunk, substituindo geradores de Lores e adicionando novas tabelas de oráculo.",
+  "version": "1.0",
+  "loreTemplates": [
+    "Dizem na deep web que <b>[NPC]</b> invadiu o mainframe de <b>[Local]</b> em busca de um arquivo proibido.",
+    "Atenção corredores! A megacorporação <b>[Facção]</b> está contratando mercenários para recuperar <b>[Item]</b> roubado por gangues.",
+    "Relatórios vazados apontam que <b>[Monstro]</b> biotecnológicos estão aterrorizando os becos perto de <b>[Local]</b>.",
+    "Alguém pagou muitos créditos em criptomoedas para que <b>[NPC]</b> sumisse com <b>[Item]</b>, mas a segurança de <b>[Facção]</b> interveio!",
+    "<b>Contrato (Extração):</b> Recuperar <b>[Item]</b> das mãos cibernéticas de <b>[Facção]</b> antes que vendam para <b>[NPC]</b> no submundo de <b>[Local]</b>."
+  ],
+  "oracleTables": [
+    {
+      "id": "cyberpunk_loot",
+      "name": "Loot de Ruas (Neon)",
+      "category": "Loot",
+      "dice": "1d6",
+      "results": [
+        { "roll": "1", "description": "100 Créditos e um Chip de Dados criptografado." },
+        { "roll": "2", "description": "Uma pistola térmica com pouca bateria." },
+        { "roll": "3", "description": "Implante óptico danificado (visão noturna)." },
+        { "roll": "4", "description": "Um deck de hackeamento de uso único." },
+        { "roll": "5", "description": "Uma granada EMP caseira." },
+        { "roll": "6", "description": "Acesso a uma conta corporativa com fundos ilimitados por 1 hora." }
+      ]
+    }
+  ]
+}

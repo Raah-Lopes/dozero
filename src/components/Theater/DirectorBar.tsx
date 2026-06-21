@@ -1,6 +1,6 @@
 // src/components/Theater/DirectorBar.tsx
 import React, { useState } from 'react';
-import { Swords, Shield, Target, Zap, Heart, Droplets, Star, Plus, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, Bell } from 'lucide-react';
+import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, Bell } from 'lucide-react';
 import { setTheaterMood, setTheaterWeather, addTensionClock, addTheaterDiaryEntry, pushChatMessage, type MoodType, type WeatherType } from '../../store';
 import { useSceneState } from './hooks/useSceneState';
 
@@ -29,7 +29,7 @@ type Tab = 'actions' | 'weather' | 'mood' | 'narrative';
 
 export const DirectorBar: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('actions');
-  const { goToNextScene, goToPrevScene, createScene, theaterData } = useSceneState();
+  const { goToNextScene,  createScene, theaterData } = useSceneState();
 
   const roll = (notation: string) => {
     const parts = notation.match(/(\d+)d(\d+)([+-]\d+)?/i);

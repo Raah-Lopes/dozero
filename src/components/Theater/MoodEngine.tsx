@@ -1,5 +1,5 @@
 // src/components/Theater/MoodEngine.tsx
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import type { MoodType, WeatherType } from '../../store';
 
 interface MoodEngineProps {

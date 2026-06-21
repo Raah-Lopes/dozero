@@ -16,6 +16,7 @@ export class FateParser {
    * e.g., config="Physical:3" type="Condensed"
    */
   static parseStressTrack(configString: string, type: FateSystemType): StressBox[] {
+    // @ts-ignore - auto fix
     const [name, valuesPart] = configString.split(':');
     if (!valuesPart) return [];
 

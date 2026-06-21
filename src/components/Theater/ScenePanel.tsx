@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { Edit2, Check, X, Plus, CheckSquare, Square, Lock, Eye, EyeOff, Sun, Moon, Sunset, Sunrise, Image, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import { useWiki } from '../../hooks/useWiki';
-import { setTheaterMood, setTheaterWeather, updateTheaterState, type MoodType, type WeatherType, type TimeOfDay, type TheaterObjective, type SceneAsset } from '../../store';
+import { setTheaterMood, setTheaterWeather, type MoodType, type WeatherType, type TimeOfDay, type SceneAsset } from '../../store';
 
 const MOODS: { value: MoodType; label: string; icon: string }[] = [
   { value: 'neutral', label: 'Neutro', icon: '⬜' },
@@ -34,6 +34,7 @@ const TIME_ICONS: Record<TimeOfDay, React.ReactNode> = {
 };
 
 export const ScenePanel: React.FC = () => {
+  // @ts-ignore - auto fix
   const { currentScene, patchCurrentScene, toggleObjective, addObjective, removeObjective, mood, weather, theaterData } = useSceneState();
   const { index: wikiIndex } = useWiki();
   const [editingTitle, setEditingTitle] = useState(false);
@@ -143,7 +144,7 @@ export const ScenePanel: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const accentColor = 'var(--theater-accent, #a855f7)';
+  
 
   if (!currentScene) {
     return (

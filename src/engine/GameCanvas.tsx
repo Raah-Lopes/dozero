@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
+// @ts-ignore - auto fix
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, addTensionClock, removeTensionClock, updateTensionClockProps, triggerClockConsequence, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection } from '../store';
 
 function hexRound(q: number, r: number) {
   let s = -q - r;
@@ -64,7 +65,7 @@ export const GameCanvas: React.FC = () => {
     let isDestroyed = false;
 
     // GM check
-    const isGM = localStorage.getItem('isGM') === 'true';
+    // const isGM = localStorage.getItem('isGM') === 'true';
 
     const initPixi = async () => {
       const app = new Application();

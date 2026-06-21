@@ -12,7 +12,7 @@ interface FloatingDocumentProps {
   onClose: () => void;
 }
 
-export const FloatingDocument: React.FC<FloatingDocumentProps> = ({ id, filepath, initialX, initialY, onClose }) => {
+export const FloatingDocument: React.FC<FloatingDocumentProps> = React.memo(({ id, filepath, initialX, initialY, onClose }) => {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
@@ -68,4 +68,4 @@ export const FloatingDocument: React.FC<FloatingDocumentProps> = ({ id, filepath
       </div>
     </DraggableWindow>
   );
-};
+});

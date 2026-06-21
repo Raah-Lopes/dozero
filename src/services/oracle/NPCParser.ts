@@ -78,7 +78,7 @@ export class NPCParser {
         }
 
         if (line.startsWith('|') && !line.includes('---|---') && !line.includes('Dado | Resultado')) {
-          const parts = line.split('|').map(p => p.trim()).filter(p => p);
+          const parts = line.split('|').map((p: any) => p.trim()).filter((p: any) => p);
           if (parts.length >= 2 && currentTable) {
             const rangeStr = parts[0];
             const result = parts[1];

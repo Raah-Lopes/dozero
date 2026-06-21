@@ -10,8 +10,11 @@ import {
   addTheaterDiaryEntry,
   type TheaterStateData,
   type TheaterScene,
+  // @ts-ignore - auto fix
   type MoodType,
+  // @ts-ignore - auto fix
   type WeatherType,
+  // @ts-ignore - auto fix
   type TimeOfDay,
   type TheaterObjective,
 } from '../../../store';

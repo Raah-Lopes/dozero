@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection, getMapConfig, updateMapConfig } from '../../store';
 import type { BackgroundData, MapConfig } from '../../store';
-import { Map as MapIcon, ImagePlus, Trash2, AlignCenter, AlignHorizontalSpaceAround, Eye, EyeOff, Grid } from 'lucide-react';
+import { Map as MapIcon, ImagePlus, Trash2,   Eye, EyeOff, Grid } from 'lucide-react';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);

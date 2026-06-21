@@ -1,6 +1,6 @@
 // src/components/Theater/SessionDiary.tsx
 import React, { useState, useRef, useEffect } from 'react';
-import { BookOpen, Download, Filter, X } from 'lucide-react';
+import { BookOpen, Download, X } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import type { DiaryEntryType } from '../../store';
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DraggableWindow } from './DraggableWindow';
 import { state } from '../../store';
-import { Globe, Swords, Building, Shield, Coins, AlertTriangle } from 'lucide-react';
+import { Globe, Swords, Building, Coins, AlertTriangle } from 'lucide-react';
 
 export const WorldEngineWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [factions, setFactions] = useState<any[]>([]);
