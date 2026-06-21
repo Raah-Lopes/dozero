@@ -45,6 +45,7 @@ class AudioEngine {
     // Callback global que a API do YT chama quando carrega
     (window as any).onYouTubeIframeAPIReady = () => {
       this.ytPlayer = new (window as any).YT.Player('dozero-yt-player', {
+        host: 'https://www.youtube.com',
         height: '300',
         width: '300',
         videoId: '',
@@ -54,7 +55,8 @@ class AudioEngine {
           'disablekb': 1,
           'fs': 0,
           'rel': 0,
-          'loop': 1
+          'loop': 1,
+          'origin': window.location.origin
         },
         events: {
           'onReady': () => {
