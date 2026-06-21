@@ -51,6 +51,10 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   const [pos, setPos] = useState({ x: initialPrefs.x, y: initialPrefs.y });
   const [size, setSize] = useState({ w: initialPrefs.w, h: initialPrefs.h });
   
+  useEffect(() => {
+    setSize(prev => ({ w: width !== undefined ? width : prev.w, h: height !== undefined ? height : prev.h }));
+  }, [width, height]);
+  
   const [isDragging, setIsDragging] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [zIndex, setZIndex] = useState(() => ++globalZIndexCounter);
@@ -99,7 +103,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       current = current.parentElement;
     }
 
-    if (windowRef.current && variant === 'default' && !isMinimized) {
+    if (windowRef.current && (variant === 'default' || variant === 'glass') && !isMinimized) {
       const rect = windowRef.current.getBoundingClientRect();
       // Check if clicking in the bottom-right corner (CSS resize handle)
       const isResizeHandle = (e.clientX > rect.right - 20) && (e.clientY > rect.bottom - 20);

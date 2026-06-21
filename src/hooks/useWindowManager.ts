@@ -39,25 +39,27 @@ interface WindowManagerState {
 }
 
 export const useWindowManager = create<WindowManagerState>((set) => ({
-  openWindows: {
-    combatLog: localStorage.getItem('showCombatLog') !== 'false'
-  },
+  openWindows: JSON.parse(localStorage.getItem('dozero_openWindows') || '{"combatLog":true}'),
   toggleWindow: (windowId) => set((state) => {
     const isNowOpen = !state.openWindows[windowId];
-    if (windowId === 'combatLog') {
-      localStorage.setItem('showCombatLog', isNowOpen.toString());
-    }
-    return { openWindows: { ...state.openWindows, [windowId]: isNowOpen } };
+    const newWindows = { ...state.openWindows, [windowId]: isNowOpen };
+    localStorage.setItem('dozero_openWindows', JSON.stringify(newWindows));
+    return { openWindows: newWindows };
   }),
   openWindow: (windowId) => set((state) => {
-    if (windowId === 'combatLog') localStorage.setItem('showCombatLog', 'true');
-    return { openWindows: { ...state.openWindows, [windowId]: true } };
+    const newWindows = { ...state.openWindows, [windowId]: true };
+    localStorage.setItem('dozero_openWindows', JSON.stringify(newWindows));
+    return { openWindows: newWindows };
   }),
   closeWindow: (windowId) => set((state) => {
-    if (windowId === 'combatLog') localStorage.setItem('showCombatLog', 'false');
-    return { openWindows: { ...state.openWindows, [windowId]: false } };
+    const newWindows = { ...state.openWindows, [windowId]: false };
+    localStorage.setItem('dozero_openWindows', JSON.stringify(newWindows));
+    return { openWindows: newWindows };
   }),
-  closeAllWindows: () => set({ openWindows: {} }),
+  closeAllWindows: () => {
+    localStorage.setItem('dozero_openWindows', '{}');
+    set({ openWindows: {} });
+  },
 
   viewMode: (localStorage.getItem('dozero_viewMode') as ViewMode) || 'canvas',
   setViewMode: (mode) => {
