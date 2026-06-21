@@ -961,13 +961,22 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                           <h4 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: '#f1f5f9', fontFamily: 'var(--font-display)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {q.name}
                           </h4>
-                          <button
-                            className="cm-danger-btn"
-                            style={{ padding: '2px', marginLeft: 'auto' }}
-                            onClick={e => { e.stopPropagation(); deleteQuest(q.id); if (isSelected) setEditingQuestId(null); }}
-                          >
-                            <Trash2 size={11} />
-                          </button>
+                          <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
+                            <button
+                              className="cm-action-btn"
+                              style={{ padding: '2px 6px', fontSize: '0.65rem' }}
+                              onClick={e => { e.stopPropagation(); setEditingQuestId(q.id); }}
+                            >
+                              <Edit3 size={11} /> Editar
+                            </button>
+                            <button
+                              className="cm-danger-btn"
+                              style={{ padding: '2px' }}
+                              onClick={e => { e.stopPropagation(); deleteQuest(q.id); if (isSelected) setEditingQuestId(null); }}
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          </div>
                         </div>
                         
                         <p style={{
@@ -1104,13 +1113,91 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                 <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'rgba(148,163,184,0.6)', textTransform: 'uppercase', marginBottom: '4px' }}>
                   Capa / Organização Visual (URL ou Preset Gradiente)
                 </label>
-                <input
-                  className="cm-input"
-                  placeholder="Insira URL da imagem de capa..."
-                  value={activeQuest.coverUrl && !activeQuest.coverUrl.startsWith('linear-gradient') ? activeQuest.coverUrl : ''}
-                  onChange={e => updateQuest(activeQuest.id, { coverUrl: e.target.value })}
-                  style={{ marginBottom: '8px' }}
-                />
+                <div
+                  style={{
+                    position: 'relative',
+                    border: '1px dashed rgba(255,255,255,0.2)',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    marginBottom: '8px',
+                    background: 'rgba(0,0,0,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const img = new window.Image();
+                      img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let { width, height } = img;
+                        const maxSize = 800;
+                        if (width > height && width > maxSize) {
+                          height *= maxSize / width;
+                          width = maxSize;
+                        } else if (height > maxSize) {
+                          width *= maxSize / height;
+                          height = maxSize;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx?.drawImage(img, 0, 0, width, height);
+                        updateQuest(activeQuest.id, { coverUrl: canvas.toDataURL('image/webp', 0.8) });
+                      };
+                      img.src = event.target?.result as string;
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                >
+                  <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem' }}>
+                    <Image size={12} /> Imagem
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const img = new window.Image();
+                          img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let { width, height } = img;
+                            const maxSize = 800;
+                            if (width > height && width > maxSize) {
+                              height *= maxSize / width;
+                              width = maxSize;
+                            } else if (height > maxSize) {
+                              width *= maxSize / height;
+                              height = maxSize;
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx?.drawImage(img, 0, 0, width, height);
+                            updateQuest(activeQuest.id, { coverUrl: canvas.toDataURL('image/webp', 0.8) });
+                          };
+                          img.src = event.target?.result as string;
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
+                  <input
+                    className="cm-input"
+                    placeholder="Ou insira URL da imagem..."
+                    value={activeQuest.coverUrl && !activeQuest.coverUrl.startsWith('linear-gradient') && !activeQuest.coverUrl.startsWith('data:') ? activeQuest.coverUrl : ''}
+                    onChange={e => updateQuest(activeQuest.id, { coverUrl: e.target.value })}
+                    style={{ flex: 1, margin: 0, border: 'none', background: 'transparent', padding: '4px' }}
+                  />
+                </div>
                 
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '0.68rem', color: 'rgba(148,163,184,0.5)', marginRight: '4px' }}>Presets:</span>
