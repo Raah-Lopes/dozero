@@ -1,4 +1,4 @@
-import { AudioTrack, SoundboardItem, AudioProviderType } from '../utils/audioTypes';
+import type { AudioTrack, SoundboardItem, AudioProviderType } from '../utils/audioTypes';
 
 class AudioEngine {
   private musicPlayer: HTMLIFrameElement | null = null; // Para YouTube/Spotify embed

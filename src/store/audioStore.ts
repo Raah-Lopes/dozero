@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AudioState, AudioTrack, SoundboardItem, AudioScenePreset } from '../utils/audioTypes';
+import type { AudioState, AudioTrack, SoundboardItem, AudioScenePreset } from '../utils/audioTypes';
 
 interface AudioStore extends AudioState {
   addAudioTrack: (track: AudioTrack) => void;

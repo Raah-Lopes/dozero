@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAudioStore } from '../../store/audioStore';
 import { audioEngine } from '../../services/AudioEngine';
-import { AudioTrack, SoundboardItem } from '../../utils/audioTypes';
+import type { AudioTrack, SoundboardItem } from '../../utils/audioTypes';
 import { Play, Volume2, Music, Mic, Star, Plus } from 'lucide-react';
 import { DraggableWindow } from './DraggableWindow';
 
