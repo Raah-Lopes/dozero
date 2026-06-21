@@ -274,14 +274,14 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
           {activeTab === 'soundboard' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
               {[
-                { id: '1', title: 'Espada', icon: '⚔️', url: '#' },
-                { id: '2', title: 'Explosão', icon: '💥', url: '#' },
-                { id: '3', title: 'Magia', icon: '✨', url: '#' },
-                { id: '4', title: 'Porta', icon: '🚪', url: '#' },
-                { id: '5', title: 'Trovão', icon: '⚡', url: '#' },
-                { id: '6', title: 'Grito', icon: '😱', url: '#' },
-                { id: '7', title: 'Moedas', icon: '💰', url: '#' },
-                { id: '8', title: 'Lobo', icon: '🐺', url: '#' },
+                { id: '1', title: 'Espada', icon: '⚔️', url: '#', volume: 0.8, provider: 'local' },
+                { id: '2', title: 'Explosão', icon: '💥', url: '#', volume: 0.8, provider: 'local' },
+                { id: '3', title: 'Magia', icon: '✨', url: '#', volume: 0.8, provider: 'local' },
+                { id: '4', title: 'Porta', icon: '🚪', url: '#', volume: 0.8, provider: 'local' },
+                { id: '5', title: 'Trovão', icon: '⚡', url: '#', volume: 0.8, provider: 'local' },
+                { id: '6', title: 'Grito', icon: '😱', url: '#', volume: 0.8, provider: 'local' },
+                { id: '7', title: 'Moedas', icon: '💰', url: '#', volume: 0.8, provider: 'local' },
+                { id: '8', title: 'Lobo', icon: '🐺', url: '#', volume: 0.8, provider: 'local' },
               ].map((sfx) => (
                 <button
                   key={sfx.id}
