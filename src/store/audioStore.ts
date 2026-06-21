@@ -14,6 +14,8 @@ const initialAudioState: AudioState = {
   ambienceVolume: 0.4,
   currentMusicId: undefined,
   currentAmbienceId: undefined,
+  currentMusicTitle: undefined,
+  currentAmbienceTitle: undefined,
   isPlayingMusic: false,
   isPlayingAmbience: false,
   playlist: [],
