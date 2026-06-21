@@ -579,6 +579,27 @@ export interface CampaignArc {
   filePath?: string;
 }
 
+export interface QuestLootItem {
+  id: string;
+  name: string;
+  type: 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha';
+  description: string;
+  quantidade?: number;
+  efeito?: string;
+}
+
+export interface CampaignQuest {
+  id: string;
+  name: string;
+  description: string;
+  status: 'active' | 'abandoned' | 'failed' | 'completed';
+  type: 'main' | 'side';
+  coverUrl?: string;
+  wikiLinks?: string[];
+  loot: QuestLootItem[];
+  filePath?: string;
+}
+
 export interface CampaignSession {
   id: string;
   date: string;
@@ -600,6 +621,7 @@ export interface CampaignData {
   overviewPath?: string;
   arcs: CampaignArc[];
   sessions: CampaignSession[];
+  quests?: CampaignQuest[];
 }
 
 export function createCampaign(campaign: Omit<CampaignData, 'id'>) {
