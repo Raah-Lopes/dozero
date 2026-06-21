@@ -11,12 +11,17 @@ class AudioEngine {
   private pendingYtVideoId: string | null = null;
   private pendingYtVolume: number = 0.5;
 
+  private currentMusicVolume: number = 0.7;
+  private currentAmbienceVolume: number = 0.4;
+
   // Callbacks para atualizar a UI
   onStateChange?: (state: any) => void;
 
   constructor() {
     this.ambienceAudio = new Audio();
+    this.ambienceAudio.crossOrigin = 'anonymous';
     this.sfxAudio = new Audio();
+    this.sfxAudio.crossOrigin = 'anonymous';
     this.sfxAudio.preload = 'auto'; // Carregar SFX rapidamente
 
     this.initYouTubeAPI();
@@ -60,6 +65,7 @@ class AudioEngine {
         },
         events: {
           'onReady': () => {
+            console.log('YouTube Player pronto');
             this.isYtReady = true;
             if (this.pendingYtVideoId) {
               this.ytPlayer.loadVideoById({ videoId: this.pendingYtVideoId });
@@ -68,11 +74,15 @@ class AudioEngine {
             }
           },
           'onStateChange': (event: any) => {
+             console.log('YouTube Player estado:', event.data);
              // Se o vídeo terminou e loop falhou, forçar repetição
              if (event.data === 0) { // 0 = YT.PlayerState.ENDED
                this.ytPlayer.seekTo(0);
                this.ytPlayer.playVideo();
              }
+          },
+          'onError': (event: any) => {
+            console.error('Erro no YouTube Player:', event.data);
           }
         }
       });
@@ -99,28 +109,57 @@ class AudioEngine {
   }
 
   playMusic(track: AudioTrack, volume: number) {
+    this.currentMusicVolume = volume;
     const embedIdOrUrl = this.getEmbedUrl(track);
-    if (!embedIdOrUrl) return console.error('URL inválida para música');
+    if (!embedIdOrUrl) {
+      console.error('URL inválida para música:', track.url);
+      return;
+    }
 
     this.stopMusic(0);
 
     if (track.provider === 'youtube') {
-      if (this.isYtReady && this.ytPlayer) {
-        this.ytPlayer.loadVideoById({ videoId: embedIdOrUrl });
+      const videoId = embedIdOrUrl;
+      console.log('Tentando tocar YouTube:', videoId, 'API pronta?', this.isYtReady);
+
+      if (this.isYtReady && this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
+        console.log('Carregando vídeo no player YT...');
+        this.ytPlayer.loadVideoById({ videoId });
         this.ytPlayer.setVolume(volume * 100);
+        this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: true });
       } else {
-        // Guarda na fila se a API ainda não tiver carregado
-        this.pendingYtVideoId = embedIdOrUrl;
+        console.log('YouTube API não está pronta, guardando na fila...');
+        this.pendingYtVideoId = videoId;
         this.pendingYtVolume = volume;
+        this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: false });
       }
     } else {
+      console.log('Tocando áudio nativo:', embedIdOrUrl);
       this.nativeMusicAudio = new Audio(embedIdOrUrl);
+      this.nativeMusicAudio.crossOrigin = 'anonymous';
       this.nativeMusicAudio.loop = true;
       this.nativeMusicAudio.volume = volume;
-      this.nativeMusicAudio.play().catch(e => console.warn("Interação do usuário necessária primeiro", e));
+      
+      this.nativeMusicAudio.addEventListener('canplaythrough', () => {
+        console.log('Áudio pronto para tocar');
+        this.nativeMusicAudio!.play()
+          .then(() => {
+            console.log('Reprodução iniciada com sucesso');
+            this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: true });
+          })
+          .catch(e => {
+            console.error('Erro ao reproduzir áudio:', e);
+            this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: false });
+          });
+      }, { once: true });
+      
+      this.nativeMusicAudio.addEventListener('error', (e) => {
+        console.error('Erro no elemento de áudio:', e);
+        this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: false });
+      });
+      
+      this.nativeMusicAudio.load();
     }
-    
-    this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: true });
   }
 
   stopMusic(fadeDuration: number = 1000) {
@@ -137,34 +176,72 @@ class AudioEngine {
   }
 
   playAmbience(track: AudioTrack, volume: number) {
+    this.currentAmbienceVolume = volume;
     const src = this.getEmbedUrl(track);
-    if (!src || !this.ambienceAudio) return;
+    
+    if (!src || !this.ambienceAudio) {
+      console.error('URL inválida ou áudio não inicializado para ambiente:', track.url);
+      return;
+    }
 
     if (track.provider === 'youtube') {
       console.warn("Ambiente do YouTube ainda não suportado nativamente. Tente arquivos mp3.");
       return;
     }
 
+    console.log('Tocando ambiente:', src);
     this.ambienceAudio.src = src;
+    this.ambienceAudio.crossOrigin = 'anonymous';
     this.ambienceAudio.loop = true;
     this.ambienceAudio.volume = volume;
-    this.ambienceAudio.play().catch(e => console.warn(e));
+
+    this.ambienceAudio.addEventListener('canplaythrough', () => {
+      console.log('Ambiente pronto para tocar');
+      this.ambienceAudio!.play()
+        .then(() => {
+          console.log('Ambiente iniciado com sucesso');
+          this.onStateChange?.({ currentAmbienceId: track.id, isPlayingAmbience: true });
+        })
+        .catch(e => {
+          console.error('Erro ao reproduzir ambiente:', e);
+          this.onStateChange?.({ currentAmbienceId: track.id, isPlayingAmbience: false });
+        });
+    }, { once: true });
     
-    this.onStateChange?.({ currentAmbienceId: track.id, isPlayingAmbience: true });
+    this.ambienceAudio.addEventListener('error', (e) => {
+      console.error('Erro no elemento de áudio de ambiente:', e);
+      this.onStateChange?.({ currentAmbienceId: track.id, isPlayingAmbience: false });
+    });
+    
+    this.ambienceAudio.load();
   }
 
   playSFX(item: SoundboardItem) {
     const src = this.getEmbedUrl({ ...item, category: 'sfx' } as AudioTrack);
-    if (!src) return;
+    if (!src) {
+      console.error('URL inválida para SFX:', item.url);
+      return;
+    }
 
     if (item.provider === 'youtube') {
        console.warn("SFX do YouTube não são ideais devido a latência da API.");
        return;
     }
 
+    console.log('Tocando SFX:', item.title, src);
     const sfx = new Audio(src);
+    sfx.crossOrigin = 'anonymous';
     sfx.volume = item.volume;
-    sfx.play().catch(e => console.warn(e));
+    
+    sfx.addEventListener('canplaythrough', () => {
+      sfx.play().catch(e => console.error('Erro ao tocar SFX:', e));
+    }, { once: true });
+    
+    sfx.addEventListener('error', (e) => {
+      console.error('Erro no SFX:', e);
+    });
+    
+    sfx.load();
   }
 
   setMusicVolume(val: number) {
