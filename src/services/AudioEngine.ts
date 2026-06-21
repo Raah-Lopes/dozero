@@ -10,7 +10,6 @@ class AudioEngine {
   private isYtReady: boolean = false;
   private pendingYtVideoId: string | null = null;
   private pendingYtVolume: number = 0.5;
-
   private currentMusicVolume: number = 0.7;
   private currentAmbienceVolume: number = 0.4;
 
@@ -22,7 +21,7 @@ class AudioEngine {
     this.ambienceAudio.crossOrigin = 'anonymous';
     this.sfxAudio = new Audio();
     this.sfxAudio.crossOrigin = 'anonymous';
-    this.sfxAudio.preload = 'auto'; // Carregar SFX rapidamente
+    this.sfxAudio.preload = 'auto';
 
     this.initYouTubeAPI();
   }
@@ -49,6 +48,7 @@ class AudioEngine {
 
     // Callback global que a API do YT chama quando carrega
     (window as any).onYouTubeIframeAPIReady = () => {
+      this.isYtReady = true;
       this.ytPlayer = new (window as any).YT.Player('dozero-yt-player', {
         host: 'https://www.youtube.com',
         height: '300',
@@ -61,12 +61,12 @@ class AudioEngine {
           'fs': 0,
           'rel': 0,
           'loop': 1,
-          'origin': window.location.origin
+          'origin': window.location.origin,
+          'enablejsapi': 1
         },
         events: {
-          'onReady': () => {
+          'onReady': (event: any) => {
             console.log('YouTube Player pronto');
-            this.isYtReady = true;
             if (this.pendingYtVideoId) {
               this.ytPlayer.loadVideoById({ videoId: this.pendingYtVideoId });
               this.ytPlayer.setVolume(this.pendingYtVolume * 100);
@@ -119,21 +119,26 @@ class AudioEngine {
     this.stopMusic(0);
 
     if (track.provider === 'youtube') {
-      const videoId = embedIdOrUrl;
+      const videoId = embedIdOrUrl; // já é o ID extraído
       console.log('Tentando tocar YouTube:', videoId, 'API pronta?', this.isYtReady);
-
+      
       if (this.isYtReady && this.ytPlayer && typeof this.ytPlayer.loadVideoById === 'function') {
         console.log('Carregando vídeo no player YT...');
-        this.ytPlayer.loadVideoById({ videoId });
+        this.ytPlayer.loadVideoById({ 
+          videoId: videoId,
+          startSeconds: 0
+        });
         this.ytPlayer.setVolume(volume * 100);
         this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: true });
       } else {
         console.log('YouTube API não está pronta, guardando na fila...');
+        // Guarda na fila se a API ainda não tiver carregado
         this.pendingYtVideoId = videoId;
         this.pendingYtVolume = volume;
         this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: false });
       }
     } else {
+      // Provedores locais ou diretos
       console.log('Tocando áudio nativo:', embedIdOrUrl);
       this.nativeMusicAudio = new Audio(embedIdOrUrl);
       this.nativeMusicAudio.crossOrigin = 'anonymous';
@@ -158,6 +163,7 @@ class AudioEngine {
         this.onStateChange?.({ currentMusicId: track.id, isPlayingMusic: false });
       });
       
+      // Força o carregamento
       this.nativeMusicAudio.load();
     }
   }
@@ -194,7 +200,7 @@ class AudioEngine {
     this.ambienceAudio.crossOrigin = 'anonymous';
     this.ambienceAudio.loop = true;
     this.ambienceAudio.volume = volume;
-
+    
     this.ambienceAudio.addEventListener('canplaythrough', () => {
       console.log('Ambiente pronto para tocar');
       this.ambienceAudio!.play()
@@ -213,6 +219,7 @@ class AudioEngine {
       this.onStateChange?.({ currentAmbienceId: track.id, isPlayingAmbience: false });
     });
     
+    // Força o carregamento
     this.ambienceAudio.load();
   }
 

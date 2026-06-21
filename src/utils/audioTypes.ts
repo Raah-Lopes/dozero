@@ -37,6 +37,8 @@ export interface AudioState {
   ambienceVolume: number;
   currentMusicId?: string;
   currentAmbienceId?: string;
+  currentMusicTitle?: string;
+  currentAmbienceTitle?: string;
   isPlayingMusic: boolean;
   isPlayingAmbience: boolean;
   playlist: AudioTrack[];
