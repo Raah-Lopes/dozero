@@ -346,6 +346,7 @@ function App() {
                  onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
                  onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
                  onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
+                 onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
                />
              )}
              {activeModal === 'chat' && (
