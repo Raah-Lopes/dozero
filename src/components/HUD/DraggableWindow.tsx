@@ -12,7 +12,7 @@ interface DraggableWindowProps {
   width?: string | number;
   height?: string | number;
   windowStyle?: React.CSSProperties;
-  variant?: 'default' | 'bare';
+  variant?: 'default' | 'bare' | 'glass';
   dragAnywhere?: boolean;
   onClose?: () => void;
 }
@@ -195,7 +195,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     <div
       id={`window-${id}`}
       ref={windowRef}
-      className={variant === 'default' ? "draggable-window glass-panel" : "draggable-window"}
+      className={(variant === 'default' || variant === 'glass') ? "draggable-window glass-panel" : "draggable-window"}
       style={{
         position: 'absolute',
         left: pos.x,
@@ -206,12 +206,12 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         display: 'flex',
         flexDirection: 'column',
         zIndex: isDragging ? globalZIndexCounter + 100 : zIndex,
-        boxShadow: variant === 'default' ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : '') : 'none',
+        boxShadow: (variant === 'default' || variant === 'glass') ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : '') : 'none',
         transition: isDragging ? 'none' : 'box-shadow 0.2s',
-        resize: (variant === 'default' && !isMinimized) ? 'both' : 'none',
+        resize: ((variant === 'default' || variant === 'glass') && !isMinimized) ? 'both' : 'none',
         overflow: 'hidden',
-        minWidth: variant === 'default' ? '250px' : 'auto',
-        minHeight: (variant === 'default' && !isMinimized) ? '100px' : 'auto',
+        minWidth: (variant === 'default' || variant === 'glass') ? '250px' : 'auto',
+        minHeight: ((variant === 'default' || variant === 'glass') && !isMinimized) ? '100px' : 'auto',
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front
@@ -234,7 +234,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       }}
     >
       {/* Drag Handle */}
-      {variant === 'default' ? (
+      {(variant === 'default' || variant === 'glass') ? (
         <div
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -316,7 +316,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
 
       {/* Content Area */}
       {!isMinimized && (
-        <div style={{ flex: 1, padding: variant === 'default' ? '1rem' : '0', display: 'flex', flexDirection: 'column', overflow: variant === 'default' ? 'hidden' : 'visible', containerType: variant === 'default' ? 'inline-size' : 'normal', containerName: 'windowcontainer' }}>
+        <div style={{ flex: 1, padding: variant === 'default' ? '1rem' : '0', display: 'flex', flexDirection: 'column', overflow: (variant === 'default' || variant === 'glass') ? 'hidden' : 'visible', containerType: (variant === 'default' || variant === 'glass') ? 'inline-size' : 'normal', containerName: 'windowcontainer' }}>
           <ErrorBoundary fallbackMessage={`Erro no módulo: ${title}`}>
             {children}
           </ErrorBoundary>
