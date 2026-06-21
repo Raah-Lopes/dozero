@@ -62,9 +62,9 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
 
   // Mock dados para exibir UI
   const mockLibrary: AudioTrack[] = [
-    { id: '1', title: 'Taverna Noturna', provider: 'youtube', url: 'https://youtube.com/watch?v=1', category: 'ambience', tags: [], volume: 0.5, isFavorite: true },
-    { id: '2', title: 'Chefe Final: Dragão', provider: 'youtube', url: 'https://youtube.com/watch?v=2', category: 'combat', tags: [], volume: 0.8, isFavorite: false },
-    { id: '3', title: 'Chuva Suave', provider: 'local', url: '#', category: 'sfx', tags: [], volume: 0.3, isFavorite: true },
+    { id: '1', title: 'Taverna Noturna', provider: 'youtube', url: 'https://www.youtube.com/watch?v=a1b2c3d4e5f', category: 'ambience', tags: [], volume: 0.5, isFavorite: true },
+    { id: '2', title: 'Chefe Final: Dragão', provider: 'youtube', url: 'https://www.youtube.com/watch?v=g6h7i8j9k0l', category: 'combat', tags: [], volume: 0.8, isFavorite: false },
+    { id: '3', title: 'Chuva Suave', provider: 'local', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', category: 'sfx', tags: [], volume: 0.3, isFavorite: true },
   ];
 
   return (
