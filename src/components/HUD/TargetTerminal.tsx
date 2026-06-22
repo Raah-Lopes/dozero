@@ -1067,6 +1067,32 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
           {isGM && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem' }}>
+              <span title="Se desativado, o token não emite luz/visão para afastar a Névoa de Guerra">Gera Visão (Ilumina a Névoa):</span>
+              <button
+                onClick={async () => {
+                  const newVal = !(tokenData.hasVision ?? true);
+                  handlePropChange('hasVision', newVal);
+                  const path = tokenId ? wikiEntry?.path : wikiPath;
+                  if (path) {
+                    await syncTokenFieldToWiki(path, 'hasVision', newVal);
+                    WikiIndexer.clearCache();
+                    window.dispatchEvent(new Event('wiki-updated'));
+                  }
+                }}
+                style={{
+                  padding: '2px 8px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
+                  background: (tokenData.hasVision ?? true) ? 'rgba(52, 211, 153, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                  border: (tokenData.hasVision ?? true) ? '1px solid #34d399' : '1px solid #f87171',
+                  color: (tokenData.hasVision ?? true) ? '#34d399' : '#f87171'
+                }}
+              >
+                {(tokenData.hasVision ?? true) ? 'SIM' : 'NÃO'}
+              </button>
+            </div>
+          )}
+
+          {isGM && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem' }}>
               <span>Ativo no Tabuleiro:</span>
               <button
                 onClick={async () => {

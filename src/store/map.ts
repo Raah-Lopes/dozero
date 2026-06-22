@@ -5,6 +5,10 @@ export interface MapConfig {
   gridType: 'square' | 'hex_v' | 'hex_h' | 'dots_square' | 'dots_hex';
   gridColor: string; // Hex string ex: '#1e293b'
   gridAlpha: number;
+  fogOfWar: boolean;
+  fowRadius: number;
+  fowShape: 'circle' | 'square' | 'hexagon';
+  fowHideTokens: boolean;
 }
 
 export function getMapConfig(): MapConfig {
@@ -16,7 +20,11 @@ export function getMapConfig(): MapConfig {
     gridSize: 50,
     gridType: 'square',
     gridColor: '#1e293b',
-    gridAlpha: 0.5
+    gridAlpha: 0.5,
+    fogOfWar: false,
+    fowRadius: 6,
+    fowShape: 'circle',
+    fowHideTokens: false
   };
 }
 

@@ -16,6 +16,11 @@ function hexRound(q: number, r: number) {
   return { q: rq, r: rr };
 }
 
+// Distance util
+function euclideanDistance(x1: number, y1: number, x2: number, y2: number) {
+  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+}
+
 function pixelToHex(x: number, y: number, type: 'hex_h' | 'hex_v', size: number) {
   let q: number, r: number;
   if (type === 'hex_h') { // flat-top
@@ -116,6 +121,14 @@ export const GameCanvas: React.FC = () => {
       let isSelecting = false;
       let selectionStart = { x: 0, y: 0 };
       
+      let isMeasuring = false;
+      let measureStart = { x: 0, y: 0 };
+
+      const getWorldPos = (clientX: number, clientY: number) => ({
+        x: (clientX - viewport.x) / viewport.scale.x,
+        y: (clientY - viewport.y) / viewport.scale.y
+      });
+      
       canvasEl.addEventListener('wheel', (e) => {
         e.preventDefault();
         const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -136,6 +149,11 @@ export const GameCanvas: React.FC = () => {
       });
 
       canvasEl.addEventListener('pointerdown', (e) => {
+        if (e.shiftKey && e.button === 0) {
+           isMeasuring = true;
+           measureStart = getWorldPos(e.clientX, e.clientY);
+           return;
+        }
         if (e.button === 2 || e.button === 1) { // Middle or Right click
           isPanning = true;
           panStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
@@ -155,11 +173,33 @@ export const GameCanvas: React.FC = () => {
           selectionBox.fill({ color: 0x0ea5e9, alpha: 0.15 });
           selectionBox.stroke({ width: 1, color: 0x0ea5e9, alpha: 0.8 });
         }
+        if (isMeasuring) {
+          const currentPos = getWorldPos(e.clientX, e.clientY);
+          const config = getMapConfig();
+          const distPx = euclideanDistance(measureStart.x, measureStart.y, currentPos.x, currentPos.y);
+          const distMeters = (distPx / config.gridSize) * 1.5;
+
+          rulerGraphic.clear();
+          rulerGraphic.moveTo(measureStart.x, measureStart.y);
+          rulerGraphic.lineTo(currentPos.x, currentPos.y);
+          rulerGraphic.stroke({ width: 4 / viewport.scale.x, color: 0xff0000, alpha: 0.8 });
+
+          rulerText.text = `${distMeters.toFixed(1)}m`;
+          rulerText.x = currentPos.x + 15 / viewport.scale.x;
+          rulerText.y = currentPos.y + 15 / viewport.scale.y;
+          rulerText.scale.set(1 / viewport.scale.x);
+          rulerText.visible = true;
+        }
       });
       window.addEventListener('pointerup', (e) => {
         if (e.button === 1 || e.button === 2) {
           isPanning = false;
           canvasEl.style.cursor = 'default';
+        }
+        if (isMeasuring) {
+          isMeasuring = false;
+          rulerGraphic.clear();
+          rulerText.visible = false;
         }
         if (isSelecting) {
           isSelecting = false;
@@ -237,6 +277,36 @@ export const GameCanvas: React.FC = () => {
       // Create an infinite grid background
       const grid = new Graphics();
       viewport.addChild(grid);
+
+      // Fog of War Overlay System
+      const fogContainer = new Container();
+      fogContainer.filters = [new AlphaFilter({ alpha: 1 })]; // Forces it to render to an offscreen texture, allowing ERASE blend mode to work safely
+      viewport.addChild(fogContainer);
+
+      const fogOverlay = new Graphics();
+      fogContainer.addChild(fogOverlay);
+
+      const fogHoles = new Graphics();
+      // Em v8, pode ser 'erase' ou equivalente. Em algumas versões, é PIXI.BLEND_MODES.ERASE
+      // Usaremos 'erase' que é a string de blend mode no Pixi v8
+      fogHoles.blendMode = 'erase'; 
+      fogContainer.addChild(fogHoles);
+
+      // Ruler Graphics
+      const rulerGraphic = new Graphics();
+      viewport.addChild(rulerGraphic);
+      const rulerText = new Text({
+        text: '0m',
+        style: {
+          fontFamily: 'Arial',
+          fontSize: 24,
+          fill: 0xffffff,
+          stroke: { color: 0x000000, width: 4 },
+          dropShadow: { color: 0x000000, alpha: 0.8, distance: 2, blur: 2 }
+        }
+      });
+      rulerText.visible = false;
+      viewport.addChild(rulerText);
 
       const drawGrid = () => {
         grid.clear();
@@ -317,6 +387,103 @@ export const GameCanvas: React.FC = () => {
         }
       };
 
+      let lastFowHash = '';
+      const drawFogOfWar = () => {
+        const config = getMapConfig();
+        const tokens = Array.from(state.tokens.values()) as any[];
+        
+        // Determinar quais tokens geram visão (apenas os que tem hasVision ativo, default true).
+        // Se fowHideTokens estiver ativo e houver tokens selecionados, a visão é gerada APENAS pelos tokens selecionados (Player View).
+        // Assim, os monstros deselecionados não geram buracos na névoa e podem ser escondidos.
+        let visionSources = tokens.filter(t => t.hasVision !== false);
+        if (config.fowHideTokens && localState.selectedTokens && localState.selectedTokens.size > 0) {
+           visionSources = visionSources.filter(t => localState.selectedTokens.has(t.id));
+        }
+
+        const currentHash = config.fogOfWar + '_' + config.fowRadius + '_' + config.fowShape + '_' + config.fowHideTokens + '_' + viewport.x + '_' + viewport.y + '_' + viewport.scale.x + '_' + visionSources.map(t => `${Math.round(t.x)},${Math.round(t.y)}`).join('|');
+        
+        if (lastFowHash === currentHash) return; // No need to redraw
+        lastFowHash = currentHash;
+
+        fogOverlay.clear();
+        fogHoles.clear();
+        
+        if (config.fogOfWar) {
+          // Desenhamos a escuridão exata no tamanho da tela visível para evitar limites da GPU
+          const wl = -viewport.x / viewport.scale.x - 1000;
+          const wt = -viewport.y / viewport.scale.y - 1000;
+          const ww = window.innerWidth / viewport.scale.x + 2000;
+          const wh = window.innerHeight / viewport.scale.y + 2000;
+
+          fogOverlay.rect(wl, wt, ww, wh);
+          fogOverlay.fill({ color: 0x000000, alpha: 0.95 });
+          
+          // Draw holes
+          visionSources.forEach(t => {
+             const radius = t.visionRadius || ((config.fowRadius || 6) * config.gridSize);
+             if (config.fowShape === 'square') {
+                fogHoles.rect(t.x - radius, t.y - radius, radius * 2, radius * 2);
+             } else if (config.fowShape === 'hexagon') {
+                fogHoles.moveTo(t.x + radius, t.y);
+                for (let i = 1; i <= 6; i++) {
+                   fogHoles.lineTo(t.x + radius * Math.cos(i * Math.PI / 3), t.y + radius * Math.sin(i * Math.PI / 3));
+                }
+             } else {
+                fogHoles.circle(t.x, t.y, radius);
+             }
+          });
+          // O blendMode 'erase' vai fazer esses buracos brancos apagarem o fogOverlay
+          fogHoles.fill({ color: 0xffffff }); 
+          fogContainer.visible = true;
+
+          // Hide tokens if requested
+          if (config.fowHideTokens) {
+            Object.entries(tokenSprites).forEach(([id, spriteRecord]) => {
+              const t = state.tokens.get(id) as any;
+              if (!t) return;
+              
+              // Se o token for a fonte de visão, sempre visível
+              if (visionSources.some(src => src.id === id)) {
+                spriteRecord.container.visible = true;
+                return;
+              }
+
+              // Checar se o token t está dentro do buraco de visão de ALGUMA visionSource
+              let isVisible = false;
+              for (const src of visionSources) {
+                const radius = src.visionRadius || ((config.fowRadius || 6) * config.gridSize);
+                const dx = Math.abs(t.x - src.x);
+                const dy = Math.abs(t.y - src.y);
+                
+                if (config.fowShape === 'square') {
+                  if (dx <= radius && dy <= radius) isVisible = true;
+                } else if (config.fowShape === 'hexagon') {
+                  // Aproximação hexagonal simples
+                  if (euclideanDistance(t.x, t.y, src.x, src.y) <= radius * 1.1) isVisible = true;
+                } else {
+                  if (euclideanDistance(t.x, t.y, src.x, src.y) <= radius) isVisible = true;
+                }
+                if (isVisible) break;
+              }
+              
+              spriteRecord.container.visible = isVisible;
+            });
+          } else {
+            // Restore visibility for all if fowHideTokens is off
+            Object.values(tokenSprites).forEach(spriteRecord => {
+               spriteRecord.container.visible = true;
+            });
+          }
+
+        } else {
+          fogContainer.visible = false;
+          // Restore visibility when FOW is off
+          Object.values(tokenSprites).forEach(spriteRecord => {
+             spriteRecord.container.visible = true;
+          });
+        }
+      };
+
       drawGrid();
 
       let draggingTokenId: string | null = null;
@@ -335,6 +502,9 @@ export const GameCanvas: React.FC = () => {
         hpBarY: number;
       }
       let tokenSprites: Record<string, TokenSpriteRecord> = {};
+
+      // Draw initial FOW after tokenSprites is defined
+      drawFogOfWar();
 
       const conditionEmojis: Record<string, string> = {
         fogo: '🔥',
@@ -1202,6 +1372,9 @@ export const GameCanvas: React.FC = () => {
 
       // Animation Loop for smooth sliding (LERP) and real-time state updates
       app.ticker.add(() => {
+        // Redraw grid and FOW on ticker (only updates if changed internally)
+        drawFogOfWar();
+
         // Update all tokens
         Object.entries(tokenSprites).forEach(([id, tokenData]) => {
           const tState = state.tokens.get(id) as any;
@@ -1264,8 +1437,6 @@ export const GameCanvas: React.FC = () => {
               ticker.add(animateText);
             }
             prevHpMap[id] = currentHp;
-
-          tokenData.container.visible = true;
 
           // Target ring rotation and visibility
           const isTargeted = localState.targets.has(id);

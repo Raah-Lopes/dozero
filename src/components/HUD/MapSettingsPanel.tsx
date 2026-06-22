@@ -186,6 +186,54 @@ export const MapSettingsPanel: React.FC = () => {
               style={{ width: '100%' }}
             />
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem', gridColumn: '1 / -1', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '4px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              <input 
+                type="checkbox" 
+                checked={mapConfig.fogOfWar || false}
+                onChange={e => updateMapConfig({ fogOfWar: e.target.checked })}
+              />
+              <strong style={{color: 'white'}}>Ativar Fog of War (Névoa de Guerra)</strong>
+            </label>
+            
+            {mapConfig.fogOfWar && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                  Raio de Visão (Em quadrados)
+                  <input 
+                    type="number" 
+                    value={mapConfig.fowRadius || 6}
+                    min="1"
+                    onChange={e => updateMapConfig({ fowRadius: Number(e.target.value) })}
+                    style={{ width: '50px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.2rem', borderRadius: '4px' }}
+                  />
+                </label>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Formato da Visão</span>
+                  <select 
+                    value={mapConfig.fowShape || 'circle'} 
+                    onChange={e => updateMapConfig({ fowShape: e.target.value as any })}
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.25rem', borderRadius: '4px', fontSize: '0.75rem' }}
+                  >
+                    <option value="circle">Círculo</option>
+                    <option value="square">Quadrado</option>
+                    <option value="hexagon">Hexágono</option>
+                  </select>
+                </div>
+                
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={mapConfig.fowHideTokens || false}
+                    onChange={e => updateMapConfig({ fowHideTokens: e.target.checked })}
+                  />
+                  Ocultar tokens que estiverem fora do alcance de visão
+                </label>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
