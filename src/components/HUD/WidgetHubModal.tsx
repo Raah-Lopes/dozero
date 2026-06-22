@@ -21,9 +21,10 @@ interface Props {
   onOpenStronghold: () => void;
   onOpenArsenalMestre: () => void;
   onOpenAudioDirector: () => void;
+  onOpenWebFrame: () => void;
 }
 
-export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector }) => {
+export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame }) => {
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '550px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -170,6 +171,10 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
 
         <button onClick={onOpenAudioDirector} title="Audio Director (Gerenciador de Áudio e SFX)" className="widget-btn theme-blue">
           <Sparkles size={32} />
+        </button>
+
+        <button onClick={onOpenWebFrame} title="Navegador Integrado (Janela Web)" className="widget-btn theme-pink">
+          <Globe size={32} />
         </button>
       </div>
     </div>

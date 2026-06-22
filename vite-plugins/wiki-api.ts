@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
+import https from 'https';
+import http from 'http';
 import type { Plugin } from 'vite';
 
 // Helper to build tree like GitHub's API
@@ -112,6 +114,22 @@ export function wikiLocalApi(): Plugin {
             return sendResponse(200, { tree });
           }
 
+          if (req.method === 'POST' && pathname === '/api/wiki/open') {
+            const filepath = body.path || '';
+            const full = path.join(repoPath, filepath);
+            
+            if (!fs.existsSync(full)) return sendResponse(404, { error: 'folder not found' });
+
+            const command = process.platform === 'win32' ? `start "" "${full}"` :
+                            process.platform === 'darwin' ? `open "${full}"` :
+                            `xdg-open "${full}"`;
+
+            exec(command, (error) => {
+               if (error) console.error('Failed to open folder:', error);
+            });
+            return sendResponse(200, { success: true });
+          }
+
           if (req.method === 'GET' && pathname === '/api/wiki/graph') {
             const graphData = buildGraph(repoPath, repoPath);
             return sendResponse(200, graphData);
@@ -143,6 +161,41 @@ export function wikiLocalApi(): Plugin {
             res.setHeader('Access-Control-Allow-Origin', '*');
             res.statusCode = 200;
             return fs.createReadStream(full).pipe(res);
+          }
+
+          if (req.method === 'GET' && pathname === '/api/proxy') {
+            const targetUrl = url.searchParams.get('url');
+            if (!targetUrl) return sendResponse(400, { error: 'url required' });
+            
+            try {
+              const parsedUrl = new URL(targetUrl);
+              const lib = parsedUrl.protocol === 'https:' ? https : http;
+              
+              const proxyReq = lib.request(parsedUrl, {
+                method: 'GET',
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                  'Referer': parsedUrl.origin
+                }
+              }, (proxyRes) => {
+                res.writeHead(proxyRes.statusCode || 200, {
+                  'Content-Type': proxyRes.headers['content-type'] || 'audio/mpeg',
+                  'Access-Control-Allow-Origin': '*',
+                  'Cache-Control': 'public, max-age=31536000'
+                });
+                proxyRes.pipe(res);
+              });
+              
+              proxyReq.on('error', (e) => {
+                console.error('Proxy error:', e);
+                sendResponse(500, { error: 'Proxy falhou' });
+              });
+              
+              proxyReq.end();
+              return;
+            } catch (e) {
+              return sendResponse(400, { error: 'Invalid URL' });
+            }
           }
 
           if (req.method === 'GET' && pathname === '/api/wiki/search') {

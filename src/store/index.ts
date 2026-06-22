@@ -9,3 +9,8 @@ export * from './theater';
 export * from './campaign';
 export * from './wiki';
 export * from './world';
+
+export const useStore = () => ({
+  combatLog: [],
+  addLoreEntry: (entry: any) => {}
+});

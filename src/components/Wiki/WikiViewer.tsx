@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub, initializeWikiTemplate } from '../../utils/githubApi';
+import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub, initializeWikiTemplate, openLocalFolder } from '../../utils/githubApi';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
 import { 
   Folder, FileText, ChevronRight, ChevronDown, 
-  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus
+  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus, FolderOpen
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
 import { WikiGraph } from './WikiGraph';
@@ -432,28 +432,35 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
               <BookOpen size={18} color="var(--accent-primary)" />
               Sua Wiki Local
             </div>
+            <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar Arquivos" style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px' }}>
+              <RefreshCw size={14} className={syncing ? 'spin' : ''} />
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--glass-border)', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <button className="btn-icon" onClick={handleCreateFolder} title="Nova Pasta">
-                <FolderPlus size={16} />
-              </button>
-              <button className="btn-icon" onClick={handleCreateFile} title="Novo Pergaminho">
+              <button className="btn-icon" onClick={handleCreateFile} title="Novo Pergaminho" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem' }}>
                 <FilePlus size={16} />
               </button>
-              <button className="btn-icon" onClick={handleUploadClick} disabled={syncing} title="Fazer Upload de Arquivo">
-                <UploadCloud size={16} className={syncing ? 'spin' : ''} />
+              <button className="btn-icon" onClick={handleCreateFolder} title="Nova Pasta" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem' }}>
+                <FolderPlus size={16} />
               </button>
-              <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar com GitHub">
-                <RefreshCw size={16} className={syncing ? 'spin' : ''} />
+              <button className="btn-icon" onClick={handleUploadClick} disabled={syncing} title="Upload de Imagem" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem' }}>
+                <UploadCloud size={16} />
               </button>
             </div>
-            <input 
+            <div style={{ width: '1px', background: 'var(--glass-border)', margin: '0.2rem 0' }}></div>
+            <button className="btn-icon" onClick={() => openLocalFolder()} title="Abrir Pasta no Windows" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem', color: 'var(--text-secondary)' }}>
+              <FolderOpen size={16} />
+            </button>
+          </div>
+          <input 
                 type="file" 
                 ref={fileInputRef} 
                 style={{ display: 'none' }} 
                 accept="image/*" 
                 onChange={handleFileChange} 
             />
-          </div>
           
           <button 
             onClick={() => setShowGraph(!showGraph)} 

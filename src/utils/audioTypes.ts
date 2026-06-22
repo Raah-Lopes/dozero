@@ -1,5 +1,11 @@
 export type AudioProviderType = 'youtube' | 'spotify' | 'soundcloud' | 'myinstants' | 'tabletop' | 'local' | 'direct';
 
+export interface AudioPlaylist {
+  id: string;
+  title: string;
+  tracks: AudioTrack[];
+}
+
 export interface AudioTrack {
   id: string;
   title: string;

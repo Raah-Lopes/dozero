@@ -78,6 +78,19 @@ export async function fetchMarkdownContent(path: string): Promise<string> {
   return data.content;
 }
 
+export async function openLocalFolder(path: string = ''): Promise<void> {
+  const config = getWikiConfig();
+  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+  
+  const response = await fetch('/api/wiki/open', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath, path })
+  });
+
+  if (!response.ok) throw new Error("Erro ao abrir pasta local");
+}
+
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';

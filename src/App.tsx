@@ -347,6 +347,7 @@ function App() {
                  onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
                  onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
                  onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
+                 onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
                />
              )}
              {activeModal === 'chat' && (

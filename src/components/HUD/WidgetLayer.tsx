@@ -19,6 +19,7 @@ const EntityForgeWidget = React.lazy(() => import('./EntityForgeWidget').then(m 
 const StrongholdWidget = React.lazy(() => import('./StrongholdWidget').then(m => ({ default: m.StrongholdWidget })));
 const ArsenalMestreWidget = React.lazy(() => import('./ArsenalMestreWidget').then(m => ({ default: m.ArsenalMestreWidget })));
 const AudioDirectorWidget = React.lazy(() => import('./AudioDirectorWidget').then(m => ({ default: m.AudioDirectorWidget })));
+const WebFrameWidget = React.lazy(() => import('./WebFrameWidget').then(m => ({ default: m.WebFrameWidget })));
 
 const FallbackLoader = () => (
   <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15,23,42,0.9)', padding: '20px', borderRadius: '12px', color: '#fff', zIndex: 9999 }}>
@@ -49,6 +50,7 @@ export const WidgetLayer: React.FC = React.memo(() => {
         {openWindows.stronghold && <StrongholdWidget onClose={() => closeWindow('stronghold')} />}
         {openWindows.arsenalMestre && <ArsenalMestreWidget onClose={() => closeWindow('arsenalMestre')} />}
         {openWindows.audioDirector && <AudioDirectorWidget onClose={() => closeWindow('audioDirector')} />}
+        {openWindows.webFrame && <WebFrameWidget onClose={() => closeWindow('webFrame')} zIndex={999} onFocus={() => {}} />}
       </ErrorBoundary>
     </Suspense>
   );
