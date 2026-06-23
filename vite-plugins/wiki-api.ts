@@ -76,7 +76,7 @@ export function wikiLocalApi(): Plugin {
     name: 'wiki-local-api',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (!req.url?.startsWith('/api/wiki')) return next();
+        if (!req.url?.startsWith('/api/wiki') && !req.url?.startsWith('/api/yt')) return next();
 
         const url = new URL(req.url, `http://${req.headers.host}`);
         const pathname = url.pathname;
@@ -109,6 +109,21 @@ export function wikiLocalApi(): Plugin {
         }
 
         try {
+          // YT STREAM API
+          if (req.method === 'GET' && pathname === '/api/yt/stream') {
+             const videoId = url.searchParams.get('videoId');
+             if (!videoId) return sendResponse(400, { error: 'Missing videoId' });
+             
+             const ytdlModule = await import('@distube/ytdl-core');
+             const ytdl = ytdlModule.default || ytdlModule;
+             
+             const info = await ytdl.getInfo(videoId);
+             const format = ytdl.chooseFormat(info.formats, { quality: 'highestaudio' });
+             
+             if (!format) return sendResponse(404, { error: 'Audio format not found' });
+             return sendResponse(200, { url: format.url, title: info.videoDetails.title });
+          }
+
           if (req.method === 'GET' && pathname === '/api/wiki/tree') {
             const tree = buildFsTree(repoPath, repoPath);
             return sendResponse(200, { tree });

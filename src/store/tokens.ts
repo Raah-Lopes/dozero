@@ -8,7 +8,20 @@ export const localState = {
   targets: new Set<string>(),
   selectedBgs: new Set<string>(),
   selectedTokens: new Set<string>(),
+  selectedProps: new Set<string>(),
+  activeTool: 'select' as 'select' | 'text',
+  editingTextId: null as string | null,
 };
+
+export function setActiveTool(tool: 'select' | 'text') {
+  localState.activeTool = tool;
+  window.dispatchEvent(new Event('tool-changed'));
+}
+
+export function setEditingTextId(id: string | null) {
+  localState.editingTextId = id;
+  window.dispatchEvent(new Event('editing-text-changed'));
+}
 
 export function toggleTarget(tokenId: string) {
   if (localState.targets.has(tokenId)) {
@@ -57,6 +70,37 @@ export function clearTokenSelection() {
 export function getSelectedTokens(): string[] {
   if (!localState.selectedTokens) return [];
   return Array.from(localState.selectedTokens);
+}
+
+export function togglePropSelection(propId: string, multi: boolean) {
+  if (!localState.selectedProps) localState.selectedProps = new Set<string>();
+
+  if (!multi) localState.selectedProps.clear();
+  
+  if (localState.selectedProps.has(propId)) {
+    localState.selectedProps.delete(propId);
+  } else {
+    localState.selectedProps.add(propId);
+  }
+  window.dispatchEvent(new Event('prop-selection-updated'));
+}
+
+export function selectPropsBulk(propIds: string[]) {
+  if (!localState.selectedProps) localState.selectedProps = new Set<string>();
+  localState.selectedProps.clear();
+  propIds.forEach(id => localState.selectedProps.add(id));
+  window.dispatchEvent(new Event('prop-selection-updated'));
+}
+
+export function clearPropSelection() {
+  if (!localState.selectedProps) localState.selectedProps = new Set<string>();
+  localState.selectedProps.clear();
+  window.dispatchEvent(new Event('prop-selection-updated'));
+}
+
+export function getSelectedProps(): string[] {
+  if (!localState.selectedProps) return [];
+  return Array.from(localState.selectedProps);
 }
 
 export function applyDamageToToken(tokenId: string, damage: number) {

@@ -11,6 +11,7 @@ export interface AudioTrack {
   title: string;
   provider: AudioProviderType;
   url: string; // URL completa ou ID do vídeo/track
+  fileHandle?: any; // Armazena a referência para o arquivo local
   thumbnail?: string;
   duration?: number;
   category: 'ambience' | 'combat' | 'exploration' | 'narrative' | 'sfx';
@@ -24,6 +25,7 @@ export interface SoundboardItem {
   title: string;
   provider: AudioProviderType;
   url: string;
+  fileHandle?: any; // Armazena a referência para o arquivo local
   icon?: string; // Emoji ou ícone
   volume: number;
 }

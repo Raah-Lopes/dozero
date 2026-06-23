@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection, getMapConfig, updateMapConfig } from '../../store';
+import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection, getMapConfig, updateMapConfig, setActiveTool } from '../../store';
 import type { BackgroundData, MapConfig } from '../../store';
-import { Map as MapIcon, ImagePlus, Trash2,   Eye, EyeOff, Grid } from 'lucide-react';
+import { ImagePlus, Trash2, Eye, EyeOff, Grid, RefreshCw, MousePointer2, Type, Search, Eraser } from 'lucide-react';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(localState.selectedBgs));
   const [mapConfig, setMapConfig] = useState<MapConfig>(getMapConfig());
+  const [activeTool, setActiveToolState] = useState(localState.activeTool);
+  const [activeTab, setActiveTab] = useState<'cenario' | 'props'>('cenario');
+  const [libraryUpdateKey, setLibraryUpdateKey] = useState(0);
 
   useEffect(() => {
     const observer = () => {
@@ -14,21 +17,27 @@ export const MapSettingsPanel: React.FC = () => {
       setBackgrounds(bgs);
     };
 
+    const selObserver = () => {
+      setSelectedIds(new Set(localState.selectedBgs));
+    };
+
     const mapConfigObserver = () => {
       setMapConfig(getMapConfig());
     };
 
-    const selObserver = () => {
-      setSelectedIds(new Set(localState.selectedBgs));
+    const toolObserver = () => {
+      setActiveToolState(localState.activeTool);
     };
 
     state.backgrounds.observe(observer);
     state.mapConfig.observe(mapConfigObserver);
     window.addEventListener('bg-selection-updated', selObserver);
+    window.addEventListener('tool-changed', toolObserver);
     
     observer();
     mapConfigObserver();
     selObserver();
+    toolObserver();
 
     // Set global flag so GameCanvas knows if Map menu is open
     (window as any).__IS_MAP_MENU_OPEN__ = true;
@@ -58,6 +67,12 @@ export const MapSettingsPanel: React.FC = () => {
       state.backgrounds.unobserve(observer);
       state.mapConfig.unobserve(mapConfigObserver);
       window.removeEventListener('bg-selection-updated', selObserver);
+      window.removeEventListener('tool-changed', toolObserver);
+      window.removeEventListener('bg-select', handleSelect);
+      window.removeEventListener('bg-clear-select', handleClearSelect);
+
+      // Reset tool when closing panel
+      setActiveTool('select');
     };
   }, []);
 
@@ -72,7 +87,6 @@ export const MapSettingsPanel: React.FC = () => {
         const ctx = canvas.getContext('2d');
         if (ctx) ctx.drawImage(img, 0, 0);
         
-        // Comprime para WebP
         const dataUrl = canvas.toDataURL('image/webp', 0.8);
         URL.revokeObjectURL(url);
         resolve({ url: dataUrl, width: img.width, height: img.height });
@@ -89,8 +103,9 @@ export const MapSettingsPanel: React.FC = () => {
         
         const newBg: BackgroundData = {
           id: 'bg_' + Date.now() + Math.random().toString(36).substr(2, 5),
+          name: file.name.split('.')[0],
           imageUrl: url,
-          x: window.innerWidth / 2 + (Math.random() * 50 - 25), // slight offset to prevent exact overlap
+          x: window.innerWidth / 2 + (Math.random() * 50 - 25),
           y: window.innerHeight / 2 + (Math.random() * 50 - 25),
           width,
           height,
@@ -102,8 +117,22 @@ export const MapSettingsPanel: React.FC = () => {
         
         addBackground(newBg);
       }
-      e.target.value = ''; // reset input
+      e.target.value = '';
     }
+  };
+
+  const handleReplaceImage = async (bgId: string) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const { url } = await compressToWebP(file);
+        updateBackgroundProps(bgId, { imageUrl: url });
+      }
+    };
+    input.click();
   };
 
   const selectAll = () => {
@@ -126,9 +155,107 @@ export const MapSettingsPanel: React.FC = () => {
     });
   };
 
+  const locateAllTexts = () => {
+    window.dispatchEvent(new Event('locate-texts'));
+  };
+
+  const clearAllTexts = () => {
+    if (confirm("Tem certeza que deseja apagar TODOS os textos do mapa?")) {
+      state.mapTexts.clear();
+      import('../../store').then(s => s.setEditingTextId(null));
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '2rem' }}>
       
+      {/* TABS */}
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', gap: '1rem' }}>
+        <button 
+          onClick={() => setActiveTab('cenario')}
+          style={{ 
+            background: 'none', border: 'none', padding: '0.5rem', color: activeTab === 'cenario' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            fontWeight: activeTab === 'cenario' ? 'bold' : 'normal', borderBottom: activeTab === 'cenario' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+            cursor: 'pointer'
+          }}
+        >
+          Cenário & Fundos
+        </button>
+        <button 
+          onClick={() => setActiveTab('props')}
+          style={{ 
+            background: 'none', border: 'none', padding: '0.5rem', color: activeTab === 'props' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            fontWeight: activeTab === 'props' ? 'bold' : 'normal', borderBottom: activeTab === 'props' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+            cursor: 'pointer'
+          }}
+        >
+          Objetos & Props
+        </button>
+      </div>
+
+      {activeTab === 'cenario' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Ferramentas de Interação */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <MousePointer2 size={16} /> Ferramenta Ativa
+        </label>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            className={`btn ${activeTool === 'select' ? 'active' : ''}`}
+            onClick={() => setActiveTool('select')}
+            title="Selecionar e Mover"
+            style={{
+              flex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              background: activeTool === 'select' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+              color: activeTool === 'select' ? '#fff' : 'var(--text-secondary)',
+              border: '1px solid var(--glass-border)'
+            }}
+          >
+            <MousePointer2 size={16} /> Cursor
+          </button>
+
+          <button
+            className={`btn ${activeTool === 'text' ? 'active' : ''}`}
+            onClick={() => setActiveTool('text')}
+            title="Criar Texto (Clique no grid)"
+            style={{
+              flex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              background: activeTool === 'text' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+              color: activeTool === 'text' ? '#fff' : 'var(--text-secondary)',
+              border: '1px solid var(--glass-border)'
+            }}
+          >
+            <Type size={16} /> Anotar (T)
+          </button>
+        </div>
+        
+        {/* Controle Geral de Textos */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+          <button
+            className="btn"
+            onClick={locateAllTexts}
+            title="Localizar todos os textos ativos"
+            style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)' }}
+          >
+            <Search size={14} /> Localizar Textos
+          </button>
+          
+          <button
+            className="btn"
+            onClick={clearAllTexts}
+            title="Apagar TODOS os textos"
+            style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--danger)', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}
+          >
+            <Eraser size={14} /> Limpar Todos
+          </button>
+        </div>
+      </div>
+
+      <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%' }} />
+
       {/* Grid Configuration Section */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -259,17 +386,10 @@ export const MapSettingsPanel: React.FC = () => {
             cursor: 'pointer'
           }}
         />
-        <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)' }}>* Auto-conversão para WebP ativada</span>
       </div>
-
-      <div style={{ height: '1px', background: 'var(--glass-border)', width: '100%' }} />
 
       {/* Action Buttons for Selection */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <MapIcon size={16} /> Ações
-        </label>
-        
         {selectedIds.size > 0 ? (
           <div style={{ padding: '0.5rem', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, width: '100%' }}>
@@ -296,11 +416,11 @@ export const MapSettingsPanel: React.FC = () => {
 
       {/* List of Maps */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Mapas Carregados ({backgrounds.length})</label>
+        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Cenários Carregados ({backgrounds.length})</label>
         {backgrounds.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic' }}>Nenhum mapa na cena.</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '150px', overflowY: 'auto', paddingRight: '5px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto', paddingRight: '5px' }}>
             {backgrounds.map((bg, idx) => (
               <div 
                 key={bg.id} 
@@ -311,23 +431,136 @@ export const MapSettingsPanel: React.FC = () => {
                   border: selectedIds.has(bg.id) ? '1px solid var(--accent-primary)' : '1px solid transparent'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {bg.hidden && <span title="Oculto"><EyeOff size={14} color="var(--text-secondary)" /></span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, overflow: 'hidden' }}>
                   {bg.locked && <span title="Travado">🔒</span>}
-                  <span style={{ fontSize: '0.8rem', color: bg.hidden ? 'var(--text-secondary)' : 'var(--text-primary)', textDecoration: bg.hidden ? 'line-through' : 'none' }}>Cenário {idx + 1}</span>
+                  
+                  {/* Inline Name Editor */}
+                  <input
+                    type="text"
+                    value={bg.name || `Cenário ${idx + 1}`}
+                    onChange={(e) => updateBackgroundProps(bg.id, { name: e.target.value })}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      borderBottom: '1px solid transparent',
+                      color: bg.hidden ? 'var(--text-secondary)' : 'var(--text-primary)',
+                      textDecoration: bg.hidden ? 'line-through' : 'none',
+                      fontSize: '0.8rem',
+                      outline: 'none',
+                      width: '100%',
+                      cursor: 'text'
+                    }}
+                    onFocus={(e) => e.target.style.borderBottom = '1px solid var(--accent-primary)'}
+                    onBlur={(e) => e.target.style.borderBottom = '1px solid transparent'}
+                  />
                 </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); removeBackground(bg.id); }}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}
-                >
-                  <Trash2 size={16} />
-                </button>
+                
+                <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); updateBackgroundProps(bg.id, { hidden: !bg.hidden }); }}
+                    className="btn-icon" title={bg.hidden ? "Mostrar Cenário" : "Ocultar Cenário"}
+                    style={{ padding: '0.3rem', border: '1px solid transparent', background: bg.hidden ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.1)' }}
+                  >
+                    {bg.hidden ? <EyeOff size={14} color="var(--text-secondary)" /> : <Eye size={14} color="var(--text-primary)" />}
+                  </button>
+
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleReplaceImage(bg.id); }}
+                    className="btn-icon" title="Trocar Imagem (mantendo posição)"
+                    style={{ padding: '0.3rem', border: '1px solid transparent', background: 'rgba(59,130,246,0.1)', color: '#93c5fd' }}
+                  >
+                    <RefreshCw size={14} />
+                  </button>
+
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); removeBackground(bg.id); }}
+                    className="btn-icon" title="Excluir"
+                    style={{ padding: '0.3rem', border: '1px solid transparent', background: 'transparent', color: 'var(--danger)' }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
 
+        </div>
+      )}
+
+      {activeTab === 'props' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            Faça upload de ícones de baús, guardas ou móveis aqui. Você poderá arrastar para o mapa para posicioná-los.
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ImagePlus size={16} /> Adicionar Props à Biblioteca
+            </label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              multiple
+              onChange={async (e) => {
+                const files = Array.from(e.target.files || []);
+                for (const file of files) {
+                  const { url } = await compressToWebP(file);
+                  const name = file.name.split('.')[0];
+                  const m = await import('../../store/props');
+                  m.localPropLibrary.push({ url, name });
+                }
+                e.target.value = '';
+                setLibraryUpdateKey(k => k + 1);
+              }}
+              style={{
+                padding: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--glass-border)',
+                borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: '0.85rem', cursor: 'pointer'
+              }}
+            />
+          </div>
+
+          {/* Galeria de Props */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
+          </div>
+          <PropLibraryGallery key={libraryUpdateKey} />
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+// Sub-componente para lidar com o import assíncrono da biblioteca local
+const PropLibraryGallery = () => {
+  const [library, setLibrary] = useState<{url: string, name: string}[]>([]);
+  
+  useEffect(() => {
+    import('../../store/props').then(m => setLibrary(m.localPropLibrary));
+  }, []);
+
+  if (library.length === 0) return <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Nenhum prop na biblioteca local ainda.</p>;
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
+      {library.map((item, idx) => (
+        <div 
+          key={idx}
+          draggable
+          onDragStart={(e) => {
+            e.dataTransfer.setData('application/json', JSON.stringify({ type: 'prop', url: item.url, name: item.name }));
+          }}
+          style={{
+            aspectRatio: '1', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+            borderRadius: '4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            cursor: 'grab', padding: '0.2rem', position: 'relative'
+          }}
+          title={item.name}
+        >
+          <img src={item.url} alt={item.name} draggable={false} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
+        </div>
+      ))}
     </div>
   );
 };

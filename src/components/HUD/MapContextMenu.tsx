@@ -51,8 +51,8 @@ export const MapContextMenu: React.FC = () => {
 
   if (!pos || selectedCount < 1 || isDragging) return null;
 
-  // Alignment functions
   const bgs = Array.from(localState.selectedBgs).map(id => state.backgrounds.get(id)).filter(Boolean) as any[];
+  if (bgs.length === 0) return null;
 
   const alignEdge = (edge: 'left' | 'right' | 'top' | 'bottom') => {
     let targetVal = edge === 'left' || edge === 'top' ? Infinity : -Infinity;
@@ -198,7 +198,7 @@ export const MapContextMenu: React.FC = () => {
        <input 
          type="range" 
          min="0" max="1" step="0.05" 
-         defaultValue={bgs[0].opacity ?? 1}
+         defaultValue={bgs[0]?.opacity ?? 1}
          onChange={(e) => bgs.forEach(bg => updateBackgroundProps(bg.id, { opacity: parseFloat(e.target.value) }))}
          style={{ width: '60px', accentColor: 'var(--accent-primary)', marginLeft: '4px' }}
          title="Opacidade"

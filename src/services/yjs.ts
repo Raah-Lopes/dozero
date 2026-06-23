@@ -55,6 +55,8 @@ export const state = {
   dlcs: doc.getMap('dlcs'),
   world: doc.getMap('world'),
   stronghold: doc.getMap('stronghold'),
+  mapTexts: doc.getMap('mapTexts'),
+  props: doc.getMap('props'),
 };
 
 export function connectProvider() {

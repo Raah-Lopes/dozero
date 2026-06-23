@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 // @ts-ignore - auto fix
-import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection } from '../store';
+import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
+import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection } from '../store';
 
 function hexRound(q: number, r: number) {
   let s = -q - r;
@@ -78,8 +78,7 @@ export const GameCanvas: React.FC = () => {
 
       try {
         await app.init({
-          width: window.innerWidth,
-          height: window.innerHeight,
+          resizeTo: window,
           backgroundColor: 0x18181b, // --bg-secondary
           antialias: true,
         });
@@ -99,6 +98,43 @@ export const GameCanvas: React.FC = () => {
       const canvasEl = app.canvas as HTMLCanvasElement;
       canvasEl.style.pointerEvents = 'auto';
       canvasEl.style.touchAction = 'none';
+
+      // HTML Text Editor Overlay
+      const textEditorInput = document.createElement('textarea');
+      textEditorInput.style.position = 'absolute';
+      textEditorInput.style.display = 'none';
+      textEditorInput.style.background = 'transparent';
+      textEditorInput.style.border = '1px dashed rgba(255,255,255,0.5)';
+      textEditorInput.style.outline = 'none';
+      textEditorInput.style.resize = 'none';
+      textEditorInput.style.overflow = 'hidden';
+      textEditorInput.style.textAlign = 'center';
+      textEditorInput.style.fontFamily = 'Inter, sans-serif';
+      textEditorInput.style.zIndex = '1000';
+      textEditorInput.style.fontWeight = 'bold';
+      textEditorInput.style.margin = '0';
+      textEditorInput.style.padding = '0';
+      textEditorInput.style.whiteSpace = 'pre-wrap';
+      textEditorInput.style.wordBreak = 'break-word';
+      
+      // Auto resize height when typing
+      textEditorInput.addEventListener('input', () => {
+        textEditorInput.style.height = 'auto';
+        textEditorInput.style.height = textEditorInput.scrollHeight + 'px';
+        if (localState.editingTextId) {
+           import('../store').then(s => {
+             s.updateMapTextProps(localState.editingTextId!, { text: textEditorInput.value });
+           });
+        }
+      });
+
+      // Also allow clicking outside to close
+      textEditorInput.addEventListener('blur', () => {
+         // Keep editing id active for the context bar, or close it?
+         // In Photoshop, clicking outside finishes. Let's let the user finish via the context bar or clicking background.
+      });
+
+      canvasRef.current.appendChild(textEditorInput);
 
       // Master Camera Container
       const viewport = new Container();
@@ -212,16 +248,36 @@ export const GameCanvas: React.FC = () => {
             Math.abs(e.clientY - selectionStart.y)
           );
           
-          const toSelect: string[] = [];
+          const toSelectTokens: string[] = [];
           for (const id in tokenSprites) {
             const t = tokenSprites[id].container;
             const globalPos = t.getGlobalPosition();
             if (selectRect.contains(globalPos.x, globalPos.y)) {
-              toSelect.push(id);
+              toSelectTokens.push(id);
             }
           }
-          if (toSelect.length > 0) {
-            selectTokensBulk(toSelect);
+          
+          const toSelectProps: string[] = [];
+          for (const id in propSprites) {
+            const pState = state.props.get(id) as any;
+            if (pState && pState.isLocked) continue; // Do not select locked props
+            const sprite = propSprites[id];
+            const globalPos = sprite.getGlobalPosition();
+            if (selectRect.contains(globalPos.x, globalPos.y)) {
+              toSelectProps.push(id);
+            }
+          }
+          
+          if (toSelectTokens.length > 0) {
+            selectTokensBulk(toSelectTokens);
+          } else {
+            clearTokenSelection();
+          }
+          
+          if (toSelectProps.length > 0) {
+            selectPropsBulk(toSelectProps);
+          } else {
+            clearPropSelection();
           }
         }
       });
@@ -236,7 +292,9 @@ export const GameCanvas: React.FC = () => {
         e.preventDefault();
         const tokenId = e.dataTransfer?.getData('tokenId');
         const wikiPath = e.dataTransfer?.getData('wikiPath');
-        if (tokenId || wikiPath) {
+        const textData = e.dataTransfer?.getData('application/json');
+
+        if (tokenId || wikiPath || textData) {
           const rect = canvasEl.getBoundingClientRect();
           const dropX = e.clientX - rect.left;
           const dropY = e.clientY - rect.top;
@@ -252,20 +310,35 @@ export const GameCanvas: React.FC = () => {
             updateTokenPosition(tokenId, snapped.x, snapped.y);
           } else if (wikiPath) {
             window.dispatchEvent(new CustomEvent('spawn-token-from-wiki', {
-              detail: {
-                wikiPath,
-                x: snapped.x,
-                y: snapped.y
-              }
+              detail: { wikiPath, x: snapped.x, y: snapped.y }
             }));
+          } else if (textData) {
+            try {
+              const parsed = JSON.parse(textData);
+              if (parsed.type === 'prop') {
+                import('../store/props').then(m => {
+                  m.addMapProp({
+                    name: parsed.name,
+                    imageUrl: parsed.url,
+                    x: snapped.x,
+                    y: snapped.y,
+                    scale: 1 / viewport.scale.x, // Start proportional to current zoom
+                    rotation: 0
+                  });
+                });
+              }
+            } catch(err) {}
           }
         }
       });
-
       // Prevent context menu
       canvasEl.addEventListener('contextmenu', e => e.preventDefault());
 
       // Backgrounds Container (under the grid)
+      const propsContainer = new Container();
+      propsContainer.eventMode = 'static';
+      viewport.addChild(propsContainer);
+
       const bgsContainer = new Container();
       bgsContainer.sortableChildren = true;
       viewport.addChild(bgsContainer);
@@ -388,6 +461,10 @@ export const GameCanvas: React.FC = () => {
       };
 
       let lastFowHash = '';
+      
+      const propSprites: Record<string, Sprite> = {};
+      const propHoverTexts: Record<string, Text> = {};
+
       const drawFogOfWar = () => {
         const config = getMapConfig();
         const tokens = Array.from(state.tokens.values()) as any[];
@@ -402,7 +479,7 @@ export const GameCanvas: React.FC = () => {
 
         const currentHash = config.fogOfWar + '_' + config.fowRadius + '_' + config.fowShape + '_' + config.fowHideTokens + '_' + viewport.x + '_' + viewport.y + '_' + viewport.scale.x + '_' + visionSources.map(t => `${Math.round(t.x)},${Math.round(t.y)}`).join('|');
         
-        if (lastFowHash === currentHash) return; // No need to redraw
+        if (currentHash === lastFowHash) return;
         lastFowHash = currentHash;
 
         fogOverlay.clear();
@@ -468,10 +545,50 @@ export const GameCanvas: React.FC = () => {
               
               spriteRecord.container.visible = isVisible;
             });
+
+            // Hide Props as well
+            Object.entries(propSprites).forEach(([id, sprite]) => {
+              const p = state.props.get(id) as any;
+              if (!p) return;
+              if (p.isHidden) {
+                 sprite.visible = false;
+                 if (propHoverTexts[id]) propHoverTexts[id].visible = false;
+                 return;
+              }
+              
+              let isVisible = false;
+              for (const src of visionSources) {
+                const radius = src.visionRadius || ((config.fowRadius || 6) * config.gridSize);
+                const dx = Math.abs(p.x - src.x);
+                const dy = Math.abs(p.y - src.y);
+                
+                if (config.fowShape === 'square') {
+                  if (dx <= radius && dy <= radius) isVisible = true;
+                } else if (config.fowShape === 'hexagon') {
+                  if (euclideanDistance(p.x, p.y, src.x, src.y) <= radius * 1.1) isVisible = true;
+                } else {
+                  if (euclideanDistance(p.x, p.y, src.x, src.y) <= radius) isVisible = true;
+                }
+                if (isVisible) break;
+              }
+              sprite.visible = isVisible;
+              if (propHoverTexts[id]) propHoverTexts[id].visible = isVisible;
+            });
+
           } else {
             // Restore visibility for all if fowHideTokens is off
             Object.values(tokenSprites).forEach(spriteRecord => {
                spriteRecord.container.visible = true;
+            });
+            Object.entries(propSprites).forEach(([id, sprite]) => {
+               const p = state.props.get(id) as any;
+               if (!p || p.isHidden) {
+                  sprite.visible = false;
+                  if (propHoverTexts[id]) propHoverTexts[id].visible = false;
+               } else {
+                  sprite.visible = true;
+                  if (propHoverTexts[id]) propHoverTexts[id].visible = true;
+               }
             });
           }
 
@@ -489,8 +606,134 @@ export const GameCanvas: React.FC = () => {
       let draggingTokenId: string | null = null;
       let tokenDragOffsets: Record<string, {x: number, y: number}> = {};
       let tokenStartPositions: Record<string, {x: number, y: number}> = {};
+      
+      let propDragOffsets: Record<string, {x: number, y: number}> = {};
+      let propStartPositions: Record<string, {x: number, y: number}> = {};
       let tokensContainer = new Container();
       viewport.addChild(tokensContainer);
+
+      // Grid Texts Container
+      let textsContainer = new Container();
+      viewport.addChild(textsContainer);
+      const textSprites: Record<string, Container> = {};
+      let draggingTextId: string | null = null;
+      let textDragOffset = {x: 0, y: 0};
+
+      const syncTexts = () => {
+        const textsState = state.mapTexts;
+        
+        Object.keys(textSprites).forEach(id => {
+          if (!textsState.has(id)) {
+            textsContainer.removeChild(textSprites[id]);
+            textSprites[id].destroy({ children: true });
+            delete textSprites[id];
+          }
+        });
+
+        Array.from(textsState.entries()).forEach(([id, textData]) => {
+          const t = textData as any;
+          if (!textSprites[id]) {
+            const container = new Container();
+            
+            const bg = new Graphics();
+            container.addChild(bg);
+            
+            const textEl = new Text({
+              text: t.text,
+              style: {
+                fontFamily: 'Inter, sans-serif',
+                fontSize: t.fontSize || 24,
+                fill: t.color || '#ffffff',
+                align: 'center',
+                fontWeight: 'bold',
+                wordWrap: true,
+                wordWrapWidth: t.wordWrapWidth || 300,
+                lineHeight: (t.fontSize || 24) * 1.2
+              }
+            });
+            textEl.anchor.set(0.5);
+            container.addChild(textEl);
+            
+            container.eventMode = 'static';
+            container.cursor = 'grab';
+            
+            let lastClickTime = 0;
+            container.on('pointerdown', (e) => {
+              if (e.button === 0) {
+                e.stopPropagation();
+                
+                const now = Date.now();
+                
+                // 1. Se estiver com a ferramenta de Texto, um clique APENAS EDITA (NÃO arrasta).
+                if (localState.activeTool === 'text') {
+                   import('../store').then(s => {
+                      s.setEditingTextId(id);
+                      textEditorInput.value = t.text;
+                      setTimeout(() => textEditorInput.focus(), 50);
+                   });
+                   return; // Não permite arrastar com a ferramenta de texto ativa
+                }
+                
+                // 2. Se estiver com a ferramenta de Seleção, duplo clique EDITA.
+                if (now - lastClickTime < 300) {
+                   import('../store').then(s => {
+                      s.setEditingTextId(id);
+                      s.setActiveTool('text');
+                      textEditorInput.value = t.text;
+                      setTimeout(() => textEditorInput.focus(), 50);
+                   });
+                   return; // Não permite arrastar no duplo clique
+                }
+                
+                lastClickTime = now;
+
+                // 3. Se for um clique simples com a ferramenta de Seleção, ARRASTA.
+                draggingTextId = id;
+                const localPos = viewport.toLocal(e.global);
+                textDragOffset = { x: container.x - localPos.x, y: container.y - localPos.y };
+                container.alpha = 0.5;
+                container.cursor = 'grabbing';
+              }
+            });
+            
+            textsContainer.addChild(container);
+            textSprites[id] = container;
+          }
+
+          const container = textSprites[id];
+          const textEl = container.children[1] as Text;
+          const bg = container.children[0] as Graphics;
+
+          textEl.text = t.text;
+          textEl.style.fill = t.color || '#ffffff';
+          textEl.style.fontSize = t.fontSize || 24;
+          textEl.style.wordWrapWidth = t.wordWrapWidth || 300;
+          
+          if (t.backgroundColor && t.backgroundColor !== 'transparent') {
+             bg.clear();
+             const w = textEl.width + 16;
+             const h = textEl.height + 8;
+             bg.roundRect(-w/2, -h/2, w, h, 8);
+             bg.fill({ color: t.backgroundColor, alpha: 0.6 });
+             bg.visible = true;
+          } else {
+             bg.visible = false;
+          }
+
+          container.visible = !t.hidden;
+
+          if (draggingTextId !== id) {
+            container.x = t.x;
+            container.y = t.y;
+            container.alpha = 1;
+            container.cursor = 'grab';
+          }
+        });
+      };
+
+      state.mapTexts.observe(syncTexts);
+      syncTexts();
+      (app as any)._yjsTextObserver = syncTexts;
 
       interface TokenSpriteRecord {
         container: Container;
@@ -550,6 +793,131 @@ export const GameCanvas: React.FC = () => {
         } else {
           g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
         }
+      };
+
+      const renderProps = () => {
+        const pState = Array.from(state.props.values()) as any[];
+        
+        // Remover apagados
+        for (const id in propSprites) {
+          if (!pState.find(p => p.id === id)) {
+            propsContainer.removeChild(propSprites[id]);
+            if (propHoverTexts[id]) propsContainer.removeChild(propHoverTexts[id]);
+            delete propSprites[id];
+            delete propHoverTexts[id];
+          }
+        }
+
+        // Adicionar/Atualizar
+        pState.forEach(p => {
+          if (!propSprites[p.id]) {
+            const sprite = new Sprite();
+            Assets.load(p.imageUrl).then(texture => {
+               sprite.texture = texture;
+               requestAnimationFrame(renderProps);
+            }).catch(console.error);
+            sprite.anchor.set(0.5);
+            sprite.eventMode = 'static';
+            sprite.cursor = 'pointer';
+
+            const tooltip = new Text({
+              text: p.name,
+              style: {
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 16,
+                fill: 0xffffff,
+                align: 'center',
+                dropShadow: { color: 0x000000, distance: 2, blur: 4, alpha: 0.8 }
+              }
+            });
+            tooltip.anchor.set(0.5, 1);
+            tooltip.alpha = 0; // Oculto por padrão
+
+            sprite.on('pointerover', () => {
+               tooltip.alpha = 1;
+            });
+            sprite.on('pointerout', () => {
+               tooltip.alpha = 0;
+            });
+            
+            let lastClickTime = 0;
+            sprite.on('pointerdown', (e) => {
+               if (e.button === 0) {
+                  e.stopPropagation();
+                  const now = Date.now();
+                  if (now - lastClickTime < 300) {
+                     // Duplo clique - abre painel de interação
+                     window.dispatchEvent(new CustomEvent('open-prop-interaction', { detail: p.id }));
+                  } else {
+                     if (localState.activeTool === 'select') {
+                        if (p.isLocked) return;
+                        
+                        const selectedProps = getSelectedProps();
+                        if (!selectedProps.includes(p.id)) {
+                           if (!e.shiftKey) {
+                              clearTokenSelection();
+                              clearPropSelection();
+                           }
+                           togglePropSelection(p.id, false);
+                        }
+                        
+                        draggingTextId = `prop_${p.id}`; 
+                        const localPos = viewport.toLocal(e.global);
+                        
+                        propDragOffsets = {};
+                        tokenDragOffsets = {};
+                        propStartPositions = {};
+                        tokenStartPositions = {};
+                        
+                        getSelectedProps().forEach(selId => {
+                           const s = propSprites[selId];
+                           if (s) {
+                              s.alpha = 0.5;
+                              propDragOffsets[selId] = { x: s.x - localPos.x, y: s.y - localPos.y };
+                              propStartPositions[selId] = { x: s.x, y: s.y };
+                           }
+                        });
+                        getSelectedTokens().forEach(selId => {
+                           const s = tokenSprites[selId]?.container;
+                           if (s) {
+                              s.alpha = 0.5;
+                              tokenDragOffsets[selId] = { x: s.x - localPos.x, y: s.y - localPos.y };
+                              tokenStartPositions[selId] = { x: s.x, y: s.y };
+                           }
+                        });
+                     }
+                  }
+                  lastClickTime = now;
+               }
+            });
+
+            propSprites[p.id] = sprite;
+            propHoverTexts[p.id] = tooltip;
+            propsContainer.addChild(sprite);
+            propsContainer.addChild(tooltip);
+          }
+
+          const sprite = propSprites[p.id];
+          const tooltip = propHoverTexts[p.id];
+          const config = getMapConfig();
+          
+          sprite.x = p.x;
+          sprite.y = p.y;
+          
+          if (sprite.texture && sprite.texture.width > 1) {
+             const maxDim = Math.max(sprite.texture.width, sprite.texture.height);
+             const baseScale = config.gridSize / maxDim;
+             sprite.scale.set(baseScale * p.scale);
+          } else {
+             sprite.scale.set(p.scale);
+          }
+          
+          sprite.rotation = p.rotation;
+
+          tooltip.x = p.x;
+          tooltip.y = p.y - (sprite.height / 2) - 10;
+          tooltip.text = p.name;
+        });
       };
 
       const syncTokens = () => {
@@ -760,24 +1128,39 @@ export const GameCanvas: React.FC = () => {
               }
               lastTokenClickTime = now;
 
-              const selected = getSelectedTokens();
-              if (!selected.includes(id)) {
-                if (!e.shiftKey) clearTokenSelection();
+              const selectedTokens = getSelectedTokens();
+              if (!selectedTokens.includes(id)) {
+                if (!e.shiftKey) {
+                   clearTokenSelection();
+                   clearPropSelection();
+                }
                 toggleTokenSelection(id, false);
               }
 
               draggingTokenId = id;
               tokenDragOffsets = {};
+              propDragOffsets = {};
+              tokenStartPositions = {};
+              propStartPositions = {};
               
               const localPos = viewport.toLocal(e.global);
-              const currentSelected = getSelectedTokens();
-              currentSelected.forEach(selId => {
+              
+              getSelectedTokens().forEach(selId => {
                 const selToken = tokenSprites[selId]?.container;
                 if (selToken) {
                   selToken.alpha = 0.5;
                   tokenDragOffsets[selId] = { x: selToken.x - localPos.x, y: selToken.y - localPos.y };
                   tokenStartPositions[selId] = { x: selToken.x, y: selToken.y };
                 }
+              });
+              
+              getSelectedProps().forEach(selId => {
+                 const s = propSprites[selId];
+                 if (s) {
+                    s.alpha = 0.5;
+                    propDragOffsets[selId] = { x: s.x - localPos.x, y: s.y - localPos.y };
+                    propStartPositions[selId] = { x: s.x, y: s.y };
+                 }
               });
             });
 
@@ -826,6 +1209,12 @@ export const GameCanvas: React.FC = () => {
       };
       state.mapConfig.observe(mapConfigObserver);
 
+      const propsObserver = () => {
+         requestAnimationFrame(renderProps);
+      };
+
+      state.props.observe(propsObserver);
+
       const updateSelectionVisuals = () => {
         const selected = getSelectedTokens();
         for (const id in tokenSprites) {
@@ -839,49 +1228,70 @@ export const GameCanvas: React.FC = () => {
       (app as any)._yjsObserver = syncTokens;
 
       const onDragEnd = () => {
-        if (!draggingTokenId) return;
-        const leaderId = draggingTokenId;
-        draggingTokenId = null;
-        
-        const currentSelected = getSelectedTokens();
         const config = getMapConfig();
+        let deltaX = 0; let deltaY = 0;
+        let foundLeader = false;
         
-        const leaderToken = tokenSprites[leaderId]?.container;
-        if (!leaderToken) return;
-
-        const leaderStart = tokenStartPositions[leaderId];
-        const leaderSnapped = snapToGrid(leaderToken.x, leaderToken.y, config);
+        if (draggingTokenId) {
+          const leaderToken = tokenSprites[draggingTokenId]?.container;
+          const leaderStart = tokenStartPositions[draggingTokenId];
+          if (leaderToken && leaderStart) {
+            const leaderSnapped = snapToGrid(leaderToken.x, leaderToken.y, config);
+            deltaX = leaderSnapped.x - leaderStart.x;
+            deltaY = leaderSnapped.y - leaderStart.y;
+            foundLeader = true;
+          }
+        } else if (draggingTextId && draggingTextId.startsWith('prop_')) {
+          const leaderId = draggingTextId.replace('prop_', '');
+          const leaderProp = propSprites[leaderId];
+          const leaderStart = propStartPositions[leaderId];
+          if (leaderProp && leaderStart) {
+             const snapped = snapToGrid(leaderProp.x, leaderProp.y, config);
+             deltaX = snapped.x - leaderStart.x;
+             deltaY = snapped.y - leaderStart.y;
+             foundLeader = true;
+          }
+        }
         
-        const deltaX = leaderStart ? (leaderSnapped.x - leaderStart.x) : 0;
-        const deltaY = leaderStart ? (leaderSnapped.y - leaderStart.y) : 0;
+        if (!foundLeader) return;
 
-        currentSelected.forEach(selId => {
+        getSelectedTokens().forEach(selId => {
           const tokenData = tokenSprites[selId];
           if (!tokenData) return;
           const token = tokenData.container;
           token.alpha = 1;
           
-          if (selId === leaderId) {
-             token.x = leaderSnapped.x;
-             token.y = leaderSnapped.y;
-          } else {
-             const startPos = tokenStartPositions[selId];
-             if (startPos) {
-                token.x = startPos.x + deltaX;
-                token.y = startPos.y + deltaY;
-             }
+          const startPos = tokenStartPositions[selId];
+          if (startPos) {
+             token.x = startPos.x + deltaX;
+             token.y = startPos.y + deltaY;
           }
-          
           updateTokenPosition(selId, token.x, token.y);
         });
+        
+        import('../store/props').then(m => {
+           getSelectedProps().forEach(selId => {
+              const selProp = propSprites[selId];
+              if (!selProp) return;
+              selProp.alpha = 1;
+              const startPos = propStartPositions[selId];
+              if (startPos) {
+                 selProp.x = startPos.x + deltaX;
+                 selProp.y = startPos.y + deltaY;
+              }
+              m.updateMapProp(selId, { x: selProp.x, y: selProp.y });
+           });
+        });
+        
+        draggingTokenId = null;
+        if (draggingTextId && draggingTextId.startsWith('prop_')) draggingTextId = null;
       };
 
       const handleNativeMove = (e: PointerEvent) => {
         const worldPoint = viewport.toLocal({ x: e.clientX, y: e.clientY });
 
-        if (draggingTokenId) {
-          const currentSelected = getSelectedTokens();
-          currentSelected.forEach(selId => {
+        if (draggingTokenId || (draggingTextId && draggingTextId.startsWith('prop_'))) {
+          getSelectedTokens().forEach(selId => {
             const selToken = tokenSprites[selId]?.container;
             const offset = tokenDragOffsets[selId];
             if (selToken && offset) {
@@ -889,15 +1299,92 @@ export const GameCanvas: React.FC = () => {
               selToken.y = worldPoint.y + offset.y;
             }
           });
+          
+          getSelectedProps().forEach(selId => {
+             const selProp = propSprites[selId];
+             const offset = propDragOffsets[selId];
+             if (selProp && offset) {
+                selProp.x = worldPoint.x + offset.x;
+                selProp.y = worldPoint.y + offset.y;
+                if (propHoverTexts[selId]) {
+                   propHoverTexts[selId].x = selProp.x;
+                   propHoverTexts[selId].y = selProp.y - (selProp.height / 2) - 10;
+                }
+             }
+          });
+          
+          if (getSelectedProps().length > 0) {
+             window.dispatchEvent(new Event('prop-selection-updated'));
+          }
+        } else if (draggingTextId) {
+           const container = textSprites[draggingTextId];
+           if (container) {
+              const rect = app.canvas.getBoundingClientRect();
+              const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+              container.x = localPos.x + textDragOffset.x;
+              container.y = localPos.y + textDragOffset.y;
+           }
         }
       };
 
-      const handleNativeUp = () => {
-        if (draggingTokenId) onDragEnd();
+      const handleNativeUp = (e: PointerEvent) => {
+        if (draggingTokenId || (draggingTextId && draggingTextId.startsWith('prop_'))) {
+            onDragEnd();
+        } else if (draggingTextId) {
+           const container = textSprites[draggingTextId];
+           if (container) {
+              import('../store').then(s => {
+                 s.updateMapTextPosition(draggingTextId!, container.x, container.y);
+              });
+              container.alpha = 1;
+              container.cursor = 'grab';
+           }
+           draggingTextId = null;
+        }
       };
 
       window.addEventListener('pointermove', handleNativeMove);
       window.addEventListener('pointerup', handleNativeUp);
+
+      window.addEventListener('locate-texts', () => {
+         const texts = Array.from(state.mapTexts.values()) as any[];
+         if (texts.length === 0) return;
+         
+         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+         texts.forEach(t => {
+            if (t.x < minX) minX = t.x;
+            if (t.x > maxX) maxX = t.x;
+            if (t.y < minY) minY = t.y;
+            if (t.y > maxY) maxY = t.y;
+         });
+         
+         const cx = (minX + maxX) / 2;
+         const cy = (minY + maxY) / 2;
+         
+         // Animação suave para focar
+         const targetX = window.innerWidth / 2 - cx * viewport.scale.x;
+         const targetY = window.innerHeight / 2 - cy * viewport.scale.y;
+         
+         const startX = viewport.x;
+         const startY = viewport.y;
+         const duration = 400;
+         const startTime = Date.now();
+         
+         const animate = () => {
+            const now = Date.now();
+            const progress = Math.min((now - startTime) / duration, 1);
+            // Ease out cubic
+            const ease = 1 - Math.pow(1 - progress, 3);
+            
+            viewport.x = startX + (targetX - startX) * ease;
+            viewport.y = startY + (targetY - startY) * ease;
+            
+            if (progress < 1) {
+               requestAnimationFrame(animate);
+            }
+         };
+         animate();
+      });
 
       // Cleanup on unmountive events
       const prevTokenCleanup = (app as any)._cleanupNativeEvents;
@@ -906,6 +1393,7 @@ export const GameCanvas: React.FC = () => {
         window.removeEventListener('pointermove', handleNativeMove);
         window.removeEventListener('pointerup', handleNativeUp);
         window.removeEventListener('token-selection-updated', updateSelectionVisuals);
+        // NOTE: we skip removing locate-texts because it's harmless or we can add named func if needed.
       };
 
       const bgSprites: Record<string, Sprite> = {};
@@ -931,6 +1419,40 @@ export const GameCanvas: React.FC = () => {
 
       bgCatcher.on('pointerdown', (e) => {
         if (e.button === 0) {
+          if (localState.activeTool === 'text') {
+             e.stopPropagation();
+             
+             // Se já estiver editando um texto e clicar fora, apenas fecha a edição
+             if (localState.editingTextId) {
+                import('../store').then(s => {
+                   s.setEditingTextId(null);
+                });
+                return;
+             }
+             
+             const localPos = viewport.toLocal(e.global);
+             import('../store').then(s => {
+                const newId = 'txt_' + Date.now();
+                s.addMapText({
+                   id: newId,
+                   text: 'Novo Texto',
+                   x: localPos.x,
+                   y: localPos.y,
+                   color: '#ffffff',
+                   backgroundColor: 'transparent',
+                   fontSize: 24
+                });
+                s.setEditingTextId(newId);
+                // NOTA: não setamos mais a ferramenta para select aqui, deixamos em text
+             });
+             return;
+          }
+
+          // Fecha a edição de texto ao clicar no mapa com a ferramenta de Seleção
+          if (localState.editingTextId) {
+             import('../store').then(s => s.setEditingTextId(null));
+          }
+
           if ((window as any).__IS_MAP_MENU_OPEN__) {
              isMarquee = true;
              const localPos = viewport.toLocal(e.global);
@@ -1063,8 +1585,8 @@ export const GameCanvas: React.FC = () => {
           }
 
           const isMenuOpen = (window as any).__IS_MAP_MENU_OPEN__ === true;
-          bgSprites[id].eventMode = isMenuOpen ? 'static' : 'none';
-          bgSprites[id].cursor = (isMenuOpen && !bg.locked) ? 'grab' : (isMenuOpen ? 'pointer' : 'default');
+          bgSprites[id].eventMode = isMenuOpen && !bg.locked ? 'static' : 'none';
+          bgSprites[id].cursor = (isMenuOpen && !bg.locked) ? 'grab' : 'default';
 
           // Update position if not currently dragging it
           if (draggingBgId !== id) {
@@ -1089,28 +1611,48 @@ export const GameCanvas: React.FC = () => {
       gizmoCorners.forEach(c => gizmoContainer.addChild(c));
 
       const syncGizmo = () => {
-        if (localState.selectedBgs.size === 0 || !(window as any).__IS_MAP_MENU_OPEN__) {
+        const isMapOpen = (window as any).__IS_MAP_MENU_OPEN__ === true;
+        const isSelectMode = localState.activeTool === 'select';
+        
+        if ((!isMapOpen || localState.selectedBgs.size === 0) && (!isSelectMode || !localState.selectedProps || localState.selectedProps.size === 0)) {
           gizmoContainer.visible = false;
           return;
         }
 
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        const selectedIds = Array.from(localState.selectedBgs);
         let hasUnlocked = false;
 
-        selectedIds.forEach(id => {
-          const bgData = state.backgrounds.get(id) as any;
-          const sprite = bgSprites[id];
-          if (sprite && bgData && !bgData.locked && !bgData.hidden) {
-            hasUnlocked = true;
-            const hw = sprite.width / 2;
-            const hh = sprite.height / 2;
-            if (sprite.x - hw < minX) minX = sprite.x - hw;
-            if (sprite.y - hh < minY) minY = sprite.y - hh;
-            if (sprite.x + hw > maxX) maxX = sprite.x + hw;
-            if (sprite.y + hh > maxY) maxY = sprite.y + hh;
-          }
-        });
+        if (isMapOpen && localState.selectedBgs.size > 0) {
+          Array.from(localState.selectedBgs).forEach(id => {
+            const bgData = state.backgrounds.get(id) as any;
+            const sprite = bgSprites[id];
+            if (sprite && bgData && !bgData.locked && !bgData.hidden) {
+              hasUnlocked = true;
+              const hw = sprite.width / 2;
+              const hh = sprite.height / 2;
+              if (sprite.x - hw < minX) minX = sprite.x - hw;
+              if (sprite.y - hh < minY) minY = sprite.y - hh;
+              if (sprite.x + hw > maxX) maxX = sprite.x + hw;
+              if (sprite.y + hh > maxY) maxY = sprite.y + hh;
+            }
+          });
+        }
+        
+        if (isSelectMode && localState.selectedProps && localState.selectedProps.size > 0) {
+           Array.from(localState.selectedProps).forEach(id => {
+              const pData = state.props.get(id) as any;
+              const sprite = propSprites[id];
+              if (sprite && pData && !pData.isLocked) {
+                 hasUnlocked = true;
+                 const hw = sprite.width / 2;
+                 const hh = sprite.height / 2;
+                 if (sprite.x - hw < minX) minX = sprite.x - hw;
+                 if (sprite.y - hh < minY) minY = sprite.y - hh;
+                 if (sprite.x + hw > maxX) maxX = sprite.x + hw;
+                 if (sprite.y + hh > maxY) maxY = sprite.y + hh;
+              }
+           });
+        }
 
         if (!hasUnlocked) {
           gizmoContainer.visible = false;
@@ -1164,19 +1706,28 @@ export const GameCanvas: React.FC = () => {
             const origW = maxX - minX;
             const origH = maxY - minY;
 
-            // Filter out locked backgrounds from moving
-            const originalStates = selectedIds
-              .filter(id => !(state.backgrounds.get(id) as any).locked)
-              .map(id => {
-                const sprite = bgSprites[id];
-                return {
-                  id,
-                  sprite,
-                  origX: sprite.x,
-                  origY: sprite.y,
-                  origScale: sprite.scale.x
-                };
-              });
+            const originalStates: any[] = [];
+            
+            if (isMapOpen && localState.selectedBgs.size > 0) {
+               Array.from(localState.selectedBgs).forEach(id => {
+                 const bgData = state.backgrounds.get(id) as any;
+                 const sprite = bgSprites[id];
+                 if (sprite && bgData && !bgData.locked && !bgData.hidden) {
+                    originalStates.push({ type: 'bg', id, sprite, origX: sprite.x, origY: sprite.y, origScale: sprite.scale.x });
+                 }
+               });
+            }
+            if (isSelectMode && localState.selectedProps && localState.selectedProps.size > 0) {
+               Array.from(localState.selectedProps).forEach(id => {
+                 const pData = state.props.get(id) as any;
+                 const sprite = propSprites[id];
+                 if (sprite && pData && !pData.isLocked) {
+                    originalStates.push({ type: 'prop', id, sprite, origX: sprite.x, origY: sprite.y, origDataScale: pData.scale, origScale: sprite.scale.x });
+                 }
+               });
+            }
+
+            let finalScaleRatio = 1;
 
             const onScaleMove = (moveEvent: PointerEvent) => {
               const rect = canvasEl.getBoundingClientRect();
@@ -1184,6 +1735,7 @@ export const GameCanvas: React.FC = () => {
               
               const dx = localPoint.x - pivotX;
               const scaleRatio = Math.max(0.1, (dx * dirX) / origW);
+              finalScaleRatio = scaleRatio;
               
               originalStates.forEach(item => {
                 item.sprite.scale.set(item.origScale * scaleRatio);
@@ -1213,12 +1765,22 @@ export const GameCanvas: React.FC = () => {
               gizmoCorners.forEach(c => c.visible = true);
               
               import('../store').then(s => {
-                originalStates.forEach(item => {
-                  s.updateBackgroundProps(item.id, { 
-                    scale: item.sprite.scale.x,
-                    x: item.sprite.x,
-                    y: item.sprite.y
-                  });
+                import('../store/props').then(m => {
+                   originalStates.forEach(item => {
+                     if (item.type === 'bg') {
+                        s.updateBackgroundProps(item.id, { 
+                          scale: item.sprite.scale.x,
+                          x: item.sprite.x,
+                          y: item.sprite.y
+                        });
+                     } else if (item.type === 'prop') {
+                        m.updateMapProp(item.id, {
+                           scale: item.origDataScale * finalScaleRatio,
+                           x: item.sprite.x,
+                           y: item.sprite.y
+                        });
+                     }
+                   });
                 });
               });
               syncGizmo();
@@ -1233,6 +1795,7 @@ export const GameCanvas: React.FC = () => {
       state.backgrounds.observe(mapObserver);
       window.addEventListener('map-menu-toggle', mapObserver);
       window.addEventListener('bg-selection-updated', syncGizmo);
+      window.addEventListener('prop-selection-updated', syncGizmo);
       window.addEventListener('map-menu-toggle', syncGizmo);
 
       const handleFocusToken = (e: any) => {
@@ -1254,8 +1817,10 @@ export const GameCanvas: React.FC = () => {
         state.backgrounds.unobserve(mapObserver);
         window.removeEventListener('map-menu-toggle', mapObserver);
         window.removeEventListener('bg-selection-updated', syncGizmo);
+        window.removeEventListener('prop-selection-updated', syncGizmo);
         window.removeEventListener('map-menu-toggle', syncGizmo);
         window.removeEventListener('focus-token', handleFocusToken);
+        state.props.unobserve(propsObserver);
       };
 
       // Add Native Window Dragging for Backgrounds (so they don't get stuck)
@@ -1461,7 +2026,7 @@ export const GameCanvas: React.FC = () => {
              }
           }
 
-          if (!isBeingDragged) {
+           if (!isBeingDragged) {
              const dx = tState.x - tokenData.container.x;
              const dy = tState.y - tokenData.container.y;
              if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
@@ -1470,6 +2035,63 @@ export const GameCanvas: React.FC = () => {
              }
           }
         });
+
+        // Sync HTML Textarea Position
+        if (localState.editingTextId && textSprites[localState.editingTextId]) {
+           const container = textSprites[localState.editingTextId];
+           const textEl = container.children[1] as Text;
+           const globalPos = textEl.getGlobalPosition();
+           const tState = state.mapTexts.get(localState.editingTextId) as any;
+           
+           if (tState) {
+              textEditorInput.style.display = 'block';
+              textEditorInput.style.left = `${globalPos.x}px`;
+              textEditorInput.style.top = `${globalPos.y}px`;
+              textEditorInput.style.transform = 'translate(-50%, -50%)'; // Anchor is 0.5
+              
+              const scale = viewport.scale.x;
+              const currentFs = tState.fontSize || 24;
+              const currentWidth = tState.wordWrapWidth || 300;
+              
+              if ((textEditorInput as any)._lastFs !== currentFs || (textEditorInput as any)._lastW !== currentWidth || (textEditorInput as any)._lastScale !== scale) {
+                 textEditorInput.style.fontSize = `${currentFs * scale}px`;
+                 textEditorInput.style.width = `${currentWidth * scale}px`;
+                 textEditorInput.style.lineHeight = `${currentFs * 1.2 * scale}px`;
+                 (textEditorInput as any)._lastFs = currentFs;
+                 (textEditorInput as any)._lastW = currentWidth;
+                 (textEditorInput as any)._lastScale = scale;
+              }
+              
+              // Sempre ajusta a altura para bater exatamente com a altura do PIXI Text (evita pulos)
+              // e forçamos box-sizing: border-box
+              textEditorInput.style.boxSizing = 'border-box';
+              textEditorInput.style.height = `${textEl.height * scale + 4}px`; // +4px para compensar a borda invisivel do textarea
+              
+              textEditorInput.style.color = tState.color || '#ffffff';
+              
+              // Sempre oculta o texto original enquanto está editando, evitando ver "dois textos"
+              textEl.alpha = 0;
+              
+              // Move a barra de contexto para ficar logo abaixo do texto
+              const contextBar = document.getElementById('text-context-bar');
+              if (contextBar) {
+                 const textHeight = textEl.height * scale;
+                 contextBar.style.top = `${globalPos.y + textHeight / 2 + 10}px`;
+                 contextBar.style.left = `${globalPos.x}px`;
+              }
+           }
+        } else {
+           textEditorInput.style.display = 'none';
+           textEditorInput.blur();
+           Object.values(textSprites).forEach(sprite => {
+              if (sprite.children[1]) sprite.children[1].alpha = 1;
+           });
+           
+           const contextBar = document.getElementById('text-context-bar');
+           if (contextBar) {
+              contextBar.style.top = '-1000px';
+           }
+        }
       });
     };
 
@@ -1486,6 +2108,9 @@ export const GameCanvas: React.FC = () => {
           if ((appRef.current as any)._yjsObserver) {
             state.tokens.unobserve((appRef.current as any)._yjsObserver);
           }
+          if ((appRef.current as any)._yjsTextObserver) {
+            state.mapTexts.unobserve((appRef.current as any)._yjsTextObserver);
+          }
           if ((appRef.current as any)._cleanupMapObservers) {
             (appRef.current as any)._cleanupMapObservers();
           }
@@ -1498,5 +2123,5 @@ export const GameCanvas: React.FC = () => {
     };
   }, []);
 
-  return <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none' }} />;
+  return <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none', position: 'relative' }} />;
 };

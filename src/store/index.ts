@@ -9,6 +9,8 @@ export * from './theater';
 export * from './campaign';
 export * from './wiki';
 export * from './world';
+export * from './mapTexts';
+export * from './props';
 
 export const useStore = () => ({
   combatLog: [],

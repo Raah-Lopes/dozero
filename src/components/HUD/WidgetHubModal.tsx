@@ -22,9 +22,10 @@ interface Props {
   onOpenArsenalMestre: () => void;
   onOpenAudioDirector: () => void;
   onOpenWebFrame: () => void;
+  onOpenDiceRoller: () => void;
 }
 
-export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame }) => {
+export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame, onOpenDiceRoller }) => {
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '550px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -175,6 +176,10 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
 
         <button onClick={onOpenWebFrame} title="Navegador Integrado (Janela Web)" className="widget-btn theme-pink">
           <Globe size={32} />
+        </button>
+
+        <button onClick={onOpenDiceRoller} title="Rolador de Dados (D4~D100, Macros, Histórico)" className="widget-btn theme-yellow">
+          <Dices size={32} />
         </button>
       </div>
     </div>

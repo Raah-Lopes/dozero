@@ -126,6 +126,7 @@ hpBarMode: always
 
 
 
+
 # Goma, O Monge Gelatinoso
 
 Goma é um slime humanóide de cor verde brilhante que encontrou o caminho da iluminação através das artes marciais. Seu corpo maleável permite que ele esquive e absorva golpes com facilidade, tornando-o um combatente corpo-a-corpo formidável.

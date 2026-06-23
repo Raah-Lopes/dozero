@@ -10,6 +10,8 @@ import { DiceOverlay } from './components/HUD/DiceOverlay';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/HUD/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
+import { TextContextBar } from './components/HUD/TextContextBar';
+import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
 import { PlayersLobby } from './components/HUD/PlayersLobby';
 import { CombatTracker } from './components/HUD/CombatTracker';
@@ -245,6 +247,8 @@ function App() {
         <div className="canvas-layer" id="canvas-container">
           <GameCanvas />
           <MapContextMenu />
+          <TextContextBar />
+          <PropInteractionPanel />
         </div>
 
       {/* Layer 10: React HUD */}
@@ -348,6 +352,7 @@ function App() {
                  onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
                  onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
                  onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
+                 onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
                />
              )}
              {activeModal === 'chat' && (
@@ -483,6 +488,7 @@ function App() {
           </DraggableWindow>
         )}
 
+        <TextContextBar />
         <WidgetLayer />
       </>
 

@@ -3,6 +3,7 @@ import { localState } from './tokens';
 
 export interface BackgroundData {
   id: string;
+  name?: string;
   imageUrl: string;
   x: number;
   y: number;

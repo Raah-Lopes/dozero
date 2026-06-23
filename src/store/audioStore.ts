@@ -13,6 +13,12 @@ interface AudioStore extends AudioState {
   clearMusic: () => void;
   clearAmbience: () => void;
   clearPlaylist: () => void;
+  localTracks: AudioTrack[];
+  setLocalTracks: (tracks: AudioTrack[]) => void;
+  loopMode: 'none' | 'single' | 'all';
+  setLoopMode: (mode: 'none' | 'single' | 'all') => void;
+  isShuffle: boolean;
+  setIsShuffle: (val: boolean) => void;
 }
 
 const initialAudioState: AudioState = {
@@ -63,7 +69,13 @@ export const useAudioStore = create<AudioStore>()(
 
       clearMusic: () => set({ currentMusicId: undefined, currentMusicTitle: undefined, isPlayingMusic: false }),
       clearAmbience: () => set({ currentAmbienceId: undefined, currentAmbienceTitle: undefined, isPlayingAmbience: false }),
-      clearPlaylist: () => set({ playlist: [] })
+      clearPlaylist: () => set({ playlist: [] }),
+      localTracks: [],
+      setLocalTracks: (tracks) => set({ localTracks: tracks }),
+      loopMode: 'all',
+      setLoopMode: (mode) => set({ loopMode: mode }),
+      isShuffle: false,
+      setIsShuffle: (val) => set({ isShuffle: val })
     }),
     {
       name: 'dozero-audio-storage',
