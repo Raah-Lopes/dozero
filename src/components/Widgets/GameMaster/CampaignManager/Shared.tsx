@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { AlertTriangle, FileText } from 'lucide-react';
-import { loadMarkdownFile, saveMarkdownContent } from '../../../utils/githubApi';
+import { loadMarkdownFile, saveMarkdownContent } from '../../../../utils/githubApi';
 
 export const LegacyBadge: React.FC = () => (
   <span style={{

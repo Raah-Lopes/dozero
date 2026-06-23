@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { Map, MapPin, Hammer } from 'lucide-react';
-import { pushChatMessage } from '../../store';
-import { LocationParser } from '../../services/oracle/LocationParser';
-import type { NPCCategory, NPCTable } from '../../services/oracle/NPCParser';
+import { pushChatMessage } from '../../../store';
+import { LocationParser } from '../../../services/oracle/LocationParser';
+import type { NPCCategory, NPCTable } from '../../../services/oracle/NPCParser';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
-import { saveMarkdownContent } from '../../utils/githubApi';
+import { saveMarkdownContent } from '../../../utils/githubApi';
 
 interface LocationGeneratorWidgetProps {
   onClose?: () => void;

@@ -3,24 +3,24 @@ import { useWindowManager } from '../../hooks/useWindowManager';
 import { ErrorBoundary } from '../ErrorBoundary';
 
 // Lazy loaded widgets
-const OracleWidgetV2 = React.lazy(() => import('../Widgets/OracleWidgetV2').then(m => ({ default: m.OracleWidgetV2 })));
-const NPCGeneratorWidget = React.lazy(() => import('../Widgets/NPCGeneratorWidget').then(m => ({ default: m.NPCGeneratorWidget })));
-const LocationGeneratorWidget = React.lazy(() => import('../Widgets/LocationGeneratorWidget').then(m => ({ default: m.LocationGeneratorWidget })));
-const EncounterWidget = React.lazy(() => import('../Widgets/EncounterWidget').then(m => ({ default: m.EncounterWidget })));
-const CampaignManagerWidget = React.lazy(() => import('../Widgets/CampaignManagerWidget').then(m => ({ default: m.CampaignManagerWidget })));
-const MapasMentaisWidget = React.lazy(() => import('../Widgets/MindMapWidget').then(m => ({ default: m.MapasMentaisWidget })));
-const AutomatedDiceWidget = React.lazy(() => import('../Widgets/AutomatedDiceWidget').then(m => ({ default: m.AutomatedDiceWidget })));
-const CharacterRosterWidget = React.lazy(() => import('../Widgets/CharacterRosterWidget').then(m => ({ default: m.CharacterRosterWidget })));
-const ChronosWidget = React.lazy(() => import('../Widgets/ChronosWidget').then(m => ({ default: m.ChronosWidget })));
-const LoreMachineWidget = React.lazy(() => import('../Widgets/LoreMachineWidget').then(m => ({ default: m.LoreMachineWidget })));
-const DLCManagerWidget = React.lazy(() => import('../Widgets/DLCManagerWidget').then(m => ({ default: m.DLCManagerWidget })));
-const WorldEngineWidget = React.lazy(() => import('../Widgets/WorldEngineWidget').then(m => ({ default: m.WorldEngineWidget })));
+const OracleWidgetV2 = React.lazy(() => import('../Widgets/Generators/OracleWidgetV2').then(m => ({ default: m.OracleWidgetV2 })));
+const NPCGeneratorWidget = React.lazy(() => import('../Widgets/Generators/NPCGeneratorWidget').then(m => ({ default: m.NPCGeneratorWidget })));
+const LocationGeneratorWidget = React.lazy(() => import('../Widgets/Generators/LocationGeneratorWidget').then(m => ({ default: m.LocationGeneratorWidget })));
+const EncounterWidget = React.lazy(() => import('../Widgets/GameMaster/EncounterWidget').then(m => ({ default: m.EncounterWidget })));
+const CampaignManagerWidget = React.lazy(() => import('../Widgets/GameMaster/CampaignManagerWidget').then(m => ({ default: m.CampaignManagerWidget })));
+const MapasMentaisWidget = React.lazy(() => import('../Widgets/PlayerTools/MindMapWidget').then(m => ({ default: m.MapasMentaisWidget })));
+const AutomatedDiceWidget = React.lazy(() => import('../Widgets/PlayerTools/AutomatedDiceWidget').then(m => ({ default: m.AutomatedDiceWidget })));
+const CharacterRosterWidget = React.lazy(() => import('../Widgets/PlayerTools/CharacterRosterWidget').then(m => ({ default: m.CharacterRosterWidget })));
+const ChronosWidget = React.lazy(() => import('../Widgets/GameMaster/ChronosWidget').then(m => ({ default: m.ChronosWidget })));
+const LoreMachineWidget = React.lazy(() => import('../Widgets/Generators/LoreMachineWidget').then(m => ({ default: m.LoreMachineWidget })));
+const DLCManagerWidget = React.lazy(() => import('../Widgets/System/DLCManagerWidget').then(m => ({ default: m.DLCManagerWidget })));
+const WorldEngineWidget = React.lazy(() => import('../Widgets/Generators/WorldEngineWidget').then(m => ({ default: m.WorldEngineWidget })));
 const EntityForgeWidget = React.lazy(() => import('./EntityForgeWidget').then(m => ({ default: m.EntityForgeWidget })));
-const StrongholdWidget = React.lazy(() => import('../Widgets/StrongholdWidget').then(m => ({ default: m.StrongholdWidget })));
-const ArsenalMestreWidget = React.lazy(() => import('../Widgets/ArsenalMestreWidget').then(m => ({ default: m.ArsenalMestreWidget })));
-const AudioDirectorWidget = React.lazy(() => import('../Widgets/AudioDirectorWidget').then(m => ({ default: m.AudioDirectorWidget })));
+const StrongholdWidget = React.lazy(() => import('../Widgets/Generators/StrongholdWidget').then(m => ({ default: m.StrongholdWidget })));
+const ArsenalMestreWidget = React.lazy(() => import('../Widgets/GameMaster/ArsenalMestreWidget').then(m => ({ default: m.ArsenalMestreWidget })));
+const AudioDirectorWidget = React.lazy(() => import('../Widgets/System/AudioDirectorWidget').then(m => ({ default: m.AudioDirectorWidget })));
 const WebFrameWidget = React.lazy(() => import('./WebFrameWidget').then(m => ({ default: m.WebFrameWidget })));
-const DiceRollerWidget = React.lazy(() => import('../Widgets/DiceRollerWidget').then(m => ({ default: m.DiceRollerWidget })));
+const DiceRollerWidget = React.lazy(() => import('../Widgets/PlayerTools/DiceRollerWidget').then(m => ({ default: m.DiceRollerWidget })));
 
 const FallbackLoader = () => (
   <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15,23,42,0.9)', padding: '20px', borderRadius: '12px', color: '#fff', zIndex: 9999 }}>

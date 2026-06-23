@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Target, Plus, Edit3, Trash2, Award, BookOpen, FileText, ExternalLink, Link2, Image, Users } from 'lucide-react';
 import * as yaml from 'js-yaml';
-import { useStore } from '../../../store';
+import { useStore } from '../../../../store';
 import type { CampaignTabProps } from '../../HUD/types';
 import { WikiLinkedTextarea } from './Shared';
-import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../utils/githubApi';
+import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../../utils/githubApi';
 import { slugify, questTemplate } from '../CampaignManagerWidget';
-import type { CampaignQuest, QuestLootItem } from '../../../store';
+import type { CampaignQuest, QuestLootItem } from '../../../../store';
 
 const STATUS_CONFIG = {
   quest: {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
-import { useWiki } from '../../hooks/useWiki';
-import { pushChatMessage, state } from '../../store';
-import { loadMarkdownFile } from '../../utils/githubApi';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
+import { useWiki } from '../../../hooks/useWiki';
+import { pushChatMessage, state } from '../../../store';
+import { loadMarkdownFile } from '../../../utils/githubApi';
 import { Sparkles, MessageCircle, ScrollText, BookOpen, ToyBrick } from 'lucide-react';
 
 export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {

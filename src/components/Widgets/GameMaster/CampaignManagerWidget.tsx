@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
 import {
   state,
   
@@ -7,14 +7,14 @@ import {
   deleteCampaign,
   updateTokenProps,
   pushChatMessage,
-} from '../../store';
-import type { CampaignData, CampaignArc, CampaignSession, CampaignQuest, QuestLootItem } from '../../store';
+} from '../../../store';
+import type { CampaignData, CampaignArc, CampaignSession, CampaignQuest, QuestLootItem } from '../../../store';
 import {
   saveMarkdownContent,
   loadMarkdownFile,
   ensureWikiFolder,
-} from '../../utils/githubApi';
-import { getWikiConfig } from '../../store';
+} from '../../../utils/githubApi';
+import { getWikiConfig } from '../../../store';
 import {
   BookOpen, Plus, Target, Calendar, Trash2,
   Play, CheckCircle, PauseCircle, ChevronRight,
@@ -23,7 +23,7 @@ import {
   FileText, Award, Users, Image,  
    MinusCircle
 } from 'lucide-react';
-import { useWiki } from '../../hooks/useWiki';
+import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
 import { OverviewTab } from './CampaignManager/OverviewTab';
 import { ArcsTab } from './CampaignManager/ArcsTab';

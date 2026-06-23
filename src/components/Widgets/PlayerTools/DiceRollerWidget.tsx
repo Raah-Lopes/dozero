@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
-import { pushChatMessage } from '../../store';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
+import { pushChatMessage } from '../../../store';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 type DieType = 4 | 6 | 8 | 10 | 12 | 20 | 100;

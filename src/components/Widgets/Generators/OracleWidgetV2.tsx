@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
-import { pushChatMessage } from '../../store';
-import { OracleParserV2, type OracleCategory, type OracleTable } from '../../services/oracle/OracleParserV2';
+import { pushChatMessage } from '../../../store';
+import { OracleParserV2, type OracleCategory, type OracleTable } from '../../../services/oracle/OracleParserV2';
 import { Search, Star, ChevronDown, ChevronRight, Dices, Sparkles } from 'lucide-react';
 
 export function OracleWidgetV2({ onClose }: { onClose: () => void }) {

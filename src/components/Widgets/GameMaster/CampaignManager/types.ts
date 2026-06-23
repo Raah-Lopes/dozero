@@ -1,4 +1,4 @@
-import type { CampaignData, CampaignArc, CampaignSession, CampaignQuest, QuestLootItem } from '../../../store';
+import type { CampaignData, CampaignArc, CampaignSession, CampaignQuest, QuestLootItem } from '../../../../store';
 
 export interface CampaignTabProps {
   campaign: CampaignData;

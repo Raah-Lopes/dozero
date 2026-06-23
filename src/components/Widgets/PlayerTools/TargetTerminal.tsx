@@ -1,19 +1,19 @@
 // src/components/HUD/TargetTerminal.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import { HealthBar } from '../UI/HealthBar';
+import { HealthBar } from '../../UI/HealthBar';
 import { 
     Dices, Trash2, Plus, Swords, 
     Backpack, Zap, Sword, HeartPulse, 
     ShieldAlert, Sparkles, Settings, Activity, 
     FileText, Heart, Skull, Cpu, User
 } from 'lucide-react';
-import { loadMarkdownFile, saveMarkdownContent } from '../../utils/githubApi';
-import { WoDParser } from '../../rules/WoDParser';
-import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, addCombatParticipant } from '../../store';
-import { useWiki } from '../../hooks/useWiki';
+import { loadMarkdownFile, saveMarkdownContent } from '../../../utils/githubApi';
+import { WoDParser } from '../../../rules/WoDParser';
+import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, addCombatParticipant } from '../../../store';
+import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
-import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
-import { WikiIndexer } from '../../services/wiki/WikiIndexer';
+import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
+import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 
 interface Macro {
   id: string;

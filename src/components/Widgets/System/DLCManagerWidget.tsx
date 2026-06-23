@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
-import { state } from '../../store';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
+import { state } from '../../../store';
 import {
   ToyBrick, Check, Search, Zap, Swords, Skull, Anchor, Beaker,
   Clock, Volume2, BookMarked, Sparkles, Tag

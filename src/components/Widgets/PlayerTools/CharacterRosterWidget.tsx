@@ -1,10 +1,10 @@
 // src/components/HUD/CharacterRosterWidget.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
-import { useWiki } from '../../hooks/useWiki';
-import { state, updateTokenProps } from '../../store';
-import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
-import { WikiIndexer } from '../../services/wiki/WikiIndexer';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
+import { useWiki } from '../../../hooks/useWiki';
+import { state, updateTokenProps } from '../../../store';
+import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
+import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 import { User, Skull, Cpu,  Shield, Zap, Sword, Star } from 'lucide-react';
 
 interface FichaPersonagem {

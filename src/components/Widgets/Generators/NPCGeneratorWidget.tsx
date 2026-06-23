@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { UserPlus, Dna, Settings2 } from 'lucide-react';
-import { pushChatMessage } from '../../store';
-import { NPCParser } from '../../services/oracle/NPCParser';
-import type { NPCCategory, NPCTable } from '../../services/oracle/NPCParser';
-import { LootParser } from '../../services/oracle/LootParser';
+import { pushChatMessage } from '../../../store';
+import { NPCParser } from '../../../services/oracle/NPCParser';
+import type { NPCCategory, NPCTable } from '../../../services/oracle/NPCParser';
+import { LootParser } from '../../../services/oracle/LootParser';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
-import { saveMarkdownContent } from '../../utils/githubApi';
+import { saveMarkdownContent } from '../../../utils/githubApi';
 
 interface NPCGeneratorWidgetProps {
   onClose?: () => void;

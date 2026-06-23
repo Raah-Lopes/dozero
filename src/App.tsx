@@ -8,7 +8,7 @@ import { SettingsModal } from './components/Modals/SettingsModal';
 import { DiceOverlay } from './components/UI/DiceOverlay';
 
 import { DraggableWindow } from './components/HUD/DraggableWindow';
-import { TargetTerminal } from './components/Widgets/TargetTerminal';
+import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
 import { TextContextBar } from './components/UI/TextContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';

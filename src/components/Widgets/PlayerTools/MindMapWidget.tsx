@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
 import {
   Type, Image as ImageIcon, Save, Trash2,
   User, MapPin, Calendar, Link as LinkIcon, Book, FileText,
   ZoomIn, ZoomOut, Maximize, Grid, Palette, FilePlus, GripHorizontal, Move
 } from 'lucide-react';
-import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../utils/githubApi';
-import { pushChatMessage } from '../../store';
+import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../utils/githubApi';
+import { pushChatMessage } from '../../../store';
 
 interface MapasMentaisWidgetProps {
   onClose: () => void;

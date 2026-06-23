@@ -1,9 +1,9 @@
 // src/components/HUD/AutomatedDiceWidget.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
-import {  pushChatMessage } from '../../store';
-import { saveMarkdownContent, loadMarkdownFile } from '../../utils/githubApi';
-import { useWiki } from '../../hooks/useWiki';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
+import {  pushChatMessage } from '../../../store';
+import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
+import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
 import { Dices, Swords,   Target,    Skull, ArrowRightCircle, ListOrdered, BookOpen } from 'lucide-react';
 

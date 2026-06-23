@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { Swords, Users, Skull, Flame, ShieldAlert } from 'lucide-react';
-import { pushChatMessage, state } from '../../store';
-import type { CombatParticipant } from '../../store';
+import { pushChatMessage, state } from '../../../store';
+import type { CombatParticipant } from '../../../store';
 
 interface EncounterWidgetProps {
   onClose?: () => void;

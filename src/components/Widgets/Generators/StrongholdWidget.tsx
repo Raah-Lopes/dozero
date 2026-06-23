@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
-import { state, restAtStronghold } from '../../store';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
+import { state, restAtStronghold } from '../../../store';
 import { Castle, Coins, Utensils, Droplets, Bed, Sparkles, Plus } from 'lucide-react';
 
 const UPGRADES_DB = [

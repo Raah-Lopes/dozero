@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from '../HUD/DraggableWindow';
-import { state } from '../../store';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
+import { state } from '../../../store';
 import { Globe, Swords, Building, Coins, AlertTriangle } from 'lucide-react';
 
 export const WorldEngineWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
