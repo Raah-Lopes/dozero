@@ -139,7 +139,6 @@ async function callPollinations(opts: AIGenerateOptions): Promise<string> {
   if (!res.ok) throw new Error(`Pollinations: ${res.statusText}`);
   const data = await res.json();
   return data.choices?.[0]?.message?.content || '';
-  }
 }
 
 // ── Ollama (local) ───────────────────────────────────────────────────────────
