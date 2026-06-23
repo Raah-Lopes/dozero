@@ -124,26 +124,21 @@ async function callOpenRouter(opts: AIGenerateOptions): Promise<string> {
 // ── Pollinations (sem chave) ─────────────────────────────────────────────────
 async function callPollinations(opts: AIGenerateOptions): Promise<string> {
   const payload = {
-    model: opts.model || 'mistral',
+    model: opts.model === 'mistral' ? 'mistral' : 'openai',
     messages: [
       { role: 'system', content: opts.systemPrompt },
       { role: 'user', content: opts.userPrompt },
     ],
     temperature: opts.temperature ?? 0.8,
   };
-  const res = await fetch('https://text.pollinations.ai/', {
+  const res = await fetch('https://text.pollinations.ai/openai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Pollinations: ${res.statusText}`);
-  // Pollinations retorna texto puro ou JSON dependendo do modelo
-  const text = await res.text();
-  try {
-    const json = JSON.parse(text);
-    return json.choices?.[0]?.message?.content || json.text || text;
-  } catch {
-    return text;
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
   }
 }
 
