@@ -32,7 +32,7 @@ Sempre gere conteúdo em PORTUGUÊS BRASILEIRO, rico em detalhes e ambientação
 Quando solicitado a gerar fichas, use o formato YAML frontmatter compatível com Obsidian.
 Seja criativo, evite clichês, e crie conteúdo que surpreenda o Mestre.`;
 
-const YAML_PC_TEMPLATE = \`
+const YAML_PC_TEMPLATE = `
 O frontmatter YAML e o corpo Markdown da ficha de PC devem seguir EXATAMENTE este template, preenchendo os valores:
 
 ---
@@ -210,7 +210,7 @@ if(!meta.inventario || meta.inventario.length === 0) {
     dv.table(["Item", "Descrição"], meta.inventario.map(i => [i.nome, i.desc]));
 }
 \`\`\`
-\`;
+`;
 
 const YAML_NPC_TEMPLATE = `
 O frontmatter YAML para NPCs/Monstros segue este formato:
@@ -253,7 +253,7 @@ inventario: []
 export function buildSystemPrompt(type: RPGContentType): string {
   return `${BASE_SYSTEM}
 
-${type === 'pc' || type === 'npc' || type === 'monstro' ? YAML_PC_TEMPLATE + '\n' + YAML_NPC_TEMPLATE : ''}
+${type === 'pc' ? YAML_PC_TEMPLATE : type === 'npc' || type === 'monstro' ? YAML_NPC_TEMPLATE : ''}
 
 Responda SOMENTE com o conteúdo solicitado, sem explicações adicionais antes ou depois.
 Para fichas: comece diretamente com --- (frontmatter YAML) seguido do corpo Markdown.
@@ -268,7 +268,7 @@ export function buildUserPrompt(params: RPGPromptParams): string {
   switch (params.type) {
     // ─── Personagem Jogador ─────────────────────────────────────────────────
     case 'pc':
-      return `Crie uma ficha completa de PERSONAGEM JOGADOR (PC) para RPG no formato YAML frontmatter + Markdown.
+      return `Crie uma ficha completa de PERSONAGEM JOGADOR (PC) para RPG no formato YAML frontmatter + Markdown (siga o template).
 
 **Dados fornecidos pelo Mestre:**
 - Nome: ${params.nome || 'Aleatório (crie um nome único)'}
@@ -277,12 +277,11 @@ export function buildUserPrompt(params: RPGPromptParams): string {
 - Conceito e ideias: ${params.conceito || 'Personagem interessante com motivações únicas'}
 ${ctx}
 
-**Inclua obrigatoriamente no corpo Markdown após o YAML:**
-1. Seção de Lore (origem, personalidade, história em 2-3 parágrafos)
-2. Motivações e objetivos pessoais
-3. Vínculo com o mundo (pelo menos 1 relação com NPC, local ou facção)
-4. Fraquezas e defeitos
-5. Ao menos 2 macros de ataque no frontmatter (formato do template)
+**Inclua obrigatoriamente no corpo Markdown (preenchendo os valores do template):**
+1. O Frontmatter YAML preenchido (HP/PM, atributos coerentes)
+2. As seções de Lore completas no template
+3. Pelo menos 2 macros de ataque no frontmatter
+4. Inventário com 3 itens legais
 
 Distribua os atributos de forma coerente com o conceito do personagem.`;
 
