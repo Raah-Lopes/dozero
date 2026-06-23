@@ -12,7 +12,13 @@ export * from './world';
 export * from './mapTexts';
 export * from './props';
 
+export interface LoreEntry {
+  id: string;
+  title: string;
+  content: string;
+}
+
 export const useStore = () => ({
   combatLog: [],
-  addLoreEntry: (entry: any) => {}
+  addLoreEntry: (entry: LoreEntry) => {}
 });

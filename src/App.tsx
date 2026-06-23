@@ -32,7 +32,6 @@ import * as yaml from 'js-yaml';
 type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets';
 
 function App() {
-  // @ts-ignore - auto fix
   const [isReady, _setIsReady] = useState(true);
   const {
     openWindows, toggleWindow,
@@ -59,14 +58,11 @@ function App() {
     setOpenWikiDocs((prev: any[]) => prev.filter((d) => d.id !== docId));
   }, [setOpenWikiDocs]);
 
-  // @ts-ignore - auto fix
   useEffect(() => {
-    const handleOpenWikiDoc = (e: any) => {
-      const filepath = e.detail;
+    const handleOpenWikiDoc = (e: Event) => {
+      const filepath = (e as CustomEvent).detail;
       if (filepath) {
-        // @ts-ignore - auto fix
-        setOpenWikiDocs(prev => {
-          // @ts-ignore - auto fix
+        setOpenWikiDocs((prev: { id: string, filepath: string }[]) => {
           if (prev.some(doc => doc.filepath === filepath)) return prev;
           return [...prev, { id: `doc-${Date.now()}`, filepath }];
         });
@@ -76,22 +72,14 @@ function App() {
     return () => window.removeEventListener('open-wiki-doc', handleOpenWikiDoc);
   }, []);
 
-  // @ts-ignore - auto fix
-  useEffect(() => {
-    localStorage.setItem('CombatLog', CombatLog.toString());
-  }, [CombatLog]);
-
-  // @ts-ignore - auto fix
   useEffect(() => {
     localStorage.setItem('dozero_viewMode', viewMode);
   }, [viewMode]);
 
-  // @ts-ignore - auto fix
   useEffect(() => {
-    const handleDblClick = (e: any) => {
-      const { tokenId } = e.detail;
-      // @ts-ignore - auto fix
-      setOpenSheets(prev => {
+    const handleDblClick = (e: Event) => {
+      const { tokenId } = (e as CustomEvent).detail;
+      setOpenSheets((prev: string[]) => {
         if (prev.includes(tokenId)) return prev;
         return [...prev, tokenId];
       });
@@ -111,11 +99,10 @@ function App() {
     };
     window.addEventListener('open-wiki-file', handleOpenWikiFile);
 
-    const handleOpenSheetByWiki = (e: any) => {
-      const wikiPath = e.detail;
+    const handleOpenSheetByWiki = (e: Event) => {
+      const wikiPath = (e as CustomEvent).detail;
       if (wikiPath) {
-        // @ts-ignore - auto fix
-        setOpenSheets(prev => {
+        setOpenSheets((prev: string[]) => {
           const key = `wiki:${wikiPath}`;
           if (prev.includes(key)) return prev;
           return [...prev, key];
@@ -443,8 +430,7 @@ function App() {
           </DraggableWindow>
         )}
 
-        // @ts-ignore - auto fix
-        {openSheets.map((sheetKey: any, index: any) => {
+        {openSheets.map((sheetKey: string, index: number) => {
           const isWiki = sheetKey.startsWith('wiki:');
           const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
           const tokenId = isWiki ? undefined : sheetKey;
@@ -464,8 +450,7 @@ function App() {
           );
         })}
 
-        // @ts-ignore - auto fix
-        {openWikiDocs.map((doc: any, index: any) => (
+        {openWikiDocs.map((doc: { id: string, filepath: string }, index: number) => (
           <FloatingDocument
             key={doc.id}
             id={doc.id}

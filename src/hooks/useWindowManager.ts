@@ -38,26 +38,34 @@ interface WindowManagerState {
   setEditingClockId: (id: string | null) => void;
 }
 
+let openWindowsTimeout: ReturnType<typeof setTimeout>;
+function debouncedSaveOpenWindows(windows: Record<string, boolean>) {
+  clearTimeout(openWindowsTimeout);
+  openWindowsTimeout = setTimeout(() => {
+    localStorage.setItem('dozero_openWindows', JSON.stringify(windows));
+  }, 500);
+}
+
 export const useWindowManager = create<WindowManagerState>((set) => ({
   openWindows: JSON.parse(localStorage.getItem('dozero_openWindows') || '{"combatLog":true}'),
   toggleWindow: (windowId) => set((state) => {
     const isNowOpen = !state.openWindows[windowId];
     const newWindows = { ...state.openWindows, [windowId]: isNowOpen };
-    localStorage.setItem('dozero_openWindows', JSON.stringify(newWindows));
+    debouncedSaveOpenWindows(newWindows);
     return { openWindows: newWindows };
   }),
   openWindow: (windowId) => set((state) => {
     const newWindows = { ...state.openWindows, [windowId]: true };
-    localStorage.setItem('dozero_openWindows', JSON.stringify(newWindows));
+    debouncedSaveOpenWindows(newWindows);
     return { openWindows: newWindows };
   }),
   closeWindow: (windowId) => set((state) => {
     const newWindows = { ...state.openWindows, [windowId]: false };
-    localStorage.setItem('dozero_openWindows', JSON.stringify(newWindows));
+    debouncedSaveOpenWindows(newWindows);
     return { openWindows: newWindows };
   }),
   closeAllWindows: () => {
-    localStorage.setItem('dozero_openWindows', '{}');
+    debouncedSaveOpenWindows({});
     set({ openWindows: {} });
   },
 
