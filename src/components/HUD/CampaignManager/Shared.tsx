@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { AlertTriangle, ExternalLink, Edit3, Link2, Save } from 'lucide-react';
 import { useWiki } from '../../../hooks/useWiki';
 
