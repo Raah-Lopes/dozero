@@ -1,166 +1,14 @@
 // src/components/HUD/AutomatedDiceWidget.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import {  pushChatMessage } from '../../../store';
+import { pushChatMessage } from '../../../store';
 import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
-import { useWiki } from '../../../hooks/useWiki';
+import { usePersonagens, FichaPersonagem } from '../../../hooks/usePersonagens';
 import * as yaml from 'js-yaml';
-import { Dices, Swords,   Target,    Skull, ArrowRightCircle, ListOrdered, BookOpen } from 'lucide-react';
-
-interface FichaPersonagem {
-  nome: string;
-  pv: number;
-  pv_max: number;
-  xp: number;
-  nivel: number;
-  mana: number;
-  mana_max: number;
-  armadura: number;
-  defesa: number;
-  velocidade: number;
-  ataque: number;
-  status: 'jogador' | 'npc' | 'inimigo';
-  avatar?: string;
-  caminhoArquivo: string;
-  ouro: number;
-  usos_cura: number;
-  status_efeitos: string[];
-  saqueado: boolean;
-  ativo: boolean;
-  // Atributos 4DET
-  forca: number;
-  destreza: number;
-  constituicao: number;
-  inteligencia: number;
-  sabedoria: number;
-  carisma: number;
-  // Atributos 3D&T
-  habilidade: number;
-  armadura_3dt: number;
-  forca_3dt: number;
-  resistencia: number;
-  pdf: number;
-  // Inventário
-  inventario: any[];
-  // Ataque personalizado
-  ataque_basico?: string;
-
-  // NOVOS CAMPOS DO ARSENAL DO MESTRE
-  energia: number;
-  energia_max: number;
-  sanidade: number;
-  sanidade_max: number;
-  fome: number;
-  fome_max: number;
-  sede: number;
-  sede_max: number;
-  cansaco: number;
-  cansaco_max: number;
-  riquezas: number;
-  armas: any[];
-  poderes: any[];
-  pocoes: any[];
-  maldicoes: any[];
-  objetos_campanha: any[];
-}
+import { Dices, Swords, Target, Skull, ArrowRightCircle, ListOrdered, BookOpen } from 'lucide-react';
 
 interface AutomatedDiceWidgetProps {
   onClose: () => void;
-}
-
-function usePersonagens() {
-  const { index, isLoading: carregando } = useWiki();
-  const [personagens, setPersonagens] = useState<FichaPersonagem[]>([]);
-
-  const carregar = useCallback(() => {
-    if (!index || index.length === 0) return;
-
-    const entidades = index.filter(e => {
-      const tipo = String(e.metadata?.tipo || '').toLowerCase();
-      const status = String(e.metadata?.status || '').toLowerCase();
-      const path = e.path.toLowerCase();
-      
-      if (path.includes('_modelo')) return false;
-      
-      return ['pc', 'npc', 'monstro', 'personagem', 'jogador', 'inimigo'].includes(tipo) ||
-             ['jogador', 'npc', 'inimigo'].includes(status) ||
-             path.includes('/fichas/') ||
-             path.includes('/personagens/');
-    });
-
-    const carregadas: FichaPersonagem[] = entidades.map(e => {
-      const tipo = e.metadata?.tipo;
-      let status: 'jogador' | 'npc' | 'inimigo' = 'npc';
-      if (tipo === 'PC' || tipo === 'Personagem' || e.metadata?.status === 'jogador') status = 'jogador';
-      else if (tipo === 'Monstro' || e.metadata?.status === 'inimigo' || e.metadata?.status === 'Hostil') status = 'inimigo';
-
-      return {
-        nome: e.metadata?.nome || e.metadata?.titulo || e.slug || 'Sem nome',
-        pv: Number(e.metadata?.pv) || Number(e.metadata?.HP) || 0,
-        pv_max: Number(e.metadata?.pv_max) || Number(e.metadata?.HP_max) || Number(e.metadata?.pv) || Number(e.metadata?.HP) || 0,
-        xp: Number(e.metadata?.xp) || Number(e.metadata?.XP) || Number(e.metadata?.XP_recompensa) || 0,
-        nivel: Number(e.metadata?.nivel) || Number(e.metadata?.Nivel) || 1,
-        mana: Number(e.metadata?.mana) || Number(e.metadata?.PM) || 0,
-        mana_max: Number(e.metadata?.mana_max) || Number(e.metadata?.PM_max) || Number(e.metadata?.mana) || Number(e.metadata?.PM) || 0,
-        armadura: Number(e.metadata?.armadura) || Number(e.metadata?.Armadura) || Number(e.metadata?.CA) || Number(e.metadata?.A) || 0,
-        defesa: Number(e.metadata?.defesa) || Number(e.metadata?.Defesa) || Number(e.metadata?.CA) || 0,
-        velocidade: parseInt(String(e.metadata?.velocidade || e.metadata?.Velocidade || e.metadata?.Deslocamento || '0')) || 0,
-        ataque: Number(e.metadata?.ataque) || Number(e.metadata?.Ataque) || Number(e.metadata?.F) || Number(e.metadata?.PdF) || 0,
-        status,
-        avatar: e.metadata?.avatar || e.metadata?.imagem,
-        caminhoArquivo: e.path,
-        ouro: Number(e.metadata?.ouro) || Number(e.metadata?.Ouro) || Number(e.metadata?.Ouro_recompensa) || 0,
-        usos_cura: e.metadata?.usos_cura_atual !== undefined ? Number(e.metadata?.usos_cura_atual) : 3,
-        status_efeitos: Array.isArray(e.metadata?.status_efeitos) ? e.metadata?.status_efeitos : [],
-        saqueado: e.metadata?.saqueado === 'true' || e.metadata?.saqueado === true,
-        ativo: e.metadata?.ativo !== false,
-
-        // Atributos 4DET
-        forca: Number(e.metadata?.força || e.metadata?.forca || e.metadata?.FOR) || 10,
-        destreza: Number(e.metadata?.destreza || e.metadata?.DES) || 10,
-        constituicao: Number(e.metadata?.constituicao || e.metadata?.CON) || 10,
-        inteligencia: Number(e.metadata?.inteligencia || e.metadata?.INT) || 10,
-        sabedoria: Number(e.metadata?.sabedoria || e.metadata?.SAB) || 10,
-        carisma: Number(e.metadata?.carisma || e.metadata?.CAR) || 10,
-
-        // Atributos 3D&T
-        habilidade: Number(e.metadata?.habilidade || e.metadata?.H) || 0,
-        armadura_3dt: Number(e.metadata?.armadura_3dt || e.metadata?.A) || 0,
-        forca_3dt: Number(e.metadata?.forca_3dt || e.metadata?.F) || 0,
-        resistencia: Number(e.metadata?.resistencia || e.metadata?.R) || 0,
-        pdf: Number(e.metadata?.pdf || e.metadata?.PdF) || 0,
-
-        // Inventário
-        inventario: Array.isArray(e.metadata?.inventario) ? e.metadata.inventario : [],
-        
-        // Ataques
-        ataque_basico: e.metadata?.ataque_basico || e.metadata?.ataque_basico_descricao,
-
-        // NOVOS CAMPOS DO ARSENAL DO MESTRE
-        energia: Number(e.metadata?.energia) !== undefined && e.metadata?.energia !== null ? Number(e.metadata?.energia) : 100,
-        energia_max: Number(e.metadata?.energia_max) !== undefined && e.metadata?.energia_max !== null ? Number(e.metadata?.energia_max) : 100,
-        sanidade: Number(e.metadata?.sanidade) ?? Number(e.metadata?.Sanidade) ?? 100,
-        sanidade_max: Number(e.metadata?.sanidade_max) ?? Number(e.metadata?.Sanidade_max) ?? 100,
-        fome: Number(e.metadata?.fome) ?? Number(e.metadata?.Fome) ?? 0,
-        fome_max: Number(e.metadata?.fome_max) ?? 100,
-        sede: Number(e.metadata?.sede) ?? Number(e.metadata?.Sede) ?? 0,
-        sede_max: Number(e.metadata?.sede_max) ?? 100,
-        cansaco: Number(e.metadata?.cansaco) ?? Number(e.metadata?.Cansaço) ?? 0,
-        cansaco_max: Number(e.metadata?.cansaco_max) ?? 100,
-        riquezas: Number(e.metadata?.riquezas) ?? Number(e.metadata?.Riquezas) ?? 0,
-        armas: Array.isArray(e.metadata?.armas) ? e.metadata.armas : [],
-        poderes: Array.isArray(e.metadata?.poderes) ? e.metadata.poderes : [],
-        pocoes: Array.isArray(e.metadata?.pocoes) ? e.metadata.pocoes : [],
-        maldicoes: Array.isArray(e.metadata?.maldicoes) ? e.metadata.maldicoes : [],
-        objetos_campanha: Array.isArray(e.metadata?.objetos_campanha) ? e.metadata.objetos_campanha : [],
-      };
-    });
-
-    setPersonagens(carregadas.filter(p => p.ativo));
-  }, [index]);
-
-  useEffect(() => { carregar(); }, [carregar]);
-  return { personagens, carregando, recarregar: carregar };
 }
 
 interface ItemIniciativa {
@@ -169,7 +17,6 @@ interface ItemIniciativa {
   valor: number;
   ficha: FichaPersonagem;
 }
-
 
 export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClose }) => {
   const { personagens, carregando, recarregar } = usePersonagens();

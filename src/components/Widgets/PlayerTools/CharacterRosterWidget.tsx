@@ -1,90 +1,24 @@
 // src/components/HUD/CharacterRosterWidget.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
+import { usePersonagens } from '../../../hooks/usePersonagens';
 import { useWiki } from '../../../hooks/useWiki';
 import { state, updateTokenProps } from '../../../store';
 import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
 import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
-import { User, Skull, Cpu,  Shield, Zap, Sword, Star } from 'lucide-react';
-
-interface FichaPersonagem {
-  nome: string;
-  pv: number;
-  pv_max: number;
-  xp: number;
-  nivel: number;
-  mana: number;
-  mana_max: number;
-  armadura: number;
-  defesa: number;
-  velocidade: number;
-  ataque: number;
-  status: 'jogador' | 'npc' | 'inimigo';
-  avatar?: string;
-  caminhoArquivo: string;
-  ativo: boolean;
-  ouro: number;
-  tipoFicha: string;
-}
+import { User, Skull, Cpu, Shield, Zap, Sword, Star } from 'lucide-react';
 
 interface CharacterRosterWidgetProps {
   onClose: () => void;
 }
 
 export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ onClose }) => {
-  const { index, isLoading: carregando } = useWiki();
-  const [personagens, setPersonagens] = useState<FichaPersonagem[]>([]);
+  // Hook centralizado — elimina a lógica duplicada que existia aqui antes
+  const { personagens, carregando } = usePersonagens(false);
+  const { index } = useWiki();
   const [filtro, setFiltro] = useState<'todos' | 'jogador' | 'npc' | 'inimigo'>('todos');
   const [uploadingPath, setUploadingPath] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!index || index.length === 0) return;
-
-    const entidades = index.filter(e => {
-      const tipo = String(e.metadata?.tipo || '').toLowerCase();
-      const status = String(e.metadata?.status || '').toLowerCase();
-      const path = e.path.toLowerCase();
-      
-      if (path.includes('_modelo')) return false;
-      
-      return ['pc', 'npc', 'monstro', 'personagem', 'jogador', 'inimigo'].includes(tipo) ||
-             ['jogador', 'npc', 'inimigo'].includes(status) ||
-             path.includes('/fichas/') ||
-             path.includes('/personagens/') ||
-             path.includes('fichas/') ||
-             path.includes('personagens/');
-    });
-
-    const carregadas: FichaPersonagem[] = entidades.map(e => {
-      const tipo = e.metadata?.tipo;
-      let status: 'jogador' | 'npc' | 'inimigo' = 'npc';
-      if (tipo === 'PC' || tipo === 'Personagem' || e.metadata?.status === 'jogador') status = 'jogador';
-      else if (tipo === 'Monstro' || e.metadata?.status === 'inimigo' || e.metadata?.status === 'Hostil') status = 'inimigo';
-
-      return {
-        nome: e.metadata?.nome || e.metadata?.titulo || e.slug || 'Sem nome',
-        pv: Number(e.metadata?.pv) || Number(e.metadata?.HP) || 0,
-        pv_max: Number(e.metadata?.pv_max) || Number(e.metadata?.HP_max) || Number(e.metadata?.pv) || Number(e.metadata?.HP) || 0,
-        xp: Number(e.metadata?.xp) || Number(e.metadata?.XP) || Number(e.metadata?.XP_recompensa) || 0,
-        nivel: Number(e.metadata?.nivel) || Number(e.metadata?.Nivel) || 1,
-        mana: Number(e.metadata?.mana) || Number(e.metadata?.PM) || 0,
-        mana_max: Number(e.metadata?.mana_max) || Number(e.metadata?.PM_max) || Number(e.metadata?.mana) || Number(e.metadata?.PM) || 0,
-        armadura: Number(e.metadata?.armadura) || Number(e.metadata?.Armadura) || Number(e.metadata?.CA) || Number(e.metadata?.A) || 0,
-        defesa: Number(e.metadata?.defesa) || Number(e.metadata?.Defesa) || Number(e.metadata?.CA) || 0,
-        velocidade: parseInt(String(e.metadata?.velocidade || e.metadata?.Velocidade || e.metadata?.Deslocamento || '0')) || 0,
-        ataque: Number(e.metadata?.ataque) || Number(e.metadata?.Ataque) || Number(e.metadata?.F) || Number(e.metadata?.PdF) || 0,
-        status,
-        avatar: e.metadata?.imageUrl || e.metadata?.avatar || e.metadata?.imagem,
-        caminhoArquivo: e.path,
-        ativo: e.metadata?.ativo !== false,
-        ouro: Number(e.metadata?.ouro) || Number(e.metadata?.Ouro) || 0,
-        tipoFicha: String(e.metadata?.tipo || (status === 'jogador' ? 'Personagem' : status === 'inimigo' ? 'Monstro' : 'NPC'))
-      };
-    });
-
-    setPersonagens(carregadas);
-  }, [index]);
 
   const personagensFiltrados = filtro === 'todos'
     ? personagens

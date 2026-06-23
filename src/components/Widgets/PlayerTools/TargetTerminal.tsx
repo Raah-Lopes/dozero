@@ -37,9 +37,52 @@ const attributeBlacklist = [
 
 export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isGM?: boolean }> = ({ tokenId, wikiPath, isGM = true }) => {
   const [tokenData, setTokenData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'roll' | 'attacks' | 'items' | 'config'>('roll');
-    const { index, isLoading: isWikiLoading } = useWiki();
+  const [activeTab, setActiveTab] = useState<'roll' | 'attacks' | 'items' | 'config' | 'ficha'>('roll');
+  const { index, isLoading: isWikiLoading } = useWiki();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [lastDiceApply, setLastDiceApply] = useState<{ value: number; dice: string; tipo: string } | null>(null);
+
+  // Recebe rolagens do DiceRollerWidget e aplica à ficha (integração dados físicos → fichas)
+  useEffect(() => {
+    const handleApplyDamage = (e: Event) => {
+      const { value, dice } = (e as CustomEvent).detail;
+      setLastDiceApply({ value, dice, tipo: 'dano' });
+      setTokenData((prev: any) => {
+        if (!prev) return prev;
+        const newHp = Math.max(0, (prev.hp || 0) - value);
+        pushChatMessage(`🗡️ <b>${prev.name || 'Personagem'}</b> recebeu <b>${value}</b> de dano (${dice}). PV: ${newHp}/${prev.maxHp || 100}`, false, newHp === 0);
+        return { ...prev, hp: newHp };
+      });
+    };
+    const handleApplyHeal = (e: Event) => {
+      const { value, dice } = (e as CustomEvent).detail;
+      setLastDiceApply({ value, dice, tipo: 'cura' });
+      setTokenData((prev: any) => {
+        if (!prev) return prev;
+        const newHp = Math.min(prev.maxHp || 100, (prev.hp || 0) + value);
+        pushChatMessage(`💗 <b>${prev.name || 'Personagem'}</b> curou <b>${value}</b> PV (${dice}). PV: ${newHp}/${prev.maxHp || 100}`, true, false);
+        return { ...prev, hp: newHp };
+      });
+    };
+    const handleApplyTest = (e: Event) => {
+      const { value, dice } = (e as CustomEvent).detail;
+      setLastDiceApply({ value, dice, tipo: 'teste' });
+      setTokenData((prev: any) => {
+        if (!prev) return prev;
+        pushChatMessage(`🎲 <b>${prev.name || 'Personagem'}</b> fez um teste: <b>${value}</b> (${dice})`, value >= 15, value <= 3);
+        return prev;
+      });
+    };
+
+    window.addEventListener('dice-apply-damage', handleApplyDamage);
+    window.addEventListener('dice-apply-heal', handleApplyHeal);
+    window.addEventListener('dice-apply-test', handleApplyTest);
+    return () => {
+      window.removeEventListener('dice-apply-damage', handleApplyDamage);
+      window.removeEventListener('dice-apply-heal', handleApplyHeal);
+      window.removeEventListener('dice-apply-test', handleApplyTest);
+    };
+  }, []);
 
   useEffect(() => {
     const parseNum = (val: any, fallback: number): number => {
@@ -400,6 +443,16 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   };
 
   if (!tokenData) {
+    // Mostra loading enquanto a wiki ainda indexa — evita o bug de "ficha não encontrada"
+    if (isWikiLoading) {
+      return (
+        <div style={{ padding: '1.5rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '14px', height: '14px', border: '2px solid rgba(168,85,247,0.3)', borderTopColor: '#a855f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          Carregando ficha...
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      );
+    }
     return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Ficha não encontrada ou deletada.</div>;
   }
 
@@ -415,7 +468,12 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           }) || null)
         : null);
 
+  // Macros WoD (token-based, para máquina de rolagem)
   const macros: Macro[] = tokenData.macros || [];
+
+  // Macros MD: lidas diretamente do frontmatter da wiki (ataques/rolagens da ficha)
+  const macrosMD: Array<{ nome: string; formula: string; tipo?: string; descricao?: string; custo?: string }> =
+    Array.isArray(wikiEntry?.metadata?.macros) ? wikiEntry.metadata.macros : [];
 
   const handleAddMacro = () => {
     const newMacro: Macro = {
@@ -626,9 +684,66 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   const renderAttacksTab = () => {
     const showArmas = wikiEntry && wikiEntry.metadata.armas && Array.isArray(wikiEntry.metadata.armas) && wikiEntry.metadata.armas.length > 0;
     const showPoderes = wikiEntry && wikiEntry.metadata.poderes && Array.isArray(wikiEntry.metadata.poderes) && wikiEntry.metadata.poderes.length > 0;
+    const showMacrosMD = macrosMD.length > 0;
     
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {/* Macros MD: ataques personalizados do frontmatter */}
+        {showMacrosMD && (
+          <div>
+            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Dices size={12} /> Macros da Ficha
+            </h5>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {macrosMD.map((macro, idx) => {
+                const tipoColor: Record<string, string> = {
+                  ataque: '#f87171', defesa: '#60a5fa', magia: '#c084fc', teste: '#34d399', outro: '#94a3b8'
+                };
+                const color = tipoColor[macro.tipo || 'outro'] || '#94a3b8';
+
+                const handleRollMacro = () => {
+                  // Parser simples de dice notation: NdM+K
+                  const match = macro.formula.match(/(\d+)d(\d+)([+-]\d+)?/);
+                  let total = 0;
+                  let breakdown = '';
+                  if (match) {
+                    const count = parseInt(match[1]);
+                    const sides = parseInt(match[2]);
+                    const bonus = parseInt(match[3] || '0');
+                    const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
+                    total = rolls.reduce((a, b) => a + b, 0) + bonus;
+                    breakdown = `[${rolls.join('+')}]${bonus !== 0 ? (bonus > 0 ? `+${bonus}` : bonus) : ''} = ${total}`;
+                  } else {
+                    total = Math.floor(Math.random() * 20) + 1;
+                    breakdown = `${macro.formula} = ${total}`;
+                  }
+                  pushChatMessage(
+                    `🎲 <b>${tokenData.name}</b> usa <b>${macro.nome}</b><br/>${macro.descricao ? `<i>${macro.descricao}</i><br/>` : ''}Resultado: <b>${breakdown}</b>`,
+                    total >= 15, total <= 3
+                  );
+                  window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: macro.nome, result: String(total), type: 'attack' } }));
+                };
+
+                return (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', border: `1px solid ${color}33`, borderRadius: '6px', padding: '0.4rem 0.6rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color }}>{macro.nome}</span>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{macro.formula}</span>
+                      {macro.descricao && <span style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '1px' }}>{macro.descricao}</span>}
+                    </div>
+                    <button
+                      onClick={handleRollMacro}
+                      style={{ padding: '4px 10px', background: `${color}22`, border: `1px solid ${color}66`, color, borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      <Dices size={10} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {showArmas && (
           <div>
             <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#f87171', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}><Sword size={12} /> Armas Equipadas</h5>
@@ -1458,6 +1573,18 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         >
           <Settings size={12} /> Status
         </button>
+        <button 
+          onClick={() => setActiveTab('ficha')} 
+          style={{
+            flex: 1, padding: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
+            background: activeTab === 'ficha' ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
+            border: 'none', borderBottom: activeTab === 'ficha' ? '2px solid #06b6d4' : 'none',
+            color: activeTab === 'ficha' ? '#67e8f9' : 'var(--text-secondary)', borderRadius: '4px 4px 0 0',
+            transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px'
+          }}
+        >
+          <FileText size={12} /> Ficha
+        </button>
       </div>
 
       {/* ACTIVE TAB CONTENT */}
@@ -1475,6 +1602,34 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         {activeTab === 'attacks' && renderAttacksTab()}
         {activeTab === 'items' && renderItemsTab()}
         {activeTab === 'config' && renderConfigTab()}
+        {activeTab === 'ficha' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {!wikiEntry ? (
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic', padding: '0.5rem' }}>
+                Ficha MD não vinculada.
+              </div>
+            ) : (
+              Object.entries(wikiEntry.metadata || {}).map(([key, value]) => {
+                // Pula campos de objeto/array complexos e imagens base64
+                if (typeof value === 'object' && value !== null) return null;
+                const strVal = String(value ?? '');
+                if (strVal.startsWith('data:image')) return null;
+                if (strVal.length > 200) return null;
+                // Guard NaN
+                const isNanVal = strVal === 'NaN' || strVal === '.nan' || strVal === 'nan';
+                
+                return (
+                  <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.3rem 0.5rem', background: 'rgba(0,0,0,0.25)', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                    <span style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>{key}</span>
+                    <span style={{ fontSize: '0.75rem', color: isNanVal ? '#475569' : '#e2e8f0', fontFamily: 'var(--font-mono)', fontStyle: isNanVal ? 'italic' : 'normal' }}>
+                      {isNanVal ? '—' : strVal}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
       {isGM && (
         <input 

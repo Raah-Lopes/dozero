@@ -59,8 +59,9 @@ tokenShape: square
 borderColor: '#5c5c5c'
 showName: true
 sizeScale: 1.4
-hpBarMode: always
+hpBarMode: hover
 ---
+
 
 
 

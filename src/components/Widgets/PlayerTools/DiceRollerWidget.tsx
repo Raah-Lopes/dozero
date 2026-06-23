@@ -129,6 +129,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   const [newMacroLabel, setNewMacroLabel] = useState('');
   const [showMacroEditor, setShowMacroEditor] = useState(false);
   const [sendToChat, setSendToChat] = useState(false);
+  const [lastResult, setLastResult] = useState<{ total: number; dice: string } | null>(null);
 
   const colors = THEMES[theme];
   const allDice: DieType[] = [4, 6, 8, 10, 12, 20, 100];
@@ -167,10 +168,16 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         id: rollId, dice: diceStr, rolls: results, modifier: mod, total, timestamp: Date.now()
       };
       setHistory(prev => [newResult, ...prev].slice(0, 10));
+      setLastResult({ total, dice: diceStr });
 
       // DiceOverlay event
       window.dispatchEvent(new CustomEvent('dice-roll', {
         detail: { id: rollId, title: diceStr, result: total, type: 'utility' }
+      }));
+
+      // Notifica TargetTerminal e outros componentes sobre o resultado — integração de dados físicos
+      window.dispatchEvent(new CustomEvent('dice-result-ready', {
+        detail: { total, dice: diceStr, rolls: results, modifier: mod }
       }));
 
       // Chat
@@ -353,6 +360,26 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                     individual: {currentRolls.map((r, i) => <span key={i} style={{ color: colors.text, marginLeft: '4px' }}>{r}</span>)}
                   </div>
                 )}
+                {/* Painel de Aplicação — integração de dados físicos com fichas */}
+                <div style={{ marginTop: '0.6rem', display: 'flex', gap: '0.4rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.6rem', color: '#444', alignSelf: 'center', marginRight: '2px' }}>Aplicar ao alvo:</span>
+                  {[
+                    { label: '🗡️ Dano', color: '#f87171', event: 'dice-apply-damage' },
+                    { label: '💗 Cura', color: '#34d399', event: 'dice-apply-heal' },
+                    { label: '🎲 Teste', color: '#60a5fa', event: 'dice-apply-test' },
+                  ].map(({ label, color, event }) => (
+                    <button
+                      key={event}
+                      onClick={() => window.dispatchEvent(new CustomEvent(event, { detail: { value: totalResult, dice: `${quantity}d${selectedDie}${modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}` } }))}
+                      style={{
+                        padding: '3px 10px', background: `${color}20`, border: `1px solid ${color}60`,
+                        color, borderRadius: '20px', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer'
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
