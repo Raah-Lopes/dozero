@@ -348,6 +348,7 @@ function App() {
                  onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
                  onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
                  onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
+                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
                />
              )}
              {activeModal === 'chat' && (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield } from 'lucide-react';
+import { X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -23,9 +23,10 @@ interface Props {
   onOpenAudioDirector: () => void;
   onOpenWebFrame: () => void;
   onOpenDiceRoller: () => void;
+  onOpenAIStudio: () => void;
 }
 
-export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame, onOpenDiceRoller }) => {
+export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame, onOpenDiceRoller, onOpenAIStudio }) => {
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '550px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -123,6 +124,9 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
         <div className="widget-category">
           <div className="widget-category-title">Game Master</div>
           <div className="widget-grid">
+            <button onClick={onOpenAIStudio} title="Estúdio IA do Mestre" className="widget-btn theme-purple" style={{ boxShadow: '0 0 10px rgba(168,85,247,0.4)' }}>
+              <Bot size={28} />
+            </button>
             <button onClick={onOpenArsenalMestre} title="Arsenal do Mestre" className="widget-btn theme-amber">
               <Shield size={28} />
             </button>
