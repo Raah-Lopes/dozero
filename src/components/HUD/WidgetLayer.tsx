@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { ErrorBoundary } from '../ErrorBoundary';
+import { CommandPalette } from '../UI/CommandPalette';
 
 // Lazy loaded widgets
 const OracleWidgetV2 = React.lazy(() => import('../Widgets/Generators/OracleWidgetV2').then(m => ({ default: m.OracleWidgetV2 })));
@@ -33,27 +34,30 @@ export const WidgetLayer: React.FC = React.memo(() => {
   const closeWindow = useWindowManager((state) => state.closeWindow);
 
   return (
-    <Suspense fallback={<FallbackLoader />}>
-      <ErrorBoundary fallbackMessage="Falha ao carregar Módulo da Central.">
-        {openWindows.oracle && <OracleWidgetV2 onClose={() => closeWindow('oracle')} />}
-        {openWindows.npcGenerator && <NPCGeneratorWidget onClose={() => closeWindow('npcGenerator')} />}
-        {openWindows.locationGenerator && <LocationGeneratorWidget onClose={() => closeWindow('locationGenerator')} />}
-        {openWindows.encounterGenerator && <EncounterWidget onClose={() => closeWindow('encounterGenerator')} />}
-        {openWindows.campaignManager && <CampaignManagerWidget onClose={() => closeWindow('campaignManager')} />}
-        {openWindows.mindMap && <MapasMentaisWidget onClose={() => closeWindow('mindMap')} />}
-        {openWindows.automatedDice && <AutomatedDiceWidget onClose={() => closeWindow('automatedDice')} />}
-        {openWindows.characterRoster && <CharacterRosterWidget onClose={() => closeWindow('characterRoster')} />}
-        {openWindows.chronos && <ChronosWidget onClose={() => closeWindow('chronos')} />}
-        {openWindows.loreMachine && <LoreMachineWidget onClose={() => closeWindow('loreMachine')} />}
-        {openWindows.dlcManager && <DLCManagerWidget onClose={() => closeWindow('dlcManager')} />}
-        {openWindows.worldEngine && <WorldEngineWidget onClose={() => closeWindow('worldEngine')} />}
-        {openWindows.entityForge && <EntityForgeWidget onClose={() => closeWindow('entityForge')} />}
-        {openWindows.stronghold && <StrongholdWidget onClose={() => closeWindow('stronghold')} />}
-        {openWindows.arsenalMestre && <ArsenalMestreWidget onClose={() => closeWindow('arsenalMestre')} />}
-        {openWindows.audioDirector && <AudioDirectorWidget onClose={() => closeWindow('audioDirector')} />}
-        {openWindows.webFrame && <WebFrameWidget onClose={() => closeWindow('webFrame')} zIndex={999} onFocus={() => {}} />}
-        {openWindows.diceRoller && <DiceRollerWidget onClose={() => closeWindow('diceRoller')} />}
-      </ErrorBoundary>
-    </Suspense>
+    <>
+      <CommandPalette />
+      <Suspense fallback={<FallbackLoader />}>
+        <ErrorBoundary fallbackMessage="Falha ao carregar Módulo da Central.">
+          {openWindows.oracle && <OracleWidgetV2 onClose={() => closeWindow('oracle')} />}
+          {openWindows.npcGenerator && <NPCGeneratorWidget onClose={() => closeWindow('npcGenerator')} />}
+          {openWindows.locationGenerator && <LocationGeneratorWidget onClose={() => closeWindow('locationGenerator')} />}
+          {openWindows.encounterGenerator && <EncounterWidget onClose={() => closeWindow('encounterGenerator')} />}
+          {openWindows.campaignManager && <CampaignManagerWidget onClose={() => closeWindow('campaignManager')} />}
+          {openWindows.mindMap && <MapasMentaisWidget onClose={() => closeWindow('mindMap')} />}
+          {openWindows.automatedDice && <AutomatedDiceWidget onClose={() => closeWindow('automatedDice')} />}
+          {openWindows.characterRoster && <CharacterRosterWidget onClose={() => closeWindow('characterRoster')} />}
+          {openWindows.chronos && <ChronosWidget onClose={() => closeWindow('chronos')} />}
+          {openWindows.loreMachine && <LoreMachineWidget onClose={() => closeWindow('loreMachine')} />}
+          {openWindows.dlcManager && <DLCManagerWidget onClose={() => closeWindow('dlcManager')} />}
+          {openWindows.worldEngine && <WorldEngineWidget onClose={() => closeWindow('worldEngine')} />}
+          {openWindows.entityForge && <EntityForgeWidget onClose={() => closeWindow('entityForge')} />}
+          {openWindows.stronghold && <StrongholdWidget onClose={() => closeWindow('stronghold')} />}
+          {openWindows.arsenalMestre && <ArsenalMestreWidget onClose={() => closeWindow('arsenalMestre')} />}
+          {openWindows.audioDirector && <AudioDirectorWidget onClose={() => closeWindow('audioDirector')} />}
+          {openWindows.webFrame && <WebFrameWidget onClose={() => closeWindow('webFrame')} zIndex={999} onFocus={() => {}} />}
+          {openWindows.diceRoller && <DiceRollerWidget onClose={() => closeWindow('diceRoller')} />}
+        </ErrorBoundary>
+      </Suspense>
+    </>
   );
 });
