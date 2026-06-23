@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Plus, Calendar, ExternalLink, FileText, Link2, Trash2, ChevronRight } from 'lucide-react';
 import type { CampaignTabProps } from './types';
-import { LegacyBadge } from './LegacyBadge';
-import { WikiLinkedTextarea } from './WikiLinkedTextarea';
+import { LegacyBadge } from './Shared';
+import { WikiLinkedTextarea } from './Shared';
 
 // Minimal mock for STATUS_CONFIG
 const STATUS_CONFIG = {

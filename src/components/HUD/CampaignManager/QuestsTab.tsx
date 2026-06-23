@@ -3,7 +3,7 @@ import { Target, Plus, Edit3, Trash2, Award, BookOpen, FileText, ExternalLink, L
 import * as yaml from 'js-yaml';
 import { useStore } from '../../../store';
 import type { CampaignTabProps } from '../types';
-import { WikiLinkedTextarea } from '../WikiLinkedTextarea';
+import { WikiLinkedTextarea } from './Shared';
 import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../utils/githubApi';
 import { slugify, questTemplate } from '../CampaignManagerWidget';
 import type { CampaignQuest, QuestLootItem } from '../../../store';

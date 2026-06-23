@@ -1,8 +1,8 @@
 import React from 'react';
 import { AlertTriangle, Link2, FileText, ExternalLink, Flag, Clock } from 'lucide-react';
 import type { CampaignTabProps } from './types';
-import { LegacyBadge } from './LegacyBadge';
-import { WikiLinkedTextarea } from './WikiLinkedTextarea';
+import { LegacyBadge } from './Shared';
+import { WikiLinkedTextarea } from './Shared';
 
 interface OverviewTabProps extends CampaignTabProps {
   openInWiki: (path: string) => void;
