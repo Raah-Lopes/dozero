@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import {
   Type, Image as ImageIcon, Save, Trash2,
   User, MapPin, Calendar, Link as LinkIcon, Book, FileText,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {  Timer, Activity, Zap } from 'lucide-react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 
 import type { TensionClock } from '../../store';
 

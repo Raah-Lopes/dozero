@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { state } from '../../store';
 import { Globe, Swords, Building, Coins, AlertTriangle } from 'lucide-react';
 

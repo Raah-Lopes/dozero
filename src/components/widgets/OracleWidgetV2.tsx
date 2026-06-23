@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
 import { pushChatMessage } from '../../store';
 import { OracleParserV2, type OracleCategory, type OracleTable } from '../../services/oracle/OracleParserV2';

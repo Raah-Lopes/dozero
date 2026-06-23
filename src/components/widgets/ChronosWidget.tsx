@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { state, initChronos, getChronosState, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../store';
 import type { ChronosState } from '../../store';
 import { Clock, Sun, Moon, Sunrise,  CalendarDays, Tent, Coffee } from 'lucide-react';

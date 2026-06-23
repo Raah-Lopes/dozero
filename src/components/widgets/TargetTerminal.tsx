@@ -1,6 +1,6 @@
 // src/components/HUD/TargetTerminal.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import { HealthBar } from './HealthBar';
+import { HealthBar } from '../UI/HealthBar';
 import { 
     Dices, Trash2, Plus, Swords, 
     Backpack, Zap, Sword, HeartPulse, 

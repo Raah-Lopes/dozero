@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { pushChatMessage } from '../../store';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────

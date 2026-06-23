@@ -1,6 +1,6 @@
 // src/components/HUD/CharacterRosterWidget.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { useWiki } from '../../hooks/useWiki';
 import { state, updateTokenProps } from '../../store';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';

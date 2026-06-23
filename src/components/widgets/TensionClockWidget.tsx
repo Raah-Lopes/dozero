@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { removeTensionClock, triggerClockConsequence, updateTensionClockProps } from '../../store';
 import type { TensionClock } from '../../store';
 import { Clock, Trash2, Pause, Play, Settings } from 'lucide-react';

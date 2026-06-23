@@ -3,7 +3,7 @@ import { useAudioStore } from '../../store/audioStore';
 import { audioEngine } from '../../services/AudioEngine';
 import type { AudioTrack, SoundboardItem } from '../../utils/audioTypes';
 import { Play, Pause, Volume2, Music, FolderOpen, Sliders, Maximize2, Minimize2, Square, Zap, HardDrive, Eye, EyeOff, LockOpen, Repeat, Repeat1, ArrowRight, Shuffle } from 'lucide-react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { get, set } from 'idb-keyval';
 
 export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {

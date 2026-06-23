@@ -1,6 +1,6 @@
 // src/components/HUD/ArsenalMestreWidget.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { useWiki } from '../../hooks/useWiki';
 import { saveMarkdownContent, loadMarkdownFile } from '../../utils/githubApi';
 import { pushChatMessage } from '../../store';

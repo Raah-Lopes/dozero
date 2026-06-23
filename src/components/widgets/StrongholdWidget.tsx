@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { state, restAtStronghold } from '../../store';
 import { Castle, Coins, Utensils, Droplets, Bed, Sparkles, Plus } from 'lucide-react';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { UserPlus, Dna, Settings2 } from 'lucide-react';
 import { pushChatMessage } from '../../store';
 import { NPCParser } from '../../services/oracle/NPCParser';

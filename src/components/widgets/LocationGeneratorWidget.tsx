@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { Map, MapPin, Hammer } from 'lucide-react';
 import { pushChatMessage } from '../../store';
 import { LocationParser } from '../../services/oracle/LocationParser';

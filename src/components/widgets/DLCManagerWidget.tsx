@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DraggableWindow } from './DraggableWindow';
+import { DraggableWindow } from '../HUD/DraggableWindow';
 import { state } from '../../store';
 import {
   ToyBrick, Check, Search, Zap, Swords, Skull, Anchor, Beaker,
