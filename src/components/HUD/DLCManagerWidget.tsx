@@ -3,7 +3,7 @@ import { DraggableWindow } from './DraggableWindow';
 import { state } from '../../store';
 import {
   ToyBrick, Check, Search, Zap, Swords, Skull, Anchor, Beaker,
-  Clock, Volume2, BookMarked, Sparkles, Globe, Shield, Tag
+  Clock, Volume2, BookMarked, Sparkles, Tag
 } from 'lucide-react';
 
 // --- ADDON REGISTRY ---

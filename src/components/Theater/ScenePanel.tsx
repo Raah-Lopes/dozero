@@ -34,8 +34,7 @@ const TIME_ICONS: Record<TimeOfDay, React.ReactNode> = {
 };
 
 export const ScenePanel: React.FC = () => {
-  // @ts-ignore - auto fix
-  const { currentScene, patchCurrentScene, toggleObjective, addObjective, removeObjective, mood, weather, theaterData } = useSceneState();
+    const { currentScene, patchCurrentScene, toggleObjective, addObjective, removeObjective, mood, weather, theaterData } = useSceneState();
   const { index: wikiIndex } = useWiki();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');

@@ -4,7 +4,6 @@ import { User, Skull, Cpu, Heart, Droplets, RefreshCw,  X, Edit2 } from 'lucide-
 import { useCastData } from './hooks/useCastData';
 import { useSceneState } from './hooks/useSceneState';
 import { toggleCastCondition } from '../../store';
-// @ts-ignore - auto fix
 import { saveMarkdownContent, loadMarkdownFile } from '../../utils/githubApi';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 

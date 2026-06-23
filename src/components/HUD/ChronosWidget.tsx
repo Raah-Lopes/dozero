@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { DraggableWindow } from './DraggableWindow';
 import { state, initChronos, getChronosState, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../store';
 import type { ChronosState } from '../../store';
-// @ts-ignore - auto fix
 import { Clock, Sun, Moon, Sunrise,  CalendarDays, Tent, Coffee } from 'lucide-react';
 
 export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = ({ onClose, isGM = true }) => {

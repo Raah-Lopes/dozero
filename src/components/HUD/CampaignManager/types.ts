@@ -8,5 +8,4 @@ export interface CampaignTabProps {
   setLinkingId: (id: string | null) => void;
   linkingId: string | null;
   // Shared helpers
-  getPCCharacters: () => any[];
-}
+  }

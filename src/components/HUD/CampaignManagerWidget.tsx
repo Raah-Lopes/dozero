@@ -1,4 +1,3 @@
-// @ts-ignore - auto fix
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DraggableWindow } from './DraggableWindow';
 import {
@@ -782,7 +781,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                     { icon: <Layers size={12} />, label: 'Arcos', value: selectedCampaign.arcs?.length || 0 },
                     { icon: <Target size={12} />, label: 'Ativos', value: (selectedCampaign.arcs || []).filter(a => a.status === 'active').length, color: '#38bdf8' },
                     { icon: <Calendar size={12} />, label: 'Sessões', value: selectedCampaign.sessions?.length || 0 },
-                    { icon: <CheckCircle size={12} />, label: 'Realizadas', value: (selectedCampaign.sessions || []).filter(s => s.status === 'completed').length, color: '#22c55e' },
+                    { icon: <Circle size={12} />, label: 'Realizadas', value: (selectedCampaign.sessions || []).filter(s => s.status === 'completed').length, color: '#22c55e' },
                   ].map((stat, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '5px', color: stat.color || 'rgba(148,163,184,0.6)', fontSize: '0.72rem' }}>
                       {stat.icon}
@@ -823,7 +822,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                     openInWiki={openInWiki}
                     linkCampaignToWiki={linkCampaignToWiki}
                     setLinkingId={setLinkingId}
-                    getPCCharacters={getPCCharacters}
+                    
                   />
                 )}
 
@@ -834,7 +833,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                     updateCampaign={updateCampaign}
                     linkingId={linkingId}
                     setLinkingId={setLinkingId}
-                    getPCCharacters={getPCCharacters}
+                    
                     editingArcId={editingArcId}
                     setEditingArcId={setEditingArcId}
                     openInWiki={openInWiki}
@@ -852,7 +851,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                     updateCampaign={updateCampaign}
                     linkingId={linkingId}
                     setLinkingId={setLinkingId}
-                    getPCCharacters={getPCCharacters}
+                    
                     expandedSession={expandedSession}
                     setExpandedSession={setExpandedSession}
                     openInWiki={openInWiki}

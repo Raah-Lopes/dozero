@@ -1,4 +1,3 @@
-// @ts-ignore - auto fix
 import React, { useState, useRef, useEffect } from 'react';
 import { GripHorizontal, X, Minus } from 'lucide-react';
 import { ErrorBoundary } from '../ErrorBoundary';

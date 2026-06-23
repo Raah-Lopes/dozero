@@ -3,15 +3,13 @@ import { DraggableWindow } from './DraggableWindow';
 import { useWiki } from '../../hooks/useWiki';
 import { pushChatMessage, state } from '../../store';
 import { loadMarkdownFile } from '../../utils/githubApi';
-// @ts-ignore - auto fix
 import { Sparkles, MessageCircle, ScrollText, BookOpen, ToyBrick } from 'lucide-react';
 
 export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { index, isLoading } = useWiki();
   const [result, setResult] = useState<string | null>(null);
   const [dlcTemplates, setDlcTemplates] = useState<string[]>([]);
-  // @ts-ignore - auto fix
-  const [activeMods, setActiveMods] = useState<string[]>([]);
+    const [activeMods, setActiveMods] = useState<string[]>([]);
 
   useEffect(() => {
     const observer = async () => {

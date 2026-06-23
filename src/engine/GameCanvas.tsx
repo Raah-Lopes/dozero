@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-// @ts-ignore - auto fix
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection } from '../store';
 
@@ -82,13 +81,13 @@ export const GameCanvas: React.FC = () => {
           backgroundColor: 0x18181b, // --bg-secondary
           antialias: true,
         });
-      } catch (e) {
+      } catch (_e) {
         console.warn("PixiJS Init failed (likely aborted by React):", e);
         return;
       }
 
       if (isDestroyed) {
-        try { app.destroy(true); } catch (e) {}
+        try { app.destroy(true); } catch (_e) {}
         return;
       }
 
@@ -2115,7 +2114,7 @@ export const GameCanvas: React.FC = () => {
             (appRef.current as any)._cleanupMapObservers();
           }
           appRef.current.destroy(true);
-        } catch (e) {
+        } catch (_e) {
           // Ignoramos erros de unmount
         }
         appRef.current = null;

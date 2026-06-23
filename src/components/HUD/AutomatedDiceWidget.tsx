@@ -1146,8 +1146,7 @@ ${vencedor}`, true);
     adicionarLog(`👉 Turno atual: ${combatente.nome}`, false);
   };
 
-  // @ts-ignore - auto fix
-  const __executarAtaqueInteligente = async () => {
+    const __executarAtaqueInteligente = async () => {
     if (!atacante || !defensor) return;
     const atk = { ...atacante };
     const def = { ...defensor };
@@ -1214,8 +1213,7 @@ ${vencedor}`, true);
     recarregar();
   };
 
-  // @ts-ignore - auto fix
-  const __executarCuraInteligente = async () => {
+    const __executarCuraInteligente = async () => {
     if (!atacante) return;
     const alvo = defensor || atacante; // Cura o defensor, ou curar si mesmo
     
@@ -1263,8 +1261,7 @@ ${vencedor}`, true);
     recarregar();
   };
 
-  // @ts-ignore - auto fix
-  const _vasculharCadaver = async () => {
+    const _vasculharCadaver = async () => {
     if (!atacante || !defensor) return;
     if (defensor.pv > 0) {
       adicionarLog("⚠️ O alvo ainda está vivo para ser saqueado!", false);

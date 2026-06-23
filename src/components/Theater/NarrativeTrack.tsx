@@ -4,14 +4,12 @@ import { Plus, ChevronRight, Trash2, BookOpen, ArrowRight } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import type { MoodType, WeatherType } from '../../store';
 
-// @ts-ignore - auto fix
 const __MOOD_LABELS: Record<MoodType, string> = {
   neutral: '⬜ Neutro', suspense: '🟣 Suspense', horror: '🔴 Horror',
   adventure: '🟡 Aventura', victory: '🟢 Vitória', sadness: '🔵 Tristeza',
   mystery: '🟤 Mistério', combat: '🔥 Combate',
 };
 
-// @ts-ignore - auto fix
 const __WEATHER_LABELS: Record<WeatherType, string> = {
   clear: '☀️ Claro', rain: '🌧 Chuva', storm: '⛈ Tempestade',
   fog: '🌫 Névoa', snow: '❄️ Neve', fire: '🔥 Fogo', darkness: '🌑 Escuridão',
@@ -35,8 +33,7 @@ export const NarrativeTrack: React.FC = () => {
         >
           <BookOpen size={18} />
         </button>
-        // @ts-ignore - auto fix
-        {scenes.map((s) => (
+                {scenes.map((s) => (
           <div
             key={s.id}
             onClick={() => setCurrentScene(s.id)}

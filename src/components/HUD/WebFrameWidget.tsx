@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DraggableWindow } from './DraggableWindow';
-import { Globe, RefreshCw, ArrowLeft, X, ExternalLink } from 'lucide-react';
+import { Globe, RefreshCw, ExternalLink } from 'lucide-react';
 
 interface WebFrameWidgetProps {
   onClose: () => void;
@@ -8,7 +8,7 @@ interface WebFrameWidgetProps {
   onFocus: () => void;
 }
 
-export const WebFrameWidget: React.FC<WebFrameWidgetProps> = ({ onClose, zIndex, onFocus }) => {
+export const WebFrameWidget: React.FC<WebFrameWidgetProps> = ({ onClose, }) => {
   const [url, setUrl] = useState('https://tabletopaudio.com');
   const [currentUrl, setCurrentUrl] = useState('https://tabletopaudio.com');
   const [key, setKey] = useState(0);

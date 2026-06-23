@@ -8,7 +8,7 @@ export function useDebounceCallback<T extends (...args: any[]) => void>(
   callback: T,
   delay: number
 ) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep a fresh reference to the callback so we don't need to add it to dependencies
   const callbackRef = useRef(callback);
