@@ -99,6 +99,12 @@ function App() {
     };
     window.addEventListener('open-wiki-file', handleOpenWikiFile);
 
+    const handleOpenWiki = () => setViewMode('wiki');
+    window.addEventListener('open-wiki', handleOpenWiki);
+
+    const handleOpenWikiGraph = () => setViewMode('wiki'); // open-wiki-graph is handled by WikiViewer internally, but we need to ensure the Wiki itself is open
+    window.addEventListener('open-wiki-graph', handleOpenWikiGraph);
+
     const handleOpenSheetByWiki = (e: Event) => {
       const wikiPath = (e as CustomEvent).detail;
       if (wikiPath) {
@@ -165,6 +171,8 @@ function App() {
       window.removeEventListener('token-dblclick', handleDblClick);
       window.removeEventListener('open-clock-config', handleOpenClockConfig);
       window.removeEventListener('open-wiki-file', handleOpenWikiFile);
+      window.removeEventListener('open-wiki', handleOpenWiki);
+      window.removeEventListener('open-wiki-graph', handleOpenWikiGraph);
       window.removeEventListener('open-sheet-by-wiki', handleOpenSheetByWiki);
       window.removeEventListener('spawn-token-from-wiki', handleSpawnTokenFromWiki);
     }

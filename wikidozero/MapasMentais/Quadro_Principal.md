@@ -1,45 +1,37 @@
 {
-  "id": "default",
-  "name": "Quadro_Principal",
-  "zoom": 1,
-  "offsetX": 0,
-  "offsetY": 0,
-  "nodes": [
-    {
-      "id": "node-1782014473761",
-      "type": "text",
-      "x": 150,
-      "y": 150,
-      "width": 396,
-      "height": 136,
-      "title": "Nova Ideia",
-      "description": "",
-      "color": "transparent",
-      "links": []
-    },
-    {
-      "id": "node-1782014488290",
-      "type": "text",
-      "x": 150,
-      "y": 150,
-      "width": 220,
-      "height": 120,
-      "title": "Nova Ideia",
-      "description": "",
-      "color": "transparent",
-      "links": []
-    },
-    {
-      "id": "node-1782014488857",
-      "type": "wiki",
-      "x": 150,
-      "y": 150,
-      "width": 220,
-      "height": 120,
-      "title": "Nova Ideia",
-      "description": "",
-      "color": "#a855f7",
-      "links": []
-    }
-  ]
+"id": "default",
+"name": "Quadro\_Principal",
+"zoom": 1,
+"offsetX": 1,
+"offsetY": 1,
+"bgColor": "#919191",
+"nodes": \[
+{
+"id": "node-1782251043753",
+"type": "character",
+"x": 388,
+"y": 280,
+"width": 105,
+"height": 170,
+"title": "Alastor ",
+"description": "Alto\nGordo\nForte\nAgressivo\nRoupas de Couro",
+"color": "#3b82f6",
+"links": \[
+"node-1782251239705"
+]
+},
+{
+"id": "node-1782251239705",
+"type": "note",
+"x": 560,
+"y": 280,
+"width": 100,
+"height": 166,
+"title": "Adanabt",
+"description": "",
+"color": "#10b981",
+"links": \[]
+}
+],
+"gridColor": "rgba(1,4,4,0.15)"
 }

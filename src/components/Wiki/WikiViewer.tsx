@@ -384,8 +384,15 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       const path = (e as CustomEvent).detail?.path || (e as CustomEvent).detail?.filePath;
       if (path) setActiveFile(path);
     };
+    const handlerGraph = () => {
+      setShowGraph(true);
+    };
     window.addEventListener('open-wiki-file', handler);
-    return () => window.removeEventListener('open-wiki-file', handler);
+    window.addEventListener('open-wiki-graph', handlerGraph);
+    return () => {
+      window.removeEventListener('open-wiki-file', handler);
+      window.removeEventListener('open-wiki-graph', handlerGraph);
+    };
   }, []);
 
   // Se initialFile mudar (ou WikiViewer for remontado com arquivo via CampaignManager)

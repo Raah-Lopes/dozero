@@ -3,7 +3,7 @@ import { Command } from 'cmdk';
 import { 
   Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, 
   Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, 
-  Anvil, Castle, Shield, Search, X, FileText
+  Anvil, Castle, Shield, Search, X, FileText, LayoutTemplate, CopyPlus, Pin
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
@@ -12,7 +12,7 @@ interface ActionDef {
   id: string;
   title: string;
   icon: React.ReactNode;
-  category: 'GameMaster' | 'PlayerTools' | 'Generators' | 'System' | 'Wiki';
+  category: string;
   onSelect: () => void;
 }
 
@@ -20,6 +20,9 @@ export const CommandPalette: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [page, setPage] = useState<'root' | 'file_options'>('root');
+  const [selectedFile, setSelectedFile] = useState<{ path: string, title: string } | null>(null);
   
   const openWindow = useWindowManager(state => state.openWindow);
   const setActiveModal = useWindowManager(state => state.setActiveModal);
@@ -33,7 +36,21 @@ export const CommandPalette: React.FC = () => {
     if (stored) {
       try { setRecentIds(JSON.parse(stored)); } catch(e){}
     }
+    const storedPinned = localStorage.getItem('dozero_pinned_commands');
+    if (storedPinned) {
+      try { setPinnedIds(JSON.parse(storedPinned)); } catch(e){}
+    }
   }, []);
+
+  const togglePin = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const newPinned = pinnedIds.includes(id) 
+      ? pinnedIds.filter(pid => pid !== id)
+      : [...pinnedIds, id];
+    setPinnedIds(newPinned);
+    localStorage.setItem('dozero_pinned_commands', JSON.stringify(newPinned));
+  };
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -41,28 +58,58 @@ export const CommandPalette: React.FC = () => {
         e.preventDefault();
         setOpen((open) => !open);
       }
+      if (e.key === 'Backspace' && !search && page !== 'root') {
+        e.preventDefault();
+        setPage('root');
+      }
+      if (e.key === 'Escape' && page !== 'root') {
+        e.preventDefault();
+        e.stopPropagation();
+        setPage('root');
+      }
     };
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
-  }, []);
+  }, [search, page]);
+
+  // Reset page when closing
+  useEffect(() => {
+    if (!open) {
+      setTimeout(() => setPage('root'), 200);
+      setSearch('');
+    }
+  }, [open]);
 
   const runCommand = (id: string, action: () => void) => {
     action();
+    if (page === 'root') {
+      setOpen(false);
+      setSearch('');
+      // Update recents
+      const newRecents = [id, ...recentIds.filter(r => r !== id)].slice(0, 3);
+      setRecentIds(newRecents);
+      localStorage.setItem('dozero_recent_commands', JSON.stringify(newRecents));
+    }
+  };
+
+  const openWikiFile = (path: string, mode: 'full' | 'preview') => {
+    if (mode === 'full') {
+      window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path } }));
+    } else {
+      setOpenWikiDocs(prev => {
+        if (prev.some(d => d.filepath === path)) return prev;
+        return [...prev, { id: Date.now().toString(), filepath: path }];
+      });
+    }
+    
     setOpen(false);
     setSearch('');
-    
-    // Update recents
+    setPage('root');
+
+    const id = `wiki_${path}`;
     const newRecents = [id, ...recentIds.filter(r => r !== id)].slice(0, 3);
     setRecentIds(newRecents);
     localStorage.setItem('dozero_recent_commands', JSON.stringify(newRecents));
-  };
-
-  const openWikiFile = (path: string) => {
-    setOpenWikiDocs(prev => {
-      if (prev.some(d => d.filepath === path)) return prev;
-      return [...prev, { id: Date.now().toString(), filepath: path }];
-    });
-    setViewMode('wiki');
   };
 
   const actions: ActionDef[] = [
@@ -78,8 +125,15 @@ export const CommandPalette: React.FC = () => {
     { id: 'pt_dice', title: 'Rolador de Dados', icon: <Dices size={16} />, category: 'PlayerTools', onSelect: () => runCommand('pt_dice', () => openWindow('diceRoller')) },
     { id: 'pt_autodice', title: 'Dados Automáticos', icon: <Dices size={16} />, category: 'PlayerTools', onSelect: () => runCommand('pt_autodice', () => openWindow('automatedDice')) },
     { id: 'pt_roster', title: 'Lista de Personagens', icon: <Users size={16} />, category: 'PlayerTools', onSelect: () => runCommand('pt_roster', () => openWindow('characterRoster')) },
-    { id: 'pt_mindmap', title: 'Painel de Conspiração', icon: <Network size={16} />, category: 'PlayerTools', onSelect: () => runCommand('pt_mindmap', () => openWindow('mindMap')) },
+    { id: 'pt_mindmap', title: 'Mapa Mental', icon: <span>🧠</span>, category: 'PlayerTools', onSelect: () => runCommand('pt_mindmap', () => openWindow('mindMap')) },
     { id: 'pt_web', title: 'Navegador Integrado', icon: <Globe size={16} />, category: 'PlayerTools', onSelect: () => runCommand('pt_web', () => openWindow('webFrame')) },
+
+    // Wiki actions
+    { id: 'wiki_open', title: 'Abrir Wiki', icon: <BookOpen size={16} />, category: 'QuickActions', onSelect: () => runCommand('wiki_open', () => window.dispatchEvent(new CustomEvent('open-wiki'))) },
+    { id: 'wiki_graph', title: 'Abrir Cérebro da Wiki', icon: <span>🕸️</span>, category: 'QuickActions', onSelect: () => runCommand('wiki_graph', () => {
+      window.dispatchEvent(new CustomEvent('open-wiki'));
+      setTimeout(() => window.dispatchEvent(new CustomEvent('open-wiki-graph')), 150);
+    }) },
 
     // Generators
     { id: 'gen_npc', title: 'Forja de NPCs', icon: <UserPlus size={16} />, category: 'Generators', onSelect: () => runCommand('gen_npc', () => openWindow('npcGenerator')) },
@@ -95,55 +149,118 @@ export const CommandPalette: React.FC = () => {
     { id: 'sys_dlc', title: 'Gerenciador de Complementos', icon: <ToyBrick size={16} />, category: 'System', onSelect: () => runCommand('sys_dlc', () => openWindow('dlcManager')) },
   ];
 
-  // Dynamic Wiki Actions
-  const wikiActions: ActionDef[] = wikiIndex.map(file => ({
-    id: `wiki_${file.path}`,
-    title: file.title || file.name,
-    icon: <FileText size={16} />,
-    category: 'Wiki',
-    onSelect: () => runCommand(`wiki_${file.path}`, () => openWikiFile(file.path))
-  }));
+  // Extrair categorias dinamicas dos arquivos Wiki (ex: 'Lore', 'Fichas', 'Locais')
+  const getWikiCategory = (path: string) => {
+    const parts = path.split('/');
+    if (parts.length > 1) return `📖 ${parts[0]}`; // Nome da pasta raiz (ex: Fichas)
+    return '📖 Base de Conhecimento';
+  };
+
+  const wikiActions: ActionDef[] = wikiIndex.map(file => {
+    const defaultName = (file.name || file.path.split('/').pop() || 'Documento').replace('.md', '');
+    const title = file.title || defaultName;
+    return {
+      id: `wiki_${file.path}`,
+      title,
+      icon: <FileText size={16} />,
+      category: getWikiCategory(file.path),
+      onSelect: () => {
+        // Switch to file_options page instead of opening immediately
+        setSelectedFile({ path: file.path, title });
+        setSearch('');
+        setPage('file_options');
+      }
+    };
+  });
 
   const allActions = [...actions, ...wikiActions];
-
   const recentActions = recentIds.map(id => allActions.find(a => a.id === id)).filter(Boolean) as ActionDef[];
+  const pinnedActions = pinnedIds.map(id => allActions.find(a => a.id === id)).filter(Boolean) as ActionDef[];
+
+  // Group wiki actions by their dynamic folder category, ONLY if user is typing
+  const isSearching = search.trim().length > 0;
+  const wikiCategories = Array.from(new Set(wikiActions.map(a => a.category)));
+
+  const renderItem = (action: ActionDef, keyPrefix = '') => (
+    <Command.Item 
+      key={`${keyPrefix}${action.id}`} 
+      value={action.title}
+      onSelect={action.onSelect} 
+      className="cmd-item"
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span className="item-icon">{action.icon}</span>
+          {action.title}
+        </div>
+        <button 
+          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); togglePin(e, action.id); }}
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+          title={pinnedIds.includes(action.id) ? "Desafixar do Acesso Rápido" : "Fixar no Acesso Rápido"}
+        >
+          <Pin size={14} style={{ color: pinnedIds.includes(action.id) ? '#facc15' : 'rgba(255,255,255,0.2)', transform: 'rotate(45deg)' }} />
+        </button>
+      </div>
+    </Command.Item>
+  );
 
   return (
     <>
-      <button 
-        className="cmd-trigger-btn"
-        title="Paleta de Comandos (Ctrl+K)"
-        onClick={() => setOpen(true)}
-      >
-        <Search size={20} />
-      </button>
+      {/* Botão Hover no Topo da Tela (mais seguro contra barras nativas do SO/Browser) */}
+      <div className="cmd-hover-area">
+        <button 
+          className="cmd-trigger-btn"
+          title="Paleta de Comandos (Ctrl+K)"
+          onClick={() => setOpen(true)}
+        >
+          <Search size={20} />
+        </button>
+      </div>
+
+      <style>
+        {`
+          .cmd-hover-area {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 250px;
+            height: 15px; /* Área invisível que detecta o mouse no topo */
+            z-index: 999999;
+          }
+
+          .cmd-trigger-btn {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            color: rgba(255,255,255,0.4);
+            padding: 0.3rem 2.5rem;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            
+            /* Fica recolhido pra cima */
+            transform: translate(-50%, -100%);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
+          }
+          
+          .cmd-hover-area:hover .cmd-trigger-btn {
+            /* Desce quando o mouse encosta na borda superior */
+            transform: translate(-50%, 0);
+            color: white;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+          }
+        `}
+      </style>
 
       {open && (
         <div className="cmd-overlay" onClick={() => setOpen(false)}>
           <style>
             {`
-              .cmd-trigger-btn {
-                position: fixed;
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0,0,0,0.5);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-top: none;
-                border-radius: 0 0 12px 12px;
-                color: rgba(255,255,255,0.3);
-                padding: 0.5rem 2rem;
-                cursor: pointer;
-                z-index: 9999;
-                opacity: 0;
-                transition: opacity 0.3s, color 0.2s, background 0.2s;
-              }
-              .cmd-trigger-btn:hover {
-                opacity: 1;
-                color: white;
-                background: rgba(255,255,255,0.1);
-              }
-
               .cmd-overlay {
                 position: fixed;
                 top: 0; left: 0; right: 0; bottom: 0;
@@ -153,12 +270,12 @@ export const CommandPalette: React.FC = () => {
                 align-items: flex-start;
                 justify-content: center;
                 padding-top: 15vh;
-                z-index: 99999;
+                z-index: 9999999;
               }
               
               .cmd-dialog {
                 width: 100%;
-                max-width: 640px;
+                max-width: 720px;
                 background: rgba(20, 20, 25, 0.85);
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 12px;
@@ -177,8 +294,18 @@ export const CommandPalette: React.FC = () => {
               .cmd-input-wrapper {
                 display: flex;
                 align-items: center;
-                padding: 1rem 1.5rem;
+                padding: 1.2rem 1.5rem;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                gap: 1rem;
+              }
+              
+              .cmd-badge {
+                background: rgba(255,255,255,0.1);
+                padding: 0.3rem 0.6rem;
+                border-radius: 6px;
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+                white-space: nowrap;
               }
 
               .cmd-input {
@@ -187,7 +314,6 @@ export const CommandPalette: React.FC = () => {
                 width: 100%;
                 font-size: 1.2rem;
                 color: var(--text-primary);
-                margin-left: 1rem;
                 outline: none;
               }
               .cmd-input::placeholder {
@@ -195,13 +321,13 @@ export const CommandPalette: React.FC = () => {
               }
 
               .cmd-list {
-                max-height: 400px;
+                max-height: 450px;
                 overflow-y: auto;
                 padding: 0.5rem;
               }
 
               .cmd-group-heading {
-                padding: 0.5rem 1rem;
+                padding: 0.8rem 1rem 0.3rem 1rem;
                 font-size: 0.75rem;
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
@@ -235,7 +361,7 @@ export const CommandPalette: React.FC = () => {
               }
 
               .cmd-empty {
-                padding: 2rem;
+                padding: 3rem;
                 text-align: center;
                 color: var(--text-secondary);
               }
@@ -265,10 +391,14 @@ export const CommandPalette: React.FC = () => {
             loop
           >
             <div className="cmd-input-wrapper">
-              <Search size={20} color="var(--text-secondary)" />
+              {page === 'root' ? (
+                <Search size={22} color="var(--text-secondary)" />
+              ) : (
+                <div className="cmd-badge">{selectedFile?.title}</div>
+              )}
               <Command.Input 
                 className="cmd-input" 
-                placeholder="O que você precisa fazer?" 
+                placeholder={page === 'root' ? "Busque ações, fichas, lores, locais..." : "O que deseja fazer com este documento?"} 
                 value={search}
                 onValueChange={setSearch}
                 autoFocus
@@ -277,85 +407,103 @@ export const CommandPalette: React.FC = () => {
                 onClick={() => setOpen(false)}
                 style={{ background:'transparent', border:'none', color:'var(--text-secondary)', cursor:'pointer' }}
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
             <Command.List className="cmd-list">
-              <Command.Empty className="cmd-empty">Nenhum comando encontrado.</Command.Empty>
+              <Command.Empty className="cmd-empty">Nenhum comando ou documento encontrado.</Command.Empty>
 
-              {recentActions.length > 0 && search === '' && (
-                <Command.Group heading="Recentes" className="cmd-group">
-                  <div className="cmd-group-heading">Recentes</div>
-                  {recentActions.map(action => (
-                    <Command.Item 
-                      key={`recent_${action.id}`} 
-                      value={action.title}
-                      onSelect={action.onSelect} 
-                      className="cmd-item"
-                    >
-                      <span className="item-icon">{action.icon}</span>
-                      {action.title}
-                    </Command.Item>
-                  ))}
-                </Command.Group>
+              {page === 'root' && (
+                <>
+                  {!isSearching && pinnedActions.length > 0 && (
+                    <Command.Group heading="Acesso Rápido" className="cmd-group">
+                      <div className="cmd-group-heading">Acesso Rápido</div>
+                      {pinnedActions.map(action => renderItem(action, 'pinned_'))}
+                    </Command.Group>
+                  )}
+
+                  {!isSearching && recentActions.length > 0 && (
+                    <Command.Group heading="Recentes" className="cmd-group">
+                      <div className="cmd-group-heading">Recentes</div>
+                      {recentActions.map(action => renderItem(action, 'recent_'))}
+                    </Command.Group>
+                  )}
+
+                  {!isSearching && (
+                    <>
+                      <Command.Group heading="Game Master" className="cmd-group">
+                        <div className="cmd-group-heading">Game Master</div>
+                        {actions.filter(a => a.category === 'GameMaster').map(action => renderItem(action))}
+                      </Command.Group>
+
+                      <Command.Group heading="Player Tools" className="cmd-group">
+                        <div className="cmd-group-heading">Player Tools</div>
+                        {actions.filter(a => a.category === 'PlayerTools').map(action => renderItem(action))}
+                      </Command.Group>
+
+                      <Command.Group heading="Generators & AI" className="cmd-group">
+                        <div className="cmd-group-heading">Generators & AI</div>
+                        {actions.filter(a => a.category === 'Generators').map(action => renderItem(action))}
+                      </Command.Group>
+
+                      <Command.Group heading="System" className="cmd-group">
+                        <div className="cmd-group-heading">System</div>
+                        {actions.filter(a => a.category === 'System').map(action => renderItem(action))}
+                      </Command.Group>
+                    </>
+                  )}
+
+                  {/* Wiki Docs só aparecem se o usuário estiver buscando */}
+                  {isSearching && wikiCategories.map(cat => {
+                    const docsInCat = wikiActions.filter(a => a.category === cat);
+                    if (docsInCat.length === 0) return null;
+                    return (
+                      <Command.Group key={cat} heading={cat} className="cmd-group">
+                        <div className="cmd-group-heading">{cat}</div>
+                        {docsInCat.map(action => renderItem(action))}
+                      </Command.Group>
+                    );
+                  })}
+
+                  {isSearching && (
+                    <Command.Group heading="Ações & Widgets" className="cmd-group">
+                      <div className="cmd-group-heading">Ações & Widgets</div>
+                      {actions.map(action => renderItem(action, 'search_'))}
+                    </Command.Group>
+                  )}
+                </>
               )}
 
-              <Command.Group heading="Game Master" className="cmd-group">
-                <div className="cmd-group-heading">Game Master</div>
-                {actions.filter(a => a.category === 'GameMaster').map(action => (
-                  <Command.Item key={action.id} value={action.title} onSelect={action.onSelect} className="cmd-item">
-                    <span className="item-icon">{action.icon}</span>
-                    {action.title}
+              {page === 'file_options' && selectedFile && (
+                <Command.Group heading="Opções do Documento" className="cmd-group">
+                  <div className="cmd-group-heading">Onde abrir?</div>
+                  
+                  <Command.Item 
+                    value="Abrir na Wiki (Visão Completa)" 
+                    onSelect={() => openWikiFile(selectedFile.path, 'full')} 
+                    className="cmd-item"
+                  >
+                    <span className="item-icon"><LayoutTemplate size={16} /></span>
+                    Abrir na Wiki Completa
                   </Command.Item>
-                ))}
-              </Command.Group>
 
-              <Command.Group heading="Player Tools" className="cmd-group">
-                <div className="cmd-group-heading">Player Tools</div>
-                {actions.filter(a => a.category === 'PlayerTools').map(action => (
-                  <Command.Item key={action.id} value={action.title} onSelect={action.onSelect} className="cmd-item">
-                    <span className="item-icon">{action.icon}</span>
-                    {action.title}
+                  <Command.Item 
+                    value="Abrir Prévia Flutuante" 
+                    onSelect={() => openWikiFile(selectedFile.path, 'preview')} 
+                    className="cmd-item"
+                  >
+                    <span className="item-icon"><CopyPlus size={16} /></span>
+                    Abrir Prévia Flutuante sobre a Tela
                   </Command.Item>
-                ))}
-              </Command.Group>
-
-              <Command.Group heading="Generators & AI" className="cmd-group">
-                <div className="cmd-group-heading">Generators & AI</div>
-                {actions.filter(a => a.category === 'Generators').map(action => (
-                  <Command.Item key={action.id} value={action.title} onSelect={action.onSelect} className="cmd-item">
-                    <span className="item-icon">{action.icon}</span>
-                    {action.title}
-                  </Command.Item>
-                ))}
-              </Command.Group>
-
-              <Command.Group heading="System" className="cmd-group">
-                <div className="cmd-group-heading">System</div>
-                {actions.filter(a => a.category === 'System').map(action => (
-                  <Command.Item key={action.id} value={action.title} onSelect={action.onSelect} className="cmd-item">
-                    <span className="item-icon">{action.icon}</span>
-                    {action.title}
-                  </Command.Item>
-                ))}
-              </Command.Group>
-
-              {wikiActions.length > 0 && (
-                <Command.Group heading="Base de Conhecimento" className="cmd-group">
-                  <div className="cmd-group-heading">Base de Conhecimento (Wiki)</div>
-                  {wikiActions.map(action => (
-                    <Command.Item key={action.id} value={action.title} onSelect={action.onSelect} className="cmd-item">
-                      <span className="item-icon">{action.icon}</span>
-                      {action.title}
-                    </Command.Item>
-                  ))}
+                  
                 </Command.Group>
               )}
 
             </Command.List>
 
             <div className="cmd-footer">
+              {page === 'file_options' && <span><span className="cmd-kbd">Backspace</span> Voltar</span>}
               <span><span className="cmd-kbd">↑</span> <span className="cmd-kbd">↓</span> Navegar</span>
               <span><span className="cmd-kbd">↵</span> Selecionar</span>
               <span><span className="cmd-kbd">ESC</span> Fechar</span>

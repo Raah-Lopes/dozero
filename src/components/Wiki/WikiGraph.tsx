@@ -55,14 +55,12 @@ function normalizeName(name: string) {
   return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
+const imageCache: Record<string, { img: HTMLImageElement, status: 'loading' | 'loaded' | 'error' }> = {};
+
 export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [settings, setSettings] = useState<GraphSettings>(() => {
-    const saved = localStorage.getItem('dozero_graph_settings');
-    return saved ? JSON.parse(saved) : defaultSettings;
-  });
-  const [renderTrigger, setRenderTrigger] = useState(0);
+  const [settings, setSettings] = useState<GraphSettings>(defaultSettings);
   const [showSettings, setShowSettings] = useState(false);
   const [linkingSourceNode, setLinkingSourceNode] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,14 +70,46 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<any>(null);
 
+  // Load Settings from GraphSettings.md
   useEffect(() => {
-    localStorage.setItem('dozero_graph_settings', JSON.stringify(settings));
-    if (fgRef.current) {
-      fgRef.current.d3Force('charge').strength(settings.repelForce);
-      fgRef.current.d3Force('link').distance(settings.linkDistance);
-      fgRef.current.d3ReheatSimulation();
+    const loadSettings = async () => {
+      try {
+        const config = getWikiConfig();
+        const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+        const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent('GraphSettings.md')}`);
+        if (res.ok) {
+          const fileData = await res.json();
+          if (fileData && fileData.content) {
+            const parsed = JSON.parse(fileData.content);
+            setSettings({ ...defaultSettings, ...parsed });
+          }
+        }
+      } catch (err) {
+        console.log('Nenhuma configuração salva encontrada no repositório. Usando padrão.');
+      }
+    };
+    loadSettings();
+  }, []);
+
+  // Save Settings to GraphSettings.md when panel closes
+  const handleCloseSettings = async () => {
+    setShowSettings(false);
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+      await fetch(`/api/wiki/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          repoPath, 
+          path: 'GraphSettings.md', 
+          content: JSON.stringify(settings, null, 2) 
+        })
+      });
+    } catch (err) {
+      console.error('Erro ao salvar as configurações no servidor.', err);
     }
-  }, [settings]);
+  };
 
   const fetchGraph = useCallback(async () => {
     try {
@@ -184,14 +214,6 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  useEffect(() => {
-    if (fgRef.current && data.nodes.length > 0) {
-      fgRef.current.d3Force('charge').strength(settings.repelForce);
-      fgRef.current.d3Force('link').distance(settings.linkDistance);
-      fgRef.current.d3ReheatSimulation();
-    }
-  }, [data, settings.repelForce, settings.linkDistance]);
-
   const handleNodeRightClick = useCallback(async (node: any) => {
     const newName = window.prompt(`Renomear nó: ${node.name}\nIsso atualizará todas as ligações em outros arquivos!`, node.name);
     if (!newName || newName.trim() === '' || newName === node.name) return;
@@ -286,45 +308,56 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
     }
   }, [fetchGraph]);
 
-  const handleNodeClick = useCallback(async (node: any, event: MouseEvent) => {
+  const handleNodeClick = useCallback((node: any, event: MouseEvent) => {
     if (event.shiftKey) {
       if (!linkingSourceNode) {
         setLinkingSourceNode(node);
       } else {
         if (linkingSourceNode.id !== node.id) {
-          try {
-            const config = getWikiConfig();
-            const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-            
-            const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(linkingSourceNode.id)}&t=${Date.now()}`);
-            const fileData = await res.json();
-            
-            const relLabel = window.prompt(`Qual a relação de ${linkingSourceNode.name} com ${node.name}? (Ex: Pai de, Aliado). Deixe em branco se for só um link.`);
-            
-            let linkText = `[[${node.name}]]`;
-            if (relLabel && relLabel.trim() !== '') {
-              linkText = `\n\n${relLabel}:: [[${node.name}]]`;
-            } else {
-              linkText = `\n\n[[${node.name}]]`;
+          const confirmLink = window.confirm(`Criar ligação de ${linkingSourceNode.name} para ${node.name}?`);
+          if (confirmLink) {
+            try {
+              const config = getWikiConfig();
+              const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+              fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(linkingSourceNode.id)}`)
+                .then(res => res.json())
+                .then(fileData => {
+                  const relLabel = window.prompt(`Qual a relação de ${linkingSourceNode.name} com ${node.name}? (Ex: Pai de, Aliado). Deixe em branco se for só um link.`);
+                  let linkText = `[[${node.name}]]`;
+                  if (relLabel && relLabel.trim() !== '') linkText = `\n\n${relLabel}:: [[${node.name}]]`;
+                  else linkText = `\n\n[[${node.name}]]`;
+
+                  const newContent = fileData.content + linkText;
+                  return fetch(`/api/wiki/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ repoPath, path: linkingSourceNode.id, content: newContent })
+                  });
+                })
+                .then(() => fetchGraph())
+                .catch(err => {
+                  console.error("Erro ao criar link visual", err);
+                  alert("Falha ao criar ligação.");
+                });
+            } catch (err) {
+              console.error("Erro", err);
             }
-
-            const newContent = fileData.content + linkText;
-            
-            await fetch(`/api/wiki/save`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ repoPath, path: linkingSourceNode.id, content: newContent })
-            });
-
-            await fetchGraph();
-          } catch (err) {
-            console.error("Erro ao criar link visual", err);
-            alert("Falha ao criar ligação.");
           }
+          setLinkingSourceNode(null);
         }
-        setLinkingSourceNode(null);
       }
       return;
+    }
+
+    if (linkingSourceNode) {
+      setLinkingSourceNode(null); // Cancel link mode on normal click
+    }
+
+    // Se o nó estava fixo (pinned), um clique solta ele para a física agir novamente
+    if (node.fx != null || node.fy != null) {
+      node.fx = null;
+      node.fy = null;
+      if (fgRef.current) fgRef.current.d3ReheatSimulation();
     }
 
     if (fgRef.current) {
@@ -335,6 +368,16 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
       onNodeClick(node.path);
     }, 800);
   }, [onNodeClick, linkingSourceNode, fetchGraph]);
+
+  useEffect(() => {
+    if (fgRef.current && data.nodes.length > 0) {
+      fgRef.current.d3Force('charge').strength((node: any) => settings.repelForce * (node.val || 1.5));
+      fgRef.current.d3Force('link').distance((link: any) => settings.linkDistance);
+      fgRef.current.d3ReheatSimulation();
+    }
+  }, [settings.repelForce, settings.linkDistance, data]);
+
+  const [activeTab, setActiveTab] = useState<'physics' | 'visuals'>('physics');
 
   return (
     <div ref={containerRef} style={{ 
@@ -394,85 +437,97 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
       {showSettings && (
         <div className="glass-panel animate-fade-in" style={{
           position: 'absolute', top: '4rem', right: '1rem', zIndex: 10,
-          width: '280px', padding: '1.5rem', borderRadius: '12px',
+          width: '320px', padding: '1.2rem', borderRadius: '16px',
           background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(168, 85, 247, 0.3)',
-          display: 'flex', flexDirection: 'column', gap: '1.5rem'
+          display: 'flex', flexDirection: 'column', gap: '1rem',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem' }}>Física do Cérebro</h3>
-            <X size={18} style={{ cursor: 'pointer', color: 'var(--text-secondary)' }} onClick={() => setShowSettings(false)} />
+            <h3 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Settings size={18} /> Cérebro
+            </h3>
+            <X size={18} style={{ cursor: 'pointer', color: 'var(--text-secondary)' }} onClick={handleCloseSettings} />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem' }}>Formato dos Nós</label>
-            <select 
-              value={settings.nodeShape} 
-              onChange={(e) => setSettings({...settings, nodeShape: e.target.value as any})}
-              style={{ background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', padding: '0.3rem', borderRadius: '4px' }}
-            >
-              <option value="circle">Círculo</option>
-              <option value="square">Quadrado</option>
-              <option value="shield">Escudo</option>
-              <option value="hexagon">Hexágono</option>
-            </select>
+          <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '8px' }}>
+            <button onClick={() => setActiveTab('physics')} style={{ flex: 1, padding: '6px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, background: activeTab === 'physics' ? 'rgba(168, 85, 247, 0.2)' : 'transparent', color: activeTab === 'physics' ? 'var(--accent-primary)' : 'var(--text-secondary)', transition: 'all 0.2s' }}>Física</button>
+            <button onClick={() => setActiveTab('visuals')} style={{ flex: 1, padding: '6px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, background: activeTab === 'visuals' ? 'rgba(168, 85, 247, 0.2)' : 'transparent', color: activeTab === 'visuals' ? 'var(--accent-primary)' : 'var(--text-secondary)', transition: 'all 0.2s' }}>Visual</button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between' }}>
-              Força de Repulsão <span>{settings.repelForce}</span>
-            </label>
-            <input type="range" min="-1000" max="-50" step="10" value={settings.repelForce} onChange={(e) => setSettings({...settings, repelForce: parseInt(e.target.value)})} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between' }}>
-              Distância dos Links <span>{settings.linkDistance}</span>
-            </label>
-            <input type="range" min="10" max="200" step="5" value={settings.linkDistance} onChange={(e) => setSettings({...settings, linkDistance: parseInt(e.target.value)})} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between' }}>
-              Espessura da Linha <span>{settings.linkWidth}</span>
-            </label>
-            <input type="range" min="0.5" max="10" step="0.5" value={settings.linkWidth} onChange={(e) => setSettings({...settings, linkWidth: parseFloat(e.target.value)})} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between' }}>
-              Partículas de Energia <span>{settings.particleCount}</span>
-            </label>
-            <input type="range" min="0" max="10" step="1" value={settings.particleCount} onChange={(e) => setSettings({...settings, particleCount: parseInt(e.target.value)})} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between' }}>
-              Tamanho das Letras <span>{settings.fontSizeBase}</span>
-            </label>
-            <input type="range" min="8" max="30" step="1" value={settings.fontSizeBase} onChange={(e) => setSettings({...settings, fontSizeBase: parseInt(e.target.value)})} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem' }}>Cores dos Nós</label>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <input type="color" value={settings.nodePrimaryColor} onChange={(e) => setSettings({...settings, nodePrimaryColor: e.target.value})} style={{ cursor: 'pointer', border: 'none', width: '25px', height: '25px', borderRadius: '4px', padding: 0 }} title="Raiz" />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Raiz</span>
+          {activeTab === 'physics' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                  Força de Repulsão <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{settings.repelForce}</span>
+                </label>
+                <input type="range" min="-1000" max="-50" step="10" value={settings.repelForce} onChange={(e) => setSettings({...settings, repelForce: parseInt(e.target.value)})} style={{ accentColor: 'var(--accent-primary)' }} />
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <input type="color" value={settings.nodeSecondaryColor} onChange={(e) => setSettings({...settings, nodeSecondaryColor: e.target.value})} style={{ cursor: 'pointer', border: 'none', width: '25px', height: '25px', borderRadius: '4px', padding: 0 }} title="Pastas" />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Pastas</span>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                  Distância dos Links <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{settings.linkDistance}</span>
+                </label>
+                <input type="range" min="10" max="200" step="5" value={settings.linkDistance} onChange={(e) => setSettings({...settings, linkDistance: parseInt(e.target.value)})} style={{ accentColor: 'var(--accent-primary)' }} />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                  Partículas de Energia <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{settings.particleCount}</span>
+                </label>
+                <input type="range" min="0" max="10" step="1" value={settings.particleCount} onChange={(e) => setSettings({...settings, particleCount: parseInt(e.target.value)})} style={{ accentColor: 'var(--accent-primary)' }} />
               </div>
             </div>
-          </div>
+          )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.85rem' }}>Cor das Ligações</label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input type="color" value={settings.linkColor} onChange={(e) => setSettings({...settings, linkColor: e.target.value})} style={{ cursor: 'pointer', border: 'none', width: '30px', height: '30px', borderRadius: '4px', padding: 0 }} />
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', alignSelf: 'center' }}>{settings.linkColor}</span>
+          {activeTab === 'visuals' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Formato dos Nós</label>
+                <select 
+                  value={settings.nodeShape} 
+                  onChange={(e) => setSettings({...settings, nodeShape: e.target.value as any})}
+                  style={{ background: 'rgba(15, 23, 42, 0.8)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '8px', outline: 'none' }}
+                >
+                  <option value="circle">Círculo</option>
+                  <option value="square">Quadrado</option>
+                  <option value="shield">Escudo</option>
+                  <option value="hexagon">Hexágono</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                  Tamanho das Letras <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{settings.fontSizeBase}</span>
+                </label>
+                <input type="range" min="8" max="30" step="1" value={settings.fontSizeBase} onChange={(e) => setSettings({...settings, fontSizeBase: parseInt(e.target.value)})} style={{ accentColor: 'var(--accent-primary)' }} />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                  Espessura da Linha <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{settings.linkWidth}</span>
+                </label>
+                <input type="range" min="0.5" max="10" step="0.5" value={settings.linkWidth} onChange={(e) => setSettings({...settings, linkWidth: parseFloat(e.target.value)})} style={{ accentColor: 'var(--accent-primary)' }} />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>Cores Personalizadas</label>
+                <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '8px' }}>
+                    <input type="color" value={settings.nodePrimaryColor} onChange={(e) => setSettings({...settings, nodePrimaryColor: e.target.value})} style={{ cursor: 'pointer', border: 'none', width: '20px', height: '20px', borderRadius: '4px', padding: 0 }} title="Raiz" />
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Raiz</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '8px' }}>
+                    <input type="color" value={settings.nodeSecondaryColor} onChange={(e) => setSettings({...settings, nodeSecondaryColor: e.target.value})} style={{ cursor: 'pointer', border: 'none', width: '20px', height: '20px', borderRadius: '4px', padding: 0 }} title="Pastas" />
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Pastas</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '8px' }}>
+                    <input type="color" value={settings.linkColor} onChange={(e) => setSettings({...settings, linkColor: e.target.value})} style={{ cursor: 'pointer', border: 'none', width: '20px', height: '20px', borderRadius: '4px', padding: 0 }} title="Links" />
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Links</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -533,8 +588,6 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
           }}
 
           nodeCanvasObject={(node: any, ctx, globalScale) => {
-            // Usa o renderTrigger silenciosamente para re-renderizar
-                        const _trigger = renderTrigger;
             const size = 16; // Base radius/size
 
             // Função para desenhar o shape atual
@@ -566,10 +619,9 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
             };
 
             if (node.avatar) {
-              if (!node.img) {
+              if (!imageCache[node.id]) {
                 const img = new Image();
                 let avatarUrl = node.avatar;
-                // Strip localhost to avoid cross-origin canvas issues
                 if (avatarUrl.includes('localhost:5174')) {
                   avatarUrl = avatarUrl.substring(avatarUrl.indexOf('/api/'));
                 }
@@ -581,20 +633,19 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
                   const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
                   img.src = `/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(avatarUrl)}`;
                 }
-                node.img = img;
-                node.imgStatus = 'loading';
+                
+                imageCache[node.id] = { img, status: 'loading' };
                 
                 img.onload = () => {
-                   node.imgStatus = 'loaded';
-                   setRenderTrigger(t => t + 1);
+                   if (imageCache[node.id]) imageCache[node.id].status = 'loaded';
                 };
                 img.onerror = () => {
-                   node.imgStatus = 'error';
-                   setRenderTrigger(t => t + 1);
+                   if (imageCache[node.id]) imageCache[node.id].status = 'error';
                 };
               }
 
-              if (node.imgStatus === 'loaded' && node.img.naturalWidth !== 0) {
+              const cached = imageCache[node.id];
+              if (cached && cached.status === 'loaded' && cached.img.naturalWidth !== 0) {
                 ctx.save();
                 drawShape();
                 ctx.strokeStyle = node.id === linkingSourceNode?.id ? '#facc15' : (node.group === '.' ? settings.nodePrimaryColor : settings.nodeSecondaryColor);
@@ -605,36 +656,47 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
                 ctx.restore();
               } else {
                 drawShape();
-                if (node.imgStatus === 'error') {
-                   ctx.fillStyle = '#ff0000'; // RED = ERROR
-                } else if (node.imgStatus === 'loading') {
-                   ctx.fillStyle = '#ff9900'; // ORANGE = LOADING
-                } else {
-                   ctx.fillStyle = node.id === linkingSourceNode?.id ? '#facc15' : (node.group === '.' ? settings.nodePrimaryColor : settings.nodeSecondaryColor);
-                }
+                ctx.fillStyle = node.group === '.' ? settings.nodePrimaryColor : settings.nodeSecondaryColor;
                 ctx.fill();
+                ctx.strokeStyle = node.id === linkingSourceNode?.id ? '#facc15' : 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = node.id === linkingSourceNode?.id ? 4 : 1.5;
+                ctx.stroke();
               }
             } else {
               drawShape();
-              ctx.fillStyle = node.id === linkingSourceNode?.id ? '#facc15' : (node.group === '.' ? settings.nodePrimaryColor : settings.nodeSecondaryColor);
+              ctx.fillStyle = node.group === '.' ? settings.nodePrimaryColor : settings.nodeSecondaryColor;
               ctx.fill();
+              ctx.strokeStyle = node.id === linkingSourceNode?.id ? '#facc15' : 'rgba(255,255,255,0.2)';
+              ctx.lineWidth = node.id === linkingSourceNode?.id ? 4 : 1.5;
+              ctx.stroke();
             }
 
-            const label = node.name;
-            const fontSize = settings.fontSizeBase / globalScale;
-            ctx.font = `${fontSize}px Inter, sans-serif`;
-            const textWidth = ctx.measureText(label).width;
-            const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
+            // Text Label
+            if (globalScale >= 1.2 || data.nodes.length < 50) {
+              const label = node.name;
+              const fontSize = settings.fontSizeBase / globalScale;
+              ctx.font = `${fontSize}px Inter, sans-serif`;
+              
+              const textWidth = ctx.measureText(label).width;
+              const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
 
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-            ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y + size + 2, bckgDimensions[0], bckgDimensions[1]);
+              ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+              ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y + size + 2, bckgDimensions[0], bckgDimensions[1]);
 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = node.id === linkingSourceNode?.id ? '#facc15' : (node.group === '.' ? settings.nodePrimaryColor : settings.nodeSecondaryColor);
-            ctx.fillText(label, node.x, node.y + size + 2 + bckgDimensions[1]/2);
-
-            node.__bckgDimensions = [bckgDimensions[0], bckgDimensions[1] + size + 2];
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+              ctx.fillText(label, node.x, node.y + size + 2 + bckgDimensions[1] / 2);
+              
+              node.__bckgDimensions = bckgDimensions;
+            } else {
+              node.__bckgDimensions = null;
+            }
+          }}
+          onNodeDragEnd={(node: any) => {
+            // Pin the node in place after dragging so it doesn't fly away
+            node.fx = node.x;
+            node.fy = node.y;
           }}
           nodePointerAreaPaint={(node: any, color, ctx) => {
             ctx.fillStyle = color;
