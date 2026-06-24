@@ -76,7 +76,7 @@ export function wikiLocalApi(): Plugin {
     name: 'wiki-local-api',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (!req.url?.startsWith('/api/wiki') && !req.url?.startsWith('/api/yt')) return next();
+        if (!req.url?.startsWith('/api/wiki') && !req.url?.startsWith('/api/yt') && !req.url?.startsWith('/api/pollinations')) return next();
 
         const url = new URL(req.url, `http://${req.headers.host}`);
         const pathname = url.pathname;
@@ -103,8 +103,41 @@ export function wikiLocalApi(): Plugin {
           }
         }
 
+        // --- POLLINATIONS PROXY ---
+        if (req.method === 'POST' && pathname === '/api/pollinations/openai') {
+          const targetUrl = 'https://text.pollinations.ai/openai';
+          const parsedUrl = new URL(targetUrl);
+          const reqProxy = https.request(parsedUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            }
+          }, (resProxy) => {
+            let responseData = '';
+            resProxy.on('data', chunk => responseData += chunk);
+            resProxy.on('end', () => {
+              res.writeHead(resProxy.statusCode || 200, {
+                'Content-Type': resProxy.headers['content-type'] || 'application/json',
+                'Access-Control-Allow-Origin': '*'
+              });
+              res.end(responseData);
+            });
+          });
+
+          reqProxy.on('error', (e) => {
+            console.error('Pollinations Proxy Error:', e);
+            sendResponse(500, { error: 'Failed to proxy request to Pollinations' });
+          });
+
+          reqProxy.write(JSON.stringify(body));
+          reqProxy.end();
+          return;
+        }
+
+        // Require repoPath for all /api/wiki routes
         const repoPath = url.searchParams.get('repoPath') || body.repoPath;
-        if (!repoPath || !fs.existsSync(repoPath)) {
+        if (pathname.startsWith('/api/wiki') && (!repoPath || !fs.existsSync(repoPath))) {
           return sendResponse(404, { error: `Pasta não encontrada: ${repoPath}` });
         }
 
