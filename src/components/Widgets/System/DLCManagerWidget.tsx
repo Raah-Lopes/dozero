@@ -3,8 +3,9 @@ import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { state } from '../../../store';
 import {
   ToyBrick, Check, Search, Zap, Swords, Skull, Anchor, Beaker,
-  Clock, Volume2, BookMarked, Sparkles, Tag
+  Clock, Volume2, BookMarked, Sparkles, Tag, FolderOpen
 } from 'lucide-react';
+import { useWiki } from '../../../hooks/useWiki';
 
 // --- ADDON REGISTRY ---
 type AddonCategory = 'cenario' | 'mecanica' | 'utilidade';
@@ -95,6 +96,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   const [activeDLCs, setActiveDLCs] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('todos');
+  const { index } = useWiki();
 
   useEffect(() => {
     const observer = () => {
@@ -115,8 +117,27 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
     }
   };
 
+  const dynamicDLCs = useMemo(() => {
+    return index
+      .filter(entry => entry.metadata?.type === 'dlc_manifest')
+      .map(entry => ({
+        id: entry.metadata?.id || entry.slug,
+        name: entry.metadata?.name || 'Expansão Desconhecida',
+        category: (entry.metadata?.category as AddonCategory) || 'cenario',
+        description: entry.metadata?.description || 'Uma expansão customizada gerada pela IA.',
+        version: entry.metadata?.version || '1.0',
+        author: entry.metadata?.author || 'Mestre',
+        icon: FolderOpen,
+        iconColor: '#a855f7',
+        tags: entry.metadata?.tags || ['Customizada'],
+        affects: ['Contexto Global (Wiki)'],
+        isNew: true,
+      }));
+  }, [index]);
+
   const filtered = useMemo(() => {
-    return ADDON_REGISTRY.filter(a => {
+    const allAddons = [...ADDON_REGISTRY, ...dynamicDLCs];
+    return allAddons.filter(a => {
       if (activeCategory !== 'todos' && a.category !== activeCategory) return false;
       if (searchTerm) {
         const s = searchTerm.toLowerCase();
@@ -124,7 +145,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
       }
       return true;
     });
-  }, [activeCategory, searchTerm]);
+  }, [activeCategory, searchTerm, dynamicDLCs]);
 
   const activeCount = activeDLCs.length;
 

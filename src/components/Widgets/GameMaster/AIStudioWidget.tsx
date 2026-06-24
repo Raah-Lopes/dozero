@@ -6,6 +6,7 @@ import { generateAI, AI_MODELS, type AIProviderType, type AIModel } from '../../
 import { buildSystemPrompt, buildUserPrompt, type RPGContentType } from '../../../services/ai/prompts/rpgPrompts';
 import { saveMarkdownContent } from '../../../utils/githubApi';
 import { useWiki } from '../../../hooks/useWiki';
+import { state } from '../../../store';
 import {
   Bot, Wand2, User, Skull, Map, Sword, BookOpen, Dices, Search,
   MessageSquare, Settings, Copy, Download, Save, Loader2, ChevronDown,
@@ -105,7 +106,16 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
   const [conceito, setConceito]      = useState('');
   const [textoExtra, setTextoExtra]  = useState('');
   const [categoriasDlc, setCategoriasDlc] = useState<string[]>(['npc', 'loot', 'local']);
+  const [dlcMode, setDlcMode]        = useState<'basico' | 'expandido' | 'modular'>('modular');
   const [useWikiCtx, setUseWikiCtx]  = useState(true);
+  const [activeDLCs, setActiveDLCs]  = useState<string[]>([]);
+
+  useEffect(() => {
+    const observer = () => setActiveDLCs(state.dlcs.get('active') as string[] || []);
+    state.dlcs.observe(observer);
+    observer();
+    return () => state.dlcs.unobserve(observer);
+  }, []);
 
   // Output
   const [output, setOutput]          = useState('');
@@ -151,9 +161,29 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
   // Contexto wiki resumido
   const buildWikiContext = useCallback(() => {
     if (!useWikiCtx || !index || index.length === 0) return '';
-    const pcs = index.filter(e => ['PC', 'Personagem', 'jogador'].includes(String(e.metadata?.tipo || '')));
-    const npcs = index.filter(e => ['NPC', 'Monstro'].includes(String(e.metadata?.tipo || ''))).slice(0, 10);
-    const locs = index.filter(e => String(e.metadata?.tipo || '').toLowerCase().includes('local')).slice(0, 5);
+
+    // Filtra DLCs inativas
+    const inactiveDlcFolders = new Set<string>();
+    const allManifests = index.filter(e => e.metadata?.type === 'dlc_manifest');
+    for (const manifest of allManifests) {
+      const dlcId = manifest.metadata?.id || manifest.slug;
+      if (!activeDLCs.includes(dlcId)) {
+        // Ajuste para paths de Windows e Unix
+        const folder = manifest.path.substring(0, Math.max(manifest.path.lastIndexOf('/'), manifest.path.lastIndexOf('\\')));
+        inactiveDlcFolders.add(folder);
+      }
+    }
+
+    const filteredIndex = index.filter(e => {
+      for (const inactiveFolder of inactiveDlcFolders) {
+        if (e.path.startsWith(inactiveFolder)) return false;
+      }
+      return true;
+    });
+
+    const pcs = filteredIndex.filter(e => ['PC', 'Personagem', 'jogador'].includes(String(e.metadata?.tipo || '')));
+    const npcs = filteredIndex.filter(e => ['NPC', 'Monstro'].includes(String(e.metadata?.tipo || ''))).slice(0, 10);
+    const locs = filteredIndex.filter(e => String(e.metadata?.tipo || '').toLowerCase().includes('local')).slice(0, 5);
     let ctx = '### Personagens conhecidos:\n';
     ctx += pcs.map(e => `- ${e.metadata?.nome || e.slug} (Nv${e.metadata?.nivel || 1})`).join('\n') || '(nenhum)';
     ctx += '\n### NPCs/Inimigos:\n';
@@ -161,7 +191,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
     ctx += '\n### Locais:\n';
     ctx += locs.map(e => `- ${e.metadata?.nome || e.slug}`).join('\n') || '(nenhum)';
     return ctx;
-  }, [index, useWikiCtx]);
+  }, [index, useWikiCtx, activeDLCs]);
 
   // ── Geração principal ───────────────────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
@@ -188,6 +218,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
         textoExtra: textoExtra || undefined,
         grupoNivel: nivel,
         categorias_dlc: categoriasDlc,
+        dlcMode: activeTab === 'dlc_factory' ? dlcMode : undefined,
       });
 
       const result = await generateAI({
@@ -491,6 +522,22 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                     min="1" max="20"
                     className="ai-input"
                   />
+                </div>
+              )}
+
+              {/* Modos DLC Factory */}
+              {activeTab === 'dlc_factory' && (
+                <div>
+                  <label className="ai-field-label">Modo de Escala</label>
+                  <select
+                    value={dlcMode}
+                    onChange={e => setDlcMode(e.target.value as any)}
+                    className="ai-input"
+                  >
+                    <option value="basico">Básico (Rápido, Nomes e Status Simples)</option>
+                    <option value="modular">Modular (Padrão, Elementos Completos Individuais)</option>
+                    <option value="expandido">Expandido (Lore Profunda, Tramas Interligadas, Mais Demorado)</option>
+                  </select>
                 </div>
               )}
 

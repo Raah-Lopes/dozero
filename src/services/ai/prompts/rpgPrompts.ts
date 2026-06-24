@@ -25,6 +25,7 @@ export interface RPGPromptParams {
   textoExtra?: string;    // Texto para auditar/resumir (sessão, DLC)
   grupoNivel?: number;    // Nível médio do grupo (para encontros)
   categorias_dlc?: string[]; // Categorias a gerar na Fábrica de DLCs
+  dlcMode?: 'basico' | 'expandido' | 'modular'; // Modo de geração da DLC Factory
   tipoEspecifico?: string; // ex: "Elfo Arqueiro", "Cidade Costeira", "Espada Lendária"
 }
 
@@ -660,7 +661,19 @@ ${ctx}
 4. Balanceamento: avalie se está justo para o nível indicado
 5. Gere uma versão revisada e expandida do conteúdo em YAML/Markdown`;
 
-    case 'dlc_factory':
+    case 'dlc_factory': {
+      const isBasico = params.dlcMode === 'basico';
+      const isExpandido = params.dlcMode === 'expandido';
+      
+      let scaleInstruction = '';
+      if (isBasico) {
+        scaleInstruction = '- MODO BÁSICO: Crie os elementos de forma muito resumida. Apenas nomes, status fundamentais e uma linha de descrição. Não crie lore profunda.';
+      } else if (isExpandido) {
+        scaleInstruction = '- MODO EXPANDIDO: Crie lore extremamente profunda, interligações de tramas (personagens se conhecem, loots pertencem a locais específicos), facções e segredos ocultos.';
+      } else {
+        scaleInstruction = '- MODO MODULAR: Crie elementos completos, mas mantendo-os independentes e fáceis de plugar em qualquer campanha.';
+      }
+
       return `Crie os elementos para uma nova DLC / Expansão para a campanha atual.
       
 **Tema / Cenário / Ideia Principal da DLC:** 
@@ -673,8 +686,25 @@ ${params.categorias_dlc?.length ? params.categorias_dlc.join(', ') : 'Nenhuma (C
 - Dê nomes criativos e temáticos aos arquivos gerados (ex: "Criaturas/Besta das Areias.md").
 - Use o seu vasto conhecimento de mecânicas de RPG para criar tabelas de loot inovadoras, NPCs interativos, mistérios e missões prontas para jogar.
 - O formato de cada arquivo gerado deve seguir o padrão do DOZERO VTT (Frontmatter com YAML detalhado no início e Markdown para a lore/descrição abaixo).
+${scaleInstruction}
+
+**IMPORTANTE (MANIFESTO):**
+Você DEVE gerar o primeiro bloco de arquivo como "_Manifesto.md". 
+O conteúdo dele DEVE conter o Frontmatter YAML com a seguinte estrutura:
+---
+type: dlc_manifest
+id: "nome_unico_dlc_sem_espacos"
+name: "Nome Bonito da DLC"
+category: "cenario"
+description: "Descrição curta"
+version: "1.0"
+author: "Gerado por IA"
+tags: ["Tag1", "Tag2"]
+---
+E logo depois o corpo da mensagem com uma descrição detalhada da Expansão.
 
 ${ctx}`;
+    }
 
     // ─── Chat Livre ─────────────────────────────────────────────────────────
     case 'chat':
