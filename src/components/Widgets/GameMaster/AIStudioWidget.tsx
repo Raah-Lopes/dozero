@@ -73,6 +73,7 @@ const TIPO_OPTIONS: Record<RPGContentType, string[]> = {
   quest: ['Exploração', 'Resgate', 'Assassinato/Caça', 'Investigação', 'Proteção/Escolta', 'Roubo/Infiltração', 'Diplomacia'],
   encontro: ['Bandidos na Estrada', 'Monstros na Masmorra', 'Emboscada Urbana', 'Defesa de Ponto', 'Caçada'],
   dlc_expand: ['Expandir', 'Auditar Balanceamento', 'Corrigir Inconsistências'],
+  dlc_factory: ['Fantasia Medieval', 'Horror Gótico', 'Steampunk', 'Pós-Apocalíptico', 'Ficção Científica', 'Cangaço Místico'],
   chat: ['Pergunta sobre Regras', 'Ideia de Campanha', 'Improvisar NPC', 'Sugestão de Plot'],
 };
 
@@ -207,7 +208,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
         throw new Error(`O modelo ${selectedModel.label} requer uma API Key. Configure em ⚙️ Configurações.`);
       }
 
-      const system = buildSystemPrompt(activeTab);
+      const system = buildSystemPrompt(activeTab, activeDLCs);
       const user = buildUserPrompt({
         type: activeTab,
         nome: nome || undefined,
@@ -254,7 +255,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
         provider,
         model: modelId,
         apiKey: apiKey || undefined,
-        systemPrompt: buildSystemPrompt('chat') + '\n\nContexto da campanha:\n' + (buildWikiContext() || 'Sem contexto disponível.'),
+        systemPrompt: buildSystemPrompt('chat', activeDLCs) + '\n\nContexto da campanha:\n' + (buildWikiContext() || 'Sem contexto disponível.'),
         userPrompt: userMsg,
         temperature,
         ollamaUrl: provider === 'ollama' ? ollamaUrl : undefined,

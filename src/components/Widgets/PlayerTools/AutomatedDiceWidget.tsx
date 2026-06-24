@@ -1,7 +1,7 @@
 // src/components/HUD/AutomatedDiceWidget.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { pushChatMessage } from '../../../store';
+import { pushChatMessage, state } from '../../../store';
 import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
 import { usePersonagens, FichaPersonagem } from '../../../hooks/usePersonagens';
 import * as yaml from 'js-yaml';
@@ -43,6 +43,19 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
   const [danoAvulsoInput, setDanoAvulsoInput] = useState<string>('1d6');
   const [bonusTestInput, setBonusTestInput] = useState<string>('0');
   const [sistemaMode, setSistemaMode] = useState<'d20' | 'd100'>('d20');
+  
+  // Modificadores Táticos (DLC)
+  const [activeDLCs, setActiveDLCs] = useState<string[]>([]);
+  const [flanqueando, setFlanqueando] = useState(false);
+  const [cobertura, setCobertura] = useState(false);
+  const [terrenoDificil, setTerrenoDificil] = useState(false);
+
+  useEffect(() => {
+    const observer = () => setActiveDLCs(state.dlcs.get('active') as string[] || []);
+    state.dlcs.observe(observer);
+    observer();
+    return () => state.dlcs.unobserve(observer);
+  }, []);
 
   const adicionarLog = (msg: string, pushGlobal = true) => {
     setResultados((prev) => [...prev.slice(-49), msg]);
@@ -290,7 +303,11 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     
     if (isD20) {
       roll = Math.floor(Math.random() * 20) + 1;
-      const mod = getMod(atacante.forca);
+      let mod = getMod(atacante.forca);
+
+      if (flanqueando) mod += 2;
+      if (cobertura) mod -= 2;
+
       toHit = roll + mod;
       res = calcularSucessoHibrido(roll, target, mod, true);
     } else {
@@ -300,12 +317,20 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     }
 
     const dmgVal = Math.floor(Math.random() * 3) + 1;
-    let totalDmg = Math.max(1, dmgVal + getMod(atacante.forca));
+    let baseDmgMod = getMod(atacante.forca);
+    if (flanqueando) baseDmgMod += 2;
+    if (terrenoDificil) baseDmgMod -= 2;
+
+    let totalDmg = Math.max(1, dmgVal + baseDmgMod);
     if (res.grau === 'sucesso_critico') totalDmg *= 2;
 
     let logStr = isD20
-      ? `⚔️ **Ataque Desarmado** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(getMod(atacante.forca))} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
+      ? `⚔️ **Ataque Desarmado** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(toHit - roll)} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
       : `⚔️ **Ataque Desarmado (d100)** de **${atacante.nome}**: Rolou **${roll}** vs chance **${atacante.forca * 5}%** (FOR). [**${res.label}**]`;
+
+    if (flanqueando) logStr += ` *(Flanqueando +2)*`;
+    if (cobertura) logStr += ` *(Cobertura -2)*`;
+    if (terrenoDificil) logStr += ` *(Terreno Difícil)*`;
 
     if (res.grau === 'sucesso' || res.grau === 'sucesso_critico') {
       logStr += ` ✅ Causa **${totalDmg}** de dano contundente.`;
@@ -327,7 +352,11 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     
     if (isD20) {
       roll = Math.floor(Math.random() * 20) + 1;
-      const mod = getMod(atacante.destreza);
+      let mod = getMod(atacante.destreza);
+      
+      if (flanqueando) mod += 2;
+      if (cobertura) mod -= 2;
+
       toHit = roll + mod;
       res = calcularSucessoHibrido(roll, target, mod, true);
     } else {
@@ -337,12 +366,20 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     }
 
     const dmgVal = Math.floor(Math.random() * 4) + 1;
-    let totalDmg = Math.max(1, dmgVal + getMod(atacante.destreza));
+    let baseDmgMod = getMod(atacante.destreza);
+    if (flanqueando) baseDmgMod += 2;
+    if (terrenoDificil) baseDmgMod -= 2;
+
+    let totalDmg = Math.max(1, dmgVal + baseDmgMod);
     if (res.grau === 'sucesso_critico') totalDmg *= 2;
 
     let logStr = isD20
-      ? `🎯 **Pedra à Distância** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(getMod(atacante.destreza))} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
+      ? `🎯 **Pedra à Distância** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(toHit - roll)} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
       : `🎯 **Pedra à Distância (d100)** de **${atacante.nome}**: Rolou **${roll}** vs chance **${atacante.destreza * 5}%** (DES). [**${res.label}**]`;
+
+    if (flanqueando) logStr += ` *(Flanqueando +2)*`;
+    if (cobertura) logStr += ` *(Cobertura -2)*`;
+    if (terrenoDificil) logStr += ` *(Terreno Difícil)*`;
 
     if (res.grau === 'sucesso' || res.grau === 'sucesso_critico') {
       logStr += ` ✅ Causa **${totalDmg}** de dano por esmagamento.`;
@@ -419,7 +456,12 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     
     if (isD20) {
       roll = Math.floor(Math.random() * 20) + 1;
-      const mod = getMod(atacante.forca) + bonus;
+      let mod = getMod(atacante.forca) + bonus;
+      
+      // Aplicar Modificadores Táticos (Acerto)
+      if (flanqueando) mod += 2;
+      if (cobertura) mod -= 2;
+
       toHit = roll + mod;
       res = calcularSucessoHibrido(roll, target, mod, true);
     } else {
@@ -429,12 +471,23 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     }
 
     const weaponDmg = Math.floor(Math.random() * 8) + 1;
-    let totalDmg = Math.max(1, weaponDmg + getMod(atacante.forca));
+    let baseDmgMod = getMod(atacante.forca);
+    
+    // Aplicar Modificadores Táticos (Dano)
+    if (flanqueando) baseDmgMod += 2;
+    if (terrenoDificil) baseDmgMod -= 2;
+
+    let totalDmg = Math.max(1, weaponDmg + baseDmgMod);
     if (res.grau === 'sucesso_critico') totalDmg *= 2;
 
     let logStr = isD20
-      ? `⚔️ **Ataque com ${item.nome}** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(getMod(atacante.forca))}+${bonus} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
+      ? `⚔️ **Ataque com ${item.nome}** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(toHit - roll)} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
       : `⚔️ **Ataque com ${item.nome} (d100)** de **${atacante.nome}**: Rolou **${roll}** vs chance **${(atacante.forca + bonus) * 5}%**. [**${res.label}**]`;
+
+    // Informar extras no log se tático estiver on
+    if (flanqueando) logStr += ` *(Flanqueando +2)*`;
+    if (cobertura) logStr += ` *(Cobertura -2)*`;
+    if (terrenoDificil) logStr += ` *(Terreno Difícil)*`;
 
     if (res.grau === 'sucesso' || res.grau === 'sucesso_critico') {
       logStr += ` ✅ Causa **${totalDmg}** de dano.`;
@@ -1361,6 +1414,29 @@ ${vencedor}`, true);
                 {/* LEFT COLUMN: ATTACKER CONTROLS */}
                 <div style={{ flex: 1.1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   
+                  {/* MODIFICADORES TÁTICOS (DLC) */}
+                  {activeDLCs.includes('dlc_advanced_combat') && (
+                    <div style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', padding: '12px', borderRadius: '8px' }}>
+                      <h5 style={{ margin: '0 0 8px', color: '#fcd34d', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Swords size={12} /> Modificadores Táticos
+                      </h5>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <label style={{ fontSize: '0.7rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
+                          <input type="checkbox" checked={flanqueando} onChange={e => setFlanqueando(e.target.checked)} style={{ accentColor: '#f59e0b' }} />
+                          Flanqueando (+2 Dano/Acerto)
+                        </label>
+                        <label style={{ fontSize: '0.7rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
+                          <input type="checkbox" checked={cobertura} onChange={e => setCobertura(e.target.checked)} style={{ accentColor: '#f59e0b' }} />
+                          Alvo com Cobertura Parcial (-2 Acerto)
+                        </label>
+                        <label style={{ fontSize: '0.7rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
+                          <input type="checkbox" checked={terrenoDificil} onChange={e => setTerrenoDificil(e.target.checked)} style={{ accentColor: '#f59e0b' }} />
+                          Terreno Difícil (Dano -2)
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
                   {/* ATRIBUTOS 4DET */}
                   <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
                     <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Atributos (4DET)</h5>

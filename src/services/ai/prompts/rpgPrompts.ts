@@ -429,7 +429,7 @@ INPUT[list:objetivos]
 \`INPUT[textArea:npcs]\`
 `;
 
-export function buildSystemPrompt(type: RPGContentType): string {
+export function buildSystemPrompt(type: RPGContentType, activeDLCs?: string[]): string {
   let template = '';
   if (type === 'pc') template = YAML_PC_TEMPLATE;
   else if (type === 'npc' || type === 'monstro') template = YAML_NPC_TEMPLATE;
@@ -461,7 +461,21 @@ Peixeira Amaldiçoada.md
 (conteúdo)
 `;
 
-  return `${BASE_SYSTEM}
+  let dlcModifiers = '';
+  if (activeDLCs && activeDLCs.length > 0) {
+    dlcModifiers = '\n\n=== COMPLEMENTOS DE CENÁRIO ATIVOS ===\n';
+    if (activeDLCs.includes('dlc_cyberpunk')) {
+      dlcModifiers += '> [CYBERPUNK]: O cenário atual está com modificador futurista. Substitua armas de fogo por lasers, espadas por katanas térmicas, magias por hacks/implantes cibernéticos, e insira corporações gananciosas na lore.\n';
+    }
+    if (activeDLCs.includes('dlc_horror')) {
+      dlcModifiers += '> [HORROR GÓTICO/CÓSMICO]: Atmosfera pesada de pavor. Insira lógicas de sanidade, horrores ancestrais, nevoeiros misteriosos, loucura progressiva e descrições perturbadoras.\n';
+    }
+    if (activeDLCs.includes('dlc_pirates')) {
+      dlcModifiers += '> [PIRATAS E MARES]: Tema náutico profundo. Navios, bucaneiros, maldições dos mares, ilhas de tesouro e combate em alto mar.\n';
+    }
+  }
+
+  return `${BASE_SYSTEM}${dlcModifiers}
 
 ${template}
 
