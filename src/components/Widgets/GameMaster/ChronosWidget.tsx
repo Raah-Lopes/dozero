@@ -95,6 +95,27 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
             <button onClick={handleCamp} style={{ padding: '0.6rem', flex: 1, background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.4)', borderRadius: '4px', color: '#22c55e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
               <Tent size={16} /> Acampamento (Restaurar)
             </button>
+
+            {/* DLC: Downtime */}
+            {((state.dlcs.get('active') as string[]) || []).includes('dlc_downtime') && (
+              <button 
+                onClick={() => {
+                  const events = [
+                    'Trabalhou na Taverna: Ganhou 50 de Ouro.',
+                    'Entrou numa briga de rua: Perdeu 20 de Ouro e tomou 5 de Dano.',
+                    'Estudou nos arquivos: Ganhou 100 XP.',
+                    'Fez amizade com os guardas locais: Pode acessar a cidade à noite.',
+                    'Ficou bêbado e perdeu a bolsa: Perdeu 1d100 de Ouro.',
+                    'Ajudou um mercador: Ganhou 1 Poção de Cura.',
+                  ];
+                  const rnd = Math.floor(Math.random() * events.length);
+                  pushChatMessage(`☕ **[TEMPOS DE CALMA]** Evento de Folga da Party: ${events[rnd]}`, true, false);
+                }}
+                style={{ padding: '0.6rem', flex: 1, background: 'rgba(236, 72, 153, 0.2)', border: '1px solid rgba(236, 72, 153, 0.4)', borderRadius: '4px', color: '#f472b6', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 'bold', marginTop: '4px' }}
+              >
+                <Coffee size={16} /> Atividade de Downtime
+              </button>
+            )}
           </div>
         )}
         

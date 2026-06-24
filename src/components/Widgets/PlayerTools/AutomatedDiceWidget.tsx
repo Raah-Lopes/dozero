@@ -91,12 +91,18 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
 
   const aplicarDanoDireto = async (alvo: FichaPersonagem, dano: number) => {
     const updated = { ...alvo };
+    const died = updated.pv > 0 && updated.pv - dano <= 0;
     updated.pv = Math.max(0, updated.pv - dano);
     if (updated.pv === 0) {
       if (!updated.status_efeitos.includes('Morto')) {
         updated.status_efeitos = [...updated.status_efeitos, 'Morto'];
       }
     }
+
+    if (died && activeDLCs.includes('dlc_journal')) {
+      adicionarLog(`📓 **[DIÁRIO DO AVENTUREIRO]**: O evento foi marcado na história — **${alvo.nome}** sucumbiu no campo de batalha.`, true);
+    }
+
     await salvarFicha(updated);
     if (defensor && defensor.caminhoArquivo === updated.caminhoArquivo) {
       setDefensor(updated);
@@ -491,6 +497,9 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
 
     if (res.grau === 'sucesso' || res.grau === 'sucesso_critico') {
       logStr += ` ✅ Causa **${totalDmg}** de dano.`;
+      if (res.grau === 'sucesso_critico' && activeDLCs.includes('dlc_journal')) {
+        adicionarLog(`📓 **[DIÁRIO DO AVENTUREIRO]**: Evento espetacular! **${atacante.nome}** acertou um golpe crítico impressionante com ${item.nome}!`, true);
+      }
       if (defensor) aplicarDanoDireto(defensor, totalDmg);
     } else {
       logStr += ` 🛡️ Errou!`;
@@ -1802,12 +1811,59 @@ ${vencedor}`, true);
                           </div>
                         )}
 
-                        {(!atacante.armas || atacante.armas.length === 0) &&
+                         {(!atacante.armas || atacante.armas.length === 0) &&
                          (!atacante.pocoes || atacante.pocoes.length === 0) &&
                          (!atacante.maldicoes || atacante.maldicoes.length === 0) &&
                          (!atacante.objetos_campanha || atacante.objetos_campanha.length === 0) &&
                          (!atacante.inventario || atacante.inventario.length === 0) && (
                           <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Mochila vazia.</div>
+                        )}
+
+                        {/* DLC: CRAFTING E ALQUIMIA */}
+                        {activeDLCs.includes('dlc_crafting') && (
+                          <div style={{ marginTop: '8px', padding: '8px', borderRadius: '6px', background: 'rgba(168, 85, 247, 0.1)', border: '1px dashed rgba(168, 85, 247, 0.3)' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#c084fc', fontWeight: 'bold', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              🧪 Bancada de Alquimia (DLC)
+                            </div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button
+                                onClick={async () => {
+                                  if (atacante.ouro >= 20 && atacante.mana >= 2) {
+                                    const updated = { ...atacante, ouro: atacante.ouro - 20, mana: atacante.mana - 2 };
+                                    if (!updated.pocoes) updated.pocoes = [];
+                                    updated.pocoes.push({ nome: 'Poção Menor', cura: '1d4+1' });
+                                    await salvarFicha(updated);
+                                    setAtacante(updated);
+                                    adicionarLog(`🧪 **[FORJA & ALQUIMIA]** **${atacante.nome}** transmutou Ouro e Mana em uma Poção Menor!`, true);
+                                  } else {
+                                    alert('Faltam recursos! Necessário: 20 Ouro e 2 PM.');
+                                  }
+                                }}
+                                style={{ flex: 1, padding: '4px', background: 'rgba(239, 68, 68, 0.2)', border: 'none', borderRadius: '4px', color: '#fca5a5', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold' }}
+                                title="Custo: 20 Ouro, 2 PM"
+                              >
+                                + Poção de Vida
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (atacante.ouro >= 30 && atacante.mana >= 3) {
+                                    const updated = { ...atacante, ouro: atacante.ouro - 30, mana: atacante.mana - 3 };
+                                    if (!updated.inventario) updated.inventario = [];
+                                    updated.inventario.push({ nome: 'Veneno Paralisante', tipo: 'consumivel', efeito: 'Paralisa alvo por 1 turno se falhar em CON', equipado: false, quantidade: 1 });
+                                    await salvarFicha(updated);
+                                    setAtacante(updated);
+                                    adicionarLog(`🧪 **[FORJA & ALQUIMIA]** **${atacante.nome}** destilou um Veneno Paralisante!`, true);
+                                  } else {
+                                    alert('Faltam recursos! Necessário: 30 Ouro e 3 PM.');
+                                  }
+                                }}
+                                style={{ flex: 1, padding: '4px', background: 'rgba(34, 197, 94, 0.2)', border: 'none', borderRadius: '4px', color: '#86efac', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold' }}
+                                title="Custo: 30 Ouro, 3 PM"
+                              >
+                                + Veneno
+                              </button>
+                            </div>
+                          </div>
                         )}
 
                       </div>
