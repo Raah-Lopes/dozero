@@ -112,7 +112,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
   const [activeDLCs, setActiveDLCs]  = useState<string[]>([]);
 
   useEffect(() => {
-    const observer = () => setActiveDLCs(state.dlcs.get('active') as string[] || []);
+    const observer = () => setActiveDLCs([...(state.dlcs.get('active') as string[] || [])]);
     state.dlcs.observe(observer);
     observer();
     return () => state.dlcs.unobserve(observer);

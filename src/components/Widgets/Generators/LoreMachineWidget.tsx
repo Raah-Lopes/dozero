@@ -13,7 +13,7 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
 
   useEffect(() => {
     const observer = async () => {
-      const active = state.dlcs.get('active') as string[] || [];
+      const active = [...(state.dlcs.get('active') as string[] || [])];
       setActiveMods(active);
       
       let allTemplates: string[] = [];
