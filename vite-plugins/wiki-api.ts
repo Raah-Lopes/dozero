@@ -104,35 +104,40 @@ export function wikiLocalApi(): Plugin {
         }
 
         // --- POLLINATIONS PROXY ---
-        if (req.method === 'POST' && pathname === '/api/pollinations/openai') {
-          const targetUrl = 'https://text.pollinations.ai/openai';
-          const parsedUrl = new URL(targetUrl);
-          const reqProxy = https.request(parsedUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-            }
-          }, (resProxy) => {
-            let responseData = '';
-            resProxy.on('data', chunk => responseData += chunk);
-            resProxy.on('end', () => {
-              res.writeHead(resProxy.statusCode || 200, {
-                'Content-Type': resProxy.headers['content-type'] || 'application/json',
-                'Access-Control-Allow-Origin': '*'
-              });
-              res.end(responseData);
+        if (pathname === '/api/pollinations/openai') {
+          if (req.method === 'OPTIONS') {
+            res.writeHead(204, {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'OPTIONS, POST',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization'
             });
-          });
-
-          reqProxy.on('error', (e) => {
+            res.end();
+            return;
+          }
+          if (req.method === 'POST') {
+          try {
+            const targetUrl = 'https://text.pollinations.ai/openai';
+            const fetchRes = await fetch(targetUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+              },
+              body: JSON.stringify(body)
+            });
+            
+            const responseData = await fetchRes.text();
+            res.writeHead(fetchRes.status, {
+              'Content-Type': fetchRes.headers.get('content-type') || 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.end(responseData);
+          } catch (e) {
             console.error('Pollinations Proxy Error:', e);
             sendResponse(500, { error: 'Failed to proxy request to Pollinations' });
-          });
-
-          reqProxy.write(JSON.stringify(body));
-          reqProxy.end();
+          }
           return;
+        }
         }
 
         // Require repoPath for all /api/wiki routes
