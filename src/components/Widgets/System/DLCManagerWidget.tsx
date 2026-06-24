@@ -156,8 +156,8 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
       initialX={window.innerWidth / 2 - 280}
       initialY={80}
       onClose={onClose}
-      width={560}
-      height={520}
+      width={600}
+      height={650}
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
 
@@ -212,7 +212,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         </div>
 
         {/* Addon Grid */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', alignContent: 'start' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filtered.map(addon => {
             const isActive = activeDLCs.includes(addon.id);
             const IconComp = addon.icon;
@@ -292,17 +292,14 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 </div>
 
                 {/* Toggle */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: isActive ? '#6ee7b7' : '#475569' }}>
                     {isActive ? '● Ativo' : '○ Inativo'}
                   </span>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={isActive}
-                      onChange={() => toggleDLC(addon.id)}
-                      style={{ display: 'none' }}
-                    />
+                  <div 
+                    onClick={() => toggleDLC(addon.id)}
+                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                  >
                     <div style={{
                       width: '36px', height: '20px',
                       background: isActive ? '#10b981' : 'rgba(255,255,255,0.08)',
@@ -316,7 +313,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                         boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
                       }} />
                     </div>
-                  </label>
+                  </div>
                 </div>
 
                 {/* Active injection indicator */}
