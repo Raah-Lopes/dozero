@@ -131,7 +131,7 @@ async function callPollinations(opts: AIGenerateOptions): Promise<string> {
     ],
     temperature: opts.temperature ?? 0.8,
   };
-  const res = await fetch('https://text.pollinations.ai/openai', {
+  const res = await fetch('/api/pollinations/openai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
