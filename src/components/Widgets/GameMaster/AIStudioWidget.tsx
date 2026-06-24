@@ -427,9 +427,16 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
               {/* Tipo específico */}
               <div>
                 <label className="ai-field-label">Tipo / Arquétipo</label>
-                <select value={tipoEsp} onChange={e => setTipoEsp(e.target.value)} className="ai-input" style={{ cursor: 'pointer' }}>
-                  {TIPO_OPTIONS[activeTab]?.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <input 
+                  list="tipo-options"
+                  value={tipoEsp} 
+                  onChange={e => setTipoEsp(e.target.value)} 
+                  className="ai-input" 
+                  placeholder="Ex: Meio-Orc Bárbaro"
+                />
+                <datalist id="tipo-options">
+                  {TIPO_OPTIONS[activeTab]?.map(t => <option key={t} value={t} />)}
+                </datalist>
               </div>
 
               {/* Nome */}

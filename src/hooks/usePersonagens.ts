@@ -94,13 +94,23 @@ export function isFieldConfigured(val: any): boolean {
 }
 
 function mapearEntidade(e: any): FichaPersonagem {
-  const tipo = e.metadata?.tipo;
-  const metaStatus = String(e.metadata?.status || '').toLowerCase();
+  const tipo = String(e.metadata?.tipo || '').toLowerCase().trim();
+  const metaStatus = String(e.metadata?.status || '').toLowerCase().trim();
+  const tags = Array.isArray(e.metadata?.tags) ? e.metadata.tags.map((t: string) => String(t).toLowerCase().trim()) : [];
 
   let status: 'jogador' | 'npc' | 'inimigo' = 'npc';
-  if (['pc', 'personagem', 'jogador'].includes(String(tipo || '').toLowerCase()) || metaStatus === 'jogador') {
+  
+  if (
+    ['pc', 'personagem', 'jogador'].includes(tipo) || 
+    ['jogador', 'pc'].includes(metaStatus) ||
+    tags.includes('personagem') || tags.includes('pc') || tags.includes('jogador')
+  ) {
     status = 'jogador';
-  } else if (['monstro', 'inimigo', 'hostil'].includes(String(tipo || '').toLowerCase()) || metaStatus === 'inimigo' || metaStatus === 'hostil') {
+  } else if (
+    ['monstro', 'inimigo', 'hostil', 'criatura'].includes(tipo) || 
+    ['inimigo', 'hostil'].includes(metaStatus) ||
+    tags.includes('monstro') || tags.includes('inimigo')
+  ) {
     status = 'inimigo';
   }
 
@@ -180,17 +190,21 @@ function mapearEntidade(e: any): FichaPersonagem {
 }
 
 function isFichaEntry(e: any): boolean {
-  const tipo = String(e.metadata?.tipo || '').toLowerCase();
-  const status = String(e.metadata?.status || '').toLowerCase();
+  const tipo = String(e.metadata?.tipo || '').toLowerCase().trim();
+  const status = String(e.metadata?.status || '').toLowerCase().trim();
   const path = e.path.toLowerCase();
+  const tags = Array.isArray(e.metadata?.tags) ? e.metadata.tags.map((t: string) => String(t).toLowerCase().trim()) : [];
 
   if (path.includes('_modelo')) return false;
 
   return (
-    ['pc', 'npc', 'monstro', 'personagem', 'jogador', 'inimigo'].includes(tipo) ||
-    ['jogador', 'npc', 'inimigo'].includes(status) ||
+    ['pc', 'npc', 'monstro', 'personagem', 'jogador', 'inimigo', 'criatura'].includes(tipo) ||
+    ['jogador', 'npc', 'inimigo', 'hostil'].includes(status) ||
+    tags.includes('personagem') || tags.includes('npc') || tags.includes('monstro') || tags.includes('inimigo') || tags.includes('pc') ||
     path.includes('/fichas/') ||
-    path.includes('/personagens/')
+    path.includes('/personagens/') ||
+    path.includes('/npcs/') ||
+    path.includes('/bestiario/')
   );
 }
 

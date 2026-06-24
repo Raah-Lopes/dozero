@@ -213,47 +213,229 @@ if(!meta.inventario || meta.inventario.length === 0) {
 `;
 
 const YAML_NPC_TEMPLATE = `
-O frontmatter YAML para NPCs/Monstros segue este formato:
+O frontmatter YAML e o corpo Markdown da ficha de NPC/Monstro devem seguir EXATAMENTE este template, preenchendo os valores:
+
 ---
+inventario: []
 tipo: NPC
 status: vivo
-nome: "Nome do NPC"
+nome: "NOME DO NPC AQUI"
 nivel: 1
-HP: 20
-HP_max: 20
-PM: 0
-PM_max: 0
-XP_recompensa: 100
-Ouro_recompensa: 50
+XP: 100
+Ouro: 0
 imagem: ""
 tags:
   - npc
 ativo: true
-FOR: 12
+origem: ""
+Localizacao: ""
+HP: 20
+HP_max: 20
+PM: 10
+PM_max: 10
+Energia: 100
+Energia_max: 100
+Sanidade: 10
+Sanidade_max: 10
+Fome: 0
+Sede: 0
+FOR: 10
 DES: 10
-CON: 12
-INT: 8
+CON: 10
+INT: 10
 SAB: 10
-CAR: 8
-F: 2
+CAR: 10
+F: 1
 H: 1
-R: 2
+R: 1
 A: 1
-PdF: 0
-CA: 12
+PdF: 1
+CA: 10
 Deslocamento: "9m"
-armas:
-  - nome: "Espada Curta"
-    dano: "1d6"
-    tipo: "físico"
-poderes: []
-inventario: []
----`;
+Acrobacia: 0
+Furtividade: 0
+Intimidacao: 0
+Investigacao: 0
+Medicina: 0
+Percepcao: 0
+Sobrevivencia: 0
+status_efeitos: []
+imagens: []
+magias: []
+macros:
+  - nome: "Ataque Básico"
+    formula: "1d20+2"
+    tipo: "ataque"
+    descricao: "Ataque corpo-a-corpo"
+---
+
+\`\`\`dataviewjs
+const file = app.workspace.getActiveFile();
+const meta = app.metadataCache.getFileCache(file)?.frontmatter || {};
+const resolveImg = (img) => {
+    if(!img) return "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
+    let linkStr = "";
+    if (typeof img === "string") linkStr = String(img);
+    else if (img.path) linkStr = String(img.path);
+    else if (Array.isArray(img) && img.length > 0) linkStr = img[0].path ? String(img[0].path) : String(img[0]);
+    else return "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
+    if(linkStr.startsWith("http")) return linkStr;
+    let linkText = linkStr.replace(/[\\[\\]!]/g, "").split("|")[0].trim();
+    let target = app.metadataCache.getFirstLinkpathDest(linkText, "");
+    return target ? app.vault.getResourcePath(target) : "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
+};
+const div = this.container.createDiv({ attr: { style: "display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;" }});
+div.createEl("img", { attr: { src: resolveImg(meta.imagem), style: "width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--text-success); box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 10px;" }});
+div.createEl("h1", { text: \`👤 \${meta.nome || file.basename}\`, attr: { style: "margin: 0; font-size: 2.2em; font-weight: bold;" }});
+\`\`\`
+
+<div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: start;">
+<div style="flex: 1; min-width: 300px;">
+
+> [!quote]- Interpretação e Lore
+> **Nome Completo:** \`INPUT[text:nome_completo]\` | **Imagem:** \`INPUT[text:imagem]\`
+> **Resumo:** 
+> \`INPUT[textArea:resumo]\`
+> 
+> **Facção / Ocupação:** \`INPUT[text:faccao]\`
+> **Raça / Espécie:** \`INPUT[text:raca]\`
+> **Origem / Nacionalidade:** \`INPUT[text:origem]\`
+> **Alinhamento:** \`INPUT[text:alinhamento]\`
+> **Nível:** \`INPUT[number:nivel]\`
+> 
+> **🧠 PERSONALIDADE & TÁTICAS**
+> - **Comportamento:** \`INPUT[textArea:tracos_dominantes]\`
+> - **Táticas de Combate:** \`INPUT[textArea:taticas]\`
+> - **Motivações:** \`INPUT[textArea:motivacoes]\`
+
+> [!warning]- ✨ PODERES, VANTAGENS & MAGIAS
+> ## Vantagens e Desvantagens
+> \`INPUT[textArea:vantagens]\`
+> 
+> ## Magias Conhecidas
+> \`INPUT[textArea:magias]\`
+
+> [!success] 🌟 RECOMPENSAS
+> **XP Recompensa:** \`INPUT[number:XP]\`
+> **Ouro Recompensa:** \`INPUT[number:Ouro]\`
+
+</div>
+
+<div style="flex: 1; min-width: 300px;">
+
+> [!danger] ⚔️ COMBATE E STATUS
+> **Ativo no Combate:** \`INPUT[toggle:ativo]\` | **Localização:** \`INPUT[text:Localizacao]\`
+> 
+> **Barras de Vida e Magia**
+> **HP:** \`INPUT[number:HP]\` / \`VIEW[{HP_max}]\` | **PM:** \`INPUT[number:PM]\` / \`VIEW[{PM_max}]\`
+> 
+> **Atributos Principais (D&D)**
+> **FOR:** \`INPUT[number:FOR]\` | **DES:** \`INPUT[number:DES]\` | **CON:** \`INPUT[number:CON]\` 
+> **INT:** \`INPUT[number:INT]\` | **SAB:** \`INPUT[number:SAB]\` | **CAR:** \`INPUT[number:CAR]\`
+> 
+> **Atributos Clássicos (4DeT)**
+> **F:** \`INPUT[number:F]\` | **H:** \`INPUT[number:H]\` | **R:** \`INPUT[number:R]\` | **A:** \`INPUT[number:A]\` | **PdF:** \`INPUT[number:PdF]\`
+> 
+> **Defesa e Movimento**
+> **CA:** \`INPUT[number:CA]\` | **Deslocamento:** \`INPUT[text:Deslocamento]\`
+> 
+> **Condições:**
+> \`\`\`meta-bind
+> INPUT[list:status_efeitos]
+> \`\`\`
+
+</div>
+</div>
+
+---
+### ⚙️ INVENTÁRIO / LOOT
+\`\`\`dataviewjs
+const meta = app.metadataCache.getFileCache(app.workspace.getActiveFile())?.frontmatter || {};
+if(!meta.inventario || meta.inventario.length === 0) {
+    dv.paragraph("Loot vazio.");
+} else {
+    dv.table(["Item", "Descrição"], meta.inventario.map(i => [i.nome, i.desc]));
+}
+\`\`\`
+`;
+
+const YAML_LOCAL_TEMPLATE = `
+O frontmatter YAML e o corpo Markdown do Local devem seguir EXATAMENTE este template, preenchendo os valores:
+
+---
+tipo: Local
+nome: "Nome do Local"
+tags:
+  - local
+imagem: ""
+clima: ""
+nivel_perigo: 1
+---
+
+# \`INPUT[text:nome]\`
+
+> [!info] Visão Geral
+> **Clima / Ambiente:** \`INPUT[text:clima]\`
+> **Nível de Perigo:** \`INPUT[number:nivel_perigo]\`
+> **Imagem:** \`INPUT[text:imagem]\`
+
+## Descrição
+\`INPUT[textArea:descricao]\`
+
+## Pontos de Interesse
+\`INPUT[textArea:pontos_interesse]\`
+
+## Encontros Possíveis
+\`INPUT[textArea:encontros]\`
+`;
+
+const YAML_QUEST_TEMPLATE = `
+O frontmatter YAML e o corpo Markdown da Quest/Missão devem seguir EXATAMENTE este template, preenchendo os valores:
+
+---
+tipo: Quest
+nome: "Nome da Missão"
+status: "Não Iniciada"
+tags:
+  - quest
+recompensa_ouro: 0
+recompensa_xp: 0
+nivel_minimo: 1
+---
+
+# 📜 Missão: \`INPUT[text:nome]\`
+
+> [!quote] Status da Missão
+> **Status:** \`INPUT[text:status]\`
+> **Nível Recomendado:** \`INPUT[number:nivel_minimo]\`
+> **Recompensa Ouro:** \`INPUT[number:recompensa_ouro]\` MO
+> **Recompensa XP:** \`INPUT[number:recompensa_xp]\` XP
+
+## Resumo e Gancho
+\`INPUT[textArea:resumo]\`
+
+## Objetivos
+\`\`\`meta-bind
+INPUT[list:objetivos]
+\`\`\`
+
+## Atos e Complicações
+\`INPUT[textArea:atos]\`
+
+## NPCs Relacionados
+\`INPUT[textArea:npcs]\`
+`;
 
 export function buildSystemPrompt(type: RPGContentType): string {
+  let template = '';
+  if (type === 'pc') template = YAML_PC_TEMPLATE;
+  else if (type === 'npc' || type === 'monstro') template = YAML_NPC_TEMPLATE;
+  else if (type === 'local') template = YAML_LOCAL_TEMPLATE;
+  else if (type === 'quest') template = YAML_QUEST_TEMPLATE;
+
   return `${BASE_SYSTEM}
 
-${type === 'pc' ? YAML_PC_TEMPLATE : type === 'npc' || type === 'monstro' ? YAML_NPC_TEMPLATE : ''}
+${template}
 
 Responda SOMENTE com o conteúdo solicitado, sem explicações adicionais antes ou depois.
 Para fichas: comece diretamente com --- (frontmatter YAML) seguido do corpo Markdown.
@@ -287,7 +469,7 @@ Distribua os atributos de forma coerente com o conceito do personagem.`;
 
     // ─── NPC ────────────────────────────────────────────────────────────────
     case 'npc':
-      return `Crie uma ficha de NPC (personagem não-jogador) completa para uso em cena.
+      return `Crie uma ficha de NPC (personagem não-jogador) completa para uso em cena. Siga rigorosamente o template YAML e as marcações de Markdown (meta-bind, callouts).
 
 **Dados fornecidos pelo Mestre:**
 - Nome: ${params.nome || 'Aleatório'}
@@ -306,7 +488,7 @@ ${ctx}
 
     // ─── Monstro ────────────────────────────────────────────────────────────
     case 'monstro':
-      return `Crie uma ficha de MONSTRO/CRIATURA para combate.
+      return `Crie uma ficha de MONSTRO/CRIATURA para combate. Siga rigorosamente o template YAML e as marcações de Markdown (meta-bind, callouts).
 
 **Dados:**
 - Nome: ${params.nome || 'Criatura Desconhecida'}
@@ -325,7 +507,7 @@ ${ctx}
 
     // ─── Local ──────────────────────────────────────────────────────────────
     case 'local':
-      return `Crie um LOCAL/CENÁRIO detalhado para uso em jogo.
+      return `Crie um LOCAL/CENÁRIO detalhado para uso em jogo. Siga rigorosamente o template YAML fornecido e o corpo em Markdown.
 
 **Dados:**
 - Nome: ${params.nome || 'Local Misterioso'}
@@ -336,11 +518,9 @@ ${ctx}
 **Inclua no formato Markdown:**
 1. Frontmatter YAML básico com campos: tipo (Local), nome, tags, imagem
 2. Descrição atmosférica (o que o grupo vê, ouve, cheira ao chegar)
-3. Mapa mental em texto (5-8 áreas/pontos de interesse)
-4. NPCs associados ao local (2-3 personagens com nomes)
-5. Segredos e rumores (3 boatos, 1 verdadeiro)
-6. Ganchos de aventura (3 hooks para quests)
-7. Fauna, flora ou ameaças ambientais únicas`;
+3. Pontos de interesse (5-8 áreas/pontos de interesse)
+4. Encontros possíveis
+5. Fauna, flora ou ameaças ambientais únicas`;
 
     // ─── Item Mágico ────────────────────────────────────────────────────────
     case 'item_magico':
@@ -399,7 +579,7 @@ ${ctx}
 
     // ─── Quest ──────────────────────────────────────────────────────────────
     case 'quest':
-      return `Crie uma QUEST/MISSÃO completa com estrutura de 3 atos.
+      return `Crie uma QUEST/MISSÃO completa com estrutura de 3 atos. Siga rigorosamente o template YAML fornecido e o corpo em Markdown.
 
 **Dados:**
 - Nome: ${params.nome || 'A Missão'}
@@ -410,13 +590,11 @@ ${ctx}
 
 **Estrutura obrigatória:**
 1. Frontmatter YAML (tipo: Quest, status, recompensa_ouro, recompensa_xp, nivel_minimo)
-2. **Ato 1 — O Gancho**: Como o grupo é chamado, o problema inicial
-3. **Ato 2 — A Complicação**: O obstáculo real, a reviravolta que muda tudo
-4. **Ato 3 — A Resolução**: Clímax, confronto final, escolhas morais
-5. NPCs envolvidos (3 com motivações conflitantes)
-6. Locais visitados (3 cenários distintos)
-7. Recompensas: XP, Ouro, Item especial, e recompensa narrativa
-8. Segredo: algo que o grupo pode descobrir que muda a perspectiva`;
+2. **Resumo e Gancho**: Como o grupo é chamado, o problema inicial
+3. **Objetivos**: Lista de passos ou metas (em bullet points simples)
+4. **Atos e Complicações**: O obstáculo real, a reviravolta que muda tudo, Clímax, confronto final, escolhas morais
+5. **NPCs Relacionados**: Pessoas envolvidas na missão e suas motivações
+6. Recompensas: XP, Ouro, Item especial, e recompensa narrativa`;
 
     // ─── Encontro ───────────────────────────────────────────────────────────
     case 'encontro':
