@@ -13,17 +13,11 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
 
   useEffect(() => {
     const observer = async () => {
-      const raw = state.dlcs.get('active');
-      let active: string[] = [];
-      if (raw) {
-        if (typeof (raw as any).toArray === 'function') active = (raw as any).toArray();
-        else if (Array.isArray(raw)) active = raw as string[];
-        else active = Array.from(raw as any) as string[];
-      }
-      setActiveMods(active);
+      const activeKeys = Array.from(state.dlcs.keys()).filter(k => state.dlcs.get(k) === true);
+      setActiveMods(activeKeys);
       
       let allTemplates: string[] = [];
-      if (active.includes('dlc_cyberpunk')) {
+      if (activeKeys.includes('dlc_cyberpunk')) {
         try {
           const content = await loadMarkdownFile('DLCs/Cyberpunk.json');
           if (content) {
