@@ -6,6 +6,9 @@ import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
 import { SettingsModal } from './components/Modals/SettingsModal';
 import { DiceOverlay } from './components/UI/DiceOverlay';
+import { PPROverlay } from './components/UI/PPROverlay';
+import { SoftTimer } from './components/UI/SoftTimer';
+import { ClimaxOverlay } from './components/UI/ClimaxOverlay';
 
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
@@ -425,7 +428,12 @@ function App() {
           <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '500' }}>Edição Ativa</span>
         </div>
       </div>
+
+      {/* UI Overlays */}
       <DiceOverlay />
+      <PPROverlay />
+      <SoftTimer />
+      <ClimaxOverlay />
       
       </div> {/* Fim da div da PÁGINA DA MESA */}
 

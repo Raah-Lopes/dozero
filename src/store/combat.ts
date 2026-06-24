@@ -15,6 +15,8 @@ export interface CombatParticipant {
   initiative: number;
   imageUrl?: string;
   conditions?: CombatCondition[];
+  minionHits?: number;
+  minionMaxHits?: number;
 }
 
 export function addCombatParticipant(tokenId: string, name: string, initiative: number, imageUrl?: string) {
@@ -121,6 +123,14 @@ export function nextCombatTurn() {
 
   turnIndex = (turnIndex + 1) % participants.length;
   state.combat.set('turnIndex', turnIndex);
+
+  // PPR: Dispatch turn-change event for overlay
+  const nextParticipant = participants[turnIndex];
+  if (nextParticipant && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('ppr-turn-change', {
+      detail: { name: nextParticipant.name, imageUrl: nextParticipant.imageUrl }
+    }));
+  }
 }
 
 export function clearCombat() {
