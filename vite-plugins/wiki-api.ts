@@ -76,7 +76,7 @@ export function wikiLocalApi(): Plugin {
     name: 'wiki-local-api',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (!req.url?.startsWith('/api/wiki') && !req.url?.startsWith('/api/yt') && !req.url?.startsWith('/api/pollinations')) return next();
+        if (!req.url?.startsWith('/api/wiki') && !req.url?.startsWith('/api/yt')) return next();
 
         const url = new URL(req.url, `http://${req.headers.host}`);
         const pathname = url.pathname;
@@ -103,42 +103,6 @@ export function wikiLocalApi(): Plugin {
           }
         }
 
-        // --- POLLINATIONS PROXY ---
-        if (pathname === '/api/pollinations/openai') {
-          if (req.method === 'OPTIONS') {
-            res.writeHead(204, {
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'OPTIONS, POST',
-              'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-            });
-            res.end();
-            return;
-          }
-          if (req.method === 'POST') {
-          try {
-            const targetUrl = 'https://text.pollinations.ai/openai';
-            const fetchRes = await fetch(targetUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-              },
-              body: JSON.stringify(body)
-            });
-            
-            const responseData = await fetchRes.text();
-            res.writeHead(fetchRes.status, {
-              'Content-Type': fetchRes.headers.get('content-type') || 'application/json',
-              'Access-Control-Allow-Origin': '*'
-            });
-            res.end(responseData);
-          } catch (e) {
-            console.error('Pollinations Proxy Error:', e);
-            sendResponse(500, { error: 'Failed to proxy request to Pollinations' });
-          }
-          return;
-        }
-        }
 
         // Require repoPath for all /api/wiki routes
         const repoPath = url.searchParams.get('repoPath') || body.repoPath;
