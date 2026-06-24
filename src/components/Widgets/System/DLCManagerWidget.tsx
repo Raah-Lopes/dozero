@@ -100,8 +100,14 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
 
   useEffect(() => {
     const observer = () => {
-      const currentDlcs = state.dlcs.get('active') as string[] || [];
-      setActiveDLCs(currentDlcs);
+      const raw = state.dlcs.get('active');
+      let currentDlcs: string[] = [];
+      if (raw) {
+        if (typeof (raw as any).toArray === 'function') currentDlcs = (raw as any).toArray();
+        else if (Array.isArray(raw)) currentDlcs = raw as string[];
+        else currentDlcs = Array.from(raw as any) as string[];
+      }
+      setActiveDLCs([...currentDlcs]);
     };
     state.dlcs.observe(observer);
     observer();
@@ -109,11 +115,22 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   }, []);
 
   const toggleDLC = (dlcId: string) => {
-    const current = state.dlcs.get('active') as string[] || [];
+    const raw = state.dlcs.get('active');
+    let current: string[] = [];
+    if (raw) {
+      if (typeof (raw as any).toArray === 'function') current = (raw as any).toArray();
+      else if (Array.isArray(raw)) current = raw as string[];
+      else current = Array.from(raw as any) as string[];
+    }
+    
     if (current.includes(dlcId)) {
-      state.dlcs.set('active', current.filter(id => id !== dlcId));
+      const next = current.filter(id => id !== dlcId);
+      console.log('Setting to:', next);
+      state.dlcs.set('active', next);
     } else {
-      state.dlcs.set('active', [...current, dlcId]);
+      const next = [...current, dlcId];
+      console.log('Setting to:', next);
+      state.dlcs.set('active', next);
     }
   };
 
@@ -212,20 +229,26 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         </div>
 
         {/* Addon Grid */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', alignContent: 'start' }}>
           {filtered.map(addon => {
             const isActive = activeDLCs.includes(addon.id);
             const IconComp = addon.icon;
             const catColor = CATEGORY_COLORS[addon.category] || '#64748b';
+            
+            // Icon color changes if active
+            const displayIconColor = isActive ? addon.iconColor : '#64748b';
 
             return (
               <div
                 key={addon.id}
+                onClick={() => toggleDLC(addon.id)}
                 style={{
+                  cursor: 'pointer',
                   background: isActive ? 'rgba(16,185,129,0.06)' : 'rgba(0,0,0,0.3)',
-                  border: isActive ? '1px solid rgba(16,185,129,0.25)' : '1px solid rgba(255,255,255,0.06)',
+                  border: isActive ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(255,255,255,0.06)',
                   borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px',
                   transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
+                  boxShadow: isActive ? '0 0 15px rgba(16,185,129,0.1)' : 'none',
                 }}
               >
                 {/* New badge */}
@@ -244,13 +267,15 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{
                     width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0,
-                    background: `${addon.iconColor}15`, border: `1px solid ${addon.iconColor}33`,
+                    background: isActive ? `${displayIconColor}15` : 'rgba(255,255,255,0.05)',
+                    border: isActive ? `1px solid ${displayIconColor}33` : '1px solid rgba(255,255,255,0.1)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.2s',
                   }}>
-                    <IconComp size={17} color={addon.iconColor} />
+                    <IconComp size={17} color={displayIconColor} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: '12px', color: isActive ? '#6ee7b7' : '#f1f5f9', lineHeight: 1.3 }}>
+                    <div style={{ fontWeight: 700, fontSize: '13px', color: isActive ? '#f1f5f9' : '#94a3b8', lineHeight: 1.3, transition: 'color 0.2s' }}>
                       {addon.name}
                     </div>
                     <div style={{ fontSize: '10px', color: '#64748b' }}>
@@ -291,41 +316,24 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   ))}
                 </div>
 
-                {/* Toggle */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: isActive ? '#6ee7b7' : '#475569' }}>
-                    {isActive ? '● Ativo' : '○ Inativo'}
-                  </span>
-                  <div 
-                    onClick={() => toggleDLC(addon.id)}
-                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                  >
+                {/* Status at the bottom */}
+                <div style={{ marginTop: 'auto', paddingTop: '6px', fontSize: '10px', color: isActive ? '#10b981' : '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isActive ? '#10b981' : '#64748b' }} />
+                    {isActive ? 'COMPLEMENTO ATIVO' : 'CLIQUE PARA ATIVAR'}
+                  </div>
+                  
+                  {/* Active injection indicator */}
+                  {isActive && (
                     <div style={{
-                      width: '36px', height: '20px',
-                      background: isActive ? '#10b981' : 'rgba(255,255,255,0.08)',
-                      borderRadius: '10px', position: 'relative', transition: 'background 0.25s',
-                      boxShadow: isActive ? '0 0 10px rgba(16,185,129,0.3)' : 'none',
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      color: '#6ee7b7', fontSize: '9px', fontWeight: 600,
+                      background: 'rgba(16,185,129,0.08)', borderRadius: '6px', padding: '2px 6px',
                     }}>
-                      <div style={{
-                        width: '16px', height: '16px', background: 'white', borderRadius: '50%',
-                        position: 'absolute', top: '2px', left: isActive ? '18px' : '2px',
-                        transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }} />
+                      <Check size={10} /> Injetado
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Active injection indicator */}
-                {isActive && (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    color: '#6ee7b7', fontSize: '10px', fontWeight: 600,
-                    background: 'rgba(16,185,129,0.08)', borderRadius: '6px', padding: '3px 8px',
-                  }}>
-                    <Check size={11} /> Dados injetados no Engine
-                  </div>
-                )}
               </div>
             );
           })}

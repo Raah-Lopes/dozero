@@ -97,7 +97,16 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
             </button>
 
             {/* DLC: Downtime */}
-            {((state.dlcs.get('active') as string[]) || []).includes('dlc_downtime') && (
+            {(() => {
+              const raw = state.dlcs.get('active');
+              let active: string[] = [];
+              if (raw) {
+                if (typeof (raw as any).toArray === 'function') active = (raw as any).toArray();
+                else if (Array.isArray(raw)) active = raw as string[];
+                else active = Array.from(raw as any) as string[];
+              }
+              return active.includes('dlc_downtime');
+            })() && (
               <button 
                 onClick={() => {
                   const events = [
