@@ -79,7 +79,7 @@ async function callGroq(opts: AIGenerateOptions): Promise<string> {
   if (!opts.apiKey) throw new Error('Chave API Groq não configurada.');
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.apiKey}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.apiKey.trim()}` },
     body: JSON.stringify({
       model: opts.model,
       messages: [
@@ -102,9 +102,9 @@ async function callOpenRouter(opts: AIGenerateOptions): Promise<string> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${opts.apiKey}`,
+      Authorization: `Bearer ${opts.apiKey.trim()}`,
       'HTTP-Referer': 'https://dozero.vtt',
-      'X-Title': 'DOZERO VTT — Estúdio IA do Mestre',
+      'X-Title': 'DOZERO VTT - Estudio IA do Mestre',
     },
     body: JSON.stringify({
       model: opts.model,
