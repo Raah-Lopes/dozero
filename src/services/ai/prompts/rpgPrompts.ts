@@ -13,6 +13,7 @@ export type RPGContentType =
   | 'quest'
   | 'encontro'
   | 'dlc_expand'
+  | 'dlc_factory'
   | 'chat';
 
 export interface RPGPromptParams {
@@ -23,6 +24,7 @@ export interface RPGPromptParams {
   contextoWiki?: string;  // Resumo do índice da wiki para contexto
   textoExtra?: string;    // Texto para auditar/resumir (sessão, DLC)
   grupoNivel?: number;    // Nível médio do grupo (para encontros)
+  categorias_dlc?: string[]; // Categorias a gerar na Fábrica de DLCs
   tipoEspecifico?: string; // ex: "Elfo Arqueiro", "Cidade Costeira", "Espada Lendária"
 }
 
@@ -433,12 +435,38 @@ export function buildSystemPrompt(type: RPGContentType): string {
   else if (type === 'local') template = YAML_LOCAL_TEMPLATE;
   else if (type === 'quest') template = YAML_QUEST_TEMPLATE;
 
+  else if (type === 'dlc_factory') template = `
+=== FORMATO DE RESPOSTA DA FÁBRICA DE DLCS ===
+Você deve gerar o conteúdo solicitado dividido em múltiplos blocos. 
+Cada bloco representará um arquivo de wiki independente.
+Você DEVE separar cada bloco (arquivo) usando EXATAMENTE este delimitador numa linha vazia:
+---DLC_ASSET_SEPARATOR---
+
+Para cada bloco, a PRIMEIRA linha DEVE ser o nome do arquivo que será criado (ex: "nome_do_npc.md" ou "itens/loot.md"), seguido de uma quebra de linha, e então o conteúdo do arquivo (que na maioria dos casos deve ser o padrão com YAML Frontmatter que você já conhece, ou Markdown simples).
+
+Exemplo de estrutura:
+Lampião Místico.md
+---
+(yaml do NPC)
+---
+(conteúdo)
+
+---DLC_ASSET_SEPARATOR---
+
+Peixeira Amaldiçoada.md
+---
+(yaml do item)
+---
+(conteúdo)
+`;
+
   return `${BASE_SYSTEM}
 
 ${template}
 
 Responda SOMENTE com o conteúdo solicitado, sem explicações adicionais antes ou depois.
-Para fichas: comece diretamente com --- (frontmatter YAML) seguido do corpo Markdown.
+Para fichas normais: comece diretamente com --- (frontmatter YAML) seguido do corpo Markdown.
+Para a Fábrica de DLCs: Siga ESTRITAMENTE as regras de separação com ---DLC_ASSET_SEPARATOR--- e a primeira linha de cada bloco sendo o nome do arquivo.
 Para outros conteúdos: use Markdown bem estruturado com headers, listas e formatação rica.`;
 }
 
@@ -631,6 +659,22 @@ ${ctx}
 3. Expansão: adicione 2-3 novos itens/regras coerentes com o conteúdo
 4. Balanceamento: avalie se está justo para o nível indicado
 5. Gere uma versão revisada e expandida do conteúdo em YAML/Markdown`;
+
+    case 'dlc_factory':
+      return `Crie os elementos para uma nova DLC / Expansão para a campanha atual.
+      
+**Tema / Cenário / Ideia Principal da DLC:** 
+${params.conceito || 'Módulo misterioso sem tema definido.'}
+
+**Categorias de elementos que você DEVE gerar (gerar pelo menos 2 a 3 arquivos distintos para cada categoria marcada):**
+${params.categorias_dlc?.length ? params.categorias_dlc.join(', ') : 'Nenhuma (Crie um pacote balanceado aleatório)'}
+
+**Instruções Especiais:**
+- Dê nomes criativos e temáticos aos arquivos gerados (ex: "Criaturas/Besta das Areias.md").
+- Use o seu vasto conhecimento de mecânicas de RPG para criar tabelas de loot inovadoras, NPCs interativos, mistérios e missões prontas para jogar.
+- O formato de cada arquivo gerado deve seguir o padrão do DOZERO VTT (Frontmatter com YAML detalhado no início e Markdown para a lore/descrição abaixo).
+
+${ctx}`;
 
     // ─── Chat Livre ─────────────────────────────────────────────────────────
     case 'chat':

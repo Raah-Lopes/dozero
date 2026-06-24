@@ -9,7 +9,7 @@ import { useWiki } from '../../../hooks/useWiki';
 import {
   Bot, Wand2, User, Skull, Map, Sword, BookOpen, Dices, Search,
   MessageSquare, Settings, Copy, Download, Save, Loader2, ChevronDown,
-  Key, Zap, Wifi, WifiOff, RefreshCw, Trash2, Send, X, Plus, Quote
+  Key, Zap, Wifi, WifiOff, RefreshCw, Trash2, Send, X, Plus, Quote, ToyBrick
 } from 'lucide-react';
 
 interface AIStudioWidgetProps {
@@ -27,7 +27,8 @@ const CONTENT_TABS: { id: RPGContentType; label: string; icon: React.ReactNode; 
   { id: 'resumo_sessao', label: 'Sessão',     icon: <BookOpen size={14} />,     color: '#fb923c' },
   { id: 'quest',         label: 'Quest',      icon: <Dices size={14} />,        color: '#34d399' },
   { id: 'encontro',      label: 'Encontro',   icon: <Zap size={14} />,          color: '#f87171' },
-  { id: 'dlc_expand',    label: 'DLC',        icon: <Search size={14} />,       color: '#a78bfa' },
+  { id: 'dlc_expand',    label: 'Auditar',    icon: <Search size={14} />,       color: '#a78bfa' },
+  { id: 'dlc_factory',   label: 'Fábrica',    icon: <ToyBrick size={14} />,     color: '#f43f5e' },
   { id: 'chat',          label: 'Chat',       icon: <MessageSquare size={14} />, color: '#60a5fa' },
 ];
 
@@ -50,12 +51,13 @@ const WIKI_SAVE_PATHS: Record<RPGContentType, string> = {
   quest:         '[1] 🏕️ Campanha Principal/Quests',
   encontro:      '[1] 🏕️ Campanha Principal/Encontros',
   dlc_expand:    'DLCs',
+  dlc_factory:   'DLCs',
   chat:          '',
 };
 
 const TYPE_LABELS: Record<string, Record<RPGContentType, string>> = {
   pc: {
-    pc: 'Humano Guerreiro', npc: '', monstro: '', local: '', item_magico: '', resumo_sessao: '', sessao_zero: '', quest: '', encontro: '', dlc_expand: '', chat: ''
+    pc: 'Humano Guerreiro', npc: '', monstro: '', local: '', item_magico: '', resumo_sessao: '', sessao_zero: '', quest: '', encontro: '', dlc_expand: '', dlc_factory: '', chat: ''
   }
 };
 
@@ -102,6 +104,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
   const [tipoEsp, setTipoEsp]        = useState(TIPO_OPTIONS['pc'][0]);
   const [conceito, setConceito]      = useState('');
   const [textoExtra, setTextoExtra]  = useState('');
+  const [categoriasDlc, setCategoriasDlc] = useState<string[]>(['npc', 'loot', 'local']);
   const [useWikiCtx, setUseWikiCtx]  = useState(true);
 
   // Output
@@ -184,6 +187,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
         contextoWiki: buildWikiContext() || undefined,
         textoExtra: textoExtra || undefined,
         grupoNivel: nivel,
+        categorias_dlc: categoriasDlc,
       });
 
       const result = await generateAI({
@@ -237,15 +241,38 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
     if (!output || !savePath) return;
     setSaveStatus('Salvando...');
     try {
-      const fileName = nome ? nome.replace(/[^a-zA-Z0-9À-ú ]/g, '').trim() : `${activeTab}_${Date.now()}`;
-      const fullPath = `${repoPath}/${savePath}/${fileName}.md`;
-      await saveMarkdownContent(fullPath, output);
-      setSaveStatus(`✅ Salvo em: ${savePath}/${fileName}.md`);
-      setShowSavePanel(false);
+      if (activeTab === 'dlc_factory') {
+        // Separa os blocos da DLC
+        const blocks = output.split('---DLC_ASSET_SEPARATOR---').map(b => b.trim()).filter(b => b.length > 0);
+        let savedCount = 0;
+        
+        // Pasta base para essa DLC será nome (se tiver) ou Tema/Conceito
+        const folderName = (nome || conceito || 'Nova_DLC').replace(/[^a-zA-Z0-9À-ú ]/g, '').trim();
+        const basePath = `${repoPath}/${savePath}/${folderName}`;
+        
+        for (const block of blocks) {
+          const lines = block.split('\n');
+          let fileName = lines[0].trim();
+          if (!fileName.endsWith('.md')) fileName += '.md';
+          const fileContent = lines.slice(1).join('\n').trim();
+          
+          await saveMarkdownContent(`${basePath}/${fileName}`, fileContent);
+          savedCount++;
+        }
+        
+        setSaveStatus(`✅ ${savedCount} arquivos salvos em: ${savePath}/${folderName}/`);
+        setShowSavePanel(false);
+      } else {
+        const fileName = nome ? nome.replace(/[^a-zA-Z0-9À-ú ]/g, '').trim() : `${activeTab}_${Date.now()}`;
+        const fullPath = `${repoPath}/${savePath}/${fileName}.md`;
+        await saveMarkdownContent(fullPath, output);
+        setSaveStatus(`✅ Salvo em: ${savePath}/${fileName}.md`);
+        setShowSavePanel(false);
+      }
     } catch (err: any) {
       setSaveStatus(`❌ Erro ao salvar: ${err.message}`);
     }
-  }, [output, savePath, nome, activeTab, repoPath]);
+  }, [output, savePath, nome, conceito, activeTab, repoPath]);
 
   // ── Copy ────────────────────────────────────────────────────────────────────
   const handleCopy = () => {
@@ -452,7 +479,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
               </div>
 
               {/* Nível */}
-              {!['resumo_sessao', 'dlc_expand', 'chat'].includes(activeTab) && (
+              {!['resumo_sessao', 'dlc_expand', 'dlc_factory', 'chat'].includes(activeTab) && (
                 <div>
                   <label className="ai-field-label">
                     {activeTab === 'encontro' ? 'Nível Médio do Grupo' : activeTab === 'monstro' ? 'Nível de Ameaça (1-5)' : 'Nível / Desafio'}
@@ -467,10 +494,35 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                 </div>
               )}
 
+              {/* Categorias DLC Factory */}
+              {activeTab === 'dlc_factory' && (
+                <div>
+                  <label className="ai-field-label" style={{ marginBottom: '8px', display: 'block' }}>O que você quer gerar nesta DLC?</label>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {['npc', 'loot', 'local', 'quest', 'item_magico'].map(cat => (
+                      <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', color: '#f1f5f9', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', border: `1px solid ${categoriasDlc.includes(cat) ? currentColor : 'rgba(255,255,255,0.1)'}` }}>
+                        <input
+                          type="checkbox"
+                          checked={categoriasDlc.includes(cat)}
+                          onChange={(e) => {
+                            if (e.target.checked) setCategoriasDlc([...categoriasDlc, cat]);
+                            else setCategoriasDlc(categoriasDlc.filter(c => c !== cat));
+                          }}
+                          style={{ margin: 0, accentColor: currentColor }}
+                        />
+                        {cat.toUpperCase()}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Conceito */}
               {!needsTextArea && (
                 <div style={{ flex: 1 }}>
-                  <label className="ai-field-label">Conceito e Ideias</label>
+                  <label className="ai-field-label">
+                    {activeTab === 'dlc_factory' ? 'Tema / Cenário da Expansão' : 'Conceito e Ideias'}
+                  </label>
                   <textarea
                     value={conceito}
                     onChange={e => setConceito(e.target.value)}
@@ -478,6 +530,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                       activeTab === 'pc' ? 'Ex: Ex-guarda corrupto que encontrou redenção...' :
                       activeTab === 'npc' ? 'Ex: Taberneiro que esconde um passado como assassino...' :
                       activeTab === 'quest' ? 'Ex: O objeto roubado é mais perigoso do que parece...' :
+                      activeTab === 'dlc_factory' ? 'Ex: Cangaço Medieval Místico com criaturas do deserto e magia antiga...' :
                       'Descreva o que você quer...'
                     }
                     className="ai-input"
