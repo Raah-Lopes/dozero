@@ -40,9 +40,10 @@ export const AI_MODELS: AIModel[] = [
   { id: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B (Groq)', provider: 'groq', requiresKey: true, free: true, contextWindow: 32768 },
 
   // Gemini — alta qualidade, gratuito com conta
-  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', provider: 'gemini', requiresKey: true, free: true, contextWindow: 1000000 },
-  { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', provider: 'gemini', requiresKey: true, free: true, contextWindow: 1000000 },
-  { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', provider: 'gemini', requiresKey: true, free: false, contextWindow: 2000000 },
+  { id: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Exp)', provider: 'gemini', requiresKey: true, free: true, contextWindow: 1000000 },
+  { id: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash', provider: 'gemini', requiresKey: true, free: true, contextWindow: 1000000 },
+  { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro', provider: 'gemini', requiresKey: true, free: false, contextWindow: 2000000 },
+  { id: 'gemini-1.5-flash-8b', label: 'Gemini 1.5 Flash 8B', provider: 'gemini', requiresKey: true, free: true, contextWindow: 1000000 },
 
   // OpenRouter — modelos gratuitos via agregador
   { id: 'openrouter/auto', label: 'Auto (OpenRouter)', provider: 'openrouter', requiresKey: true, free: true },
