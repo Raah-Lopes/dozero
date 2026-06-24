@@ -9,7 +9,7 @@ import { useWiki } from '../../../hooks/useWiki';
 import {
   Bot, Wand2, User, Skull, Map, Sword, BookOpen, Dices, Search,
   MessageSquare, Settings, Copy, Download, Save, Loader2, ChevronDown,
-  Key, Zap, Wifi, WifiOff, RefreshCw, Trash2, Send, X, Plus
+  Key, Zap, Wifi, WifiOff, RefreshCw, Trash2, Send, X, Plus, Quote
 } from 'lucide-react';
 
 interface AIStudioWidgetProps {
@@ -558,11 +558,31 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                     </div>
                   )}
                   {chatHistory.map((msg, i) => (
-                    <div key={i} className={msg.role === 'user' ? 'ai-chat-bubble-user' : 'ai-chat-bubble-ai'}>
-                      <div style={{ fontSize: '0.55rem', color: '#475569', marginBottom: '4px', fontWeight: 700 }}>
-                        {msg.role === 'user' ? '👤 Você' : '🤖 Mestre-IA'}
+                    <div key={i} className={msg.role === 'user' ? 'ai-chat-bubble-user' : 'ai-chat-bubble-ai'} style={{ position: 'relative' }}>
+                      <div style={{ fontSize: '0.55rem', color: '#475569', marginBottom: '4px', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{msg.role === 'user' ? '👤 Você' : '🤖 Mestre-IA'}</span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button 
+                            onClick={() => setChatInput((prev) => prev + (prev ? '\n\n' : '') + `> ${msg.text.split('\n').join('\n> ')}\n\n`)} 
+                            title="Citar e Responder"
+                            style={{ color: '#64748b', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
+                            onMouseEnter={e => e.currentTarget.style.color = currentColor}
+                            onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                          >
+                            <Quote size={11} />
+                          </button>
+                          <button 
+                            onClick={() => navigator.clipboard.writeText(msg.text)} 
+                            title="Copiar texto"
+                            style={{ color: '#64748b', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
+                            onMouseEnter={e => e.currentTarget.style.color = currentColor}
+                            onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                          >
+                            <Copy size={11} />
+                          </button>
+                        </div>
                       </div>
-                      {msg.text}
+                      <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
                     </div>
                   ))}
                   {isGenerating && (
