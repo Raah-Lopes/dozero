@@ -52,14 +52,8 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
 
   useEffect(() => {
     const observer = () => {
-      const raw = state.dlcs.get('active');
-      let currentDlcs: string[] = [];
-      if (raw) {
-        if (typeof (raw as any).toArray === 'function') currentDlcs = (raw as any).toArray();
-        else if (Array.isArray(raw)) currentDlcs = raw as string[];
-        else currentDlcs = Array.from(raw as any) as string[];
-      }
-      setActiveDLCs([...currentDlcs]);
+      const activeKeys = Array.from(state.dlcs.keys()).filter(k => state.dlcs.get(k) === true);
+      setActiveDLCs(activeKeys);
     };
     state.dlcs.observe(observer);
     observer();

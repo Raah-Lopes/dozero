@@ -100,14 +100,8 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
 
   useEffect(() => {
     const observer = () => {
-      const raw = state.dlcs.get('active');
-      let currentDlcs: string[] = [];
-      if (raw) {
-        if (typeof (raw as any).toArray === 'function') currentDlcs = (raw as any).toArray();
-        else if (Array.isArray(raw)) currentDlcs = raw as string[];
-        else currentDlcs = Array.from(raw as any) as string[];
-      }
-      setActiveDLCs([...currentDlcs]);
+      const activeKeys = Array.from(state.dlcs.keys()).filter(k => state.dlcs.get(k) === true);
+      setActiveDLCs(activeKeys);
     };
     state.dlcs.observe(observer);
     observer();
@@ -115,23 +109,8 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   }, []);
 
   const toggleDLC = (dlcId: string) => {
-    const raw = state.dlcs.get('active');
-    let current: string[] = [];
-    if (raw) {
-      if (typeof (raw as any).toArray === 'function') current = (raw as any).toArray();
-      else if (Array.isArray(raw)) current = raw as string[];
-      else current = Array.from(raw as any) as string[];
-    }
-    
-    if (current.includes(dlcId)) {
-      const next = current.filter(id => id !== dlcId);
-      console.log('Setting to:', next);
-      state.dlcs.set('active', next);
-    } else {
-      const next = [...current, dlcId];
-      console.log('Setting to:', next);
-      state.dlcs.set('active', next);
-    }
+    const isCurrentlyActive = state.dlcs.get(dlcId) === true;
+    state.dlcs.set(dlcId, !isCurrentlyActive);
   };
 
   const dynamicDLCs = useMemo(() => {
