@@ -1,11 +1,11 @@
 ---
-inventario:
-  - nome: Hidromel de Guerreiro
-    desc: Um hidromel forte e especial que aumenta a força de Jubbaer quando consumido.
-  - nome: Espada de Batalha
-    desc: Uma espada larga e pesada, ideal para cortar inimigos com força bruta.
-  - nome: Escudo de Madeira
-    desc: Um escudo simples feito de madeira, usado para defender Jubbaer em combate.
+inventario: 
+- nome: Hidromel de Guerreiro
+desc: Um hidromel forte e especial que aumenta a força de Jubbaer quando consumido.
+- nome: Espada de Batalha
+desc: Uma espada larga e pesada, ideal para cortar inimigos com força bruta.
+- nome: Escudo de Madeira
+desc: Um escudo simples feito de madeira, usado para defender Jubbaer em combate.
 tipo: PC
 status: vivo
 nome: Jubbaer
@@ -13,8 +13,8 @@ nivel: 1
 XP: 0
 Ouro: 0
 imagem: ""
-tags:
-  - personagem
+tags: 
+- personagem: 
 ativo: true
 origem: Cidade Subterrânea
 Localizacao: Barrio de Hidromel
@@ -49,20 +49,19 @@ Medicina: 0
 Percepcao: 1
 Sobrevivencia: 1
 status_efeitos: []
-imagens: []
+imagens: ![](http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero\&path=ANEXOS/Jubbaer___qu.webp)
 magias: []
-macros:
-  - nome: "Ataque Básico"
-    formula: "1d20+4"
-    tipo: "ataque"
-    descricao: "Ataque corpo-a-corpo com espada"
-  - nome: "Golpe de Hidromel"
-    formula: "1d20+6"
-    tipo: "ataque"
-    descricao: "Ataque especial com aumento de força após beber hidromel"
+macros: 
+- nome: "Ataque Básico"
+formula: "1d20+4"
+tipo: "ataque"
+descricao: "Ataque corpo-a-corpo com espada"
+- nome: "Golpe de Hidromel"
+formula: "1d20+6"
+tipo: "ataque"
+descricao: "Ataque especial com aumento de força após beber hidromel"
 ---
-
-> [!quote]- Interpretação e Lore
+[!quote]- Interpretação e Lore
 > **Nome Completo:** Jubbaer, a Guerreira Bebada | **Imagem:** 
 > **Resumo:** 
 > Jubbaer é uma elfa de cabelos verdes, nascida em uma cidade subterrânea. Ela é uma guerreira feroz e tem uma peculiaridade: quando bebe hidromel, sua força aumenta descomunalmente. Essa característica a torna uma oponente formidável em combate.
@@ -147,3 +146,4 @@ if(!meta.inventario || meta.inventario.length === 0) {
     dv.table(["Item", "Descrição"], meta.inventario.map(i => [i.nome, i.desc]));
 }
 ```
+![](http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero\&path=ANEXOS/Jubbaer___qu.webp)

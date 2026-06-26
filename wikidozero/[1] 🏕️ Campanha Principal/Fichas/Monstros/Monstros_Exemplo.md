@@ -1,3 +1,3 @@
-# Monstros_Exemplo.md
+# Monstros\_Exemplo.md
 
-Este é um arquivo de exemplo. Escreva sua lore aqui!
+Este ï¿½ um arquivo de exemplo. Escreva sua lore aqui!
