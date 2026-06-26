@@ -1,27 +1,27 @@
 ---
-inventario: 
-- nome: Hidromel de Guerreiro
-descricao: Um hidromel forte e especial que aumenta a força de Jubbaer quando consumido.
-quantidade: 1
-efeito: "cura_10"
-- nome: Escudo de Madeira
-descricao: Um escudo simples feito de madeira, usado para defender Jubbaer em combate.
-equipado: false
-efeito: "defesa_2"
-armas: 
-- nome: Espada de Batalha
-descricao: Uma espada larga e pesada, ideal para cortar inimigos com força bruta.
-dano: "1d8+2"
-equipado: false
+inventario:
+  - nome: Hidromel de Guerreiro
+    descricao: Um hidromel forte e especial que aumenta a força de Jubbaer quando consumido.
+    quantidade: 1
+    efeito: cura_10
+  - nome: Escudo de Madeira
+    descricao: Um escudo simples feito de madeira, usado para defender Jubbaer em combate.
+    equipado: false
+    efeito: defesa_2
+armas:
+  - nome: Espada de Batalha
+    descricao: Uma espada larga e pesada, ideal para cortar inimigos com força bruta.
+    dano: 1d8+2
+    equipado: true
 tipo: PC
 status: vivo
 nome: Jubbaer
 nivel: 1
 XP: 0
 Ouro: 0
-imagem: ""
-tags: 
-- personagem: 
+imagem: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jubbaer_1782514366215.webp
+tags:
+  - personagem
 ativo: true
 origem: Cidade Subterrânea
 Localizacao: Barrio de Hidromel
@@ -47,7 +47,7 @@ R: 1
 A: 1
 PdF: 1
 CA: 12
-Deslocamento: "9m"
+Deslocamento: 9m
 Acrobacia: 0
 Furtividade: 0
 Intimidacao: 2
@@ -56,18 +56,30 @@ Medicina: 0
 Percepcao: 1
 Sobrevivencia: 1
 status_efeitos: []
-imagens: ![](http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero\&path=ANEXOS/Jubbaer___qu.webp)
+imagens: []
 magias: []
-macros: 
-- nome: "Ataque Básico"
-formula: "1d20+4"
-tipo: "ataque"
-descricao: "Ataque corpo-a-corpo com espada"
-- nome: "Golpe de Hidromel"
-formula: "1d20+6"
-tipo: "ataque"
-descricao: "Ataque especial com aumento de força após beber hidromel"
+macros:
+  - nome: Ataque Básico
+    formula: 1d20+4
+    tipo: ataque
+    descricao: Ataque corpo-a-corpo com espada
+  - nome: Golpe de Hidromel
+    formula: 1d20+6
+    tipo: ataque
+    descricao: Ataque especial com aumento de força após beber hidromel
+avatar: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jubbaer_1782514366215.webp
+imageUrl: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jubbaer_1782514366215.webp
+tokenShape: hexagon
+titulo: Jubbaer
+title: Jubbaer
 ---
+
+
+
+
+
+
+
 > \[!quote]- Interpretação e Lore
 > **Nome Completo:** Jubbaer, a Guerreira Bebada | **Imagem:**
 > **Resumo:**
