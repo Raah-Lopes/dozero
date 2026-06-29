@@ -681,44 +681,224 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     );
   };
 
+  
   const renderAttacksTab = () => {
-    const showArmas = wikiEntry && wikiEntry.metadata.armas && Array.isArray(wikiEntry.metadata.armas) && wikiEntry.metadata.armas.length > 0;
-    const showPoderes = wikiEntry && wikiEntry.metadata.poderes && Array.isArray(wikiEntry.metadata.poderes) && wikiEntry.metadata.poderes.length > 0;
+    const showArmas = wikiEntry && wikiEntry.metadata?.armas && Array.isArray(wikiEntry.metadata.armas) && wikiEntry.metadata.armas.length > 0;
+    const showPoderes = wikiEntry && wikiEntry.metadata?.poderes && Array.isArray(wikiEntry.metadata.poderes) && wikiEntry.metadata.poderes.length > 0;
+    const macrosMD = wikiEntry?.metadata?.macros || [];
     const showMacrosMD = macrosMD.length > 0;
-    
+
+    // 🌟 Intelligent Parser: Motor de Fórmulas Dinâmicas GLOBAL
+    const evaluateFormula = (form: string, condBonus: number, exhaustionPenalty: number = 0, isD20: boolean = false) => {
+       let parsed = form.replace(/@([a-zA-Z0-9_]+)/g, (match, p1) => {
+          const key = p1.toLowerCase();
+          const attrKeys = ['for', 'des', 'con', 'int', 'sab', 'car', 'forca', 'destreza', 'constituicao', 'inteligencia', 'sabedoria', 'carisma'];
+          let val = Number(tokenData[key]) || 0;
+          if (attrKeys.includes(key) && val >= 1) {
+             return Math.floor((val - 10) / 2).toString();
+          }
+          return val.toString();
+       });
+       
+       let total = 0;
+       let rollsBreakdown = '';
+       parsed = parsed.replace(/(\d+)d(\d+)/gi, (match, count, faces) => {
+          const c = parseInt(count) || 1;
+          const f = parseInt(faces) || 20;
+          let sum = 0;
+          let r = [];
+          for(let i=0; i<c; i++){
+             const roll = Math.floor(Math.random() * f) + 1;
+             sum += roll;
+             r.push(roll);
+          }
+          rollsBreakdown += `[${r.join('+')}]`;
+          return sum.toString();
+       });
+       
+       if (!rollsBreakdown && isD20) {
+          const d20 = Math.floor(Math.random() * 20) + 1;
+          rollsBreakdown = `[${d20}]`;
+          parsed = `${d20} + ` + parsed;
+       }
+       
+       const totalModifiers = exhaustionPenalty + condBonus;
+       if (totalModifiers !== 0) {
+          parsed += totalModifiers > 0 ? ` + ${totalModifiers}` : ` - ${Math.abs(totalModifiers)}`;
+       }
+
+       const mathExpr = parsed.replace(/[^-()\d/*+.]/g, '');
+       try {
+          total = Function(`'use strict'; return (${mathExpr || '0'})`)();
+       } catch(e) {
+          total = parseInt(mathExpr) || 0;
+       }
+       return { total, breakdown: `${rollsBreakdown} -> ${parsed} = ${total}` };
+    };
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        {/* Macros MD: ataques personalizados do frontmatter */}
-        {showMacrosMD && (
-          <div>
-            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Dices size={12} /> Macros da Ficha
-            </h5>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {macrosMD.map((macro, idx) => {
-                const tipoColor: Record<string, string> = {
-                  ataque: '#f87171', defesa: '#60a5fa', magia: '#c084fc', teste: '#34d399', outro: '#94a3b8'
-                };
-                const color = tipoColor[macro.tipo || 'outro'] || '#94a3b8';
+        {/* Painel de Condições Ativas */}
+        <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.6rem' }}>
+          <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            ⚙️ Condições & Kits Rápidos
+          </h5>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <button
+              onClick={() => setActiveConditions(prev => ({ ...prev, flanqueando: !prev.flanqueando }))}
+              style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer', background: activeConditions.flanqueando ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.05)', color: activeConditions.flanqueando ? '#a7f3d0' : '#cbd5e1' }}
+            >🗡️ Flanqueando {activeConditions.flanqueando && '(+2)'}</button>
+            <button
+              onClick={() => setActiveConditions(prev => ({ ...prev, inspirado: !prev.inspirado }))}
+              style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer', background: activeConditions.inspirado ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)', color: activeConditions.inspirado ? '#fde68a' : '#cbd5e1' }}
+            >✨ Inspirado {activeConditions.inspirado && '(+1)'}</button>
+          </div>
+        </div>
 
-                const handleRollMacro = () => {
-                  // Parser simples de dice notation: NdM+K
-                  const match = macro.formula.match(/(\d+)d(\d+)([+-]\d+)?/);
-                  let total = 0;
-                  let breakdown = '';
-                  if (match) {
-                    const count = parseInt(match[1]);
-                    const sides = parseInt(match[2]);
-                    const bonus = parseInt(match[3] || '0');
-                    const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
-                    total = rolls.reduce((a, b) => a + b, 0) + bonus;
-                    breakdown = `[${rolls.join('+')}]${bonus !== 0 ? (bonus > 0 ? `+${bonus}` : bonus) : ''} = ${total}`;
-                  } else {
-                    total = Math.floor(Math.random() * 20) + 1;
-                    breakdown = `${macro.formula} = ${total}`;
+        {/* Ações Básicas Fixas do Pathfinder 2e */}
+        <div>
+          <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+             Ações Básicas
+          </h5>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            {/* Ataque Desarmado */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.4rem', borderRadius: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.75rem', color: 'white', fontWeight: 'bold' }}>Ataque Desarmado</span>
+                <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Soco ou Chute (1d20 + FOR) | Dano: 1d4 + FOR</span>
+              </div>
+              <button
+                onClick={() => {
+                  let condBonusAtk = 0; let condBonusDmg = 0;
+                  if (activeConditions.flanqueando) { condBonusAtk += 2; }
+                  if (activeConditions.inspirado) { condBonusAtk += 1; condBonusDmg += 1; }
+                  const atkEval = evaluateFormula('1d20 + @for', condBonusAtk, 0, true);
+                  const dmgEval = evaluateFormula('1d4 + @for', condBonusDmg, 0, false);
+                  
+                  const attackTotal = atkEval.total;
+                  let finalDmg = dmgEval.total;
+                  const targetIds = getTargets();
+                  let msg = `⚔️ **Ataque Desarmado** de **${tokenData.nome || 'Desconhecido'}**!<br/>`;
+                  msg += `Acerto: ${atkEval.breakdown} = <b>${attackTotal}</b><br/>`;
+                  msg += `Dano: ${dmgEval.breakdown} = <b>${finalDmg} contundente</b>`;
+                  
+                  if (targetIds.length > 0) {
+                     msg += `<br/><br/><b>Contra Alvos:</b>`;
+                     targetIds.forEach(tId => {
+                        const t = state.tokens.get(tId) as any;
+                        if (!t) return;
+                        const tDef = t.defesa || t.ca || 10;
+                        let grau = 'FRACASSO';
+                        let cor = '#ef4444';
+                        if (attackTotal >= tDef + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; }
+                        else if (attackTotal >= tDef) { grau = 'SUCESSO'; cor = '#10b981'; }
+                        else if (attackTotal <= tDef - 10) { grau = 'FRACASSO CRÍTICO'; cor = '#7f1d1d'; }
+                        else { grau = 'FRACASSO'; cor = '#ef4444'; }
+                        
+                        if (grau === 'SUCESSO CRÍTICO') {
+                          msg += `<br/>🎯 <b style="color:${cor};">${grau}</b> em ${t.nome} (CA ${tDef})! Dano Dobrado: <b>${finalDmg * 2}</b>`;
+                          applyDamageAndSync(tId, finalDmg * 2);
+                          window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'CRÍTICO: Desarmado', result: String(finalDmg * 2), type: 'attack' } }));
+                        } else if (grau === 'SUCESSO') {
+                          msg += `<br/>✅ <b style="color:${cor};">${grau}</b> em ${t.nome} (CA ${tDef})! Dano: <b>${finalDmg}</b>`;
+                          applyDamageAndSync(tId, finalDmg);
+                          window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'DANO: Desarmado', result: String(finalDmg), type: 'attack' } }));
+                        } else {
+                          msg += `<br/>🛡️ <b style="color:${cor};">${grau}</b> contra ${t.nome} (CA ${tDef}). Nenhum dano.`;
+                        }
+                     });
                   }
+                  pushChatMessage(msg, true, false);
+                }}
+                style={{ padding: '4px 8px', background: 'rgba(251,191,36,0.15)', color: '#fde68a', borderRadius: '4px', fontSize: '0.65rem', cursor: 'pointer', fontWeight: 'bold' }}
+              >GOLPEAR</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Macros MD: ataques personalizados do frontmatter */}
+        <div style={{ marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <h5 style={{ margin: 0, fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase' }}>Macros & Habilidades</h5>
+              <button 
+                onClick={() => setIsEditingMacro(!isEditingMacro)}
+                style={{ background: 'transparent', border: '1px solid rgba(251, 191, 36, 0.5)', color: '#fbbf24', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}>
+                {isEditingMacro ? 'Cancelar' : '+ Nova Ação'}
+              </button>
+            </div>
+
+            {isEditingMacro && (
+              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '0.5rem', borderRadius: '6px', border: '1px solid rgba(251, 191, 36, 0.2)', marginBottom: '0.5rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <input type="text" placeholder="Nome (Ex: Golpe Feroz)" value={newMacro.nome} onChange={e => setNewMacro({...newMacro, nome: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', fontSize: '0.7rem', padding: '4px', borderRadius: '4px' }} />
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <input type="text" placeholder="Fórmula (Ex: 1d20 + @for)" value={newMacro.formula} onChange={e => setNewMacro({...newMacro, formula: e.target.value})} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'white', fontSize: '0.7rem', padding: '4px', borderRadius: '4px' }} />
+                  <input type="text" placeholder="Dano (Ex: 1d8)" value={newMacro.dano} onChange={e => setNewMacro({...newMacro, dano: e.target.value})} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'white', fontSize: '0.7rem', padding: '4px', borderRadius: '4px' }} />
+                </div>
+                <button onClick={async () => {
+                      if (!newMacro.nome || !newMacro.formula) return;
+                      const path = wikiEntry?.path;
+                      if (!path) return;
+                      const updatedMacros = [...(wikiEntry.metadata.macros || []), newMacro];
+                      await syncTokenFieldToWiki(path, 'macros', updatedMacros);
+                      setIsEditingMacro(false);
+                      setNewMacro({ nome: '', formula: '1d20 + @for', dano: '', tipo: 'ataque', descricao: '' });
+                    }}
+                    style={{ background: '#fbbf24', color: 'black', fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Salvar
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {macrosMD.map((macro: any, idx: number) => {
+                const color = '#f87171';
+                const handleRollMacro = () => {
+                  let condBonusAtk = 0; let condBonusDmg = 0;
+                  if (activeConditions.flanqueando) { condBonusAtk += 2; }
+                  if (activeConditions.inspirado) { condBonusAtk += 1; condBonusDmg += 1; }
+                  
+                  const isD20 = macro.formula.includes('d20') || macro.formula.match(/d20/i);
+                  const res = evaluateFormula(macro.formula || '1d20', condBonusAtk, 0, isD20);
+                  let total = res.total;
+                  let breakdown = res.breakdown;
+
+                  const targetsIds = getTargets();
+                  let resolutionMsg = "";
+                  
+                  if (targetsIds.length > 0) {
+                    resolutionMsg += `<br/><b>Resolução contra os alvos:</b>`;
+                    targetsIds.forEach(tId => {
+                      const tStats = getTargetStats(tId);
+                      const effectiveDefense = tStats.defesa;
+                      
+                      let grau = 'FRACASSO';
+                      let cor = '#ef4444';
+                      if (total >= effectiveDefense + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; }
+                      else if (total >= effectiveDefense) { grau = 'SUCESSO'; cor = '#10b981'; }
+                      else if (total <= effectiveDefense - 10) { grau = 'FRACASSO CRÍTICO'; cor = '#7f1d1d'; }
+                      else { grau = 'FRACASSO'; cor = '#ef4444'; }
+                      
+                      if (grau.includes('SUCESSO')) {
+                        const macroDano = String(macro.dano || '').trim();
+                        if (macroDano) {
+                           const dmgRes = evaluateFormula(macroDano, condBonusDmg, 0, false);
+                           let dmgTotal = dmgRes.total;
+                           if (grau === 'SUCESSO CRÍTICO') dmgTotal *= 2;
+                           
+                           applyDamageAndSync(tId, dmgTotal);
+                           resolutionMsg += `<br/>• <b>${tStats.name}</b> (Def ${effectiveDefense}): <b style="color:${cor}">🎯 ${grau}!</b> <span style="color:#ef4444">💥 Dano [ ${dmgRes.breakdown} ]: ${dmgTotal} (HP -${dmgTotal})</span>`;
+                           window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'DANO: ' + macro.nome, result: String(dmgTotal), type: 'attack' } }));
+                        } else {
+                          resolutionMsg += `<br/>• <b>${tStats.name}</b> (Def ${effectiveDefense}): <b style="color:${cor}">🎯 ${grau}! (Sem fórmula de dano)</b>`;
+                        }
+                      } else {
+                        resolutionMsg += `<br/>• <b>${tStats.name}</b> (Def ${effectiveDefense}): <span style="color:var(--text-secondary)">🛡️ ${grau}! (Nenhum dano)</span>`;
+                      }
+                    });
+                  }
+
                   pushChatMessage(
-                    `🎲 <b>${tokenData.name}</b> usa <b>${macro.nome}</b><br/>${macro.descricao ? `<i>${macro.descricao}</i><br/>` : ''}Resultado: <b>${breakdown}</b>`,
+                    `🎲 <b>${tokenData.name}</b> usa macro <b>${macro.nome}</b><br/>Resultado: <b>${breakdown}</b>${resolutionMsg}`,
                     total >= 15, total <= 3
                   );
                   window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: macro.nome, result: String(total), type: 'attack' } }));
@@ -729,207 +909,81 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color }}>{macro.nome}</span>
                       <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{macro.formula}</span>
-                      {macro.descricao && <span style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '1px' }}>{macro.descricao}</span>}
                     </div>
-                    <button
-                      onClick={handleRollMacro}
-                      style={{ padding: '4px 10px', background: `${color}22`, border: `1px solid ${color}66`, color, borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer', flexShrink: 0 }}
-                    >
-                      <Dices size={10} />
-                    </button>
+                    <button onClick={handleRollMacro} style={{ padding: '4px 10px', background: `${color}22`, color, borderRadius: '4px', cursor: 'pointer' }}>ROLAR</button>
                   </div>
                 );
               })}
             </div>
-          </div>
-        )}
+        </div>
 
         {showArmas && (
           <div>
-            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#f87171', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}><Sword size={12} /> Armas Equipadas</h5>
+            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#f87171', textTransform: 'uppercase' }}>Armas Equipadas</h5>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               {wikiEntry.metadata.armas.map((item: any, idx: number) => {
                 const danoExpr = item.dano || '1d6';
                 
                 const handleRollWeapon = () => {
-                  const dieRoll = Math.floor(Math.random() * 20) + 1;
+                  let condBonusAtk = 0; let condBonusDmg = 0;
+                  if (activeConditions.flanqueando) { condBonusAtk += 2; }
+                  if (activeConditions.inspirado) { condBonusAtk += 1; condBonusDmg += 1; }
+
                   const atkBonus = Number(tokenData.ataque) || 0;
-                  const totalAtk = dieRoll + atkBonus;
+                  const atkEval = evaluateFormula(`1d20 + ${atkBonus}`, condBonusAtk, 0, true);
+                  const totalAtk = atkEval.total;
                   const targetsIds = getTargets();
-                  
-                  let targetNames = "ninguém (Nenhum alvo selecionado)";
-                  if (targetsIds.length > 0) {
-                    targetNames = targetsIds.map(id => (state.tokens.get(id) as any)?.name || 'Desconhecido').join(', ');
-                  }
 
-                  let msg = `⚔️ <b>${tokenData.name}</b> ataca <b>${targetNames}</b> com <b>${item.nome}</b>!<br/>
-                    Ataque: <b>${totalAtk}</b> (Dado: ${dieRoll} + Bônus: ${atkBonus})<br/>`;
-                  
-                  if (dieRoll === 20) {
-                    msg += `<b style="color:var(--success)">SUCESSO CRÍTICO!</b>`;
-                  }
+                  let msg = `⚔️ <b>${tokenData.name}</b> ataca com <b>${item.nome}</b>!<br/>Ataque: ${atkEval.breakdown} = <b>${totalAtk}</b><br/>`;
 
-                  let dmgTotal = 0;
-                  const dmgMatch = danoExpr.match(/(\d+)d(\d+)(?:\s*\+\s*(\d+))?/i);
-                  if (dmgMatch) {
-                    const numDice = parseInt(dmgMatch[1]) || 1;
-                    const diceFaces = parseInt(dmgMatch[2]) || 6;
-                    const flatDmg = parseInt(dmgMatch[3]) || 0;
-                    
-                    let rolls: number[] = [];
-                    for(let i=0; i<numDice; i++) {
-                      rolls.push(Math.floor(Math.random() * diceFaces) + 1);
-                    }
-                    dmgTotal = rolls.reduce((a,b) => a+b, 0) + flatDmg;
-                    msg += `<br/>🎲 Rolo de Dano [${rolls.join(', ')}]${flatDmg ? ` + ${flatDmg}` : ''}: <b>${dmgTotal} de Dano Letal</b>!`;
-                  } else {
-                    dmgTotal = 5;
-                    msg += `<br/>🎲 Causa <b>${dmgTotal} de Dano</b>!`;
-                  }
+                  const dmgEval = evaluateFormula(danoExpr, condBonusDmg, 0, false);
+                  let dmgTotal = dmgEval.total;
+                  msg += `🎲 Dano: <b>${dmgEval.breakdown}</b>! Total: <b>${dmgTotal}</b>`;
 
                   if (targetsIds.length > 0) {
-                    targetsIds.forEach(tId => applyDamageToToken(tId, dmgTotal));
+                    msg += `<br/><b>Resolução contra os alvos:</b>`;
+                    targetsIds.forEach(tId => {
+                      const tStats = getTargetStats(tId);
+                      const effectiveDefense = tStats.defesa;
+                      
+                      let grau = 'FRACASSO'; let cor = '#ef4444';
+                      if (totalAtk >= effectiveDefense + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; }
+                      else if (totalAtk >= effectiveDefense) { grau = 'SUCESSO'; cor = '#10b981'; }
+                      else { grau = 'FRACASSO'; cor = '#ef4444'; }
+                      
+                      if (grau === 'SUCESSO CRÍTICO') {
+                        msg += `<br/>🎯 <b style="color:${cor};">${grau}</b> em ${tStats.name} (CA ${effectiveDefense})! Dano Dobrado: <b>${dmgTotal * 2}</b>`;
+                        applyDamageAndSync(tId, dmgTotal * 2);
+                        window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'CRÍTICO: ' + item.nome, result: String(dmgTotal * 2), type: 'attack' } }));
+                      } else if (grau === 'SUCESSO') {
+                        msg += `<br/>✅ <b style="color:${cor};">${grau}</b> em ${tStats.name} (CA ${effectiveDefense})! Dano: <b>${dmgTotal}</b>`;
+                        applyDamageAndSync(tId, dmgTotal);
+                        window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'DANO: ' + item.nome, result: String(dmgTotal), type: 'attack' } }));
+                      } else {
+                        msg += `<br/>🛡️ <b style="color:${cor};">${grau}</b> contra ${tStats.name} (CA ${effectiveDefense}). Nenhum dano.`;
+                      }
+                    });
                   }
-
-                  pushChatMessage(msg, totalAtk >= 14, dieRoll === 1);
-
-                  window.dispatchEvent(new CustomEvent('dice-roll', {
-                    detail: {
-                      title: `Ataque: ${item.nome}`,
-                      result: totalAtk.toString(),
-                      type: 'attack'
-                    }
-                  }));
+                  pushChatMessage(msg, totalAtk >= 14, false);
+                  window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: `Ataque: ${item.nome}`, result: totalAtk.toString(), type: 'attack' }}));
                 };
 
                 return (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', borderLeft: item.equipado ? '3px solid #ef4444' : '3px solid var(--text-secondary)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: '0.75rem', color: item.equipado ? 'white' : '#cbd5e1', fontWeight: item.equipado ? 'bold' : 'normal', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {item.nome}
-                      </span>
-                      <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        Dano: {danoExpr} | {item.descricao || 'Sem descrição'}
-                      </span>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'white', fontWeight: 'bold' }}>{item.nome}</span>
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Dano: {danoExpr}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '4px', marginLeft: '4px' }}>
-                      <button
-                        onClick={handleRollWeapon}
-                        style={{ padding: '2px 6px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5', borderRadius: '4px', fontSize: '0.6rem', fontWeight: 'bold', cursor: 'pointer' }}
-                      >
-                        ATK
-                      </button>
-                      <button 
-                        style={{ padding: '2px 4px', background: item.equipado ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)', border: item.equipado ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(59,130,246,0.2)', color: item.equipado ? '#fca5a5' : '#93c5fd', borderRadius: '4px', fontSize: '0.6rem', cursor: 'pointer' }}
-                        onClick={() => handleItemAction('armas', idx, 'equipar')}
-                      >
-                        {item.equipado ? 'Guardar' : 'Equipar'}
-                      </button>
-                    </div>
+                    <button onClick={handleRollWeapon} style={{ padding: '2px 6px', background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderRadius: '4px', fontSize: '0.6rem', cursor: 'pointer' }}>ATK</button>
                   </div>
                 );
               })}
             </div>
           </div>
         )}
-
-        {showPoderes && (
-          <div>
-            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#c084fc', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}><Sparkles size={12} /> Habilidades & Poderes</h5>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              {wikiEntry.metadata.poderes.map((item: any, idx: number) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', borderLeft: '3px solid #a855f7' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: '0.75rem', color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {item.nome} <span style={{ fontSize: '0.65rem', color: '#c084fc' }}>({item.custo || '0 PM'})</span>
-                    </span>
-                    <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {item.descricao || 'Sem descrição'}
-                    </span>
-                  </div>
-                  <button 
-                    style={{ padding: '2px 6px', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.4)', color: '#d8b4fe', borderRadius: '4px', fontSize: '0.6rem', cursor: 'pointer', marginLeft: '4px' }}
-                    onClick={() => handleItemAction('poderes', idx, 'conjurar')}
-                  >
-                    USAR
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <h5 style={{ margin: 0, fontSize: '0.7rem', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Ataques e Macros</h5>
-            {isGM && (
-              <button onClick={handleAddMacro} className="btn-icon" style={{ padding: '1px', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)', background: 'transparent', borderRadius: '4px' }}>
-                <Plus size={10} />
-              </button>
-            )}
-          </div>
-
-          {macros.length === 0 && <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Nenhum ataque customizado.</span>}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            {macros.map((macro) => (
-              <div key={macro.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', background: 'rgba(0, 0, 0, 0.3)', border: '1px solid var(--glass-border)', borderLeft: '3px solid var(--accent-primary)', borderRadius: '6px', padding: '0.4rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  {isGM ? (
-                    <input 
-                      type="text" 
-                      value={macro.name} 
-                      onChange={e => handleEditMacro(macro.id, { name: e.target.value })}
-                      style={{ background: 'transparent', border: 'none', borderBottom: '1px dashed var(--text-secondary)', color: 'white', fontWeight: 600, width: '120px', fontSize: '0.75rem', padding: 0 }} 
-                    />
-                  ) : (
-                    <span style={{ fontWeight: 600, color: 'white', fontSize: '0.75rem' }}>{macro.name}</span>
-                  )}
-                  
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button
-                      onClick={() => handleRoll(macro)}
-                      style={{ padding: '2px 6px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 'bold' }}
-                    >
-                      ROLAR
-                    </button>
-                    {isGM && (
-                      <button onClick={() => handleDeleteMacro(macro.id)} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 0 }}>
-                        <Trash2 size={12} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {isGM && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
-                      Dados:
-                      <input type="number" value={macro.pool} onChange={e => handleEditMacro(macro.id, { pool: parseInt(e.target.value) || 0 })} style={{ width: '22px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.6rem', borderRadius: '3px', padding: '1px', textAlign: 'center' }} />
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
-                      Fome:
-                      <input type="number" value={macro.hunger} onChange={e => handleEditMacro(macro.id, { hunger: parseInt(e.target.value) || 0 })} style={{ width: '22px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.6rem', borderRadius: '3px', padding: '1px', textAlign: 'center' }} />
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
-                      Dano:
-                      <input type="number" value={macro.damage} onChange={e => handleEditMacro(macro.id, { damage: parseInt(e.target.value) || 0 })} style={{ width: '22px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.6rem', borderRadius: '3px', padding: '1px', textAlign: 'center' }} />
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '2px', gridColumn: 'span 3' }}>
-                      Fórm:
-                      <input type="text" value={macro.formula || ''} onChange={e => handleEditMacro(macro.id, { formula: e.target.value })} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.6rem', borderRadius: '3px', padding: '1px 3px' }} />
-                    </label>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     );
-  };
-
-  const renderItemsTab = () => {
+  };const renderItemsTab = () => {
     const showPocoes = wikiEntry && wikiEntry.metadata.pocoes && Array.isArray(wikiEntry.metadata.pocoes) && wikiEntry.metadata.pocoes.length > 0;
     const showObjetos = wikiEntry && wikiEntry.metadata.objetos_campanha && Array.isArray(wikiEntry.metadata.objetos_campanha) && wikiEntry.metadata.objetos_campanha.length > 0;
     const showGeral = wikiEntry && wikiEntry.metadata.inventario && Array.isArray(wikiEntry.metadata.inventario) && wikiEntry.metadata.inventario.length > 0;
