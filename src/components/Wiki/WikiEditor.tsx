@@ -11,12 +11,17 @@ import {
   BlockTypeSelect, CreateLink,
   InsertImage, InsertTable, ListsToggle, CodeToggle, InsertThematicBreak,
   tablePlugin, imagePlugin, linkPlugin, linkDialogPlugin,
-  diffSourcePlugin, DiffSourceToggleWrapper
+  diffSourcePlugin, DiffSourceToggleWrapper,
+  codeBlockPlugin,
+  directivesPlugin,
+  AdmonitionDirectiveDescriptor
 } from '@mdxeditor/editor';
 import type { MDXEditorMethods } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { getWikiConfig } from '../../store';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { DataviewRenderer } from './DataviewRenderer';
+import { MermaidRenderer } from './MermaidRenderer';
 
 interface WikiEditorProps {
   markdown: string;
@@ -101,6 +106,41 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
           }),
           linkPlugin(),
           linkDialogPlugin(),
+          directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
+          codeBlockPlugin({
+            codeBlockEditorDescriptors: [
+              {
+                match: (language) => language === 'dataview',
+                priority: 10,
+                Editor: (props: any) => (
+                  <div style={{ margin: '1rem 0' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '0.5rem' }}>Dataview</div>
+                    <DataviewRenderer query={props.code} isJS={false} />
+                  </div>
+                )
+              },
+              {
+                match: (language) => language === 'dataviewjs',
+                priority: 10,
+                Editor: (props: any) => (
+                  <div style={{ margin: '1rem 0' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#eab308', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '0.5rem' }}>Dataview JS</div>
+                    <DataviewRenderer query={props.code} isJS={true} />
+                  </div>
+                )
+              },
+              {
+                match: (language) => language === 'mermaid',
+                priority: 10,
+                Editor: (props: any) => (
+                  <div style={{ margin: '1rem 0' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '0.5rem' }}>Gráfico Vetorial</div>
+                    <MermaidRenderer code={props.code} />
+                  </div>
+                )
+              }
+            ]
+          }),
           diffSourcePlugin({ diffMarkdown: markdown, viewMode: 'rich-text' }),
           toolbarPlugin({
             toolbarContents: () => (

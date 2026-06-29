@@ -65,8 +65,6 @@ export class WikiQuery {
 
 &#x20;   return this; // Retorna "this" para permitir encadeamento
 
-&#x20; }
-
 &#x20; // Filtra usando uma função customizada para lógicas complexas
 
 &#x20; filter(predicate: (meta: Record\<string, any>) \=> boolean): WikiQuery {
@@ -74,8 +72,6 @@ export class WikiQuery {
 &#x20;   this.results \= this.results.filter(entry \=> predicate(entry.metadata));
 
 &#x20;   return this;
-
-&#x20; }
 
 &#x20; // Busca dentro de arrays de tags
 
@@ -88,10 +84,6 @@ export class WikiQuery {
 &#x20;     return Array.isArray(tags) && tags.includes(tag);
 
 &#x20;   });
-
-&#x20;   return this;
-
-&#x20; }
 
 &#x20; // Ordenação de resultados
 
@@ -109,21 +101,11 @@ export class WikiQuery {
 
 &#x20;     return 0;
 
-&#x20;   });
-
-&#x20;   return this;
-
-&#x20; }
-
 &#x20; // Executa a busca e retorna os dados
 
 &#x20; get(): WikiEntry\[] {
 
 &#x20;   return this.results;
-
-&#x20; }
-
-}
 
 // 3. Exemplo de Uso Prático em um Componente React
 
@@ -176,15 +158,11 @@ TIP
 
 yaml
 
-\---
-
 tipo: monstro
 
 hp: 50
 
 tags: \[fogo, chefe]
-
-\---
 
 \# Dragão Vermelho
 
@@ -202,137 +180,6 @@ Quando a Wiki tiver centenas ou até milhares de arquivos, não podemos carregar
 Isso garante que um índice de 10.000 arquivos ocupe apenas poucos megabytes de memória RAM e as buscas sejam milissegundos.
 
 ## Esboço Estrutural do Código (Query Engine)
-
-Aqui está um rascunho de como essa API de queries funcionaria "por debaixo dos panos", usando um padrão de interface encadeável (fluent API), muito similar a ferramentas de banco de dados.
-
-typescript
-
-// 1. Tipagem Básica do Índice
-
-export interface WikiEntry {
-
-&#x20; path: string;       // ex: "/wiki/bestiario/dragao.md"
-
-&#x20; slug: string;       // ex: "dragao"
-
-&#x20; metadata: Record\<string, any>; // O JSON gerado pelo gray-matter
-
-}
-
-// 2. Motor de Busca (Query Engine)
-
-export class WikiQuery {
-
-&#x20; private results: WikiEntry\[];
-
-&#x20; constructor(private index: WikiEntry\[]) {
-
-&#x20;   this.results \= \[...index]; // Inicializa com todos os arquivos
-
-&#x20; }
-
-&#x20; // Filtra por propriedades exatas (ex: tipo \=\=\= 'arma')
-
-&#x20; where(key: string, value: any): WikiQuery {
-
-&#x20;   this.results \= this.results.filter(entry \=> entry.metadata\[key] \=\=\= value);
-
-&#x20;   return this; // Retorna "this" para permitir encadeamento
-
-&#x20; }
-
-&#x20; // Filtra usando uma função customizada para lógicas complexas
-
-&#x20; filter(predicate: (meta: Record\<string, any>) \=> boolean): WikiQuery {
-
-&#x20;   this.results \= this.results.filter(entry \=> predicate(entry.metadata));
-
-&#x20;   return this;
-
-&#x20; }
-
-&#x20; // Busca dentro de arrays de tags
-
-&#x20; containsTag(tag: string): WikiQuery {
-
-&#x20;   this.results \= this.results.filter(entry \=> {
-
-&#x20;     const tags \= entry.metadata.tags;
-
-&#x20;     return Array.isArray(tags) && tags.includes(tag);
-
-&#x20;   });
-
-&#x20;   return this;
-
-&#x20; }
-
-&#x20; // Ordenação de resultados
-
-&#x20; sortBy(key: string, order: 'asc' | 'desc' \= 'asc'): WikiQuery {
-
-&#x20;   this.results.sort((a, b) \=> {
-
-&#x20;     const valA \= a.metadata\[key];
-
-&#x20;     const valB \= b.metadata\[key];
-
-&#x20;     if (valA \< valB) return order \=\=\= 'asc' ? -1 : 1;
-
-&#x20;     if (valA > valB) return order \=\=\= 'asc' ? 1 : -1;
-
-&#x20;     return 0;
-
-&#x20;   });
-
-&#x20;   return this;
-
-&#x20; }
-
-&#x20; // Executa a busca e retorna os dados
-
-&#x20; get(): WikiEntry\[] {
-
-&#x20;   return this.results;
-
-&#x20; }
-
-}
-
-// 3. Exemplo de Uso Prático em um Componente React
-
-/\*
-
-&#x20; const queryEngine \= new WikiQuery(globalWikiIndex);
-
-&#x20;&#x20;
-
-&#x20; const chefesDeFogo \= queryEngine
-
-&#x20;   .where('tipo', 'monstro')
-
-&#x20;   .containsTag('chefe')
-
-&#x20;   .containsTag('fogo')
-
-&#x20;   .sortBy('hp', 'desc')
-
-&#x20;   .get();
-
-\*/
-
-## Próximos Passos
-
-1. Instalar a biblioteca `gray-matter`.
-2. Criar a estrutura e a função que fará a leitura em lote com `import.meta.glob` no Vite.
-3. Criar a store (usando Zustand, Context, etc) para guardar o índice global na memória assim que a aplicação iniciar.
-4. Implementar a classe `WikiQuery` detalhada acima.
-
-IMPORTANT
-
-Gostaria de aprovar essa arquitetura para que eu comece a criar o serviço de indexação e as implementações em TypeScript? Já percebi pelo projeto que vocês usam React, então usaremos ganchos do React (`hooks`) para entregar esses dados facilmente aos seus componentes visuais depois!
-
-\---
 
 # Walkthrough: Sistema Dataview da Wiki
 
@@ -419,31 +266,15 @@ export function ListaDeMonstros() {
 
 &#x20; );
 
-}
-
 ## Como Testar
 
 Para ver isso rodando localmente, recomendo criar um arquivo Markdown qualquer em `d:/DOZERO/wiki/teste.md` com o seguinte cabeçalho (Frontmatter):
-
-yaml
-
-\---
-
-tipo: monstro
-
-hp: 50
-
-tags: \[fogo, chefe]
-
-\---
 
 \# Dragão
 
 Corpo do dragão...
 
 Em seguida importe o Hook onde quiser exibir essa informação. Tudo será cacheado via React de modo instantâneo.
-
-TIP
 
 Qualquer erro na tipagem com o TypeScript que encontrar com `gray-matter`, lembre-se que separamos os `import type` na estrutura final garantindo que o compilador rigoroso do `DOZERO` ficasse feliz! Tudo está compilando adequadamente.
 
@@ -491,8 +322,6 @@ Vamos modificar a "Ficha de Personagem" nativa que abre quando clicamos nos toke
 
 \- Clicar na aba para testar se a caixinha com propriedades abre/fecha e exibe o JSON do Frontmatter corretamente formatado.
 
-***
-
 \# Walkthrough: Integração Wiki & Ficha de Personagens (TargetTerminal)
 
 Finalizamos a implementação que conecta os Tokens do seu mapa com a vasta biblioteca da Wiki (Atores, Monstros, NPCs, etc)!
@@ -529,8 +358,6 @@ A ficha de personagem (que abre ao clicar num Token no mapa) foi modificada para
 
 &#x20;  resistencia: Fogo, Gelo
 
-&#x20;  \---
-
 &#x20;  \# Texto do Lich...
 
 &#x20;  \`\`\`
@@ -549,15 +376,11 @@ A ficha de personagem (que abre ao clicar num Token no mapa) foi modificada para
 
 \> Por padrão, a caixinha foi desenhada para ignorar de maneira limpa variáveis puramente visuais ou arranjos em arrays pesados (focamos em strings e números diretos, que são a maior parte das características do RPG), mantendo o painel bem rápido.
 
-***
-
 \# Plano de Implementação: Redesign do Oráculo (Modo Compacto)
 
 \## Objetivo
 
 Atender ao seu pedido de transformar o Oráculo massivo em uma "caixinha mágica" super elegante e minimalista. Chega de ver tabelas gigantes na tela! O Oráculo será focado em \*\*Ação e Mistério\*\*: você escolhe o que quer rolar, aperta o botão e a resposta cai direto no chat.
-
-\## Proposed Changes
 
 \### Redesign da Interface (\`OracleWidget.tsx\`)
 
@@ -581,59 +404,9 @@ Atender ao seu pedido de transformar o Oráculo massivo em uma "caixinha mágica
 
 \- \*\*Draggable Window:\*\* A janela já suporta ser arrastada e redimensionada livremente, mas adicionarei um indicador visual extra com o ícone de alças (\`GripHorizontal\`) no topo e nas bordas, deixando óbvio que você pode puxar a janela para qualquer canto do mapa.
 
-\> \[!TIP]
-
 \> \*\*User Review Required\*\*
 
 \> Este novo modelo é muito mais imersivo para o jogo, escondendo o funcionamento interno. Acha que essa estrutura com \*\*duas listas suspensas (Categoria -> Tabela)\*\* e um botão grandão de rolar atende perfeitamente ao que você imaginou para a UX?
-
-\## Verification Plan
-
-1\. Validar se a janela agora é pequena e elegante.
-
-2\. Garantir que as tabelas sumiram e os Dropdowns funcionam em cascata.
-
-3\. Testar a rolagem enviando perfeitamente para o Chat e aparecendo no minipainel do Widget.
-
-***
-
-\# Plano de Implementação: Redesign do Oráculo (Modo Compacto)
-
-\## Objetivo
-
-Atender ao seu pedido de transformar o Oráculo massivo em uma "caixinha mágica" super elegante e minimalista. Chega de ver tabelas gigantes na tela! O Oráculo será focado em \*\*Ação e Mistério\*\*: você escolhe o que quer rolar, aperta o botão e a resposta cai direto no chat.
-
-\## Proposed Changes
-
-\### Redesign da Interface (\`OracleWidget.tsx\`)
-
-\- \*\*Tamanho e Layout:\*\* A janela passará de 750px (gigante) para cerca de \*\*300px x 250px\*\* (super compacta).
-
-\- \*\*Navegação em Cascata (Dropdowns Inteligentes):\*\*
-
-&#x20; \- No lugar da barra lateral gigantesca, usaremos dois campos de seleção elegantes estilizados em \*glassmorphism\*.
-
-&#x20; \- \*\*Passo 1:\*\* Você escolhe a Categoria maior (Ex: \`Ironsmith\`, \`Ask the Oracle\`).
-
-&#x20; \- \*\*Passo 2:\*\* Você escolhe a Pergunta exata (Ex: \`Type of Evidence of Corruption\`, \`Fifty Fifty\`).
-
-\- \*\*Botão de Ação Massivo:\*\* Um grande botão central \`\[ 🎲 Rolar 1d100 ]\` vai brilhar esperando o seu clique.
-
-\- \*\*Ocultação de Tabelas:\*\* O código das tabelas de resultados será completamente removido da parte visual. Você só saberá a resposta quando rolar o dado.
-
-\- \*\*Feedback Imediato:\*\* O resultado será "cuspido" no Chat Global instantaneamente, mas eu também colocarei um pequeno painel na própria caixinha de "Último Resultado" para você não se perder.
-
-\### Alças e Arrastabilidade
-
-\- \*\*Draggable Window:\*\* A janela já suporta ser arrastada e redimensionada livremente, mas adicionarei um indicador visual extra com o ícone de alças (\`GripHorizontal\`) no topo e nas bordas, deixando óbvio que você pode puxar a janela para qualquer canto do mapa.
-
-\> \[!TIP]
-
-\> \*\*User Review Required\*\*
-
-\> Este novo modelo é muito mais imersivo para o jogo, escondendo o funcionamento interno. Acha que essa estrutura com \*\*duas listas suspensas (Categoria -> Tabela)\*\* e um botão grandão de rolar atende perfeitamente ao que você imaginou para a UX?
-
-\## Verification Plan
 
 1\. Validar se a janela agora é pequena e elegante.
 
@@ -670,8 +443,6 @@ O objetivo é criar uma interface premium e intuitiva onde o mestre possa ter um
 \> \*\*Tamanho da Interface:\*\*
 
 \> Por lidar com muita informação (textos de resumo, múltiplos arcos e sessões), o ideal é que este widget tenha um tamanho considerável (maior que os widgets de rolagem de dados ou de combate). Você prefere que ele seja um \*\*Widget Arrastável (Draggable)\*\* como os outros, ou uma \*\*Tela Cheia (Modal Fullscreen)\*\* que cobre o mapa enquanto você planeja? Minha recomendação inicial é um Widget Arrastável grande, para permitir consultar o mapa simultaneamente.
-
-\## Proposed Changes
 
 \### Armazenamento e Estado Central
 
@@ -715,8 +486,6 @@ O objetivo é criar uma interface premium e intuitiva onde o mestre possa ter um
 
 \- Adicionar o estado de renderização para o \`CampaignManagerWidget\` (abrir/fechar/posição inicial).
 
-\## Verification Plan
-
 \### Testes Manuais
 
 \- Abrir o Hub de Ferramentas e lançar o Gestor de Campanhas.
@@ -731,15 +500,7 @@ O objetivo é criar uma interface premium e intuitiva onde o mestre possa ter um
 
 \- Avaliar se a interface responde de forma fluida (micro-interações) e se as cores seguem a estética "WOW" do projeto.
 
-***
-
-
-
-
-
 Ótima ideia! Deixa eu explorar o sistema de notas existente antes de planejar a integração:
-
-
 
 Listed directory wiki
 
@@ -753,27 +514,15 @@ Viewed WikiEditor.tsx:1-133
 
 Viewed githubApi.ts:1-129
 
-
-
 Agora entendi completamente o sistema. O wiki usa uma API local (\`/api/wiki/\*\`) que lê/escreve arquivos Markdown no disco. Vou criar um plano antes de executar:
-
-
 
 Edited implementation\_plan.md
 
-
-
 Entendi perfeitamente a ideia. Antes de executar, preciso de duas decisões suas:
-
-
 
 \### 📐 Arquitetura da Integração
 
-
-
 O plano é: \*\*Yjs guarda metadados\*\* (nome, data, status, caminho do arquivo) e \*\*os arquivos \`.md\` no disco guardam o conteúdo\*\* (notas de sessão, descrição de arco, sinopse da campanha). A estrutura de pastas na sua wiki ficaria assim:
-
-
 
 \`\`\`
 
@@ -795,13 +544,7 @@ Campanhas/
 
 &#x20;     2026-06-20\_Sessao-02.md
 
-\`\`\`
-
-
-
 Preciso de resposta para duas perguntas abertas do plano:
-
-
 
 \*\*Pergunta 1 — Editor dentro do widget:\*\*
 
@@ -809,37 +552,19 @@ Preciso de resposta para duas perguntas abertas do plano:
 
 \- \*\*Opção B:\*\* WikiEditor (MDXEditor) embutido mini direto no widget — edição rica sem sair, mas mais pesado
 
-
-
 \*\*Pergunta 2 — Pasta raiz das campanhas:\*\*
 
 \- Criar sempre dentro de uma pasta fixa chamada \`Campanhas/\` na raiz da wiki?
 
 \- Ou o usuário escolhe a pasta no momento de criar a campanha?
 
-
-
 \------
-
-
 
 \# Integração: Gestor de Campanhas ↔ Wiki (Arquivos Markdown)
 
-
-
-\## Visão Geral
-
-
-
 O Gestor de Campanhas passa a ser a \*\*interface visual\*\* das notas. Cada \*\*sessão\*\* e cada \*\*arco narrativo\*\* terá um arquivo \`.md\` correspondente na pasta da wiki do usuário. O Yjs deixa de ser o único repositório dos dados — passa a ser o \*\*índice/metadados\*\* (nome, data, status), enquanto o \*\*conteúdo\*\* (o texto de resumo/notas) vive como arquivo Markdown no disco.
 
-
-
 \## Arquitetura da Integração
-
-
-
-\`\`\`
 
 Yjs (state.campaigns)          Disco Local (/api/wiki/\*)
 
@@ -873,45 +598,19 @@ Yjs (state.campaigns)          Disco Local (/api/wiki/\*)
 
 └─────────────────────┘
 
-\`\`\`
-
-
-
 \*\*Regra simples:\*\* \`filePath\` no Yjs aponta para o caminho relativo do arquivo dentro da wiki. O conteúdo textual SEMPRE vem do arquivo. O Yjs só guarda metadados estruturais.
-
-
 
 \## Mudanças Propostas
 
-
-
-\---
-
-
-
 \### Modelo de Dados
-
-
-
-\#### \[MODIFY] \[store/index.ts]\(file:///d:/DOZERO/src/store/index.ts)
 
 \- Adicionar campo \`filePath?: string\` nas interfaces \`CampaignArc\` e \`CampaignSession\` (o \`CampaignData\` também ganha \`folderPath?\` para a pasta raiz da campanha).
 
 \- Adicionar campo \`overviewPath?: string\` em \`CampaignData\` para o arquivo \`\_campanha.md\`.
 
-
-
-\---
-
-
-
 \### Gestor de Campanhas (Widget)
 
-
-
 \#### \[MODIFY] \[src/components/HUD/CampaignManagerWidget.tsx]\(file:///d:/DOZERO/src/components/HUD/CampaignManagerWidget.tsx)
-
-
 
 \*\*Aba "Visão Geral":\*\*
 
@@ -921,8 +620,6 @@ Yjs (state.campaigns)          Disco Local (/api/wiki/\*)
 
 \- Auto-save de 1 segundo salva o conteúdo no arquivo \`.md\` via \`/api/wiki/save\`.
 
-
-
 \*\*Aba "Arcos Narrativos":\*\*
 
 \- Ao criar um arco, gera \`Campanhas/\[nome]/Arcos/\[nome-arco].md\`.
@@ -931,48 +628,22 @@ Yjs (state.campaigns)          Disco Local (/api/wiki/\*)
 
 \- Edição salva diretamente no arquivo \`.md\`.
 
-
-
 \*\*Aba "Sessões":\*\*
 
 \- Ao criar uma sessão, gera \`Campanhas/\[nome]/Sessoes/YYYY-MM-DD\_Sessao-NN.md\` com template inicial.
 
 \- O textarea de resumo é substituído pelo \*\*\`WikiEditor\`\*\* (modo compacto).
 
-\- Edição salva diretamente no arquivo \`.md\`.
-
-
-
 \*\*Botão "Abrir na Wiki":\*\*
 
 \- Um botão ≡ em cada sessão/arco que abre o arquivo correspondente no \`WikiViewer\` principal.
 
-
-
-\---
-
-
-
-\## Open Questions
-
-
-
-\> \[!IMPORTANT]
-
 \> \*\*Pasta raiz das campanhas na wiki:\*\* As campanhas serão criadas dentro de uma subpasta fixa (ex: \`Campanhas/\`) na raiz da wiki. Isso é aceitável? Ou prefere que o usuário escolha a pasta no momento de criar a campanha?
-
-
-
-\> \[!IMPORTANT]
 
 \> \*\*Editor rico vs. textarea simples:\*\* O \`WikiEditor\` (MDXEditor) é pesado e foi feito para tela cheia. Dentro do widget compacto, pode ser lento ou ter problemas de layout. A alternativa é usar um \*\*textarea\*\* simples com suporte a Markdown preview, que é mais leve e integra melhor no widget. Qual prefere?
 
 \> - \*\*Opção A (Recomendada):\*\* Textarea simples + botão "Abrir na Wiki" para edição rica — mais leve, o usuário vai para a wiki para formatar.
 
 \> - \*\*Opção B:\*\* WikiEditor embutido mini — edição rica direto no widget, mais complexo de implementar.
-
-
-
-\> \[!WARNING]
 
 \> \*\*Dados existentes:\*\* Campanhas que já foram criadas (e estão no Yjs sem \`filePath\`) serão tratadas como "legadas" — o widget vai exibir um botão para "Vincular à Wiki" e criar os arquivos manualmente.

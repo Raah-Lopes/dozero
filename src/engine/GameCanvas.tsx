@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets } from '../store';
 
 function hexRound(q: number, r: number) {
   let s = -q - r;
@@ -971,10 +971,20 @@ export const GameCanvas: React.FC = () => {
             token.addChild(tokenBorder);
 
             // Async load portrait image (Support custom imageUrl)
-            const imgPath = t.imageUrl ? t.imageUrl : (id === 'omega_sentinel' ? '/omega_sentinel.png' : '/vite.svg');
+            let imgPath = t.imageUrl ? t.imageUrl : (id === 'omega_sentinel' ? '/omega_sentinel.png' : '/vite.svg');
             
-            Assets.load(imgPath).then((texture) => {
+            // Resolve path for local wiki images
+            if (imgPath && !imgPath.startsWith('http') && !imgPath.startsWith('data:') && !imgPath.startsWith('/')) {
+              const config = getWikiConfig();
+              const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+              imgPath = `/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(imgPath)}`;
+            }
+            
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
               if (isDestroyed || !tokenSprites[id]) return;
+              const texture = Texture.from(img);
               const sprite = new Sprite(texture);
               sprite.anchor.set(0.5);
               
@@ -994,7 +1004,8 @@ export const GameCanvas: React.FC = () => {
 
               token.addChild(mask);
               token.addChild(sprite);
-            }).catch(() => {});
+            };
+            img.src = imgPath;
 
             // Pulsing Neon Glow
             const glow = new Graphics();
@@ -1132,8 +1143,14 @@ export const GameCanvas: React.FC = () => {
                 if (!e.shiftKey) {
                    clearTokenSelection();
                    clearPropSelection();
+                   clearTargets();
                 }
                 toggleTokenSelection(id, false);
+                toggleTarget(id);
+              } else if (e.shiftKey) {
+                // Se já está selecionado e segurou shift, desmarca seleção e alvo
+                toggleTokenSelection(id, false);
+                toggleTarget(id);
               }
 
               draggingTokenId = id;
@@ -1197,6 +1214,18 @@ export const GameCanvas: React.FC = () => {
                 tokenSprites[id].container.y = t.y;
               }
             }
+          }
+          
+          // Animação Dinâmica da Barra de Vida (HP)
+          const hp = t.hp !== undefined ? Number(t.hp) : 100;
+          const maxHp = t.maxHp ? Number(t.maxHp) : 100;
+          const hpPct = Math.max(0, Math.min(1, maxHp > 0 ? hp / maxHp : 0));
+          
+          const fill = tokenSprites[id].hpFill;
+          if (fill && tokenSprites[id].hpBarY !== undefined) {
+            fill.clear();
+            fill.rect(-19, tokenSprites[id].hpBarY + 1, 38 * hpPct, 4);
+            fill.fill(0xef4444);
           }
         });
       };
@@ -2010,7 +2039,11 @@ export const GameCanvas: React.FC = () => {
           }
 
           // Update Mini HP Bar live
-          const hpPercent = Math.max(0, tState.hp / (tState.maxHp || 1));
+          const curHp = Number(tState.hp);
+          const maxHp = Number(tState.maxHp || 1);
+          const validHp = isNaN(curHp) ? 100 : curHp;
+          const validMax = isNaN(maxHp) || maxHp === 0 ? Math.max(100, validHp) : maxHp;
+          const hpPercent = Math.max(0, Math.min(1, validHp / validMax));
           const hpY = tokenData.hpBarY !== undefined ? tokenData.hpBarY + 1 : 36;
           tokenData.hpFill.clear();
           tokenData.hpFill.rect(-19, hpY, 38 * hpPercent, 4);

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { AlertTriangle, FileText } from 'lucide-react';
+import { AlertTriangle, FileText, Paperclip, Loader2 } from 'lucide-react';
 import { loadMarkdownFile, saveMarkdownContent } from '../../../../utils/githubApi';
+import { getWikiConfig } from '../../../../store';
 
 export const LegacyBadge: React.FC = () => (
   <span style={{
@@ -34,8 +35,11 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const saveTimer = useRef<number | null>(null);
   const mountedRef = useRef(true);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Load from file when filePath becomes available
   useEffect(() => {
@@ -75,6 +79,82 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
     }
   };
 
+  const insertTextAtCursor = (textToInsert: string) => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const before = content.slice(0, start);
+    const after = content.slice(end);
+    const newVal = before + textToInsert + after;
+    setContent(newVal);
+    // Trigger save
+    window.setTimeout(() => {
+      ta.selectionStart = start + textToInsert.length;
+      ta.selectionEnd = start + textToInsert.length;
+      ta.focus();
+    }, 10);
+    if (filePath) {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+      saveTimer.current = window.setTimeout(async () => {
+        setSaving(true);
+        try { await saveMarkdownContent(filePath, newVal); }
+        finally { setSaving(false); }
+      }, 1000);
+    } else {
+      onFallbackChange?.(newVal);
+    }
+  };
+
+  const handleImageAttach = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+
+      // Convert to WebP
+      const reader = new FileReader();
+      const dataUrl: string = await new Promise((res, rej) => {
+        reader.onload = ev => res(ev.target?.result as string);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+
+      // Resize via canvas
+      const img = new Image();
+      await new Promise<void>(res => { img.onload = () => res(); img.src = dataUrl; });
+      const canvas = document.createElement('canvas');
+      const maxSize = 1200;
+      let w = img.width, h = img.height;
+      if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
+      if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      const webpBase64 = canvas.toDataURL('image/webp', 0.85);
+
+      const safeName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `${safeName}_${Date.now()}.webp`;
+
+      const res = await fetch('/api/wiki/save-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoPath, filename, base64: webpBase64 }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        const altText = file.name.replace(/\.[^.]+$/, '');
+        insertTextAtCursor(`\n![${altText}](${data.url})\n`);
+      }
+    } catch (err) {
+      console.error('Erro ao anexar imagem:', err);
+    } finally {
+      setUploadingImage(false);
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -90,13 +170,42 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
   return (
     <div style={{ position: 'relative' }}>
       <textarea
+        ref={textareaRef}
         className="cm-textarea"
-        style={{ minHeight }}
+        style={{ minHeight, paddingBottom: '28px' }}
         value={content}
         onChange={handleChange}
         placeholder={placeholder}
         autoFocus={autoFocus}
       />
+      {/* Toolbar dentro do textarea */}
+      <div style={{
+        position: 'absolute', bottom: '6px', left: '8px',
+        display: 'flex', alignItems: 'center', gap: '4px',
+      }}>
+        <label
+          title="Anexar imagem (salva em ANEXOS/ e insere no texto)"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            padding: '2px 8px', borderRadius: '5px', cursor: 'pointer',
+            background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)',
+            color: '#c084fc', fontSize: '0.65rem', fontWeight: 700, fontFamily: 'var(--font-display)',
+            transition: 'all 0.2s',
+          }}
+        >
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleImageAttach}
+          />
+          {uploadingImage
+            ? <Loader2 size={10} style={{ animation: 'spin 1s linear infinite' }} />
+            : <Paperclip size={10} />}
+          {uploadingImage ? 'Enviando...' : 'Anexar'}
+        </label>
+      </div>
       {saving && (
         <span style={{
           position: 'absolute', bottom: '8px', right: '10px',
@@ -109,4 +218,3 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
     </div>
   );
 };
-

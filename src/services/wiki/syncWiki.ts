@@ -31,8 +31,9 @@ export async function syncTokenFieldToWiki(wikiPath: string, field: string, valu
       }
       else data[field] = value;
       
-      const newFrontStr = yaml.dump(data);
-      const newContent = `---\n${newFrontStr}---\n${parts.slice(2).join('---')}`;
+      const newFrontStr = yaml.dump(data, { indent: 2, lineWidth: -1 });
+      const body = parts.slice(2).join('---');
+      const newContent = `---\n${newFrontStr}---\n${body}`;
       
       await saveMarkdownContent(wikiPath, newContent);
       return true;

@@ -99,6 +99,18 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
     state.combat.set('participants', parts.map(p => p.tokenId === tokenId ? (p.minionMaxHits ? { ...p, minionHits: undefined, minionMaxHits: undefined } : { ...p, minionHits: 2, minionMaxHits: 2 }) : p));
   };
 
+  const toggleAction = (tokenId: string, currentRemaining: number = 3) => {
+    const parts = (state.combat.get('participants') as CombatParticipant[]) || [];
+    state.combat.set('participants', parts.map(p => {
+      if (p.tokenId === tokenId) {
+        let newActions = currentRemaining - 1;
+        if (newActions < 0) newActions = 3;
+        return { ...p, actionsRemaining: newActions };
+      }
+      return p;
+    }));
+  };
+
   const hitMinion = (tokenId: string) => {
     const parts = (state.combat.get('participants') as CombatParticipant[]) || [];
     state.combat.set('participants', parts.map(p => {
@@ -205,10 +217,21 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
                       )}
                     </div>
                   ) : tokensMap.has(p.tokenId) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4px', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '0.75rem', color: '#fca5a5', fontWeight: 'bold' }}>HP: {tokensMap.get(p.tokenId).hp ?? 0}/{tokensMap.get(p.tokenId).maxHp ?? 1}</span>
                       <span style={{ fontSize: '0.75rem', color: '#93c5fd', fontWeight: 'bold' }}>PM: {tokensMap.get(p.tokenId).mana ?? 0}/{tokensMap.get(p.tokenId).maxMana ?? 0}</span>
                       <span style={{ fontSize: '0.75rem', color: '#d1d5db', fontWeight: 'bold' }}>🛡️ {tokensMap.get(p.tokenId).defesa ?? 0}</span>
+                      <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }} onClick={(e) => { e.stopPropagation(); toggleAction(p.tokenId, p.actionsRemaining ?? 3); }} title="Economia de 3 Ações">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <div key={i} style={{
+                            width: '12px', height: '12px', transform: 'rotate(45deg)', cursor: 'pointer',
+                            background: i < (p.actionsRemaining ?? 3) ? '#f59e0b' : 'rgba(255,255,255,0.1)',
+                            border: `1px solid ${i < (p.actionsRemaining ?? 3) ? '#fbbf24' : 'rgba(255,255,255,0.2)'}`,
+                            boxShadow: i < (p.actionsRemaining ?? 3) ? '0 0 5px rgba(245,158,11,0.5)' : 'none',
+                            transition: 'all 0.2s'
+                          }} />
+                        ))}
+                      </div>
                     </div>
                   )}
 

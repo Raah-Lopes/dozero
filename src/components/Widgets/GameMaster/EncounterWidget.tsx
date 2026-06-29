@@ -86,15 +86,96 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
       "Invasores Alienígenas / Mutantes": "/enemy_alien.png"
     };
 
-    // Injetar Inimigos no Tracker de Iniciativa
+    // Injetar Inimigos no Tabuleiro (Canvas) e no Tracker de Iniciativa
     const currentParticipants = (state.combat.get('participants') as CombatParticipant[]) || [];
     
-    const newEnemies: CombatParticipant[] = enemiesToSpawn.map(e => ({
-      tokenId: `enc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      name: e.name,
-      initiative: Math.floor(Math.random() * 20) + 1 + e.level, // 1d20 + nível
-      imageUrl: imageMap[faccao] || '/enemy_bandit.png'
-    }));
+    const newEnemies: CombatParticipant[] = enemiesToSpawn.map((e, index) => {
+      const tokenId = `enc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const imageUrl = imageMap[faccao] || '/enemy_bandit.png';
+      
+      // Calcular atributos baseados no Nível
+      const hp = 10 + (e.level * 12);
+      const defense = 10 + e.level;
+      const attack = 2 + e.level;
+      
+      // Espalhar tokens próximos ao centro da mesa
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const offsetX = (Math.random() - 0.5) * 200 + (index * 20);
+      const offsetY = (Math.random() - 0.5) * 200 + (index * 20);
+
+      // Gerar armas e poderes baseados na facção
+      let weaponName = "Ataque Corporal";
+      let weaponDamage = `1d${4 + Math.ceil(e.level/2)}+${e.level}`;
+      let powerName = "Golpe Devastador";
+      let powerEffect = `dano_2d6+${e.level}`;
+      
+      if (faccao === "Bandidos e Mercenários") {
+        weaponName = "Lâmina Suja / Clava";
+        weaponDamage = `1d6+${e.level}`;
+        powerName = "Ataque Traiçoeiro";
+      } else if (faccao === "Mortos-Vivos (Undead)") {
+        weaponName = "Garras Pútridas";
+        weaponDamage = `1d4+${e.level}`;
+        powerName = "Miasma Pútrido";
+      } else if (faccao === "Cultistas do Abismo") {
+        weaponName = "Adaga Sacrificial";
+        powerName = "Raio Sombrio";
+        powerEffect = `dano_1d8+${e.level}`;
+      } else if (faccao === "Monstros Selvagens") {
+        weaponName = "Mordida Selvagem";
+        weaponDamage = `1d8+${e.level}`;
+        powerName = "Fúria Bestial";
+      } else if (faccao === "Guarda Real / Milícia") {
+        weaponName = "Espada / Lança Longa";
+        weaponDamage = `1d8+${e.level}`;
+        powerName = "Investida com Escudo";
+      } else if (faccao === "Invasores Alienígenas / Mutantes") {
+        weaponName = "Apêndice Ácido / Feixe";
+        weaponDamage = `2d4+${e.level}`;
+        powerName = "Explosão Plasmática";
+        powerEffect = `dano_3d4+${e.level}`;
+      }
+
+      const armas = [
+        { nome: weaponName, dano: weaponDamage, equipado: true, descricao: `Ataque básico (Nível ${e.level})` }
+      ];
+
+      const poderes = e.level >= 3 ? [
+        { nome: powerName, efeito: powerEffect, custo: "0 PM", descricao: "Habilidade poderosa de Elite/Chefe." }
+      ] : [];
+
+      // 1. Criar o Token Físico na Mesa
+      state.tokens.set(tokenId, {
+        id: tokenId,
+        x: cx + offsetX,
+        y: cy + offsetY,
+        name: e.name,
+        hp: hp,
+        maxHp: hp,
+        nivel: e.level,
+        defesa: defense,
+        ataque: attack,
+        imageUrl: imageUrl,
+        tokenShape: 'circle',
+        sizeScale: 1,
+        borderColor: '#ef4444', // Borda vermelha indicando hostilidade
+        showName: true,
+        hpBarMode: 'always',
+        status: 'npc',
+        ativo: true,
+        armas: armas,
+        poderes: poderes
+      });
+
+      // 2. Retornar dados para o Tracker de Iniciativa
+      return {
+        tokenId,
+        name: e.name,
+        initiative: Math.floor(Math.random() * 20) + 1 + e.level, // 1d20 + nível
+        imageUrl: imageUrl
+      };
+    });
 
     const combinedParticipants = [...currentParticipants, ...newEnemies];
     combinedParticipants.sort((a, b) => b.initiative - a.initiative);

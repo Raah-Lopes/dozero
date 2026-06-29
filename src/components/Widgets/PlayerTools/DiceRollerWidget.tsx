@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { pushChatMessage } from '../../../store';
+import { useRulesEngine } from '../../../hooks/useRulesEngine';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 type DieType = 4 | 6 | 8 | 10 | 12 | 20 | 100;
@@ -114,7 +115,8 @@ const AnimatedDie: React.FC<{ sides: DieType; value: number; rolling: boolean; t
 
 // ─── Widget Principal ──────────────────────────────────────────────────────
 export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [selectedDie, setSelectedDie] = useState<DieType>(20);
+  const { currentEngine } = useRulesEngine();
+  const [selectedDie, setSelectedDie] = useState<DieType>(currentEngine.defaultDie);
   const [quantity, setQuantity] = useState(1);
   const [modifier, setModifier] = useState(0);
   const [rolling, setRolling] = useState(false);
@@ -146,6 +148,24 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [selectedDie, quantity, modifier]);
+
+  useEffect(() => {
+    const handleRulesChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ engineId: string }>;
+      // When the engine changes, we just reload the component state indirectly,
+      // but to be safe we can force it or just rely on the user reopening.
+      // Better: we can import RULES_ENGINES here, but since useRulesEngine provides currentEngine,
+      // React state might not auto-update the useState initial value.
+      // We will listen to it here.
+    };
+    window.addEventListener('rules-engine-changed', handleRulesChange);
+    return () => window.removeEventListener('rules-engine-changed', handleRulesChange);
+  }, []);
+
+  useEffect(() => {
+    setSelectedDie(currentEngine.defaultDie);
+  }, [currentEngine.defaultDie]);
+
 
   const handleRoll = useCallback((overrideQty?: number, overrideDie?: DieType, overrideMod?: number) => {
     if (rolling) return;

@@ -5,9 +5,7 @@ import App from './App.tsx'
 import { LiveKitWrapper } from './services/livekit/LiveKitWrapper.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <LiveKitWrapper>
-      <App />
-    </LiveKitWrapper>
-  </StrictMode>,
+  <LiveKitWrapper>
+    <App />
+  </LiveKitWrapper>
 )

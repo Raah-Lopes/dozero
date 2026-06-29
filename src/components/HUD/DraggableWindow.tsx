@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GripHorizontal, X, Minus } from 'lucide-react';
+import { GripHorizontal, X, Minus, Pin } from 'lucide-react';
 import { ErrorBoundary } from '../ErrorBoundary';
 
 interface DraggableWindowProps {
@@ -37,18 +37,19 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
              isNaN(parsed.x) || isNaN(parsed.y) ||
              parsed.x < -100 || parsed.x > screenW - 50 || 
              parsed.y < 0 || parsed.y > screenH - 50) {
-            return { x: initialX, y: Math.max(0, initialY), w: width, h: height };
+            return { x: initialX, y: Math.max(0, initialY), w: width, h: height, pinned: false };
          }
          if (parsed.y < 0) parsed.y = 0;
-         return parsed;
+         return { ...parsed, pinned: parsed.pinned || false };
       }
     } catch (e) {}
-    return { x: initialX, y: Math.max(0, initialY), w: width, h: height };
+    return { x: initialX, y: Math.max(0, initialY), w: width, h: height, pinned: false };
   };
 
   const initialPrefs = getInitialPrefs();
   const [pos, setPos] = useState({ x: initialPrefs.x, y: initialPrefs.y });
   const [size, setSize] = useState({ w: initialPrefs.w, h: initialPrefs.h });
+  const [isPinned, setIsPinned] = useState(initialPrefs.pinned || false);
   
   useEffect(() => {
     setSize(prev => ({ w: width !== undefined ? width : prev.w, h: height !== undefined ? height : prev.h }));
@@ -67,7 +68,20 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     setZIndex(globalZIndexCounter);
   };
 
+  useEffect(() => {
+    const handleBringToFront = (e: Event) => {
+      const targetId = (e as CustomEvent).detail;
+      if (targetId === id) {
+        bringToFront();
+        setIsMinimized(false);
+      }
+    };
+    window.addEventListener('bring-window-to-front', handleBringToFront);
+    return () => window.removeEventListener('bring-window-to-front', handleBringToFront);
+  }, [id]);
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPinned) return;
     const target = e.target as HTMLElement;
     
     // Do not initiate drag on interactive elements
@@ -77,11 +91,15 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       target.tagName === 'INPUT' || 
       target.tagName === 'TEXTAREA' || 
       target.tagName === 'A' ||
+      target.tagName === 'LABEL' ||
+      target.tagName === 'SUMMARY' ||
       target.closest('button') || 
       target.closest('select') ||
       target.closest('input') ||
       target.closest('textarea') ||
       target.closest('a') ||
+      target.closest('label') ||
+      target.closest('summary') ||
       target.closest('.interactive') ||
       target.getAttribute('role') === 'button'
     ) {
@@ -174,7 +192,30 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     // Final safety check for y
     if (newY < 0) newY = 0;
 
-    setPos({ x: newX, y: newY });
+    // 3. Collision with pinned windows
+    let nextX = newX;
+    let nextY = newY;
+    const pinnedWindows = document.querySelectorAll('.draggable-window[data-pinned="true"]');
+    pinnedWindows.forEach((pinned) => {
+      if (pinned.id === `window-${id}`) return;
+      const pRect = pinned.getBoundingClientRect();
+      
+      const xOverlap = (nextX < pRect.right && nextX + rect.width > pRect.left &&
+                        pos.y < pRect.bottom && pos.y + rect.height > pRect.top);
+      if (xOverlap) {
+         if (nextX > pos.x) nextX = pRect.left - rect.width;
+         else if (nextX < pos.x) nextX = pRect.right;
+      }
+      
+      const yOverlap = (nextX < pRect.right && nextX + rect.width > pRect.left &&
+                        nextY < pRect.bottom && nextY + rect.height > pRect.top);
+      if (yOverlap) {
+         if (nextY > pos.y) nextY = pRect.top - rect.height;
+         else if (nextY < pos.y) nextY = pRect.bottom;
+      }
+    });
+
+    setPos({ x: nextX, y: nextY });
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -189,7 +230,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         x: pos.x,
         y: finalY,
         w: rect.width,
-        h: rect.height
+        h: rect.height,
+        pinned: isPinned
       }));
     }
   };
@@ -199,6 +241,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       id={`window-${id}`}
       ref={windowRef}
       className={(variant === 'default' || variant === 'glass') ? "draggable-window glass-panel" : "draggable-window"}
+      data-pinned={isPinned}
       style={{
         position: 'absolute',
         left: pos.x,
@@ -209,9 +252,9 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         display: 'flex',
         flexDirection: 'column',
         zIndex: isDragging ? globalZIndexCounter + 100 : zIndex,
-        boxShadow: (variant === 'default' || variant === 'glass') ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : '') : 'none',
+        boxShadow: (variant === 'default' || variant === 'glass') ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : (isPinned ? '0 0 10px rgba(168, 85, 247, 0.1)' : '')) : 'none',
         transition: isDragging ? 'none' : 'box-shadow 0.2s',
-        resize: ((variant === 'default' || variant === 'glass') && !isMinimized) ? 'both' : 'none',
+        resize: ((variant === 'default' || variant === 'glass') && !isMinimized && !isPinned) ? 'both' : 'none',
         overflow: 'hidden',
         minWidth: (variant === 'default' || variant === 'glass') ? '250px' : 'auto',
         minHeight: ((variant === 'default' || variant === 'glass') && !isMinimized) ? '100px' : 'auto',
@@ -231,7 +274,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
             x: pos.x,
             y: pos.y,
             w: rect.width,
-            h: rect.height
+            h: rect.height,
+            pinned: isPinned
           }));
         }
       }}
@@ -256,11 +300,29 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
           onDoubleClick={() => setIsMinimized(!isMinimized)}
         >
           <div style={{ display: 'flex', gap: '0.5rem', color: 'var(--text-secondary)', alignItems: 'center' }}>
-            <GripHorizontal size={14} />
+            <GripHorizontal size={14} style={{ opacity: isPinned ? 0.2 : 1 }} />
             <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</span>
           </div>
         
         <div style={{ position: 'absolute', right: '0.25rem', top: '0.25rem', display: 'flex', gap: '0.25rem' }}>
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              setIsPinned(!isPinned);
+              localStorage.setItem(storageKey, JSON.stringify({
+                x: pos.x, y: pos.y, w: size.w, h: size.h, pinned: !isPinned
+              }));
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={isPinned ? "Desafixar Janela" : "Fixar Janela (Bloquear sobreposição)"}
+            style={{ 
+              background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'transparent', border: 'none', color: isPinned ? 'white' : 'var(--text-secondary)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', borderRadius: '4px'
+            }}
+          >
+            <Pin size={14} />
+          </button>
+          
           <button 
             onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
             onPointerDown={(e) => e.stopPropagation()}

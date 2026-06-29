@@ -33,16 +33,20 @@ channel.onmessage = (event) => {
 // IndexeddbPersistence saves the document locally so it survives F5
 export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 
+// Conecta ao servidor WebSocket embutido no próprio Vite (mesma porta do site)
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = `${protocol}//${window.location.host}/yjs`;
+
 export const provider = new WebsocketProvider(
-  'ws://localhost:1234', 
+  wsUrl, 
   roomName, 
-  doc, 
-  { connect: false } // we don't connect to websocket yet to avoid console errors
+  doc
 );
 
 export const state = {
   tokens: doc.getMap('tokens'),
   chat: doc.getArray('chat'),
+  polls: doc.getMap('polls'),
   wiki: doc.getMap('wiki'),
   backgrounds: doc.getMap('backgrounds'),
   combat: doc.getMap('combat'),
@@ -57,6 +61,7 @@ export const state = {
   stronghold: doc.getMap('stronghold'),
   mapTexts: doc.getMap('mapTexts'),
   props: doc.getMap('props'),
+  trades: doc.getMap('trades'),
 };
 
 export function connectProvider() {
@@ -76,14 +81,12 @@ indexeddbProvider.on('synced', () => {
     state.combat.set('participants', []);
   }
 
-  // Limpeza do personagem antigo
+  // Limpeza de personagens de teste antigos
   if (state.tokens.has('goblin_boss')) {
     state.tokens.delete('goblin_boss');
   }
-
-  const sentinel = state.tokens.get('omega_sentinel') as any;
-  if (!sentinel) {
-    state.tokens.set('omega_sentinel', { id: 'omega_sentinel', name: 'Sentinela Ômega', hp: 150, maxHp: 150, mana: 50, maxMana: 50, x: 800, y: 400 });
+  if (state.tokens.has('omega_sentinel')) {
+    state.tokens.delete('omega_sentinel');
   }
   if (!state.world.has('factions')) {
     state.world.set('factions', [

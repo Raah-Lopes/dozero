@@ -12,6 +12,8 @@ import {
   Trash2, Search, LayoutGrid, List, User, Cpu, Copy, BookOpen, Sparkles, Settings
 } from 'lucide-react';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
+import { getWikiConfig } from '../../store';
+import { resolveImageUrl } from '../../utils/imageUtils';
 
 const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
 
@@ -418,7 +420,22 @@ export const NPCPanel: React.FC = () => {
         ctx?.drawImage(img, 0, 0, width, height);
 
         const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
-        handleUpdateTokenProp(token, 'imageUrl', webpDataUrl);
+        
+        const config = getWikiConfig();
+        const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+        const cleanName = (token.name || 'npc').replace(/[^a-zA-Z0-9]/g, '_');
+        const finalFilename = `${cleanName}_${Date.now()}.webp`;
+        
+        fetch('/api/wiki/save-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repoPath, filename: finalFilename, base64: webpDataUrl })
+        }).then(res => res.json()).then(data => {
+          handleUpdateTokenProp(token, 'imageUrl', data.url);
+        }).catch(err => {
+          console.error("Erro ao salvar anexo na wiki", err);
+          handleUpdateTokenProp(token, 'imageUrl', webpDataUrl);
+        });
       };
       img.src = event.target?.result as string;
     };
@@ -727,7 +744,7 @@ export const NPCPanel: React.FC = () => {
                             title="Alterar Imagem/Avatar"
                           >
                             {t.imageUrl ? (
-                              <img src={t.imageUrl} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <User size={16} />
@@ -1033,7 +1050,7 @@ export const NPCPanel: React.FC = () => {
                             title="Alterar Imagem/Avatar"
                           >
                             {t.imageUrl ? (
-                              <img src={t.imageUrl} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <User size={16} />

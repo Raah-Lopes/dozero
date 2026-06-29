@@ -531,7 +531,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
         </div>
       )}
 
-      <div style={{ width: '100%', height: '100%', opacity: isSearching ? 0.5 : 1, transition: 'opacity 0.3s' }}>
+      <div ref={containerRef} className="wiki-graph-container" style={{ width: '100%', height: '100%', opacity: isSearching ? 0.5 : 1, transition: 'opacity 0.3s' }}>
         {filteredData.nodes.length > 0 || data.nodes.length === 0 ? (
           <ForceGraph2D
             ref={fgRef}

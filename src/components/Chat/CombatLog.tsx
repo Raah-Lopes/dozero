@@ -163,29 +163,42 @@ export const CombatLog: React.FC = () => {
       </div>
 
       {/* Message Feed */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingRight: '0.4rem', paddingTop: '0.5rem' }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem', paddingRight: '0.4rem', paddingTop: '0.5rem', fontFamily: 'monospace' }}>
         {mensagensFiltradas.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>Sem registros nesta categoria.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>[ Sistema Aguardando Registros ]</p>
         ) : (
-          mensagensFiltradas.map((msg, index) => (
-            <div 
-              key={index} 
-              className="animate-fade-in"
-              style={{ 
-                padding: '0.5rem 0.6rem', 
-                background: msg.isCritical ? 'rgba(34, 197, 94, 0.08)' : msg.isFailure ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                borderLeft: `3px solid ${msg.isCritical ? 'var(--success)' : msg.isFailure ? 'var(--danger)' : 'var(--accent-primary)'}`,
-                border: '1px solid var(--glass-border)',
-                borderLeftWidth: '3px',
-                borderRadius: '6px',
-                fontSize: '0.8rem',
-                lineHeight: '1.45',
-                boxShadow: msg.isCritical ? '0 0 8px rgba(34, 197, 94, 0.15)' : msg.isFailure ? '0 0 8px rgba(239, 68, 68, 0.15)' : 'none'
-              }}
-            >
-              <div dangerouslySetInnerHTML={{ __html: msg.text }} style={{ color: 'var(--text-primary)' }} />
-            </div>
-          ))
+          mensagensFiltradas.map((msg, index) => {
+            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            return (
+              <div 
+                key={index} 
+                className="animate-fade-in"
+                style={{ 
+                  padding: '0.2rem 0.4rem', 
+                  display: 'flex',
+                  gap: '0.5rem',
+                  fontSize: '0.75rem',
+                  lineHeight: '1.4',
+                  borderLeft: `2px solid ${msg.isCritical ? '#10b981' : msg.isFailure ? '#ef4444' : 'transparent'}`,
+                  background: msg.isCritical ? 'rgba(16, 185, 129, 0.05)' : msg.isFailure ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
+                  borderBottom: '1px dotted rgba(255,255,255,0.05)',
+                  alignItems: 'flex-start'
+                }}
+              >
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', whiteSpace: 'nowrap', opacity: 0.7 }}>[{time}]</span>
+                <div 
+                  dangerouslySetInnerHTML={{ __html: msg.text }} 
+                  style={{ 
+                    color: msg.isCritical ? '#a7f3d0' : msg.isFailure ? '#fca5a5' : '#cbd5e1', 
+                    fontFamily: 'Inter, sans-serif',
+                    wordBreak: 'break-word',
+                    flex: 1
+                  }} 
+                />
+              </div>
+            );
+          })
         )}
       </div>
     </div>

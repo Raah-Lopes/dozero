@@ -11,6 +11,7 @@ export * from './wiki';
 export * from './world';
 export * from './mapTexts';
 export * from './props';
+export * from './useCommandRegistry';
 
 export interface LoreEntry {
   id: string;

@@ -4,6 +4,7 @@ import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { pushChatMessage, state } from '../../../store';
 import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
 import { usePersonagens, FichaPersonagem } from '../../../hooks/usePersonagens';
+import { useRulesEngine } from '../../../hooks/useRulesEngine';
 import * as yaml from 'js-yaml';
 import { Dices, Swords, Target, Skull, ArrowRightCircle, ListOrdered, BookOpen } from 'lucide-react';
 
@@ -42,7 +43,8 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
   const [disputeAttr, setDisputeAttr] = useState<string>('forca');
   const [danoAvulsoInput, setDanoAvulsoInput] = useState<string>('1d6');
   const [bonusTestInput, setBonusTestInput] = useState<string>('0');
-  const [sistemaMode, setSistemaMode] = useState<'d20' | 'd100'>('d20');
+  const { currentEngine } = useRulesEngine();
+  const [sistemaMode, setSistemaMode] = useState<'d20' | 'd100' | 'custom'>('d20');
   
   // Modificadores Táticos (DLC)
   const [activeDLCs, setActiveDLCs] = useState<string[]>([]);
@@ -116,129 +118,78 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     recarregar();
   };
 
-  // Calcular Sucesso Híbrido (Pathfinder d20 / Call of Cthulhu d100)
-  const calcularSucessoHibrido = (
+  // Calcular Grau de Sucesso (Pathfinder 2e)
+  const calcularSucesso = (
     roll: number,
     target: number,
-    modifier = 0,
-    isD20 = true
+    modifier = 0
   ): { grau: 'sucesso_critico' | 'sucesso' | 'falha' | 'falha_critica'; label: string; color: string } => {
-    if (isD20) {
-      const total = roll + modifier;
-      const natural20 = roll === 20;
-      const natural1 = roll === 1;
-      
-      let baseGrau: 'sucesso_critico' | 'sucesso' | 'falha' | 'falha_critica' = 'falha';
-      
-      if (total >= target) {
-        baseGrau = (total >= target + 10) ? 'sucesso_critico' : 'sucesso';
-      } else {
-        baseGrau = (total <= target - 10) ? 'falha_critica' : 'falha';
-      }
-      
-      let finalGrau = baseGrau;
-      if (natural20) {
-        if (baseGrau === 'falha_critica') finalGrau = 'falha';
-        else if (baseGrau === 'falha') finalGrau = 'sucesso';
-        else if (baseGrau === 'sucesso') finalGrau = 'sucesso_critico';
-      } else if (natural1) {
-        if (baseGrau === 'sucesso_critico') finalGrau = 'sucesso';
-        else if (baseGrau === 'sucesso') finalGrau = 'falha';
-        else if (baseGrau === 'falha') finalGrau = 'falha_critica';
-      }
-      
-      const colors = {
-        sucesso_critico: '#10b981',
-        sucesso: '#34d399',
-        falha: '#f87171',
-        falha_critica: '#ef4444',
-      };
-      
-      const labels = {
-        sucesso_critico: '💥 SUCESSO CRÍTICO',
-        sucesso: '✅ SUCESSO',
-        falha: '❌ FALHA',
-        falha_critica: '💀 FALHA CRÍTICA',
-      };
-      
-      return { grau: finalGrau, label: labels[finalGrau], color: colors[finalGrau] };
+    const total = roll + modifier;
+    const natural20 = roll === 20;
+    const natural1 = roll === 1;
+    
+    let baseGrau: 'sucesso_critico' | 'sucesso' | 'falha' | 'falha_critica' = 'falha';
+    
+    if (total >= target) {
+      baseGrau = (total >= target + 10) ? 'sucesso_critico' : 'sucesso';
     } else {
-      // d100 Mode
-      const targetPercent = target * 5;
-      const ext = Math.floor(targetPercent / 5);
-      
-      let grau: 'sucesso_critico' | 'sucesso' | 'falha' | 'falha_critica' = 'falha';
-      
-      if (roll === 1 || roll <= ext) {
-        grau = 'sucesso_critico';
-      } else if (roll <= targetPercent) {
-        grau = 'sucesso';
-      } else if (roll >= 96) {
-        grau = 'falha_critica';
-      } else {
-        grau = 'falha';
-      }
-      
-      const colors = {
-        sucesso_critico: '#10b981',
-        sucesso: '#34d399',
-        falha: '#f87171',
-        falha_critica: '#ef4444',
-      };
-      
-      const labels = {
-        sucesso_critico: '💥 SUCESSO CRÍTICO (Extremo)',
-        sucesso: '✅ SUCESSO',
-        falha: '❌ FALHA',
-        falha_critica: '💀 FALHA CRÍTICA (Desastre)',
-      };
-      
-      return { grau, label: labels[grau], color: colors[grau] };
+      baseGrau = (total <= target - 10) ? 'falha_critica' : 'falha';
     }
+    
+    let finalGrau = baseGrau;
+    if (natural20) {
+      if (baseGrau === 'falha_critica') finalGrau = 'falha';
+      else if (baseGrau === 'falha') finalGrau = 'sucesso';
+      else if (baseGrau === 'sucesso') finalGrau = 'sucesso_critico';
+    } else if (natural1) {
+      if (baseGrau === 'sucesso_critico') finalGrau = 'sucesso';
+      else if (baseGrau === 'sucesso') finalGrau = 'falha';
+      else if (baseGrau === 'falha') finalGrau = 'falha_critica';
+    }
+    
+    const colors = {
+      sucesso_critico: '#10b981',
+      sucesso: '#34d399',
+      falha: '#f87171',
+      falha_critica: '#ef4444',
+    };
+    
+    const labels = {
+      sucesso_critico: '💥 SUCESSO CRÍTICO',
+      sucesso: '✅ SUCESSO',
+      falha: '❌ FALHA',
+      falha_critica: '💀 FALHA CRÍTICA',
+    };
+    
+    return { grau: finalGrau, label: labels[finalGrau], color: colors[finalGrau] };
   };
 
   // Funções de Rolagem Tática
-  const rolarAtributo4DET = (nomeAtributo: string, valor: number, charNome: string) => {
-    const isD20 = sistemaMode === 'd20';
-    if (isD20) {
-      const roll = Math.floor(Math.random() * 20) + 1;
-      const mod = getMod(valor);
-      const res = calcularSucessoHibrido(roll, cd, mod, true);
-      adicionarLog(`🎲 **${charNome}** rola **${nomeAtributo.toUpperCase()}**: 1d20(${roll})${formatMod(mod)} = **${roll + mod}** vs CD ${cd}. [**${res.label}**]`, true);
-    } else {
-      const roll = Math.floor(Math.random() * 100) + 1;
-      const chance = valor * 5;
-      const res = calcularSucessoHibrido(roll, valor, 0, false);
-      adicionarLog(`📊 **${charNome}** rola **${nomeAtributo.toUpperCase()} (d100)**: Rolou **${roll}** vs chance **${chance}%** (Atributo ${valor}). [**${res.label}**]`, true);
+  const rolarAtributoPF2e = (nomeAtributo: string, valor: number, charNome: string) => {
+    if (sistemaMode === 'custom') {
+      const res = currentEngine.rollAttribute(nomeAtributo, valor, charNome, cd);
+      adicionarLog(res.logMsg, res.pushGlobal);
+      return;
     }
-  };
-
-  const rolarAtributo3DT = (nomeAtributo: string, valor: number, charNome: string) => {
-    const d6 = Math.floor(Math.random() * 6) + 1;
-    const total = d6 + valor;
-    adicionarLog(`🎲 Rolo Reto de **${nomeAtributo.toUpperCase()} (3D&T)** para **${charNome}**: 1d6(${d6}) + ${valor} = **${total}**`, true);
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const mod = getMod(valor);
+    const res = calcularSucesso(roll, cd, mod);
+    adicionarLog(`🎲 **${charNome}** rola **${nomeAtributo.toUpperCase()}**: 1d20(${roll})${formatMod(mod)} = **${roll + mod}** vs CD ${cd}. [**${res.label}**]`, true);
   };
 
   const rolarPericia = async (nomePericia: string, attrValor: number, charNome: string) => {
-    const isD20 = sistemaMode === 'd20';
-    let roll = 0;
-    let total = 0;
-    let res;
-    
-    if (isD20) {
-      roll = Math.floor(Math.random() * 20) + 1;
-      const mod = getMod(attrValor);
-      total = roll + mod;
-      res = calcularSucessoHibrido(roll, cd, mod, true);
-    } else {
-      roll = Math.floor(Math.random() * 100) + 1;
-      total = roll;
-      res = calcularSucessoHibrido(roll, attrValor, 0, false);
+    if (sistemaMode === 'custom') {
+      const res = currentEngine.rollSkill(nomePericia, attrValor, charNome, cd);
+      adicionarLog(res.logMsg, res.pushGlobal);
+      return;
     }
+    
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const mod = getMod(attrValor);
+    const total = roll + mod;
+    const res = calcularSucesso(roll, cd, mod);
 
-    let logMsg = isD20
-      ? `🤸‍♂️ **${charNome}** rola **${nomePericia}**: 1d20(${roll})${formatMod(getMod(attrValor))} = **${total}** vs CD ${cd}. [**${res.label}**]`
-      : `🤸‍♂️ **${charNome}** rola **${nomePericia} (d100)**: Rolou **${roll}** vs chance **${attrValor * 5}%**. [**${res.label}**]`;
+    let logMsg = `🤸‍♂️ **${charNome}** rola **${nomePericia}**: 1d20(${roll})${formatMod(mod)} = **${total}** vs CD ${cd}. [**${res.label}**]`;
 
     adicionarLog(logMsg, true);
 
@@ -303,27 +254,17 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
 
   const rolarAtaqueDesarmado = () => {
     if (!atacante) return;
-    const isD20 = sistemaMode === 'd20';
+    
     const target = defensor ? defensor.defesa : cd;
     
-    let roll = 0;
-    let toHit = 0;
-    let res;
-    
-    if (isD20) {
-      roll = Math.floor(Math.random() * 20) + 1;
-      let mod = getMod(atacante.forca);
+    const roll = Math.floor(Math.random() * 20) + 1;
+    let mod = getMod(atacante.forca);
 
-      if (flanqueando) mod += 2;
-      if (cobertura) mod -= 2;
+    if (flanqueando) mod += 2;
+    if (cobertura) mod -= 2;
 
-      toHit = roll + mod;
-      res = calcularSucessoHibrido(roll, target, mod, true);
-    } else {
-      roll = Math.floor(Math.random() * 100) + 1;
-      toHit = roll;
-      res = calcularSucessoHibrido(roll, atacante.forca, 0, false);
-    }
+    const toHit = roll + mod;
+    const res = calcularSucesso(roll, target, mod);
 
     const dmgVal = Math.floor(Math.random() * 3) + 1;
     let baseDmgMod = getMod(atacante.forca);
@@ -333,9 +274,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     let totalDmg = Math.max(1, dmgVal + baseDmgMod);
     if (res.grau === 'sucesso_critico') totalDmg *= 2;
 
-    let logStr = isD20
-      ? `⚔️ **Ataque Desarmado** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(toHit - roll)} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
-      : `⚔️ **Ataque Desarmado (d100)** de **${atacante.nome}**: Rolou **${roll}** vs chance **${atacante.forca * 5}%** (FOR). [**${res.label}**]`;
+    let logStr = `⚔️ **Ataque Desarmado** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(toHit - roll)} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`;
 
     if (flanqueando) logStr += ` *(Flanqueando +2)*`;
     if (cobertura) logStr += ` *(Cobertura -2)*`;
@@ -352,27 +291,17 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
 
   const rolarPedraDistancia = () => {
     if (!atacante) return;
-    const isD20 = sistemaMode === 'd20';
+    
     const target = defensor ? defensor.defesa : cd;
     
-    let roll = 0;
-    let toHit = 0;
-    let res;
+    const roll = Math.floor(Math.random() * 20) + 1;
+    let mod = getMod(atacante.destreza);
     
-    if (isD20) {
-      roll = Math.floor(Math.random() * 20) + 1;
-      let mod = getMod(atacante.destreza);
-      
-      if (flanqueando) mod += 2;
-      if (cobertura) mod -= 2;
+    if (flanqueando) mod += 2;
+    if (cobertura) mod -= 2;
 
-      toHit = roll + mod;
-      res = calcularSucessoHibrido(roll, target, mod, true);
-    } else {
-      roll = Math.floor(Math.random() * 100) + 1;
-      toHit = roll;
-      res = calcularSucessoHibrido(roll, atacante.destreza, 0, false);
-    }
+    const toHit = roll + mod;
+    const res = calcularSucesso(roll, target, mod);
 
     const dmgVal = Math.floor(Math.random() * 4) + 1;
     let baseDmgMod = getMod(atacante.destreza);
@@ -382,9 +311,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     let totalDmg = Math.max(1, dmgVal + baseDmgMod);
     if (res.grau === 'sucesso_critico') totalDmg *= 2;
 
-    let logStr = isD20
-      ? `🎯 **Pedra à Distância** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(toHit - roll)} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
-      : `🎯 **Pedra à Distância (d100)** de **${atacante.nome}**: Rolou **${roll}** vs chance **${atacante.destreza * 5}%** (DES). [**${res.label}**]`;
+    let logStr = `🎯 **Pedra à Distância** de **${atacante.nome}**: Acerto 1d20(${roll})${formatMod(toHit - roll)} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`;
 
     if (flanqueando) logStr += ` *(Flanqueando +2)*`;
     if (cobertura) logStr += ` *(Cobertura -2)*`;
@@ -412,31 +339,18 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     setAtacante(a);
     recarregar();
 
-    const isD20 = sistemaMode === 'd20';
     const target = defensor ? defensor.defesa : cd;
     
-    let roll = 0;
-    let toHit = 0;
-    let res;
-    
-    if (isD20) {
-      roll = Math.floor(Math.random() * 20) + 1;
-      const mod = getMod(a.inteligencia);
-      toHit = roll + mod;
-      res = calcularSucessoHibrido(roll, target, mod, true);
-    } else {
-      roll = Math.floor(Math.random() * 100) + 1;
-      toHit = roll;
-      res = calcularSucessoHibrido(roll, a.inteligencia, 0, false);
-    }
+    const roll = Math.floor(Math.random() * 20) + 1;
+    const mod = getMod(a.inteligencia);
+    const toHit = roll + mod;
+    const res = calcularSucesso(roll, target, mod);
 
     const dmgVal = Math.floor(Math.random() * 6) + 1;
     let totalDmg = Math.max(1, dmgVal + getMod(a.inteligencia));
     if (res.grau === 'sucesso_critico') totalDmg *= 2;
 
-    let logStr = isD20
-      ? `✨ **Magia Básica** de **${a.nome}** (Gasta 1 PM): Acerto 1d20(${roll})${formatMod(getMod(a.inteligencia))} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`
-      : `✨ **Magia Básica (d100)** de **${a.nome}** (Gasta 1 PM): Rolou **${roll}** vs chance **${a.inteligencia * 5}%** (INT). [**${res.label}**]`;
+    let logStr = `✨ **Magia Básica** de **${a.nome}** (Gasta 1 PM): Acerto 1d20(${roll})${formatMod(getMod(a.inteligencia))} = **${toHit}** vs Defesa ${target}. [**${res.label}**]`;
 
     if (res.grau === 'sucesso' || res.grau === 'sucesso_critico') {
       logStr += ` ✅ Causa **${totalDmg}** de dano mágico.`;
@@ -455,7 +369,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
 
   const rolarArmaEquipada = (item: any) => {
     if (!atacante) return;
-    const isD20 = sistemaMode === 'd20';
+    
     const target = defensor ? defensor.defesa : cd;
     const bonus = parseEffectBonus(item.efeito);
     
@@ -472,7 +386,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
       if (cobertura) mod -= 2;
 
       toHit = roll + mod;
-      res = calcularSucessoHibrido(roll, target, mod, true);
+      res = calcularSucesso(roll, target, mod);
     } else {
       roll = Math.floor(Math.random() * 100) + 1;
       toHit = roll;
@@ -521,7 +435,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     const valAtk = Number(atacante[attrKey]) || 10;
     const valDef = Number(defensor[attrKey]) || 10;
 
-    const isD20 = sistemaMode === 'd20';
+    
     if (isD20) {
       const modAtk = getMod(valAtk);
       const modDef = getMod(valDef);
@@ -602,7 +516,7 @@ ${vencedor}`, true);
       return;
     }
 
-    const isD20 = sistemaMode === 'd20';
+    
     if (isD20) {
       const d20Atk = Math.floor(Math.random() * 20) + 1;
       const d20Def = Math.floor(Math.random() * 20) + 1;
@@ -905,7 +819,7 @@ ${vencedor}`, true);
   };
 
   const rolarD20Generico = () => {
-    const isD20 = sistemaMode === 'd20';
+    
     if (isD20) {
       const d20 = Math.floor(Math.random() * 20) + 1;
       adicionarLog(`🎲 Teste Genérico (d20): rolou **${d20}**`, true);
@@ -916,7 +830,7 @@ ${vencedor}`, true);
   };
 
   const rolarTesteBonus = () => {
-    const isD20 = sistemaMode === 'd20';
+    
     const bonus = parseInt(bonusTestInput) || 0;
     if (isD20) {
       const d20 = Math.floor(Math.random() * 20) + 1;
@@ -1285,10 +1199,26 @@ ${vencedor}`, true);
               >
                 Modo d100 (CoC)
               </button>
+              <button
+                onClick={() => setSistemaMode('custom')}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: sistemaMode === 'custom' ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
+                  color: sistemaMode === 'custom' ? '#ffffff' : '#94a3b8',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Modo: {currentEngine.name}
+              </button>
             </div>
 
             {/* Input de CD */}
-            {sistemaMode === 'd20' && (
+            {sistemaMode !== 'd100' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <span style={{ fontSize: '0.75rem', color: '#cbd5e1', fontWeight: 'bold' }}>CD:</span>
                 <input
@@ -1449,9 +1379,9 @@ ${vencedor}`, true);
                     </div>
                   )}
 
-                  {/* ATRIBUTOS 4DET */}
+                  {/* ATRIBUTOS */}
                   <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
-                    <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Atributos (4DET)</h5>
+                    <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Atributos (Pathfinder 2e)</h5>
                     {atacante ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
                         {[
@@ -1464,7 +1394,7 @@ ${vencedor}`, true);
                         ].map(a => (
                           <button
                             key={a.label}
-                            onClick={() => rolarAtributo4DET(a.label, a.val, atacante.nome)}
+                            onClick={() => rolarAtributoPF2e(a.label, a.val, atacante.nome)}
                             style={{
                               background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)',
                               borderRadius: '6px', color: '#c084fc', padding: '6px', cursor: 'pointer',

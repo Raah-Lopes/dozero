@@ -17,6 +17,12 @@ export interface QuestLootItem {
   efeito?: string;
 }
 
+export interface QuestObjective {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface CampaignQuest {
   id: string;
   name: string;
@@ -25,6 +31,7 @@ export interface CampaignQuest {
   type: 'main' | 'side';
   coverUrl?: string;
   wikiLinks?: string[];
+  objectives?: QuestObjective[];
   loot: QuestLootItem[];
   filePath?: string;
 }

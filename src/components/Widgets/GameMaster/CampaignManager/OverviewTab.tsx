@@ -1,8 +1,9 @@
-import React from 'react';
-import { AlertTriangle, Link2, FileText, ExternalLink, Flag, Clock } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { AlertTriangle, Link2, FileText, ExternalLink, Flag, Clock, ImagePlus, Loader2 } from 'lucide-react';
 import type { CampaignTabProps } from './types';
 import { LegacyBadge } from './Shared';
 import { WikiLinkedTextarea } from './Shared';
+import { getWikiConfig } from '../../../../store';
 
 interface OverviewTabProps extends CampaignTabProps {
   openInWiki: (path: string) => void;
@@ -17,9 +18,108 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   linkCampaignToWiki
 }) => {
   const upd = (updates: Partial<any>) => updateCampaign(campaign.id, updates);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+
+      // Read and resize image to 1400px wide max
+      const reader = new FileReader();
+      const dataUrl: string = await new Promise((res, rej) => {
+        reader.onload = ev => res(ev.target?.result as string);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+      const img = new Image();
+      await new Promise<void>(res => { img.onload = () => res(); img.src = dataUrl; });
+      const canvas = document.createElement('canvas');
+      const maxW = 1400;
+      const ratio = Math.min(1, maxW / img.width);
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const webpBase64 = canvas.toDataURL('image/webp', 0.85);
+
+      const safeName = campaign.name.replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `capa_${safeName}.webp`;
+
+      const res = await fetch('/api/wiki/save-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoPath, filename, base64: webpBase64 }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        upd({ imageUrl: data.url });
+      }
+    } catch (err) {
+      console.error('Erro ao fazer upload da capa:', err);
+    } finally {
+      setUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = '';
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', animation: 'fadeIn 0.25s ease-out' }}>
+
+      {/* ─── Campaign Cover Image ─── */}
+      <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', minHeight: '120px' }}>
+        {campaign.imageUrl ? (
+          <div style={{ position: 'relative' }}>
+            <img
+              src={campaign.imageUrl}
+              alt="Capa da Campanha"
+              style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block', borderRadius: '12px' }}
+            />
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '12px',
+              background: 'linear-gradient(to top, rgba(2,6,23,0.8) 0%, transparent 60%)',
+            }} />
+            <label
+              title="Trocar imagem de capa"
+              style={{
+                position: 'absolute', bottom: '10px', right: '10px', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                padding: '5px 12px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 700,
+                fontFamily: 'var(--font-display)', background: 'rgba(0,0,0,0.7)',
+                border: '1px solid rgba(255,255,255,0.2)', color: '#e2e8f0', transition: 'all 0.2s',
+              }}
+            >
+              <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+              {uploadingCover ? <Loader2 size={11} style={{ animation: 'spin 1s linear infinite' }} /> : <ImagePlus size={11} />}
+              {uploadingCover ? 'Enviando...' : 'Trocar Capa'}
+            </label>
+          </div>
+        ) : (
+          <label
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: '8px', height: '120px', borderRadius: '12px', cursor: 'pointer',
+              background: 'rgba(168,85,247,0.05)', border: '1px dashed rgba(168,85,247,0.3)',
+              color: 'rgba(168,85,247,0.7)', transition: 'all 0.2s',
+            }}
+          >
+            <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+            {uploadingCover
+              ? <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
+              : <ImagePlus size={24} />}
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-display)' }}>
+              {uploadingCover ? 'Enviando capa...' : 'Adicionar Imagem de Capa'}
+            </span>
+            <span style={{ fontSize: '0.65rem', color: 'rgba(168,85,247,0.5)' }}>
+              Salva automaticamente na pasta ANEXOS da Wiki
+            </span>
+          </label>
+        )}
+      </div>
+
       {/* Legacy / link banner */}
       {!campaign.folderPath && (
         <div style={{
@@ -61,7 +161,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
       <div>
         <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.6)', marginBottom: '8px', fontFamily: 'var(--font-display)' }}>
-          Sinopse & Background
+          Sinopse &amp; Background
         </label>
         <WikiLinkedTextarea
           key={`overview-${campaign.id}-${campaign.overviewPath}`}

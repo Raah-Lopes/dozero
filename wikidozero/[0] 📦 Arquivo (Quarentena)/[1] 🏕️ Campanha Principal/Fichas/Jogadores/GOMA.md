@@ -1,0 +1,193 @@
+---
+titulo: Goma
+tipo: Personagem
+classe: Monge de Geleia
+raça: Slime Humanóide
+força: 14
+destreza: 18
+constituicao: 16
+inteligencia: 8
+sabedoria: 10
+carisma: 15
+ataque_basico: Soco Gelatinoso (1d6+4 contundente)
+habilidade_especial: Absorção de Impacto (Reduz dano físico)
+tags: \[jogador, slime, linha de frente]
+inventario:
+  - nome: Arco Curto de Caça
+    tipo: equipamento
+    efeito: ataque_6
+    quantidade: 1
+    descricao: Arco leve e flexível para disparo rápido.
+    equipado: false
+  - nome: Cajado do Conjurador
+    tipo: equipamento
+    efeito: ataque_6
+    quantidade: 1
+    descricao: Canaliza poderes arcanos (+1 em feitiços).
+    equipado: false
+  - nome: Escudo de Mana
+    tipo: poder
+    efeito: defesa_4
+    quantidade: 1
+    descricao: Converte mana em barreira física temporária.
+    equipado: false
+pv: 0
+HP: 0
+energia: 100
+mana: 100
+PM: 99
+sanidade: 100
+ouro: 1000
+Ouro: 1000
+status_efeitos:
+  - Morto
+HP_max: 100
+pv_max: 100
+PM_max: 100
+usos_cura_atual: 3
+saqueado: false
+energia_max: .nan
+sanidade_max: .nan
+fome: .nan
+fome_max: .nan
+sede: .nan
+sede_max: .nan
+cansaco: .nan
+cansaco_max: .nan
+defesa: 0
+riquezas: 0
+armas:
+  - nome: Arco Curto de Caça
+    tipo: equipamento
+    efeito: ataque_6
+    dano: 1d6
+    descricao: Arco leve e flexível para disparo rápido.
+    equipado: false
+  - nome: Cajado do Conjurador
+    tipo: equipamento
+    efeito: ataque_6
+    dano: 1d6
+    descricao: Canaliza poderes arcanos (+1 em feitiços).
+    equipado: false
+poderes:
+  - nome: Escudo de Mana
+    tipo: poder
+    custo: 1 PM
+    efeito: defesa_4
+    descricao: Converte mana em barreira física temporária.
+pocoes: []
+maldicoes: []
+objetos_campanha: []
+XP: 0
+avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Goma_1782615592140.webp
+imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Goma_1782615592140.webp
+imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Goma_1782615592140.webp
+energiaMax: 0
+nivel: 1
+nome: Goma
+title: Goma
+tokenShape: circle
+borderColor: '#5c5c5c'
+showName: true
+sizeScale: 1.4
+hpBarMode: always
+ativo: false
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Goma, O Monge Gelatinoso
+
+Goma é um slime humanóide de cor verde brilhante que encontrou o caminho da iluminação através das artes marciais. Seu corpo maleável permite que ele esquive e absorva golpes com facilidade, tornando-o um combatente corpo-a-corpo formidável.
+
+Sempre sorridente e um pouco ingênuo, Goma está em uma jornada para provar que slimes não são apenas monstros de baixo nível para aventureiros iniciantes.
+
+Lider:: \[\[arcanus]]

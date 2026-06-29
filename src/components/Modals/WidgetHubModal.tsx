@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot } from 'lucide-react';
+import { X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -24,9 +24,11 @@ interface Props {
   onOpenWebFrame: () => void;
   onOpenDiceRoller: () => void;
   onOpenAIStudio: () => void;
+  onOpenTradeShop: () => void;
+  onOpenSystemAuditor: () => void;
 }
 
-export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame, onOpenDiceRoller, onOpenAIStudio }) => {
+export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame, onOpenDiceRoller, onOpenAIStudio, onOpenTradeShop, onOpenSystemAuditor }) => {
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '550px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -167,6 +169,9 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
             <button onClick={onOpenWebFrame} title="Navegador Integrado" className="widget-btn theme-pink">
               <Globe size={28} />
             </button>
+            <button onClick={onOpenTradeShop} title="Sistema Comercial & Lojas" className="widget-btn theme-amber" style={{ boxShadow: '0 0 10px rgba(245,158,11,0.3)' }}>
+              <Coins size={28} />
+            </button>
           </div>
         </div>
 
@@ -207,6 +212,9 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
             </button>
             <button onClick={onOpenDLCManager} title="Gerenciador de Complementos" className="widget-btn theme-orange">
               <ToyBrick size={28} />
+            </button>
+            <button onClick={onOpenSystemAuditor} title="Auditor de Sistema (Linter)" className="widget-btn theme-red">
+              <Shield size={28} />
             </button>
           </div>
         </div>

@@ -732,33 +732,29 @@ const addQuest = async (type: 'main' | 'side') => {
                     gap: '8px'
                   }}
                   onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
+                  onDrop={async (e) => {
                     e.preventDefault();
                     const file = e.dataTransfer.files?.[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const img = new window.Image();
-                      img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let { width, height } = img;
-                        const maxSize = 800;
-                        if (width > height && width > maxSize) {
-                          height *= maxSize / width;
-                          width = maxSize;
-                        } else if (height > maxSize) {
-                          width *= maxSize / height;
-                          height = maxSize;
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx?.drawImage(img, 0, 0, width, height);
-                        updateQuest(activeQuest.id, { coverUrl: canvas.toDataURL('image/webp', 0.8) });
-                      };
-                      img.src = event.target?.result as string;
-                    };
-                    reader.readAsDataURL(file);
+                    try {
+                      const config = (await import('../../../../store')).getWikiConfig();
+                      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+                      const reader = new FileReader();
+                      const dataUrl: string = await new Promise((res, rej) => { reader.onload = ev => res(ev.target?.result as string); reader.onerror = rej; reader.readAsDataURL(file); });
+                      const img2 = new window.Image();
+                      await new Promise<void>(res => { img2.onload = () => res(); img2.src = dataUrl; });
+                      const cnv = document.createElement('canvas');
+                      const maxSize = 800;
+                      let w = img2.width, h = img2.height;
+                      if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; } else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+                      cnv.width = w; cnv.height = h;
+                      cnv.getContext('2d')!.drawImage(img2, 0, 0, w, h);
+                      const webp = cnv.toDataURL('image/webp', 0.82);
+                      const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+                      const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
+                      const data2 = await res2.json();
+                      if (data2.url) updateQuest(activeQuest.id, { coverUrl: data2.url });
+                    } catch (err) { console.error('Erro ao enviar capa:', err); }
                   }}
                 >
                   <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem' }}>
@@ -767,32 +763,29 @@ const addQuest = async (type: 'main' | 'side') => {
                       type="file"
                       accept="image/*"
                       style={{ display: 'none' }}
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const img = new window.Image();
-                          img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            let { width, height } = img;
-                            const maxSize = 800;
-                            if (width > height && width > maxSize) {
-                              height *= maxSize / width;
-                              width = maxSize;
-                            } else if (height > maxSize) {
-                              width *= maxSize / height;
-                              height = maxSize;
-                            }
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx?.drawImage(img, 0, 0, width, height);
-                            updateQuest(activeQuest.id, { coverUrl: canvas.toDataURL('image/webp', 0.8) });
-                          };
-                          img.src = event.target?.result as string;
-                        };
-                        reader.readAsDataURL(file);
+                        try {
+                          const config = (await import('../../../../store')).getWikiConfig();
+                          const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+                          const reader = new FileReader();
+                          const dataUrl: string = await new Promise((res, rej) => { reader.onload = ev => res(ev.target?.result as string); reader.onerror = rej; reader.readAsDataURL(file); });
+                          const img2 = new window.Image();
+                          await new Promise<void>(res => { img2.onload = () => res(); img2.src = dataUrl; });
+                          const cnv = document.createElement('canvas');
+                          const maxSize = 800;
+                          let w = img2.width, h = img2.height;
+                          if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; } else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+                          cnv.width = w; cnv.height = h;
+                          cnv.getContext('2d')!.drawImage(img2, 0, 0, w, h);
+                          const webp = cnv.toDataURL('image/webp', 0.82);
+                          const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+                          const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
+                          const data2 = await res2.json();
+                          if (data2.url) updateQuest(activeQuest.id, { coverUrl: data2.url });
+                        } catch (err) { console.error('Erro ao enviar capa:', err); }
+                        e.target.value = '';
                       }}
                     />
                   </label>
@@ -845,6 +838,93 @@ const addQuest = async (type: 'main' | 'side') => {
                   placeholder="Escreva a descrição geral da missão, ganchos e objetivos..."
                   minHeight="120px"
                 />
+              </div>
+
+              {/* ─── Objectives Section ─── */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'rgba(148,163,184,0.6)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Objetivos
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '8px' }}>
+                  {(activeQuest.objectives || []).map((obj, idx) => (
+                    <div key={obj.id} style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      padding: '6px 10px', borderRadius: '8px',
+                      background: obj.done ? 'rgba(34,197,94,0.05)' : 'rgba(15,23,42,0.4)',
+                      border: `1px solid ${obj.done ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                      transition: 'all 0.2s',
+                    }}>
+                      <button
+                        onClick={() => {
+                          const objs = [...(activeQuest.objectives || [])];
+                          objs[idx] = { ...objs[idx], done: !objs[idx].done };
+                          updateQuest(activeQuest.id, { objectives: objs });
+                        }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: obj.done ? '#22c55e' : 'rgba(148,163,184,0.35)', transition: 'color 0.2s' }}
+                      >
+                        {obj.done
+                          ? <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                          : <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                        }
+                      </button>
+                      <span style={{
+                        flex: 1, fontSize: '0.78rem', color: obj.done ? 'rgba(148,163,184,0.4)' : '#cbd5e1',
+                        textDecoration: obj.done ? 'line-through' : 'none', transition: 'all 0.2s',
+                      }}>
+                        {obj.text}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const objs = (activeQuest.objectives || []).filter((_, i) => i !== idx);
+                          updateQuest(activeQuest.id, { objectives: objs });
+                        }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'rgba(148,163,184,0.2)', borderRadius: '4px', display: 'flex', transition: 'color 0.2s' }}
+                        className="cm-danger-btn"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                  {(activeQuest.objectives || []).length === 0 && (
+                    <p style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.35)', fontStyle: 'italic', margin: '4px 0' }}>
+                      Nenhum objetivo definido ainda.
+                    </p>
+                  )}
+                </div>
+                {/* Add objective form */}
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    id={`new-obj-${activeQuest.id}`}
+                    className="cm-input"
+                    placeholder="Novo objetivo..."
+                    style={{ flex: 1, fontSize: '0.78rem', padding: '6px 10px' }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        const inp = e.currentTarget;
+                        const text = inp.value.trim();
+                        if (!text) return;
+                        const newObj = { id: `obj_${Date.now()}`, text, done: false };
+                        updateQuest(activeQuest.id, { objectives: [...(activeQuest.objectives || []), newObj] });
+                        inp.value = '';
+                      }
+                    }}
+                  />
+                  <button
+                    className="cm-action-btn"
+                    style={{ flexShrink: 0 }}
+                    onClick={() => {
+                      const inp = document.getElementById(`new-obj-${activeQuest.id}`) as HTMLInputElement;
+                      if (!inp) return;
+                      const text = inp.value.trim();
+                      if (!text) return;
+                      const newObj = { id: `obj_${Date.now()}`, text, done: false };
+                      updateQuest(activeQuest.id, { objectives: [...(activeQuest.objectives || []), newObj] });
+                      inp.value = '';
+                    }}
+                  >
+                    + Objetivo
+                  </button>
+                </div>
               </div>
 
               <div>

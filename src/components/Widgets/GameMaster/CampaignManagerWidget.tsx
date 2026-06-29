@@ -562,15 +562,27 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                   key={c.id}
                   className={`cm-campaign-card${selectedId === c.id ? ' selected' : ''}`}
                   onClick={() => { setSelectedId(c.id); setActiveTab('overview'); }}
+                  style={{ padding: 0, overflow: 'hidden' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  {/* Mini cover strip */}
+                  {c.imageUrl && (
                     <div style={{
-                      width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
-                      background: `${stConf.bg}`, border: `1px solid ${stConf.border}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      height: '48px', overflow: 'hidden', borderRadius: '9px 9px 0 0', position: 'relative',
                     }}>
-                      <Icon size={14} color={stConf.color} />
+                      <img src={c.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.7) 0%, transparent 70%)' }} />
                     </div>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '10px 12px' }}>
+                    {!c.imageUrl && (
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
+                        background: `${stConf.bg}`, border: `1px solid ${stConf.border}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}>
+                        <Icon size={14} color={stConf.color} />
+                      </div>
+                    )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{
                         fontSize: '0.82rem', fontWeight: 700, color: selectedId === c.id ? '#e2e8f0' : '#cbd5e1',

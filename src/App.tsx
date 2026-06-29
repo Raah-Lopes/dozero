@@ -4,6 +4,7 @@ import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, La
 import { WikiViewer } from './components/Wiki/WikiViewer';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
+import { ChatWindow } from './components/Chat/ChatWindow';
 import { SettingsModal } from './components/Modals/SettingsModal';
 import { DiceOverlay } from './components/UI/DiceOverlay';
 import { PPROverlay } from './components/UI/PPROverlay';
@@ -51,6 +52,7 @@ function App() {
 
   const handleCloseActorLibrary = useCallback(() => setShowActors(false), [setShowActors]);
   const handleCloseCombatLog = useCallback(() => toggleWindow('combatLog'), [toggleWindow]);
+  const handleCloseChatWindow = useCallback(() => toggleWindow('chatWindow'), [toggleWindow]);
   const handleCloseMapSettings = useCallback(() => setShowMapSettings(false), [setShowMapSettings]);
   
   const handleCloseSheet = useCallback((sheetKey: string) => {
@@ -92,6 +94,16 @@ function App() {
     const handleOpenClockConfig = () => setActiveModal('clockConfig');
     window.addEventListener('open-clock-config', handleOpenClockConfig);
 
+    // Auto-limpeza de Coordenadas Fantasmas (Reset de posição de fichas)
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('window_prefs_sheet-')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
     // Evento disparado pelo CampaignManagerWidget para abrir um arquivo na Wiki
     const handleOpenWikiFile = (e: Event) => {
       const path = (e as CustomEvent).detail?.path || (e as CustomEvent).detail?.filePath;
@@ -113,7 +125,11 @@ function App() {
       if (wikiPath) {
         setOpenSheets((prev: string[]) => {
           const key = `wiki:${wikiPath}`;
-          if (prev.includes(key)) return prev;
+          if (prev.includes(key)) {
+            // Ficha já está mapeada! Trazemos ela pra frente da tela e desminimizamos
+            setTimeout(() => window.dispatchEvent(new CustomEvent('bring-window-to-front', { detail: `sheet-${key}` })), 10);
+            return prev;
+          }
           return [...prev, key];
         });
       }
@@ -282,6 +298,9 @@ function App() {
                     <LayoutGrid size={20} />
                   </button>
                   <button className={`btn-icon theme-red ${openWindows.combatLog ? 'active' : ''}`} onClick={() => toggleWindow('combatLog')} title="Registro de Rolagens (Log)">
+                    <MessageSquare size={20} />
+                  </button>
+                  <button className={`btn-icon theme-blue ${openWindows.chatWindow ? 'active' : ''}`} onClick={() => toggleWindow('chatWindow')} title="Chat P2P (Mensagens)">
                     <MessageSquare size={20} />
                   </button>
                   <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações do Sistema">
@@ -481,6 +500,12 @@ function App() {
         {openWindows.combatLog && (
           <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={handleCloseCombatLog}>
             <CombatLog />
+          </DraggableWindow>
+        )}
+
+        {openWindows.chatWindow && (
+          <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={100} width={320} height={400} onClose={handleCloseChatWindow}>
+            <ChatWindow />
           </DraggableWindow>
         )}
 

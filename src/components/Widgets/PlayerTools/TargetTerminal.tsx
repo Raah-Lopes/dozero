@@ -5,11 +5,11 @@ import {
     Dices, Trash2, Plus, Swords, 
     Backpack, Zap, Sword, HeartPulse, 
     ShieldAlert, Sparkles, Settings, Activity, 
-    FileText, Heart, Skull, Cpu, User
+    FileText, Heart, Skull, Cpu, User, Crosshair
 } from 'lucide-react';
 import { loadMarkdownFile, saveMarkdownContent } from '../../../utils/githubApi';
 import { WoDParser } from '../../../rules/WoDParser';
-import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, addCombatParticipant } from '../../../store';
+import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, toggleTarget, addCombatParticipant } from '../../../store';
 import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
 import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
@@ -41,6 +41,38 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   const { index, isLoading: isWikiLoading } = useWiki();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lastDiceApply, setLastDiceApply] = useState<{ value: number; dice: string; tipo: string } | null>(null);
+
+  const [activeConditions, setActiveConditions] = useState({ flanqueando: false, inspirado: false, map2: false, map3: false });
+  const [isEditingMacro, setIsEditingMacro] = useState(false);
+  const [newMacro, setNewMacro] = useState({ nome: '', formula: '1d20 + @for', dano: '', tipo: 'ataque', descricao: '' });
+  const [isTargeted, setIsTargeted] = useState(false);
+
+  useEffect(() => {
+    const handleTargetsUpdate = () => {
+      if (tokenId) {
+        setIsTargeted(getTargets().includes(tokenId));
+      }
+    };
+    window.addEventListener('targets-updated', handleTargetsUpdate);
+    handleTargetsUpdate();
+    return () => window.removeEventListener('targets-updated', handleTargetsUpdate);
+  }, [tokenId]);
+
+  const getTargetStats = (tId: string) => {
+    const t = state.tokens.get(tId) as any;
+    return {
+      name: t?.name || t?.nome || 'Alvo',
+      defesa: Number(t?.defesa || t?.ca || 10)
+    };
+  };
+
+  const applyDamageAndSync = (tId: string, damage: number) => {
+    const t = state.tokens.get(tId) as any;
+    if (t) {
+      const newHp = Math.max(0, (Number(t.hp) || 0) - damage);
+      updateTokenProps(tId, { hp: newHp });
+    }
+  };
 
   // Recebe rolagens do DiceRollerWidget e aplica à ficha (integração dados físicos → fichas)
   useEffect(() => {
@@ -785,6 +817,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   if (targetIds.length > 0) {
                      msg += `<br/><br/><b>Contra Alvos:</b>`;
                      targetIds.forEach(tId => {
+                        if (tId === tokenId) return;
                         const t = state.tokens.get(tId) as any;
                         if (!t) return;
                         const tDef = t.defesa || t.ca || 10;
@@ -868,6 +901,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   if (targetsIds.length > 0) {
                     resolutionMsg += `<br/><b>Resolução contra os alvos:</b>`;
                     targetsIds.forEach(tId => {
+                      if (tId === tokenId) return;
                       const tStats = getTargetStats(tId);
                       const effectiveDefense = tStats.defesa;
                       
@@ -943,6 +977,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   if (targetsIds.length > 0) {
                     msg += `<br/><b>Resolução contra os alvos:</b>`;
                     targetsIds.forEach(tId => {
+                      if (tId === tokenId) return;
                       const tStats = getTargetStats(tId);
                       const effectiveDefense = tStats.defesa;
                       
@@ -1339,17 +1374,37 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           
           {/* Quick Wiki View Button */}
           {wikiEntry && (
-            <button
-              onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: wikiEntry.path }))}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '2px', padding: '2px 4px',
-                background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.3)',
-                borderRadius: '4px', color: '#d8b4fe', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 'bold'
-              }}
-              title="Abrir Ficha MD"
-            >
-              <FileText size={10} /> Consultar
-            </button>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button 
+                onClick={() => {
+                   if (tokenId) {
+                     toggleTarget(tokenId);
+                     window.dispatchEvent(new Event('targets-updated'));
+                   }
+                }}
+                title="Mirar (Definir como Alvo)"
+                style={{
+                  background: isTargeted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${isTargeted ? '#ef4444' : 'rgba(255,255,255,0.1)'}`,
+                  color: isTargeted ? '#ef4444' : '#cbd5e1',
+                  width: '20px', height: '20px', borderRadius: '4px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                }}
+              >
+                <Crosshair size={12} />
+              </button>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: wikiEntry.path }))}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '2px', padding: '2px 4px',
+                  background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.3)',
+                  borderRadius: '4px', color: '#d8b4fe', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 'bold'
+                }}
+                title="Abrir Ficha MD"
+              >
+                <FileText size={10} /> Consultar
+              </button>
+            </div>
           )}
         </div>
         

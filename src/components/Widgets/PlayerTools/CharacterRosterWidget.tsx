@@ -1,12 +1,12 @@
-// src/components/HUD/CharacterRosterWidget.tsx
 import React, { useState, useRef } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { usePersonagens } from '../../../hooks/usePersonagens';
 import { useWiki } from '../../../hooks/useWiki';
-import { state, updateTokenProps } from '../../../store';
+import { state, updateTokenProps, getWikiConfig } from '../../../store';
 import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
 import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
-import { User, Skull, Cpu, Shield, Zap, Sword, Star } from 'lucide-react';
+import { resolveImageUrl } from '../../../utils/imageUtils';
+import { User, Skull, Cpu, Shield, Zap, Sword, Star, Eye, EyeOff } from 'lucide-react';
 
 interface CharacterRosterWidgetProps {
   onClose: () => void;
@@ -16,13 +16,19 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
   // Hook centralizado — elimina a lógica duplicada que existia aqui antes
   const { personagens, carregando } = usePersonagens(false);
   const { index } = useWiki();
-  const [filtro, setFiltro] = useState<'todos' | 'jogador' | 'npc' | 'inimigo'>('todos');
+  const [filtro, setFiltro] = useState<'todos' | 'jogador' | 'npc' | 'inimigo' | 'ativos'>('ativos');
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [processandoLote, setProcessandoLote] = useState(false);
   const [uploadingPath, setUploadingPath] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const personagensFiltrados = filtro === 'todos'
-    ? personagens
-    : personagens.filter(p => p.status === filtro);
+  // 'ativos' agora funciona como o Painel Mestre (mostra todos, permitindo ligar/desligar)
+  // as outras abas filtram para mostrar APENAS os personagens que estão ativos.
+  const personagensFiltrados = filtro === 'ativos'
+    ? personagens // Mostra todo mundo (ativos e inativos)
+    : filtro === 'todos'
+    ? personagens.filter(p => p.ativo) // Aba 'Todos' mostra apenas os ativos
+    : personagens.filter(p => p.ativo && p.status === filtro); // Abas específicas mostram apenas os ativos daquele tipo
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -51,6 +57,40 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
     if (percentual > 60) return '#10b981';
     if (percentual > 30) return '#f59e0b';
     return '#ef4444';
+  };
+
+  const handleToggleActive = async (e: React.MouseEvent, caminhoArquivo: string, currentAtivo: boolean) => {
+    e.stopPropagation(); // Evita que o card seja clicado (abrindo a ficha)
+    
+    // Inverte o estado atual e salva na wiki
+    const success = await syncTokenFieldToWiki(caminhoArquivo, 'ativo', !currentAtivo);
+    if (success) {
+      WikiIndexer.clearCache(); // Força a re-indexação imediata
+      window.dispatchEvent(new Event('wiki-updated')); // Atualiza as UI dependentes
+    }
+  };
+
+  const handleToggleSelection = (e: React.MouseEvent, caminhoArquivo: string) => {
+    e.stopPropagation();
+    const next = new Set(selecionados);
+    if (next.has(caminhoArquivo)) next.delete(caminhoArquivo);
+    else next.add(caminhoArquivo);
+    setSelecionados(next);
+  };
+
+  const handleBulkToggle = async (tornarAtivo: boolean) => {
+    setProcessandoLote(true);
+    try {
+      const paths = Array.from(selecionados);
+      // Processa todos em paralelo para ser rápido
+      await Promise.all(paths.map(path => syncTokenFieldToWiki(path, 'ativo', tornarAtivo)));
+      
+      setSelecionados(new Set()); // Limpa seleção
+      WikiIndexer.clearCache();
+      window.dispatchEvent(new Event('wiki-updated')); // Atualiza a UI uma única vez!
+    } finally {
+      setProcessandoLote(false);
+    }
   };
 
   const handleAvatarClick = (path: string, e: React.MouseEvent) => {
@@ -90,9 +130,30 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
 
         const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
 
-        const success = await syncTokenFieldToWiki(uploadingPath, 'imageUrl', webpDataUrl);
+        // Salvar a imagem como arquivo na pasta ANEXOS da wiki
+        const config = getWikiConfig();
+        const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+        const entry = index.find(en => en.path === uploadingPath);
+        const cleanName = (entry?.metadata?.nome || entry?.metadata?.titulo || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+        const finalFilename = `${cleanName}_${Date.now()}.webp`;
+
+        let savedUrl = webpDataUrl;
+        try {
+          const res = await fetch('/api/wiki/save-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ repoPath, filename: finalFilename, base64: webpDataUrl })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            savedUrl = data.url; // Ex: "ANEXOS/Jubbaer_1234567890.webp"
+          }
+        } catch (err) {
+          console.error("Erro ao salvar imagem na wiki, usando base64:", err);
+        }
+
+        const success = await syncTokenFieldToWiki(uploadingPath, 'imagem', savedUrl);
         if (success) {
-          const entry = index.find(en => en.path === uploadingPath);
           if (entry) {
             const entrySlug = entry.slug;
             const entryName = (entry.metadata?.nome || entry.metadata?.titulo || '').trim().toLowerCase();
@@ -101,7 +162,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
               const matchesSlug = tokData.wikiSlug && tokData.wikiSlug === entrySlug;
               const matchesName = !tokData.wikiSlug && tokData.name && tokData.name.trim().toLowerCase() === entryName;
               if (matchesSlug || matchesName) {
-                updateTokenProps(tokId, { imageUrl: webpDataUrl });
+                updateTokenProps(tokId, { imageUrl: savedUrl });
               }
             });
           }
@@ -138,7 +199,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
 
         {/* Filtros */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexShrink: 0 }}>
-          {(['todos', 'jogador', 'npc', 'inimigo'] as const).map((status) => (
+          {(['ativos', 'todos', 'jogador', 'npc', 'inimigo'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setFiltro(status)}
@@ -158,6 +219,47 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
             </button>
           ))}
         </div>
+
+        {/* Barra de Ações em Massa */}
+        {selecionados.size > 0 && (
+          <div style={{
+            display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px',
+            background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
+            padding: '8px 12px', borderRadius: '8px', flexShrink: 0
+          }}>
+            <span style={{ fontSize: '0.85rem', color: '#93c5fd', fontWeight: 'bold' }}>
+              {selecionados.size} selecionado(s)
+            </span>
+            <div style={{ flex: 1 }} />
+            <button
+              onClick={() => handleBulkToggle(true)}
+              disabled={processandoLote}
+              style={{
+                padding: '4px 12px', borderRadius: '4px', border: '1px solid #10b981',
+                background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', cursor: processandoLote ? 'wait' : 'pointer',
+                fontSize: '0.75rem', fontWeight: 'bold'
+              }}
+            >Ativar Lote</button>
+            <button
+              onClick={() => handleBulkToggle(false)}
+              disabled={processandoLote}
+              style={{
+                padding: '4px 12px', borderRadius: '4px', border: '1px solid #ef4444',
+                background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', cursor: processandoLote ? 'wait' : 'pointer',
+                fontSize: '0.75rem', fontWeight: 'bold'
+              }}
+            >Desativar Lote</button>
+            <button
+              onClick={() => setSelecionados(new Set())}
+              disabled={processandoLote}
+              style={{
+                padding: '4px 12px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)',
+                background: 'rgba(255,255,255,0.05)', color: '#cbd5e1', cursor: processandoLote ? 'wait' : 'pointer',
+                fontSize: '0.75rem'
+              }}
+            >Limpar</button>
+          </div>
+        )}
 
         {/* Lista de Personagens */}
         <div style={{
@@ -183,7 +285,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                 <div key={p.caminhoArquivo} style={{
                   background: 'rgba(15, 23, 42, 0.4)',
                   backdropFilter: 'blur(8px)',
-                  border: `1px solid ${p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'rgba(255, 255, 255, 0.05)'}`,
+                  border: `1px solid ${selecionados.has(p.caminhoArquivo) ? '#3b82f6' : p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'rgba(255, 255, 255, 0.05)'}`,
                   borderRadius: '10px',
                   padding: '10px 14px',
                   display: 'flex',
@@ -193,22 +295,42 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                   cursor: 'pointer',
                   opacity: p.ativo ? 1 : 0.6,
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  boxShadow: selecionados.has(p.caminhoArquivo) ? '0 0 12px rgba(59, 130, 246, 0.4)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
                 }}
                 onClick={() => window.dispatchEvent(new CustomEvent('open-sheet-by-wiki', { detail: p.caminhoArquivo }))}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = `0 4px 12px ${getStatusColor(p.status)}`;
-                  e.currentTarget.style.borderColor = getStatusColor(p.status).replace('0.2', '0.8');
+                  if (!selecionados.has(p.caminhoArquivo)) {
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${getStatusColor(p.status)}`;
+                    e.currentTarget.style.borderColor = getStatusColor(p.status).replace('0.2', '0.8');
+                  }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-                  e.currentTarget.style.borderColor = p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'rgba(255, 255, 255, 0.05)';
+                  if (!selecionados.has(p.caminhoArquivo)) {
+                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                    e.currentTarget.style.borderColor = p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'rgba(255, 255, 255, 0.05)';
+                  }
                 }}
                 title="Abrir Ficha do Personagem"
                 >
-                  {/* Left Side: Avatar */}
+                  {/* Left Side: Checkbox */}
+                  <div 
+                    style={{
+                      padding: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}
+                    onClick={(e) => handleToggleSelection(e, p.caminhoArquivo)}
+                    title="Selecionar para ações em lote"
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={selecionados.has(p.caminhoArquivo)} 
+                      readOnly 
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+
+                  {/* Avatar */}
                   <div 
                     style={{ position: 'relative', width: '64px', height: '64px', flexShrink: 0, cursor: 'pointer' }}
                     onClick={(e) => handleAvatarClick(p.caminhoArquivo, e)}
@@ -242,11 +364,42 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     </div>
                   </div>
 
-                  {/* Middle Section: Name, Type and Level */}
+                  {/* Middle Section: Name, Type and Level, and HP */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {p.nome}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {p.nome}
+                      </div>
+                      
+                      {/* Active Toggle */}
+                      <div 
+                        style={{
+                          padding: '4px',
+                          background: p.ativo ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                          border: `1px solid ${p.ativo ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                          borderRadius: '6px',
+                          color: p.ativo ? '#10b981' : '#ef4444',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title={p.ativo ? "Desativar (Esconder da mesa)" : "Ativar (Mostrar na mesa)"}
+                        onClick={(e) => handleToggleActive(e, p.caminhoArquivo, p.ativo)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.1)';
+                          e.currentTarget.style.background = p.ativo ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.background = p.ativo ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+                        }}
+                      >
+                        {p.ativo ? <Eye size={16} /> : <EyeOff size={16} />}
+                      </div>
                     </div>
+
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem' }}>
                       <span style={{ 
                         background: getStatusColor(p.status).replace('0.2', '0.1'),

@@ -1,3 +1,15 @@
+import { getWikiConfig } from '../store';
+
+export const resolveImageUrl = (url: string | undefined | null): string => {
+  if (!url) return '/vite.svg';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('/')) {
+    return url;
+  }
+  const config = getWikiConfig();
+  const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+  return `/api/wiki/raw?path=${encodeURIComponent(url)}&repoPath=${encodeURIComponent(repoPath)}`;
+};
+
 export const convertImageToWebP = async (file: File, quality: number = 0.8): Promise<{ base64: string, filename: string }> => {
   return new Promise((resolve, reject) => {
     // Se for um SVG, mantemos original para nao perder vetor

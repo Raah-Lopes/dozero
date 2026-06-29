@@ -67,6 +67,7 @@ export interface FichaPersonagem {
   cansaco: number;
   cansaco_max: number;
   riquezas: number;
+  loja?: any;
 }
 
 export interface MacroFicha {
@@ -186,6 +187,7 @@ function mapearEntidade(e: any): FichaPersonagem {
     cansaco: safeNum(e.metadata?.cansaco ?? e.metadata?.Cansaço, 0),
     cansaco_max: safeNum(e.metadata?.cansaco_max, 100),
     riquezas: safeNum(e.metadata?.riquezas ?? e.metadata?.Riquezas, 0),
+    loja: e.metadata?.loja || null,
   };
 }
 

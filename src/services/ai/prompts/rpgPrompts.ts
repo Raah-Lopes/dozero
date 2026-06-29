@@ -30,13 +30,13 @@ export interface RPGPromptParams {
 }
 
 const BASE_SYSTEM = `Você é o Mestre-IA do sistema DOZERO VTT — um VTT (Virtual Tabletop) de RPG tabletop brasileiro. 
-Você conhece profundamente os sistemas 4DET (Quatro Dados e Talentos), D&D 5e e sistemas narrativos.
+Você conhece profundamente o sistema Pathfinder 2e.
 Sempre gere conteúdo em PORTUGUÊS BRASILEIRO, rico em detalhes e ambientação.
 Quando solicitado a gerar fichas, use o formato YAML frontmatter compatível com Obsidian.
 Seja criativo, evite clichês, e crie conteúdo que surpreenda o Mestre.`;
 
 const YAML_PC_TEMPLATE = `
-O frontmatter YAML e o corpo Markdown da ficha de PC devem seguir EXATAMENTE este template, preenchendo os valores:
+O frontmatter YAML e o corpo Markdown da ficha de PC devem seguir EXATAMENTE este template, preenchendo os valores. A matemática DEVE respeitar o sistema d20 do Pathfinder 2e:
 
 ---
 inventario: []
@@ -68,155 +68,144 @@ CON: 10
 INT: 10
 SAB: 10
 CAR: 10
-F: 1
-H: 1
-R: 1
-A: 1
-PdF: 1
-CA: 10
+CA: 15
+Fortitude: 0
+Reflexos: 0
+Vontade: 0
 Deslocamento: "9m"
 Acrobacia: 0
+Arcanismo: 0
+Atletismo: 0
+Enganacao: 0
+Diplomacia: 0
 Furtividade: 0
 Intimidacao: 0
-Investigacao: 0
 Medicina: 0
+Natureza: 0
+Ocultismo: 0
 Percepcao: 0
+Performance: 0
+Religiao: 0
+Sociedade: 0
 Sobrevivencia: 0
+Roubo: 0
 status_efeitos: []
 imagens: []
 magias: []
 macros:
   - nome: "Ataque Básico"
-    formula: "1d20+2"
+    formula: "1d20+7"
+    dano: "1d8+4"
     tipo: "ataque"
-    descricao: "Ataque corpo-a-corpo"
+    descricao: "Ataque corpo-a-corpo padrão."
 ---
 
-\`\`\`dataviewjs
-const file = app.workspace.getActiveFile();
-const meta = app.metadataCache.getFileCache(file)?.frontmatter || {};
-const resolveImg = (img) => {
-    if(!img) return "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
-    let linkStr = "";
-    if (typeof img === "string") linkStr = String(img);
-    else if (img.path) linkStr = String(img.path);
-    else if (Array.isArray(img) && img.length > 0) linkStr = img[0].path ? String(img[0].path) : String(img[0]);
-    else return "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
-    if(linkStr.startsWith("http")) return linkStr;
-    let linkText = linkStr.replace(/[\\[\\]!]/g, "").split("|")[0].trim();
-    let target = app.metadataCache.getFirstLinkpathDest(linkText, "");
-    return target ? app.vault.getResourcePath(target) : "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
-};
-const div = this.container.createDiv({ attr: { style: "display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;" }});
-div.createEl("img", { attr: { src: resolveImg(meta.imagem), style: "width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--text-success); box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 10px;" }});
-div.createEl("h1", { text: \`👤 \${meta.nome || file.basename}\`, attr: { style: "margin: 0; font-size: 2.2em; font-weight: bold;" }});
-\`\`\`
 
 <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: start;">
 <div style="flex: 1; min-width: 300px;">
 
-> [!quote]- Interpretação e Lore
-> **Nome Completo:** \`INPUT[text:nome_completo]\` | **Imagem:** \`INPUT[text:imagem]\`
-> **Resumo:** 
-> \`INPUT[textArea:resumo]\`
-> 
-> **Títulos e Apelidos:** \`INPUT[text:titulos]\`
-> **Facção / Ocupação:** \`INPUT[text:faccao]\`
-> **Raça / Espécie:** \`INPUT[text:raca]\`
-> **Origem / Nacionalidade:** \`INPUT[text:origem]\`
-> **Idade / Gênero:** \`INPUT[text:idade_genero]\`
-> **Alinhamento:** \`INPUT[text:alinhamento]\`
-> **Nível:** \`INPUT[number:nivel]\`
-> **Altura / Peso:** \`INPUT[text:altura_peso]\`
-> 
-> **🧠 PERSONALIDADE & CITAÇÕES**
-> - **Traços Dominantes:** \`INPUT[textArea:tracos_dominantes]\`
-> - **Virtudes:** \`INPUT[textArea:virtudes]\`
-> - **Defeitos / Vícios / Medos:** \`INPUT[textArea:defeitos]\`
-> - **Sonhos e Objetivos:** \`INPUT[textArea:sonhos]\`
-> 
-> **📜 HISTÓRIA & RELACIONAMENTOS**
-> - **Infância:** \`INPUT[textArea:historia_infancia]\`
-> - **Adolescência / Vida Adulta:** \`INPUT[textArea:historia_adulta]\`
-> - **Eventos Marcantes:** \`INPUT[textArea:historia_eventos]\`
-> - **Relacionamentos:** \`INPUT[textArea:relacionamentos]\`
+:::note[Interpretação e Lore]
+**Nome Completo:** \`INPUT[text:nome_completo]\` | **Imagem:** \`INPUT[text:imagem]\`
+**Resumo:** 
+\`INPUT[textArea:resumo]\`
 
-> [!warning]- ✨ PODERES, VANTAGENS & MAGIAS
-> ## Vantagens e Desvantagens (Passivas/Ativas)
-> \`INPUT[textArea:vantagens]\`
-> 
-> ## Magias Conhecidas
-> \`INPUT[textArea:magias]\`
+**Ancestralidade:** \`INPUT[text:raca]\`
+**Herança:** \`INPUT[text:heranca]\`
+**Histórico:** \`INPUT[text:origem]\`
+**Classe:** \`INPUT[text:classe]\`
+**Nível:** \`INPUT[number:nivel]\`
 
-> [!info]- 🗺️ MAPA MENTAL & REFERÊNCIAS
-> \`\`\`mermaid
-> mindmap
-> root((NOME))
->   Família
->   Aliados
->   Rivais
->   Objetivos
-> \`\`\`
+**Títulos e Apelidos:** \`INPUT[text:titulos]\`
+**Facção / Ocupação:** \`INPUT[text:faccao]\`
+**Raça / Espécie:** \`INPUT[text:raca]\`
+**Origem / Nacionalidade:** \`INPUT[text:origem]\`
+**Idade / Gênero:** \`INPUT[text:idade_genero]\`
+**Alinhamento:** \`INPUT[text:alinhamento]\`
+**Nível:** \`INPUT[number:nivel]\`
+**Altura / Peso:** \`INPUT[text:altura_peso]\`
 
-> [!success] 🌟 PROGRESSO: Nível \`INPUT[number:nivel]\`
-> **XP Atual:** \`INPUT[number:XP]\` / Próximo Nível: \`VIEW[{nivel} * 1000]\`
+**🧠 PERSONALIDADE & CITAÇÕES**
+- **Traços Dominantes:** \`INPUT[textArea:tracos_dominantes]\`
+- **Virtudes:** \`INPUT[textArea:virtudes]\`
+- **Defeitos / Vícios / Medos:** \`INPUT[textArea:defeitos]\`
+- **Sonhos e Objetivos:** \`INPUT[textArea:sonhos]\`
 
+**📜 HISTÓRIA & RELACIONAMENTOS**
+- **Infância:** \`INPUT[textArea:historia_infancia]\`
+- **Adolescência / Vida Adulta:** \`INPUT[textArea:historia_adulta]\`
+- **Eventos Marcantes:** \`INPUT[textArea:historia_eventos]\`
+- **Relacionamentos:** \`INPUT[textArea:relacionamentos]\`
+
+:::
+:::danger[✨ PODERES, VANTAGENS & MAGIAS]
+## Vantagens e Desvantagens (Passivas/Ativas)
+\`INPUT[textArea:vantagens]\`
+
+## Magias Conhecidas
+\`INPUT[textArea:magias]\`
+
+:::
+:::note[🗺️ MAPA MENTAL & REFERÊNCIAS]
+\`\`\`mermaid
+mindmap
+root((NOME))
+  Família
+  Aliados
+  Rivais
+  Objetivos
+\`\`\`
+
+:::
+:::tip[🌟 PROGRESSO: Nível \`INPUT[number:nivel]\`]
+**XP Atual:** \`INPUT[number:XP]\` / Próximo Nível: \`VIEW[{nivel} * 1000]\`
+
+:::
 </div>
 
 <div style="flex: 1; min-width: 300px;">
 
-> [!danger] ⚔️ COMBATE, STATUS E SOBREVIVÊNCIA
-> **Ativo no Combate:** \`INPUT[toggle:ativo]\` | **Localização:** \`INPUT[text:Localizacao]\`
-> 
-> **Barras de Vida e Combate**
-> **HP:** \`INPUT[number:HP]\` / \`VIEW[{HP_max}]\` | **PM:** \`INPUT[number:PM]\` / \`VIEW[{PM_max}]\`
-> 
-> **Sobrevivência & Sanidade**
-> **Energia:** \`INPUT[number:Energia]\` / \`VIEW[{Energia_max}]\` | **Sanidade:** \`INPUT[number:Sanidade]\` / \`VIEW[{Sanidade_max}]\`
-> **Fome (%):** \`INPUT[number:Fome]\` | **Sede (%):** \`INPUT[number:Sede]\`
-> 
-> **Atributos Principais (D&D)**
-> **FOR:** \`INPUT[number:FOR]\` | **DES:** \`INPUT[number:DES]\` | **CON:** \`INPUT[number:CON]\` 
-> **INT:** \`INPUT[number:INT]\` | **SAB:** \`INPUT[number:SAB]\` | **CAR:** \`INPUT[number:CAR]\`
-> 
-> **Atributos Clássicos (4DeT)**
-> **F:** \`INPUT[number:F]\` | **H:** \`INPUT[number:H]\` | **R:** \`INPUT[number:R]\` | **A:** \`INPUT[number:A]\` | **PdF:** \`INPUT[number:PdF]\`
-> 
-> **Defesa e Movimento**
-> **CA:** \`INPUT[number:CA]\` | **Deslocamento:** \`INPUT[text:Deslocamento]\`
-> 
-> **Perícias Básicas:**
-> **Acrobacia:** \`INPUT[number:Acrobacia]\` | **Furtividade:** \`INPUT[number:Furtividade]\`
-> **Intimidação:** \`INPUT[number:Intimidacao]\` | **Investigação:** \`INPUT[number:Investigacao]\`
-> **Medicina:** \`INPUT[number:Medicina]\` | **Percepção:** \`INPUT[number:Percepcao]\`
-> **Sobrevivência:** \`INPUT[number:Sobrevivencia]\`
-> 
-> **Condições:**
-> \`\`\`meta-bind
-> INPUT[list:status_efeitos]
-> \`\`\`
+:::danger[⚔️ COMBATE, STATUS E SOBREVIVÊNCIA]
+**Ativo no Combate:** \`INPUT[toggle:ativo]\` | **Localização:** \`INPUT[text:Localizacao]\`
 
-> [!tip]- 💰 RIQUEZAS E TESOUROS
-> - Ouro atual: \`INPUT[number:Ouro]\` MO
+**Barras de Vida e Combate**
+**HP:** \`INPUT[number:HP]\` / \`VIEW[{HP_max}]\` | **PM:** \`INPUT[number:PM]\` / \`VIEW[{PM_max}]\`
 
+**Sobrevivência & Sanidade**
+**Energia:** \`INPUT[number:Energia]\` / \`VIEW[{Energia_max}]\` | **Sanidade:** \`INPUT[number:Sanidade]\` / \`VIEW[{Sanidade_max}]\`
+**Fome (%):** \`INPUT[number:Fome]\` | **Sede (%):** \`INPUT[number:Sede]\`
+
+**Atributos (Pathfinder 2e)**
+**FOR:** \`INPUT[number:FOR]\` | **DES:** \`INPUT[number:DES]\` | **CON:** \`INPUT[number:CON]\` 
+**INT:** \`INPUT[number:INT]\` | **SAB:** \`INPUT[number:SAB]\` | **CAR:** \`INPUT[number:CAR]\`
+
+**Defesa e Movimento**
+**CA:** \`INPUT[number:CA]\` | **Deslocamento:** \`INPUT[text:Deslocamento]\`
+
+**Perícias Básicas:**
+**Acrobacia:** \`INPUT[number:Acrobacia]\` | **Furtividade:** \`INPUT[number:Furtividade]\`
+**Intimidação:** \`INPUT[number:Intimidacao]\` | **Investigação:** \`INPUT[number:Investigacao]\`
+**Medicina:** \`INPUT[number:Medicina]\` | **Percepção:** \`INPUT[number:Percepcao]\`
+**Sobrevivência:** \`INPUT[number:Sobrevivencia]\`
+
+**Condições:**
+\`\`\`meta-bind
+INPUT[list:status_efeitos]
+\`\`\`
+
+:::
+:::tip[💰 RIQUEZAS E TESOUROS]
+- Ouro atual: \`INPUT[number:Ouro]\` MO
+
+:::
 </div>
 </div>
 
 ---
 ### ⚙️ INVENTÁRIO & ARMAS
-\`\`\`dataviewjs
-const meta = app.metadataCache.getFileCache(app.workspace.getActiveFile())?.frontmatter || {};
-if(!meta.inventario || meta.inventario.length === 0) {
-    dv.paragraph("Inventário vazio.");
-} else {
-    // Tabela simples de inventário
-    dv.table(["Item", "Descrição"], meta.inventario.map(i => [i.nome, i.desc]));
-}
-\`\`\`
 `;
 
 const YAML_NPC_TEMPLATE = `
-O frontmatter YAML e o corpo Markdown da ficha de NPC/Monstro devem seguir EXATAMENTE este template, preenchendo os valores:
+O frontmatter YAML e o corpo Markdown da ficha de NPC/Monstro devem seguir EXATAMENTE este template, preenchendo os valores. A matemática DEVE respeitar o sistema d20 do Pathfinder 2e:
 
 ---
 inventario: []
@@ -248,118 +237,100 @@ CON: 10
 INT: 10
 SAB: 10
 CAR: 10
-F: 1
-H: 1
-R: 1
-A: 1
-PdF: 1
-CA: 10
+CA: 15
+Fortitude: 0
+Reflexos: 0
+Vontade: 0
 Deslocamento: "9m"
 Acrobacia: 0
+Arcanismo: 0
+Atletismo: 0
+Enganacao: 0
+Diplomacia: 0
 Furtividade: 0
 Intimidacao: 0
-Investigacao: 0
 Medicina: 0
+Natureza: 0
+Ocultismo: 0
 Percepcao: 0
+Performance: 0
+Religiao: 0
+Sociedade: 0
 Sobrevivencia: 0
+Roubo: 0
 status_efeitos: []
 imagens: []
 magias: []
+poderes: []
 macros:
   - nome: "Ataque Básico"
-    formula: "1d20+2"
+    formula: "1d20+7"
+    dano: "1d8+4"
     tipo: "ataque"
-    descricao: "Ataque corpo-a-corpo"
+    descricao: "Ataque corpo-a-corpo padrão."
 ---
 
-\`\`\`dataviewjs
-const file = app.workspace.getActiveFile();
-const meta = app.metadataCache.getFileCache(file)?.frontmatter || {};
-const resolveImg = (img) => {
-    if(!img) return "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
-    let linkStr = "";
-    if (typeof img === "string") linkStr = String(img);
-    else if (img.path) linkStr = String(img.path);
-    else if (Array.isArray(img) && img.length > 0) linkStr = img[0].path ? String(img[0].path) : String(img[0]);
-    else return "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
-    if(linkStr.startsWith("http")) return linkStr;
-    let linkText = linkStr.replace(/[\\[\\]!]/g, "").split("|")[0].trim();
-    let target = app.metadataCache.getFirstLinkpathDest(linkText, "");
-    return target ? app.vault.getResourcePath(target) : "https://via.placeholder.com/150/333333/FFFFFF?text=👤";
-};
-const div = this.container.createDiv({ attr: { style: "display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;" }});
-div.createEl("img", { attr: { src: resolveImg(meta.imagem), style: "width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--text-success); box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 10px;" }});
-div.createEl("h1", { text: \`👤 \${meta.nome || file.basename}\`, attr: { style: "margin: 0; font-size: 2.2em; font-weight: bold;" }});
-\`\`\`
 
 <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: start;">
 <div style="flex: 1; min-width: 300px;">
 
-> [!quote]- Interpretação e Lore
-> **Nome Completo:** \`INPUT[text:nome_completo]\` | **Imagem:** \`INPUT[text:imagem]\`
-> **Resumo:** 
-> \`INPUT[textArea:resumo]\`
-> 
-> **Facção / Ocupação:** \`INPUT[text:faccao]\`
-> **Raça / Espécie:** \`INPUT[text:raca]\`
-> **Origem / Nacionalidade:** \`INPUT[text:origem]\`
-> **Alinhamento:** \`INPUT[text:alinhamento]\`
-> **Nível:** \`INPUT[number:nivel]\`
-> 
-> **🧠 PERSONALIDADE & TÁTICAS**
-> - **Comportamento:** \`INPUT[textArea:tracos_dominantes]\`
-> - **Táticas de Combate:** \`INPUT[textArea:taticas]\`
-> - **Motivações:** \`INPUT[textArea:motivacoes]\`
+:::note[Interpretação e Lore]
+**Nome Completo:** \`INPUT[text:nome_completo]\` | **Imagem:** \`INPUT[text:imagem]\`
+**Resumo:** 
+\`INPUT[textArea:resumo]\`
 
-> [!warning]- ✨ PODERES, VANTAGENS & MAGIAS
-> ## Vantagens e Desvantagens
-> \`INPUT[textArea:vantagens]\`
-> 
-> ## Magias Conhecidas
-> \`INPUT[textArea:magias]\`
+**Família / Organização:** \`INPUT[text:faccao]\`
+**Ancestralidade / Espécie:** \`INPUT[text:raca]\`
+**Traço Principal:** \`INPUT[text:traco]\`
+**Nível:** \`INPUT[number:nivel]\`
 
-> [!success] 🌟 RECOMPENSAS
-> **XP Recompensa:** \`INPUT[number:XP]\`
-> **Ouro Recompensa:** \`INPUT[number:Ouro]\`
+**🧠 PERSONALIDADE & TÁTICAS**
+- **Comportamento:** \`INPUT[textArea:tracos_dominantes]\`
+- **Táticas de Combate:** \`INPUT[textArea:taticas]\`
+- **Motivações:** \`INPUT[textArea:motivacoes]\`
 
+:::
+:::danger[✨ PODERES, VANTAGENS & MAGIAS]
+## Vantagens e Desvantagens
+\`INPUT[textArea:vantagens]\`
+
+## Magias Conhecidas
+\`INPUT[textArea:magias]\`
+
+:::
+:::tip[🌟 RECOMPENSAS]
+**XP Recompensa:** \`INPUT[number:XP]\`
+**Ouro Recompensa:** \`INPUT[number:Ouro]\`
+
+:::
 </div>
 
 <div style="flex: 1; min-width: 300px;">
 
-> [!danger] ⚔️ COMBATE E STATUS
-> **Ativo no Combate:** \`INPUT[toggle:ativo]\` | **Localização:** \`INPUT[text:Localizacao]\`
-> 
-> **Barras de Vida e Magia**
-> **HP:** \`INPUT[number:HP]\` / \`VIEW[{HP_max}]\` | **PM:** \`INPUT[number:PM]\` / \`VIEW[{PM_max}]\`
-> 
-> **Atributos Principais (D&D)**
-> **FOR:** \`INPUT[number:FOR]\` | **DES:** \`INPUT[number:DES]\` | **CON:** \`INPUT[number:CON]\` 
-> **INT:** \`INPUT[number:INT]\` | **SAB:** \`INPUT[number:SAB]\` | **CAR:** \`INPUT[number:CAR]\`
-> 
-> **Atributos Clássicos (4DeT)**
-> **F:** \`INPUT[number:F]\` | **H:** \`INPUT[number:H]\` | **R:** \`INPUT[number:R]\` | **A:** \`INPUT[number:A]\` | **PdF:** \`INPUT[number:PdF]\`
-> 
-> **Defesa e Movimento**
-> **CA:** \`INPUT[number:CA]\` | **Deslocamento:** \`INPUT[text:Deslocamento]\`
-> 
-> **Condições:**
-> \`\`\`meta-bind
-> INPUT[list:status_efeitos]
-> \`\`\`
+:::danger[⚔️ COMBATE E STATUS]
+**Ativo no Combate:** \`INPUT[toggle:ativo]\` | **Localização:** \`INPUT[text:Localizacao]\`
 
+**Barras de Vida e Magia**
+**HP:** \`INPUT[number:HP]\` / \`VIEW[{HP_max}]\` | **PM:** \`INPUT[number:PM]\` / \`VIEW[{PM_max}]\`
+
+**Atributos (Pathfinder 2e)**
+**FOR:** \`INPUT[number:FOR]\` | **DES:** \`INPUT[number:DES]\` | **CON:** \`INPUT[number:CON]\` 
+**INT:** \`INPUT[number:INT]\` | **SAB:** \`INPUT[number:SAB]\` | **CAR:** \`INPUT[number:CAR]\`
+
+**Defesa e Movimento**
+**CA:** \`INPUT[number:CA]\` | **Deslocamento:** \`INPUT[text:Deslocamento]\`
+
+**Condições:**
+\`\`\`meta-bind
+INPUT[list:status_efeitos]
+\`\`\`
+
+:::
 </div>
 </div>
 
 ---
 ### ⚙️ INVENTÁRIO / LOOT
-\`\`\`dataviewjs
-const meta = app.metadataCache.getFileCache(app.workspace.getActiveFile())?.frontmatter || {};
-if(!meta.inventario || meta.inventario.length === 0) {
-    dv.paragraph("Loot vazio.");
-} else {
-    dv.table(["Item", "Descrição"], meta.inventario.map(i => [i.nome, i.desc]));
-}
-\`\`\`
 `;
 
 const YAML_LOCAL_TEMPLATE = `
@@ -377,11 +348,12 @@ nivel_perigo: 1
 
 # \`INPUT[text:nome]\`
 
-> [!info] Visão Geral
-> **Clima / Ambiente:** \`INPUT[text:clima]\`
-> **Nível de Perigo:** \`INPUT[number:nivel_perigo]\`
-> **Imagem:** \`INPUT[text:imagem]\`
+:::note[Visão Geral]
+**Clima / Ambiente:** \`INPUT[text:clima]\`
+**Nível de Perigo:** \`INPUT[number:nivel_perigo]\`
+**Imagem:** \`INPUT[text:imagem]\`
 
+:::
 ## Descrição
 \`INPUT[textArea:descricao]\`
 
@@ -408,12 +380,13 @@ nivel_minimo: 1
 
 # 📜 Missão: \`INPUT[text:nome]\`
 
-> [!quote] Status da Missão
-> **Status:** \`INPUT[text:status]\`
-> **Nível Recomendado:** \`INPUT[number:nivel_minimo]\`
-> **Recompensa Ouro:** \`INPUT[number:recompensa_ouro]\` MO
-> **Recompensa XP:** \`INPUT[number:recompensa_xp]\` XP
+:::note[Status da Missão]
+**Status:** \`INPUT[text:status]\`
+**Nível Recomendado:** \`INPUT[number:nivel_minimo]\`
+**Recompensa Ouro:** \`INPUT[number:recompensa_ouro]\` MO
+**Recompensa XP:** \`INPUT[number:recompensa_xp]\` XP
 
+:::
 ## Resumo e Gancho
 \`INPUT[textArea:resumo]\`
 

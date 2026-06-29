@@ -256,7 +256,9 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
       };
     });
 
-    setPersonagens(carregadas);
+    // Filtrar apenas os personagens ativos para a mesa
+    const ativas = carregadas.filter(p => p.ativo);
+    setPersonagens(ativas);
     if (selectedChar) {
       const updated = carregadas.find(p => p.caminhoArquivo === selectedChar.caminhoArquivo);
       if (updated) setSelectedChar(updated);

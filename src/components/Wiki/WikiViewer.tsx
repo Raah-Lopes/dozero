@@ -567,6 +567,45 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                 }} 
               />
 
+              {/* Injetor Automático de Cabeçalho (Profile Header) */}
+              {(() => {
+                 try {
+                   let parsedMeta = null;
+                   if (frontmatter) {
+                      const lines = frontmatter.split('\n').filter(l => l.trim().length > 0);
+                      parsedMeta = {} as any;
+                      lines.forEach(line => {
+                        const idx = line.indexOf(':');
+                        if (idx !== -1) {
+                          parsedMeta[line.slice(0, idx).trim().toLowerCase()] = line.slice(idx + 1).trim();
+                        }
+                      });
+                   }
+                   if (parsedMeta && parsedMeta.nome && parsedMeta.imagem) {
+                     let imgUrl = parsedMeta.imagem.replace(/[\[\]!]/g, "").split("|")[0].trim();
+                     if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
+                       const configStr = localStorage.getItem('dozero_wiki_config');
+                       const repoPath = configStr ? JSON.parse(configStr).repoPath : '';
+                       imgUrl = `/api/wiki/raw?path=${encodeURIComponent(imgUrl)}&repoPath=${encodeURIComponent(repoPath)}`;
+                     }
+                     return (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '20px', paddingTop: '10px' }}>
+                          <img 
+                            src={imgUrl} 
+                            alt={parsedMeta.nome} 
+                            style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--accent-primary)', boxShadow: '0 0 20px rgba(168,85,247,0.3)', marginBottom: '10px' }} 
+                            onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/150/333333/FFFFFF?text=👤'; }}
+                          />
+                          <h1 style={{ margin: 0, fontSize: '2.5em', fontWeight: 'bold', color: 'var(--text-primary)', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                            {parsedMeta.nome}
+                          </h1>
+                        </div>
+                     );
+                   }
+                 } catch(e) {}
+                 return null;
+              })()}
+
               <WikiEditor 
                 editorRef={editorRef}
                 key={activeFile} // Force remount when file changes so Editor gets fresh markdown

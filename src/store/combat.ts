@@ -17,6 +17,7 @@ export interface CombatParticipant {
   conditions?: CombatCondition[];
   minionHits?: number;
   minionMaxHits?: number;
+  actionsRemaining?: number;
 }
 
 export function addCombatParticipant(tokenId: string, name: string, initiative: number, imageUrl?: string) {

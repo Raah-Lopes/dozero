@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
+import { useCommandRegistry } from '../../store';
 
 interface ActionDef {
   id: string;
@@ -30,6 +31,7 @@ export const CommandPalette: React.FC = () => {
   const setViewMode = useWindowManager(state => state.setViewMode);
   
   const { index: wikiIndex } = useWiki();
+  const dynamicCommands = useCommandRegistry(state => state.commands);
 
   useEffect(() => {
     const stored = localStorage.getItem('dozero_recent_commands');
@@ -173,13 +175,14 @@ export const CommandPalette: React.FC = () => {
     };
   });
 
-  const allActions = [...actions, ...wikiActions];
+  const allActions = [...actions, ...dynamicCommands, ...wikiActions];
   const recentActions = recentIds.map(id => allActions.find(a => a.id === id)).filter(Boolean) as ActionDef[];
   const pinnedActions = pinnedIds.map(id => allActions.find(a => a.id === id)).filter(Boolean) as ActionDef[];
 
   // Group wiki actions by their dynamic folder category, ONLY if user is typing
   const isSearching = search.trim().length > 0;
   const wikiCategories = Array.from(new Set(wikiActions.map(a => a.category)));
+  const systemCategories = Array.from(new Set([...actions, ...dynamicCommands].map(a => a.category))).filter(c => c !== 'QuickActions');
 
   const renderItem = (action: ActionDef, keyPrefix = '') => (
     <Command.Item 
@@ -432,25 +435,23 @@ export const CommandPalette: React.FC = () => {
 
                   {!isSearching && (
                     <>
-                      <Command.Group heading="Game Master" className="cmd-group">
-                        <div className="cmd-group-heading">Game Master</div>
-                        {actions.filter(a => a.category === 'GameMaster').map(action => renderItem(action))}
-                      </Command.Group>
-
-                      <Command.Group heading="Player Tools" className="cmd-group">
-                        <div className="cmd-group-heading">Player Tools</div>
-                        {actions.filter(a => a.category === 'PlayerTools').map(action => renderItem(action))}
-                      </Command.Group>
-
-                      <Command.Group heading="Generators & AI" className="cmd-group">
-                        <div className="cmd-group-heading">Generators & AI</div>
-                        {actions.filter(a => a.category === 'Generators').map(action => renderItem(action))}
-                      </Command.Group>
-
-                      <Command.Group heading="System" className="cmd-group">
-                        <div className="cmd-group-heading">System</div>
-                        {actions.filter(a => a.category === 'System').map(action => renderItem(action))}
-                      </Command.Group>
+                      {systemCategories.map(cat => {
+                        const items = [...actions, ...dynamicCommands].filter(a => a.category === cat);
+                        if (items.length === 0) return null;
+                        
+                        // Formatações cosméticas p/ categorias antigas
+                        let displayName = cat;
+                        if (cat === 'GameMaster') displayName = 'Game Master';
+                        if (cat === 'PlayerTools') displayName = 'Player Tools';
+                        if (cat === 'Generators') displayName = 'Generators & AI';
+                        
+                        return (
+                          <Command.Group key={cat} heading={displayName} className="cmd-group">
+                            <div className="cmd-group-heading">{displayName}</div>
+                            {items.map(action => renderItem(action))}
+                          </Command.Group>
+                        )
+                      })}
                     </>
                   )}
 
@@ -469,7 +470,7 @@ export const CommandPalette: React.FC = () => {
                   {isSearching && (
                     <Command.Group heading="Ações & Widgets" className="cmd-group">
                       <div className="cmd-group-heading">Ações & Widgets</div>
-                      {actions.map(action => renderItem(action, 'search_'))}
+                      {[...actions, ...dynamicCommands].map(action => renderItem(action, 'search_'))}
                     </Command.Group>
                   )}
                 </>

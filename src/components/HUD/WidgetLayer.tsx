@@ -2,6 +2,8 @@ import React, { Suspense } from 'react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { CommandPalette } from '../UI/CommandPalette';
+import { useCommandRegistry } from '../../store';
+import { ShieldAlert } from 'lucide-react';
 
 // Lazy loaded widgets
 const OracleWidgetV2 = React.lazy(() => import('../Widgets/Generators/OracleWidgetV2').then(m => ({ default: m.OracleWidgetV2 })));
@@ -23,6 +25,8 @@ const AudioDirectorWidget = React.lazy(() => import('../Widgets/System/AudioDire
 const WebFrameWidget = React.lazy(() => import('./WebFrameWidget').then(m => ({ default: m.WebFrameWidget })));
 const DiceRollerWidget = React.lazy(() => import('../Widgets/PlayerTools/DiceRollerWidget').then(m => ({ default: m.DiceRollerWidget })));
 const AIStudioWidget = React.lazy(() => import('../Widgets/GameMaster/AIStudioWidget').then(m => ({ default: m.AIStudioWidget })));
+const TradeShopWidget = React.lazy(() => import('../Widgets/PlayerTools/TradeShopWidget').then(m => ({ default: m.TradeShopWidget })));
+const AuditorWidget = React.lazy(() => import('../Widgets/System/AuditorWidget').then(m => ({ default: m.AuditorWidget })));
 
 const FallbackLoader = () => (
   <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15,23,42,0.9)', padding: '20px', borderRadius: '12px', color: '#fff', zIndex: 9999 }}>
@@ -33,6 +37,18 @@ const FallbackLoader = () => (
 export const WidgetLayer: React.FC = React.memo(() => {
   const openWindows = useWindowManager((state) => state.openWindows);
   const closeWindow = useWindowManager((state) => state.closeWindow);
+  const openWindow = useWindowManager((state) => state.openWindow);
+  const registerCommand = useCommandRegistry((state) => state.registerCommand);
+
+  React.useEffect(() => {
+    registerCommand({
+      id: 'sys_auditor',
+      title: 'Auditor de Sistema (Linter IA)',
+      category: 'System',
+      icon: <ShieldAlert size={16} />,
+      onSelect: () => openWindow('systemAuditor')
+    });
+  }, [registerCommand, openWindow]);
 
   return (
     <>
@@ -58,6 +74,8 @@ export const WidgetLayer: React.FC = React.memo(() => {
           {openWindows.webFrame && <WebFrameWidget onClose={() => closeWindow('webFrame')} zIndex={999} onFocus={() => {}} />}
           {openWindows.diceRoller && <DiceRollerWidget onClose={() => closeWindow('diceRoller')} />}
           {openWindows.aiStudio && <AIStudioWidget onClose={() => closeWindow('aiStudio')} />}
+          {openWindows.tradeShop && <TradeShopWidget onClose={() => closeWindow('tradeShop')} />}
+          {openWindows.systemAuditor && <AuditorWidget onClose={() => closeWindow('systemAuditor')} />}
         </ErrorBoundary>
       </Suspense>
     </>
