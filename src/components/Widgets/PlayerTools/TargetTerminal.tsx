@@ -72,10 +72,11 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   const applyDamageAndSync = async (tId: string, damage: number) => {
     const t = state.tokens.get(tId) as any;
     if (t) {
-      const newHp = Math.max(0, (Number(t.hp) || 0) - damage);
-      updateTokenProps(tId, { hp: newHp });
+      const currentHp = Number(t.pv ?? t.hp ?? t.HP ?? 0);
+      const newHp = Math.max(0, currentHp - damage);
+      updateTokenProps(tId, { hp: newHp, pv: newHp, HP: newHp });
       if (t.wikiPath) {
-        await syncMultipleFieldsToWiki(t.wikiPath, { hp: newHp, pv: newHp, HP: newHp });
+        import('../../../store').then(s => s.syncMultipleFieldsToWiki(t.wikiPath, { hp: newHp, pv: newHp, HP: newHp }));
       }
     }
   };
