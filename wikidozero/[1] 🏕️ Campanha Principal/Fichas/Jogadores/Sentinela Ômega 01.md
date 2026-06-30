@@ -6,6 +6,12 @@ inventario:
     desc: Sua antiga arma de exterminador, agora configurada para um modo não-letal de atordoamento. Embora enferrujada e com arranhões, ainda emite um zumbido ameaçador e um brilho azulado característico de sua origem.
   - nome: Caderneta de Observações Curiosas
     desc: 'Uma pequena caderneta de couro surrada, cheia de anotações meticulosas e desenhos infantis sobre fenômenos mundanos: o voo de um inseto, a cor de uma flor, o som de um riso. Acompanha uma caneta de luz holográfica.'
+  - nome: Espada Longa
+    tipo: equipamento
+    efeito: ataque_8
+    quantidade: 1
+    descricao: Uma clássica espada de aço temperado.
+    equipado: false
 tipo: PC
 status: vivo
 nome: Sentinela Ômega 01
@@ -21,10 +27,10 @@ tags:
 ativo: true
 origem: Forjado nas fornalhas da Corporação Ômega, Setor 7
 Localizacao: ''
-HP: 25
-HP_max: 36
-PM: 10
-PM_max: 10
+HP: 33
+HP_max: 33
+PM: 15
+PM_max: 15
 Energia: 100
 Energia_max: 100
 Sanidade: 10
@@ -32,8 +38,8 @@ Sanidade_max: 10
 Fome: 0
 Sede: 0
 FOR: 21
-DES: 13
-CON: 18
+DES: 15
+CON: 16
 INT: 10
 SAB: 10
 CAR: 10
@@ -65,12 +71,63 @@ title: Sentinela Ômega 01
 energia: 100
 sanidade: 100
 defesa: 13
-pv: 25
+pv: 33
 sizeScale: 1.4
 showName: true
 tokenShape: hexagon
-pv_max: 36
+pv_max: 33
+mana_max: 15
+energia_max: 100
+vigor_max: 100
+mana: 15
+armas:
+  - nome: Espada Longa
+    tipo: equipamento
+    efeito: ataque_8
+    dano: 1d8
+    descricao: Uma clássica espada de aço temperado.
+    equipado: false
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

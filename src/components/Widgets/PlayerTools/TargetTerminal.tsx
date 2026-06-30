@@ -400,8 +400,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
     const isAttr = ['for', 'des', 'con', 'int', 'sab', 'car'].includes(key.toLowerCase());
     const title = isAttr ? `Atributo: ${key.toUpperCase()}` : `Teste: ${key.toUpperCase()}`;
+    const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
 
-    const messageHtml = `🎲 <b>${tokenData.nome}</b> realizou um teste de <b>${title}</b> (Pathfinder 2e)<br/>
+    const messageHtml = `🎲 <b>${charName}</b> realizou um teste de <b>${title}</b> (Pathfinder 2e)<br/>
       Fórmula: <b>${formula}</b><br/>
       Rolagem: <b>${total}</b> (Dado: ${dieRoll} | Bônus: ${mod >= 0 ? '+' : ''}${mod})`;
 
@@ -708,7 +709,15 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
        let parsed = form.replace(/@([a-zA-Z0-9_]+)/g, (match, p1) => {
           const key = p1.toLowerCase();
           const attrKeys = ['for', 'des', 'con', 'int', 'sab', 'car'];
-          let val = Number(tokenData[key]) || 0;
+          let val = 0;
+          if (key === 'for') val = Number(tokenData.forca ?? tokenData.FOR) || 10;
+          else if (key === 'des') val = Number(tokenData.destreza ?? tokenData.DES) || 10;
+          else if (key === 'con') val = Number(tokenData.constituicao ?? tokenData.CON) || 10;
+          else if (key === 'int') val = Number(tokenData.inteligencia ?? tokenData.INT) || 10;
+          else if (key === 'sab') val = Number(tokenData.sabedoria ?? tokenData.SAB) || 10;
+          else if (key === 'car') val = Number(tokenData.carisma ?? tokenData.CAR) || 10;
+          else val = Number(tokenData[key]) || 0;
+
           if (attrKeys.includes(key) && val >= 1) {
              return Math.floor((val - 10) / 2).toString();
           }
@@ -751,8 +760,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         const atkEval = evaluateFormula(`${atkBase} + ${condBonusAtk}`);
         const totalAtk = atkEval.total;
         const targetsIds = getTargets();
-
-        let msg = "⚔️ <b>" + (tokenData.nome || 'Desconhecido') + "</b> ataca com <b>" + (item.nome || 'Arma') + "</b>!<br/>Ataque: " + atkEval.breakdown + " = <b>" + totalAtk + "</b><br/>";
+        
+        const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Desconhecido';
+        let msg = "⚔️ <b>" + charName + "</b> ataca com <b>" + (item.nome || 'Arma') + "</b>!<br/>Ataque: " + atkEval.breakdown + " = <b>" + totalAtk + "</b><br/>";
 
         const dmgEval = evaluateFormula(danoExpr);
         let dmgTotal = dmgEval.total;
@@ -1586,6 +1596,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           const path = tokenId ? wikiEntry?.path : wikiPath;
           if (path) {
             await syncMultipleFieldsToWiki(path, updates);
+            setTokenData((prev: any) => ({ ...prev, ...updates }));
             WikiIndexer.clearCache();
             window.dispatchEvent(new Event('wiki-updated'));
           }

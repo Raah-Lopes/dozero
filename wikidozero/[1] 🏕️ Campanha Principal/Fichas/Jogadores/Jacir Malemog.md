@@ -31,12 +31,12 @@ Sanidade: 10
 Sanidade_max: 10
 Fome: 0
 Sede: 0
-FOR: 12
-DES: 16
-CON: 14
+FOR: 17
+DES: 10
+CON: 19
 INT: 10
-SAB: 10
-CAR: 13
+SAB: 14
+CAR: 10
 CA: 15
 Deslocamento: 9m
 Acrobacia: 5
@@ -72,7 +72,11 @@ tokenShape: hexagon
 borderColor: '#66a1ff'
 titulo: Jacir Malemog
 title: Jacir Malemog
+pv_max: 24
+energia_max: 20
+vigor_max: 20
 ---
+
 
 
 
