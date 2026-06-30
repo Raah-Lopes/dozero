@@ -27,7 +27,7 @@ tags:
 ativo: true
 origem: Forjado nas fornalhas da Corporação Ômega, Setor 7
 Localizacao: ''
-HP: 33
+HP: 42
 HP_max: 42
 PM: 15
 PM_max: 15
@@ -71,7 +71,7 @@ title: Sentinela Ômega 01
 energia: 100
 sanidade: 100
 defesa: 13
-pv: 33
+pv: 42
 sizeScale: 1.4
 showName: true
 tokenShape: hexagon
@@ -94,6 +94,7 @@ inteligencia: 10
 sabedoria: 14
 carisma: 10
 ---
+
 
 
 
