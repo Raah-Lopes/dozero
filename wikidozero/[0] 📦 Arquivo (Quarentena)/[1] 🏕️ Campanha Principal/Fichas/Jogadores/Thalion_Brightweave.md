@@ -18,7 +18,6 @@ xp: 190
 nivel: 3
 mana: 120
 mana_max: 120
-CA: 10
 armadura_legacy: 2
 defesa: 10
 velocidade: 10

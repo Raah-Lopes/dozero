@@ -9,7 +9,7 @@ inventario:
 tipo: PC
 status: vivo
 nome: Sentinela Ômega 01
-nivel: 1
+nivel: 3
 XP: 0
 Ouro: 50
 imagem: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
@@ -22,7 +22,7 @@ ativo: true
 origem: Forjado nas fornalhas da Corporação Ômega, Setor 7
 Localizacao: ''
 HP: 25
-HP_max: 26
+HP_max: 36
 PM: 10
 PM_max: 10
 Energia: 100
@@ -31,12 +31,12 @@ Sanidade: 10
 Sanidade_max: 10
 Fome: 0
 Sede: 0
-FOR: 8
-DES: 14
-CON: 16
-INT: 16
+FOR: 21
+DES: 13
+CON: 18
+INT: 10
 SAB: 10
-CAR: 8
+CAR: 10
 CA: 13
 Deslocamento: 9m
 Acrobacia: 2
@@ -69,7 +69,25 @@ pv: 25
 sizeScale: 1.4
 showName: true
 tokenShape: hexagon
+pv_max: 36
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

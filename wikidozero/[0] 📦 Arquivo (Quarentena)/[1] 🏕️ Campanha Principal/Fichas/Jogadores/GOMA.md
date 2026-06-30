@@ -12,8 +12,6 @@ carisma: 15
 ataque_basico: Soco Gelatinoso (1d6+4 contundente)
 habilidade_especial: Absorção de Impacto (Reduz dano físico)
 tags: \[jogador, slime, linha de frente]
-inventario:
-  - nome: Arco Curto de Caça
 FOR: 10
 DES: 10
 CON: 10
@@ -26,6 +24,8 @@ Acrobacia: 0
 Furtividade: 0
 Atletismo: 0
 Percepcao: 0
+inventario:
+  - nome: Arco Curto de Caça
     tipo: equipamento
     efeito: ataque_6
     quantidade: 1

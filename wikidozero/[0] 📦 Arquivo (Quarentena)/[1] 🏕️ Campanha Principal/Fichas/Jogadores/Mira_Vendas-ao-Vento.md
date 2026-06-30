@@ -18,7 +18,6 @@ xp: 0
 nivel: 2
 mana: 10
 mana_max: 10
-CA: 10
 armadura_legacy: 0
 defesa: 14
 velocidade: 12
