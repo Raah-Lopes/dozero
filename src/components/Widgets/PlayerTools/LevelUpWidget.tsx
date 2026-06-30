@@ -82,9 +82,15 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
       case 'Arqueiro': distribute('DES', 'SAB', 'CON'); break;
       case 'Médico': distribute('SAB', 'INT', 'CAR'); break;
       case 'Bárbaro': distribute('FOR', 'CON', 'DES'); break;
+      case 'Guerreiro': distribute('FOR', 'DES', 'CON'); break;
       case 'Mago': distribute('INT', 'SAB', 'DES'); break;
       case 'Bardo': distribute('CAR', 'DES', 'INT'); break;
       case 'Paladino': distribute('CAR', 'FOR', 'CON'); break;
+      case 'Clérigo': distribute('SAB', 'CAR', 'CON'); break;
+      case 'Feiticeiro': distribute('CAR', 'DES', 'CON'); break;
+      case 'Bruxo': distribute('CAR', 'CON', 'INT'); break;
+      case 'Druida': distribute('SAB', 'INT', 'CON'); break;
+      case 'Alquimista': distribute('INT', 'DES', 'CON'); break;
       case 'Ranger': distribute('DES', 'SAB', 'FOR'); break;
       case 'Monge': distribute('DES', 'SAB', 'CON'); break;
       case 'Equilibrado':
@@ -187,15 +193,23 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
             <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: '0 0 0.75rem 0' }}>Escolha um caminho para distribuir os pontos e Vida que faltam de forma otimizada para a classe:</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-              <button onClick={() => applyArchetype('Tanque')} style={archetypeBtnStyle}><ShieldAlert size={14}/> Tanque (CON)</button>
+              <button onClick={() => applyArchetype('Guerreiro')} style={archetypeBtnStyle}><Swords size={14}/> Guerreiro (FOR)</button>
               <button onClick={() => applyArchetype('Bárbaro')} style={archetypeBtnStyle}><Swords size={14}/> Bárbaro (FOR)</button>
               <button onClick={() => applyArchetype('Ladino')} style={archetypeBtnStyle}><Eye size={14}/> Ladino (DES)</button>
               <button onClick={() => applyArchetype('Arqueiro')} style={archetypeBtnStyle}><Crosshair size={14}/> Arqueiro (DES)</button>
+              <button onClick={() => applyArchetype('Ranger')} style={archetypeBtnStyle}><Crosshair size={14}/> Ranger (DES)</button>
+              <button onClick={() => applyArchetype('Monge')} style={archetypeBtnStyle}><Zap size={14}/> Monge (DES)</button>
               <button onClick={() => applyArchetype('Mago')} style={archetypeBtnStyle}><Brain size={14}/> Mago (INT)</button>
-              <button onClick={() => applyArchetype('Bardo')} style={archetypeBtnStyle}><Target size={14}/> Bardo (CAR)</button>
+              <button onClick={() => applyArchetype('Alquimista')} style={archetypeBtnStyle}><Brain size={14}/> Alquimista (INT)</button>
+              <button onClick={() => applyArchetype('Clérigo')} style={archetypeBtnStyle}><HeartPulse size={14}/> Clérigo (SAB)</button>
+              <button onClick={() => applyArchetype('Druida')} style={archetypeBtnStyle}><Zap size={14}/> Druida (SAB)</button>
               <button onClick={() => applyArchetype('Médico')} style={archetypeBtnStyle}><HeartPulse size={14}/> Médico (SAB)</button>
+              <button onClick={() => applyArchetype('Bardo')} style={archetypeBtnStyle}><Target size={14}/> Bardo (CAR)</button>
               <button onClick={() => applyArchetype('Paladino')} style={archetypeBtnStyle}><ShieldAlert size={14}/> Paladino (CAR)</button>
-              <button onClick={() => applyArchetype('Equilibrado')} style={{...archetypeBtnStyle, gridColumn: 'span 2'}}><Target size={14}/> Equilibrado (Corrigir defasagem)</button>
+              <button onClick={() => applyArchetype('Feiticeiro')} style={archetypeBtnStyle}><Zap size={14}/> Feiticeiro (CAR)</button>
+              <button onClick={() => applyArchetype('Bruxo')} style={archetypeBtnStyle}><Eye size={14}/> Bruxo (CAR)</button>
+              <button onClick={() => applyArchetype('Tanque')} style={archetypeBtnStyle}><ShieldAlert size={14}/> Tanque (CON)</button>
+              <button onClick={() => applyArchetype('Equilibrado')} style={{...archetypeBtnStyle, gridColumn: 'span 2'}}><Target size={14}/> Corrigir e Balancear (+Baixo)</button>
             </div>
           </div>
         )}
