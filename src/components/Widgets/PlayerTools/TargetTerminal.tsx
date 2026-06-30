@@ -842,22 +842,39 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.4rem 0' }}>
             <h5 style={{ margin: 0, fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase' }}>Ações & Magias (Macros)</h5>
-            <button onClick={() => {
-              const nome = prompt('Nome do Ataque/Magia (Ex: Bola de Fogo):');
-              if (!nome) return;
-              const formula = prompt('Fórmula de Rolagem (Ex: 1d20 + 5):');
-              if (!formula) return;
-              const dano = prompt('Dano (Ex: 2d6 + 3) ou deixe em branco:');
-              
-              const newMacro = { nome, formula, tipo: 'ataque', descricao: dano ? `Dano: ${dano}` : '' };
-              const currentMacros = tokenData.macros || [];
-              const updatedMacros = [...currentMacros, newMacro];
-              
-              if (tokenData.wikiPath) {
-                import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
-              }
-              updateTokenProps(tokenId, { macros: updatedMacros });
-            }} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ADICIONAR</button>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button onClick={() => {
+                const basicos = [
+                  { nome: 'Golpe Desarmado', formula: '1d20 + @for', tipo: 'ataque', descricao: 'Dano: 1d4 + @for' },
+                  { nome: 'Arremesso de Pedra', formula: '1d20 + @des', tipo: 'ataque', descricao: 'Dano: 1d4 + @for' },
+                  { nome: 'Esquiva', formula: '1d20 + @des', tipo: 'defesa', descricao: 'Você tenta se esquivar do próximo ataque.' }
+                ];
+                
+                const currentMacros = tokenData.macros || [];
+                const updatedMacros = [...currentMacros, ...basicos];
+                
+                if (tokenData.wikiPath) {
+                  import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+                }
+                updateTokenProps(tokenId, { macros: updatedMacros });
+              }} style={{ fontSize: '0.65rem', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontWeight: 'bold' }}>+ BÁSICOS</button>
+              <button onClick={() => {
+                const nome = prompt('Nome do Ataque/Magia (Ex: Bola de Fogo):');
+                if (!nome) return;
+                const formula = prompt('Fórmula de Rolagem (Ex: 1d20 + 5):');
+                if (!formula) return;
+                const dano = prompt('Dano (Ex: 2d6 + 3) ou deixe em branco:');
+                
+                const newMacro = { nome, formula, tipo: 'ataque', descricao: dano ? `Dano: ${dano}` : '' };
+                const currentMacros = tokenData.macros || [];
+                const updatedMacros = [...currentMacros, newMacro];
+                
+                if (tokenData.wikiPath) {
+                  import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+                }
+                updateTokenProps(tokenId, { macros: updatedMacros });
+              }} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ADICIONAR</button>
+            </div>
           </div>
           
           {macrosMD.map((macro: any, idx: number) => (
@@ -909,22 +926,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             </div>
           ))}
           
-          {macrosMD.length === 0 && (
-            <div style={{ padding: '0.8rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-              Nenhuma macro cadastrada.<br/>
-              <button onClick={() => {
-                const basicos = [
-                  { nome: 'Golpe Desarmado', formula: '1d20 + @for', tipo: 'ataque', descricao: 'Dano: 1d4 + @for' },
-                  { nome: 'Arremesso de Pedra', formula: '1d20 + @des', tipo: 'ataque', descricao: 'Dano: 1d4 + @for' },
-                  { nome: 'Esquiva', formula: '1d20 + @des', tipo: 'defesa', descricao: 'Você tenta se esquivar do próximo ataque.' }
-                ];
-                if (tokenData.wikiPath) {
-                  import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: basicos }));
-                }
-                updateTokenProps(tokenId, { macros: basicos });
-              }} style={{ marginTop: '0.5rem', padding: '6px 12px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Adicionar Ataques Básicos</button>
-            </div>
-          )}
+
         </div>
 
       </div>
