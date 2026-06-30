@@ -1411,36 +1411,7 @@ ${vencedor}`, true);
                     )}
                   </div>
 
-                  {/* ATRIBUTOS 3D&T */}
-                  <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
-                    <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>3D&T (Bônus Reto)</h5>
-                    {atacante ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
-                        {[
-                          { label: 'H', val: atacante.habilidade },
-                          { label: 'A', val: atacante.armadura_3dt },
-                          { label: 'F', val: atacante.forca_3dt },
-                          { label: 'R', val: atacante.resistencia },
-                          { label: 'PdF', val: atacante.pdf },
-                        ].map(a => (
-                          <button
-                            key={a.label}
-                            onClick={() => rolarAtributo3DT(a.label, a.val, atacante.nome)}
-                            style={{
-                              background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)',
-                              borderRadius: '6px', color: '#ffedd5', padding: '4px', cursor: 'pointer',
-                              display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.75rem'
-                            }}
-                          >
-                            <span style={{ fontWeight: 'bold' }}>{a.label}</span>
-                            <span>{a.val}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Atacante.</div>
-                    )}
-                  </div>
+
 
                   {/* PERÍCIAS */}
                   <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>

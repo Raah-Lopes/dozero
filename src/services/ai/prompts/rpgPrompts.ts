@@ -36,60 +36,13 @@ Quando solicitado a gerar fichas, use o formato YAML frontmatter compatível com
 Seja criativo, evite clichês, e crie conteúdo que surpreenda o Mestre.`;
 
 const YAML_PC_TEMPLATE = `
-O frontmatter YAML e o corpo Markdown da ficha de PC devem seguir EXATAMENTE este template, preenchendo os valores. A matemática DEVE respeitar o sistema d20 do Pathfinder 2e:
+O frontmatter YAML e o corpo Markdown da ficha de PC devem seguir EXATAMENTE este template:
 
 ---
 inventario: []
 tipo: PC
 status: vivo
-nome: "NOME DO PERSONAGEM AQUI"
-nivel: 1
-XP: 0
-Ouro: 0
-imagem: ""
-tags:
-  - personagem
 ativo: true
-origem: ""
-Localizacao: ""
-HP: 10
-HP_max: 10
-PM: 10
-PM_max: 10
-Energia: 100
-Energia_max: 100
-Sanidade: 10
-Sanidade_max: 10
-Fome: 0
-Sede: 0
-FOR: 10
-DES: 10
-CON: 10
-INT: 10
-SAB: 10
-CAR: 10
-CA: 15
-Fortitude: 0
-Reflexos: 0
-Vontade: 0
-Deslocamento: "9m"
-Acrobacia: 0
-Arcanismo: 0
-Atletismo: 0
-Enganacao: 0
-Diplomacia: 0
-Furtividade: 0
-Intimidacao: 0
-Medicina: 0
-Natureza: 0
-Ocultismo: 0
-Percepcao: 0
-Performance: 0
-Religiao: 0
-Sociedade: 0
-Sobrevivencia: 0
-Roubo: 0
-status_efeitos: []
 imagens: []
 magias: []
 macros:
@@ -97,241 +50,252 @@ macros:
     formula: "1d20+7"
     dano: "1d8+4"
     tipo: "ataque"
-    descricao: "Ataque corpo-a-corpo padrão."
+    descricao: "Ataque padrão do personagem"
+ficha_personagem:
+  cabecalho:
+    nome_personagem: "NOME AQUI"
+    genero: ""
+    alinhamento: ""
+    nivel: 1
+    nome_jogador: ""
+    xp: 0
+  ancestralidade:
+    heranca: ""
+    habilidade: ""
+  biografia:
+    habilidade: ""
+  classe:
+    habilidades_nivel: []
+  atributos:
+    for: 10
+    des: 10
+    con: 10
+    int: 10
+    sab: 10
+    car: 10
+  pontos_vida:
+    maximo: 10
+    atuais: 10
+    anotacoes: ""
+  velocidade_metros: 9
+  pericias:
+    acrobatismo: 0
+    arcanismo: 0
+    atletismo: 0
+    diplomacia: 0
+    dissimulacao: 0
+    furtividade: 0
+    intimidacao: 0
+    ladroagem: 0
+    manufatura: 0
+    medicina: 0
+    natureza: 0
+    ocultismo: 0
+    performance: 0
+    religiao: 0
+    saber: 0
+    sociedade: 0
+    sobrevivencia: 0
+  percepcao:
+    total: 0
+    sab: 0
+    prof: 0
+    sentidos_anotacoes: ""
+  jogadas_salvamento:
+    fortitude: 0
+    reflexos: 0
+    vontade: 0
+  defesas:
+    proficiencia_armadura:
+      sem_armadura: 0
+      leve: 0
+      media: 0
+      pesada: 0
+    ca: 10
+    anotacoes: ""
+  ataques_armas:
+    proficiencia:
+      simples: 0
+      marcial: 0
+      desarmado: 0
+      outra: 0
+    corpo_a_corpo:
+      - nome: "Espada"
+        dano: "1d8"
+        tracos: ""
+    a_distancia:
+      - nome: "Arco"
+        dano: "1d6"
+        tracos: ""
+        municao: ""
 ---
-
 
 <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: start;">
 <div style="flex: 1; min-width: 300px;">
 
 :::note[Interpretação e Lore]
-**Nome Completo:** \`INPUT[text:nome_completo]\` | **Imagem:** \`INPUT[text:imagem]\`
-**Resumo:** 
-\`INPUT[textArea:resumo]\`
-
-**Ancestralidade:** \`INPUT[text:raca]\`
-**Herança:** \`INPUT[text:heranca]\`
-**Histórico:** \`INPUT[text:origem]\`
-**Classe:** \`INPUT[text:classe]\`
-**Nível:** \`INPUT[number:nivel]\`
-
-**Títulos e Apelidos:** \`INPUT[text:titulos]\`
-**Facção / Ocupação:** \`INPUT[text:faccao]\`
-**Raça / Espécie:** \`INPUT[text:raca]\`
-**Origem / Nacionalidade:** \`INPUT[text:origem]\`
-**Idade / Gênero:** \`INPUT[text:idade_genero]\`
-**Alinhamento:** \`INPUT[text:alinhamento]\`
-**Nível:** \`INPUT[number:nivel]\`
-**Altura / Peso:** \`INPUT[text:altura_peso]\`
-
-**🧠 PERSONALIDADE & CITAÇÕES**
-- **Traços Dominantes:** \`INPUT[textArea:tracos_dominantes]\`
-- **Virtudes:** \`INPUT[textArea:virtudes]\`
-- **Defeitos / Vícios / Medos:** \`INPUT[textArea:defeitos]\`
-- **Sonhos e Objetivos:** \`INPUT[textArea:sonhos]\`
-
-**📜 HISTÓRIA & RELACIONAMENTOS**
-- **Infância:** \`INPUT[textArea:historia_infancia]\`
-- **Adolescência / Vida Adulta:** \`INPUT[textArea:historia_adulta]\`
-- **Eventos Marcantes:** \`INPUT[textArea:historia_eventos]\`
-- **Relacionamentos:** \`INPUT[textArea:relacionamentos]\`
-
+**Nome Completo:** \`INPUT[text:ficha_personagem.cabecalho.nome_personagem\]\`
+**Ancestralidade:** \`INPUT[text:ficha_personagem.ancestralidade.heranca\]\`
+**Classe:** \`INPUT[textArea:ficha_personagem.classe.habilidades_nivel\]\`
 :::
-:::danger[✨ PODERES, VANTAGENS & MAGIAS]
-## Vantagens e Desvantagens (Passivas/Ativas)
-\`INPUT[textArea:vantagens]\`
 
-## Magias Conhecidas
-\`INPUT[textArea:magias]\`
-
-:::
-:::note[🗺️ MAPA MENTAL & REFERÊNCIAS]
-\`\`\`mermaid
-mindmap
-root((NOME))
-  Família
-  Aliados
-  Rivais
-  Objetivos
-\`\`\`
-
-:::
-:::tip[🌟 PROGRESSO: Nível \`INPUT[number:nivel]\`]
-**XP Atual:** \`INPUT[number:XP]\` / Próximo Nível: \`VIEW[{nivel} * 1000]\`
-
+:::tip[🌟 PROGRESSO]
+**Nível:** \`INPUT[number:ficha_personagem.cabecalho.nivel\]\`
+**XP Atual:** \`INPUT[number:ficha_personagem.cabecalho.xp\]\`
 :::
 </div>
 
 <div style="flex: 1; min-width: 300px;">
 
 :::danger[⚔️ COMBATE, STATUS E SOBREVIVÊNCIA]
-**Ativo no Combate:** \`INPUT[toggle:ativo]\` | **Localização:** \`INPUT[text:Localizacao]\`
-
-**Barras de Vida e Combate**
-**HP:** \`INPUT[number:HP]\` / \`VIEW[{HP_max}]\` | **PM:** \`INPUT[number:PM]\` / \`VIEW[{PM_max}]\`
-
-**Sobrevivência & Sanidade**
-**Energia:** \`INPUT[number:Energia]\` / \`VIEW[{Energia_max}]\` | **Sanidade:** \`INPUT[number:Sanidade]\` / \`VIEW[{Sanidade_max}]\`
-**Fome (%):** \`INPUT[number:Fome]\` | **Sede (%):** \`INPUT[number:Sede]\`
+**Ativo no Combate:** \`INPUT[toggle:ativo\]\` 
+**HP:** \`INPUT[number:ficha_personagem.pontos_vida.atuais\]\` / \`VIEW[{ficha_personagem.pontos_vida.maximo}\]\`
 
 **Atributos (Pathfinder 2e)**
-**FOR:** \`INPUT[number:FOR]\` | **DES:** \`INPUT[number:DES]\` | **CON:** \`INPUT[number:CON]\` 
-**INT:** \`INPUT[number:INT]\` | **SAB:** \`INPUT[number:SAB]\` | **CAR:** \`INPUT[number:CAR]\`
+**FOR:** \`INPUT[number:ficha_personagem.atributos.for\]\` | **DES:** \`INPUT[number:ficha_personagem.atributos.des\]\` | **CON:** \`INPUT[number:ficha_personagem.atributos.con\]\` 
+**INT:** \`INPUT[number:ficha_personagem.atributos.int\]\` | **SAB:** \`INPUT[number:ficha_personagem.atributos.sab\]\` | **CAR:** \`INPUT[number:ficha_personagem.atributos.car\]\`
 
 **Defesa e Movimento**
-**CA:** \`INPUT[number:CA]\` | **Deslocamento:** \`INPUT[text:Deslocamento]\`
+**CA:** \`INPUT[number:ficha_personagem.defesas.ca\]\` | **Deslocamento:** \`INPUT[number:ficha_personagem.velocidade_metros\]\`m
 
-**Perícias Básicas:**
-**Acrobacia:** \`INPUT[number:Acrobacia]\` | **Furtividade:** \`INPUT[number:Furtividade]\`
-**Intimidação:** \`INPUT[number:Intimidacao]\` | **Investigação:** \`INPUT[number:Investigacao]\`
-**Medicina:** \`INPUT[number:Medicina]\` | **Percepção:** \`INPUT[number:Percepcao]\`
-**Sobrevivência:** \`INPUT[number:Sobrevivencia]\`
-
-**Condições:**
-\`\`\`meta-bind
-INPUT[list:status_efeitos]
-\`\`\`
-
-:::
-:::tip[💰 RIQUEZAS E TESOUROS]
-- Ouro atual: \`INPUT[number:Ouro]\` MO
-
+**Salvamentos:**
+**Fortitude:** \`INPUT[number:ficha_personagem.jogadas_salvamento.fortitude\]\` | **Reflexos:** \`INPUT[number:ficha_personagem.jogadas_salvamento.reflexos\]\` | **Vontade:** \`INPUT[number:ficha_personagem.jogadas_salvamento.vontade\]\`
 :::
 </div>
 </div>
-
----
-### ⚙️ INVENTÁRIO & ARMAS
 `;
 
+
 const YAML_NPC_TEMPLATE = `
-O frontmatter YAML e o corpo Markdown da ficha de NPC/Monstro devem seguir EXATAMENTE este template, preenchendo os valores. A matemática DEVE respeitar o sistema d20 do Pathfinder 2e:
+O frontmatter YAML e o corpo Markdown da ficha de NPC devem seguir EXATAMENTE este template (mesma base do PC):
 
 ---
 inventario: []
 tipo: NPC
 status: vivo
-nome: "NOME DO NPC AQUI"
-nivel: 1
-XP: 100
-Ouro: 0
-imagem: ""
-tags:
-  - npc
 ativo: true
-origem: ""
-Localizacao: ""
-HP: 20
-HP_max: 20
-PM: 10
-PM_max: 10
-Energia: 100
-Energia_max: 100
-Sanidade: 10
-Sanidade_max: 10
-Fome: 0
-Sede: 0
-FOR: 10
-DES: 10
-CON: 10
-INT: 10
-SAB: 10
-CAR: 10
-CA: 15
-Fortitude: 0
-Reflexos: 0
-Vontade: 0
-Deslocamento: "9m"
-Acrobacia: 0
-Arcanismo: 0
-Atletismo: 0
-Enganacao: 0
-Diplomacia: 0
-Furtividade: 0
-Intimidacao: 0
-Medicina: 0
-Natureza: 0
-Ocultismo: 0
-Percepcao: 0
-Performance: 0
-Religiao: 0
-Sociedade: 0
-Sobrevivencia: 0
-Roubo: 0
-status_efeitos: []
 imagens: []
 magias: []
-poderes: []
 macros:
   - nome: "Ataque Básico"
     formula: "1d20+7"
     dano: "1d8+4"
     tipo: "ataque"
-    descricao: "Ataque corpo-a-corpo padrão."
+    descricao: "Ataque padrão do personagem"
+ficha_personagem:
+  cabecalho:
+    nome_personagem: "NOME AQUI"
+    genero: ""
+    alinhamento: ""
+    nivel: 1
+    nome_jogador: ""
+    xp: 0
+  ancestralidade:
+    heranca: ""
+    habilidade: ""
+  biografia:
+    habilidade: ""
+  classe:
+    habilidades_nivel: []
+  atributos:
+    for: 10
+    des: 10
+    con: 10
+    int: 10
+    sab: 10
+    car: 10
+  pontos_vida:
+    maximo: 10
+    atuais: 10
+    anotacoes: ""
+  velocidade_metros: 9
+  pericias:
+    acrobatismo: 0
+    arcanismo: 0
+    atletismo: 0
+    diplomacia: 0
+    dissimulacao: 0
+    furtividade: 0
+    intimidacao: 0
+    ladroagem: 0
+    manufatura: 0
+    medicina: 0
+    natureza: 0
+    ocultismo: 0
+    performance: 0
+    religiao: 0
+    saber: 0
+    sociedade: 0
+    sobrevivencia: 0
+  percepcao:
+    total: 0
+    sab: 0
+    prof: 0
+    sentidos_anotacoes: ""
+  jogadas_salvamento:
+    fortitude: 0
+    reflexos: 0
+    vontade: 0
+  defesas:
+    proficiencia_armadura:
+      sem_armadura: 0
+      leve: 0
+      media: 0
+      pesada: 0
+    ca: 10
+    anotacoes: ""
+  ataques_armas:
+    proficiencia:
+      simples: 0
+      marcial: 0
+      desarmado: 0
+      outra: 0
+    corpo_a_corpo:
+      - nome: "Espada"
+        dano: "1d8"
+        tracos: ""
+    a_distancia:
+      - nome: "Arco"
+        dano: "1d6"
+        tracos: ""
+        municao: ""
 ---
-
 
 <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: start;">
 <div style="flex: 1; min-width: 300px;">
 
 :::note[Interpretação e Lore]
-**Nome Completo:** \`INPUT[text:nome_completo]\` | **Imagem:** \`INPUT[text:imagem]\`
-**Resumo:** 
-\`INPUT[textArea:resumo]\`
-
-**Família / Organização:** \`INPUT[text:faccao]\`
-**Ancestralidade / Espécie:** \`INPUT[text:raca]\`
-**Traço Principal:** \`INPUT[text:traco]\`
-**Nível:** \`INPUT[number:nivel]\`
-
-**🧠 PERSONALIDADE & TÁTICAS**
-- **Comportamento:** \`INPUT[textArea:tracos_dominantes]\`
-- **Táticas de Combate:** \`INPUT[textArea:taticas]\`
-- **Motivações:** \`INPUT[textArea:motivacoes]\`
-
+**Nome Completo:** \`INPUT[text:ficha_personagem.cabecalho.nome_personagem\]\`
+**Ancestralidade:** \`INPUT[text:ficha_personagem.ancestralidade.heranca\]\`
+**Classe:** \`INPUT[textArea:ficha_personagem.classe.habilidades_nivel\]\`
 :::
-:::danger[✨ PODERES, VANTAGENS & MAGIAS]
-## Vantagens e Desvantagens
-\`INPUT[textArea:vantagens]\`
 
-## Magias Conhecidas
-\`INPUT[textArea:magias]\`
-
-:::
-:::tip[🌟 RECOMPENSAS]
-**XP Recompensa:** \`INPUT[number:XP]\`
-**Ouro Recompensa:** \`INPUT[number:Ouro]\`
-
+:::tip[🌟 PROGRESSO]
+**Nível:** \`INPUT[number:ficha_personagem.cabecalho.nivel\]\`
+**XP Atual:** \`INPUT[number:ficha_personagem.cabecalho.xp\]\`
 :::
 </div>
 
 <div style="flex: 1; min-width: 300px;">
 
-:::danger[⚔️ COMBATE E STATUS]
-**Ativo no Combate:** \`INPUT[toggle:ativo]\` | **Localização:** \`INPUT[text:Localizacao]\`
-
-**Barras de Vida e Magia**
-**HP:** \`INPUT[number:HP]\` / \`VIEW[{HP_max}]\` | **PM:** \`INPUT[number:PM]\` / \`VIEW[{PM_max}]\`
+:::danger[⚔️ COMBATE, STATUS E SOBREVIVÊNCIA]
+**Ativo no Combate:** \`INPUT[toggle:ativo\]\` 
+**HP:** \`INPUT[number:ficha_personagem.pontos_vida.atuais\]\` / \`VIEW[{ficha_personagem.pontos_vida.maximo}\]\`
 
 **Atributos (Pathfinder 2e)**
-**FOR:** \`INPUT[number:FOR]\` | **DES:** \`INPUT[number:DES]\` | **CON:** \`INPUT[number:CON]\` 
-**INT:** \`INPUT[number:INT]\` | **SAB:** \`INPUT[number:SAB]\` | **CAR:** \`INPUT[number:CAR]\`
+**FOR:** \`INPUT[number:ficha_personagem.atributos.for\]\` | **DES:** \`INPUT[number:ficha_personagem.atributos.des\]\` | **CON:** \`INPUT[number:ficha_personagem.atributos.con\]\` 
+**INT:** \`INPUT[number:ficha_personagem.atributos.int\]\` | **SAB:** \`INPUT[number:ficha_personagem.atributos.sab\]\` | **CAR:** \`INPUT[number:ficha_personagem.atributos.car\]\`
 
 **Defesa e Movimento**
-**CA:** \`INPUT[number:CA]\` | **Deslocamento:** \`INPUT[text:Deslocamento]\`
+**CA:** \`INPUT[number:ficha_personagem.defesas.ca\]\` | **Deslocamento:** \`INPUT[number:ficha_personagem.velocidade_metros\]\`m
 
-**Condições:**
-\`\`\`meta-bind
-INPUT[list:status_efeitos]
-\`\`\`
-
+**Salvamentos:**
+**Fortitude:** \`INPUT[number:ficha_personagem.jogadas_salvamento.fortitude\]\` | **Reflexos:** \`INPUT[number:ficha_personagem.jogadas_salvamento.reflexos\]\` | **Vontade:** \`INPUT[number:ficha_personagem.jogadas_salvamento.vontade\]\`
 :::
 </div>
 </div>
-
----
-### ⚙️ INVENTÁRIO / LOOT
 `;
+
 
 const YAML_LOCAL_TEMPLATE = `
 O frontmatter YAML e o corpo Markdown do Local devem seguir EXATAMENTE este template, preenchendo os valores:

@@ -48,12 +48,6 @@ interface FichaPersonagem {
   inteligencia: number;
   sabedoria: number;
   carisma: number;
-  // Atributos 3D&T
-  habilidade: number;
-  armadura_3dt: number;
-  forca_3dt: number;
-  resistencia: number;
-  pdf: number;
   // Inventários específicos
   armas: any[];
   poderes: any[];
@@ -238,13 +232,6 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
         inteligencia: Number(e.metadata?.inteligencia || e.metadata?.INT || e.metadata?.inteligência) || 10,
         sabedoria: Number(e.metadata?.sabedoria || e.metadata?.SAB) || 10,
         carisma: Number(e.metadata?.carisma || e.metadata?.CAR) || 10,
-
-        // Atributos 3D&T
-        habilidade: Number(e.metadata?.habilidade || e.metadata?.H) || 0,
-        armadura_3dt: Number(e.metadata?.armadura_3dt || e.metadata?.A) || 0,
-        forca_3dt: Number(e.metadata?.forca_3dt || e.metadata?.F) || 0,
-        resistencia: Number(e.metadata?.resistencia || e.metadata?.R) || 0,
-        pdf: Number(e.metadata?.pdf || e.metadata?.PdF) || 0,
 
         // Inventários específicos
         armas: Array.isArray(e.metadata?.armas) ? e.metadata.armas : [],
@@ -729,29 +716,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                       </div>
                     </div>
 
-                    {/* Atributos 3D&T */}
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '10px' }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#f97316', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Sistema 3D&T</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
-                        {[
-                          { label: 'H', val: selectedChar.habilidade, key: 'habilidade' },
-                          { label: 'A', val: selectedChar.armadura_3dt, key: 'armadura_3dt' },
-                          { label: 'F', val: selectedChar.forca_3dt, key: 'forca_3dt' },
-                          { label: 'R', val: selectedChar.resistencia, key: 'resistencia' },
-                          { label: 'PdF', val: selectedChar.pdf, key: 'pdf' },
-                        ].map(a => (
-                          <div key={a.key} style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.65rem', color: '#ffedd5', fontWeight: 'bold' }}>{a.label}</span>
-                            <input
-                              type="number"
-                              value={a.val}
-                              onChange={e => handlePropChange(a.key, Math.max(0, parseInt(e.target.value) || 0))}
-                              style={{ width: '40px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 2px', fontSize: '0.75rem', textAlign: 'center' }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+
 
                   </div>
                 )}

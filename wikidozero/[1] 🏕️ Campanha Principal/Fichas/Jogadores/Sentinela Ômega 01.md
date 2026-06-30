@@ -66,7 +66,14 @@ energia: 100
 sanidade: 100
 defesa: 13
 pv: 25
+sizeScale: 1.4
+showName: true
+tokenShape: hexagon
 ---
+
+
+
+
 
 
 

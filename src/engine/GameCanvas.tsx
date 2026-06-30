@@ -1143,14 +1143,11 @@ export const GameCanvas: React.FC = () => {
                 if (!e.shiftKey) {
                    clearTokenSelection();
                    clearPropSelection();
-                   clearTargets();
                 }
                 toggleTokenSelection(id, false);
-                toggleTarget(id);
               } else if (e.shiftKey) {
-                // Se já está selecionado e segurou shift, desmarca seleção e alvo
+                // Se já está selecionado e segurou shift, desmarca
                 toggleTokenSelection(id, false);
-                toggleTarget(id);
               }
 
               draggingTokenId = id;

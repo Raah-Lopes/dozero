@@ -26,7 +26,7 @@ export interface FichaPersonagem {
   status_efeitos: string[];
   saqueado: boolean;
 
-  // Atributos 4DET / D&D
+  // Atributos PF2e (com fallback para 4DET/legado)
   forca: number;
   destreza: number;
   constituicao: number;
@@ -34,12 +34,12 @@ export interface FichaPersonagem {
   sabedoria: number;
   carisma: number;
 
-  // Atributos 3D&T
-  habilidade: number;
-  armadura_3dt: number;
-  forca_3dt: number;
-  resistencia: number;
-  pdf: number;
+  // Elementos Estruturados PF2e
+  pericias?: Record<string, number>;
+  percepcao?: { total: number; sab: number; prof: number; sentidos_anotacoes: string; };
+  jogadas_salvamento?: { fortitude: number; reflexos: number; vontade: number; };
+  defesas?: { ca: number; [key: string]: any; };
+  ataques_armas?: { corpo_a_corpo: any[]; a_distancia: any[]; proficiencia: any; };
 
   // Inventário e equipamentos
   inventario: any[];
@@ -127,18 +127,25 @@ function mapearEntidade(e: any): FichaPersonagem {
     }));
   }
 
+  // Acessa o nó estruturado de Pathfinder se existir
+  const fp = e.metadata?.ficha_personagem || {};
+  const cabecalho = fp.cabecalho || {};
+  const atributos = fp.atributos || {};
+  const defesas = fp.defesas || {};
+  const pontos_vida = fp.pontos_vida || {};
+
   return {
-    nome: e.metadata?.nome || e.metadata?.titulo || e.slug || 'Sem nome',
-    pv: safeNum(e.metadata?.pv ?? e.metadata?.HP, 0),
-    pv_max: safeNum(e.metadata?.pv_max ?? e.metadata?.HP_max ?? e.metadata?.pv ?? e.metadata?.HP, 0),
-    xp: safeNum(e.metadata?.xp ?? e.metadata?.XP ?? e.metadata?.XP_recompensa, 0),
-    nivel: safeNum(e.metadata?.nivel ?? e.metadata?.Nivel, 1),
+    nome: cabecalho.nome_personagem || e.metadata?.nome || e.metadata?.titulo || e.slug || 'Sem nome',
+    pv: safeNum(pontos_vida.atuais ?? e.metadata?.pv ?? e.metadata?.HP, 0),
+    pv_max: safeNum(pontos_vida.maximo ?? e.metadata?.pv_max ?? e.metadata?.HP_max ?? e.metadata?.pv ?? e.metadata?.HP, 0),
+    xp: safeNum(cabecalho.xp ?? e.metadata?.xp ?? e.metadata?.XP ?? e.metadata?.XP_recompensa, 0),
+    nivel: safeNum(cabecalho.nivel ?? e.metadata?.nivel ?? e.metadata?.Nivel, 1),
     mana: safeNum(e.metadata?.mana ?? e.metadata?.PM, 0),
     mana_max: safeNum(e.metadata?.mana_max ?? e.metadata?.PM_max ?? e.metadata?.mana ?? e.metadata?.PM, 0),
-    armadura: safeNum(e.metadata?.armadura ?? e.metadata?.Armadura ?? e.metadata?.CA ?? e.metadata?.A, 0),
-    defesa: safeNum(e.metadata?.defesa ?? e.metadata?.Defesa ?? e.metadata?.CA, 0),
-    velocidade: safeNum(e.metadata?.velocidade ?? e.metadata?.Velocidade ?? e.metadata?.Deslocamento, 0),
-    ataque: safeNum(e.metadata?.ataque ?? e.metadata?.Ataque ?? e.metadata?.F ?? e.metadata?.PdF, 0),
+    armadura: safeNum(defesas.ca ?? e.metadata?.armadura ?? e.metadata?.Armadura ?? e.metadata?.CA ?? e.metadata?.A, 0),
+    defesa: safeNum(defesas.ca ?? e.metadata?.defesa ?? e.metadata?.Defesa ?? e.metadata?.CA, 0),
+    velocidade: safeNum(fp.velocidade_metros ?? e.metadata?.velocidade ?? e.metadata?.Velocidade ?? e.metadata?.Deslocamento, 0),
+    ataque: safeNum(e.metadata?.ataque ?? e.metadata?.Ataque, 0),
     status,
     avatar: e.metadata?.imageUrl || e.metadata?.avatar || e.metadata?.imagem,
     caminhoArquivo: e.path,
@@ -149,20 +156,20 @@ function mapearEntidade(e: any): FichaPersonagem {
     status_efeitos: Array.isArray(e.metadata?.status_efeitos) ? e.metadata.status_efeitos : [],
     saqueado: e.metadata?.saqueado === 'true' || e.metadata?.saqueado === true,
 
-    // 4DET
-    forca: safeNum(e.metadata?.força ?? e.metadata?.forca ?? e.metadata?.FOR, 10),
-    destreza: safeNum(e.metadata?.destreza ?? e.metadata?.DES, 10),
-    constituicao: safeNum(e.metadata?.constituicao ?? e.metadata?.CON, 10),
-    inteligencia: safeNum(e.metadata?.inteligencia ?? e.metadata?.INT, 10),
-    sabedoria: safeNum(e.metadata?.sabedoria ?? e.metadata?.SAB, 10),
-    carisma: safeNum(e.metadata?.carisma ?? e.metadata?.CAR, 10),
+    // Atributos PF2e com Fallback
+    forca: safeNum(atributos.for ?? e.metadata?.força ?? e.metadata?.forca ?? e.metadata?.FOR, 10),
+    destreza: safeNum(atributos.des ?? e.metadata?.destreza ?? e.metadata?.DES, 10),
+    constituicao: safeNum(atributos.con ?? e.metadata?.constituicao ?? e.metadata?.CON, 10),
+    inteligencia: safeNum(atributos.int ?? e.metadata?.inteligencia ?? e.metadata?.INT, 10),
+    sabedoria: safeNum(atributos.sab ?? e.metadata?.sabedoria ?? e.metadata?.SAB, 10),
+    carisma: safeNum(atributos.car ?? e.metadata?.carisma ?? e.metadata?.CAR, 10),
 
-    // 3D&T
-    habilidade: safeNum(e.metadata?.habilidade ?? e.metadata?.H, 0),
-    armadura_3dt: safeNum(e.metadata?.armadura_3dt ?? e.metadata?.A, 0),
-    forca_3dt: safeNum(e.metadata?.forca_3dt ?? e.metadata?.F, 0),
-    resistencia: safeNum(e.metadata?.resistencia ?? e.metadata?.R, 0),
-    pdf: safeNum(e.metadata?.pdf ?? e.metadata?.PdF, 0),
+    // Elementos Estruturados PF2e
+    pericias: fp.pericias,
+    percepcao: fp.percepcao,
+    jogadas_salvamento: fp.jogadas_salvamento,
+    defesas: fp.defesas,
+    ataques_armas: fp.ataques_armas,
 
     // Inventário
     inventario: Array.isArray(e.metadata?.inventario) ? e.metadata.inventario : [],
