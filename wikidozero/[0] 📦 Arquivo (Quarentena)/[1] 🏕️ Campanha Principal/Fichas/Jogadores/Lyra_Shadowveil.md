@@ -1,12 +1,25 @@
 ---
 nome: Lyra Shadowveil
+FOR: 10
+DES: 10
+CON: 10
+INT: 10
+SAB: 10
+CAR: 10
+CA: 10
+Deslocamento: 9m
+Acrobacia: 0
+Furtividade: 0
+Atletismo: 0
+Percepcao: 0
 pv: 52
 pv_max: 52
 xp: 310
 nivel: 5
 mana: 80
 mana_max: 80
-armadura: 4
+CA: 10
+armadura_legacy: 4
 defesa: 16
 velocidade: 14
 ataque: 14

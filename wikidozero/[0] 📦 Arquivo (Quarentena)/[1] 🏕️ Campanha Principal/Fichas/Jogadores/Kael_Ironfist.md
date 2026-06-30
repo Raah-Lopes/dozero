@@ -1,12 +1,25 @@
 ---
 nome: Kael Ironfist
+FOR: 10
+DES: 10
+CON: 10
+INT: 10
+SAB: 10
+CAR: 10
+CA: 10
+Deslocamento: 9m
+Acrobacia: 0
+Furtividade: 0
+Atletismo: 0
+Percepcao: 0
 pv: 85
 pv_max: 85
 xp: 240
 nivel: 4
 mana: 20
 mana_max: 30
-armadura: 15
+CA: 10
+armadura_legacy: 15
 defesa: 12
 velocidade: 8
 ataque: 22

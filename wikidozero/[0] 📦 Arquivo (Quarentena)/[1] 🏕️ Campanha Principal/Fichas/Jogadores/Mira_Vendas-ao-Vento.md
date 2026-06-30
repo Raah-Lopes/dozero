@@ -1,12 +1,25 @@
 ---
 nome: Mira Vendas-ao-Vento
+FOR: 10
+DES: 10
+CON: 10
+INT: 10
+SAB: 10
+CAR: 10
+CA: 10
+Deslocamento: 9m
+Acrobacia: 0
+Furtividade: 0
+Atletismo: 0
+Percepcao: 0
 pv: 30
 pv_max: 30
 xp: 0
 nivel: 2
 mana: 10
 mana_max: 10
-armadura: 0
+CA: 10
+armadura_legacy: 0
 defesa: 14
 velocidade: 12
 ataque: 6

@@ -1,12 +1,25 @@
 ---
 nome: Gorath o Implacável
+FOR: 10
+DES: 10
+CON: 10
+INT: 10
+SAB: 10
+CAR: 10
+CA: 10
+Deslocamento: 9m
+Acrobacia: 0
+Furtividade: 0
+Atletismo: 0
+Percepcao: 0
 pv: 120
 pv_max: 120
 xp: 0
 nivel: 6
 mana: 100
 mana_max: 0
-armadura: 10
+CA: 10
+armadura_legacy: 10
 defesa: 8
 velocidade: 6
 ataque: 35

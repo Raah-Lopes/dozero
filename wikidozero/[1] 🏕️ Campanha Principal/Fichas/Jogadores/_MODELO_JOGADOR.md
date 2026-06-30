@@ -1,21 +1,29 @@
 ---
 nome: _MODELO_JOGADOR
-pv: 49
-pv_max: 50
+pv: 20
+pv_max: 20
 xp: 0
 nivel: 1
-mana: 30
-mana_max: 30
-armadura: 4
-defesa: 10
-velocidade: 10
-ataque: 10
+mana: 10
+mana_max: 10
+FOR: 10
+DES: 10
+CON: 10
+INT: 10
+SAB: 10
+CAR: 10
+CA: 10
+Deslocamento: 9m
 status: jogador
 ouro: 0
 usos_cura: 3
 saqueado: false
-ativo: fals
+ativo: true
 status_efeitos: []
+Acrobacia: 0
+Furtividade: 0
+Atletismo: 0
+Percepcao: 0
 inventario: 
   - id: "pocao_1"
     nome: "Poção de Vida P"

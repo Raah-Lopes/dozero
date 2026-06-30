@@ -1,12 +1,25 @@
 ---
 nome: Thalion Brightweave
+FOR: 10
+DES: 10
+CON: 10
+INT: 10
+SAB: 10
+CAR: 10
+CA: 10
+Deslocamento: 9m
+Acrobacia: 0
+Furtividade: 0
+Atletismo: 0
+Percepcao: 0
 pv: 38
 pv_max: 38
 xp: 190
 nivel: 3
 mana: 120
 mana_max: 120
-armadura: 2
+CA: 10
+armadura_legacy: 2
 defesa: 10
 velocidade: 10
 ataque: 8

@@ -14,6 +14,18 @@ habilidade_especial: Absorção de Impacto (Reduz dano físico)
 tags: \[jogador, slime, linha de frente]
 inventario:
   - nome: Arco Curto de Caça
+FOR: 10
+DES: 10
+CON: 10
+INT: 10
+SAB: 10
+CAR: 10
+CA: 10
+Deslocamento: 9m
+Acrobacia: 0
+Furtividade: 0
+Atletismo: 0
+Percepcao: 0
     tipo: equipamento
     efeito: ataque_6
     quantidade: 1
