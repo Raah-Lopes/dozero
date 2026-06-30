@@ -46,7 +46,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
   const [activeConditions, setActiveConditions] = useState({ flanqueando: false, inspirado: false, map2: false, map3: false });
   const [isEditingMacro, setIsEditingMacro] = useState(false);
-  const [newMacro, setNewMacro] = useState({ nome: '', formula: '1d20 + @for', dano: '', tipo: 'ataque', descricao: '' });
+  const [newMacro, setNewMacro] = useState({ nome: '', formula: '1d20 + @for', dano: '', custo: '', tipo: 'ataque', descricao: '' });
   const [isTargeted, setIsTargeted] = useState(false);
   const [isLevelUpOpen, setIsLevelUpOpen] = useState(false);
 
@@ -864,11 +864,11 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'rgba(0,0,0,0.5)', padding: '0.5rem', borderRadius: '6px', marginBottom: '8px' }}>
               <select onChange={(e) => {
                 const v = e.target.value;
-                if (v === 'ataque_forca') setNewMacro({ nome: 'Golpe de Força', formula: '1d20 + @for', dano: '1d8 + @for', tipo: 'ataque', descricao: 'Ataque corpo-a-corpo pesado' });
-                if (v === 'ataque_des') setNewMacro({ nome: 'Ataque Rápido', formula: '1d20 + @des', dano: '1d6 + @des', tipo: 'ataque', descricao: 'Ataque ágil/finesse' });
-                if (v === 'magia_atk') setNewMacro({ nome: 'Raio Mágico', formula: '1d20 + @int', dano: '3d6', tipo: 'ataque', descricao: 'Dano elemental mágico' });
-                if (v === 'cura') setNewMacro({ nome: 'Curar Ferimentos', formula: '1d20 + @sab', dano: '1d8', tipo: 'cura', descricao: 'Cura aliada' });
-                if (v === 'teste_gen') setNewMacro({ nome: 'Teste de Atributo', formula: '1d20 + @for', dano: '', tipo: 'teste', descricao: 'Teste sem alvo' });
+                if (v === 'ataque_forca') setNewMacro({ nome: 'Golpe de Força', formula: '1d20 + @for', dano: '1d8 + @for', custo: '', tipo: 'ataque', descricao: 'Ataque corpo-a-corpo pesado' });
+                if (v === 'ataque_des') setNewMacro({ nome: 'Ataque Rápido', formula: '1d20 + @des', dano: '1d6 + @des', custo: '', tipo: 'ataque', descricao: 'Ataque ágil/finesse' });
+                if (v === 'magia_atk') setNewMacro({ nome: 'Raio Mágico', formula: '1d20 + @int', dano: '3d6', custo: '2 PM', tipo: 'ataque', descricao: 'Dano elemental mágico' });
+                if (v === 'cura') setNewMacro({ nome: 'Curar Ferimentos', formula: '1d20 + @sab', dano: '1d8', custo: '2 PM', tipo: 'cura', descricao: 'Cura aliada' });
+                if (v === 'teste_gen') setNewMacro({ nome: 'Teste de Atributo', formula: '1d20 + @for', dano: '', custo: '', tipo: 'teste', descricao: 'Teste sem alvo' });
               }} style={{ background: '#334155', color: 'white', border: 'none', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }}>
                 <option value="">-- Escolher Template Pronto --</option>
                 <option value="ataque_forca">Ataque Pesado (Usa Força)</option>
@@ -881,10 +881,11 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               <div style={{ display: 'flex', gap: '4px' }}>
                 <input value={newMacro.formula} onChange={e => setNewMacro({...newMacro, formula: e.target.value})} placeholder="Fórmula (Ex: 1d20+@for)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
                 <input value={newMacro.dano} onChange={e => setNewMacro({...newMacro, dano: e.target.value})} placeholder="Dano (Ex: 1d8)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+                <input value={newMacro.custo || ''} onChange={e => setNewMacro({...newMacro, custo: e.target.value})} placeholder="Custo (Ex: 2 PM)" style={{ width: '80px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
               </div>
               <button onClick={() => {
                 if (!newMacro.nome || !newMacro.formula) return;
-                const macroObj = { nome: newMacro.nome, formula: newMacro.formula, tipo: newMacro.tipo, descricao: newMacro.dano ? `Dano: ${newMacro.dano}` : (newMacro.descricao || '') };
+                const macroObj = { nome: newMacro.nome, formula: newMacro.formula, tipo: newMacro.tipo, custo: newMacro.custo, descricao: newMacro.dano ? `Dano: ${newMacro.dano}` : (newMacro.descricao || '') };
                 const updatedMacros = [...(tokenData.macros || []), macroObj];
                 if (tokenData.wikiPath) {
                   import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
@@ -911,6 +912,25 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                  };
 
                  let finalFormula = String(macro.formula).toLowerCase();
+                 
+                 if (macro.custo) {
+                   const cMatch = String(macro.custo).toLowerCase().match(/(\d+)\s*(pm|mana|vigor|energia)/);
+                   if (cMatch) {
+                     const qtd = parseInt(cMatch[1]);
+                     const isMana = cMatch[2] === 'pm' || cMatch[2] === 'mana';
+                     const current = isMana ? (tokenData.mana || 0) : (tokenData.energia || 0);
+                     const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
+                     if (current < qtd) {
+                       pushChatMessage(`⚠️ <b>${charName}</b> tentou usar <b>${macro.nome}</b>, mas não tem ${cMatch[2].toUpperCase()} suficiente! (${current}/${qtd})`, false, true);
+                       return;
+                     }
+                     handlePropChange(isMana ? 'mana' : 'energia', current - qtd);
+                     if (tokenData.wikiPath) {
+                       import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { [isMana ? 'PM' : 'energia']: current - qtd }));
+                     }
+                   }
+                 }
+
                  for (const [k, v] of Object.entries(mods)) {
                    finalFormula = finalFormula.replace(new RegExp(k, 'g'), String(v));
                  }
@@ -918,6 +938,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                  const atkEval = evaluateFormula(finalFormula);
                  const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
                  let msg = `🎲 <b>${charName}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
+                 if (macro.custo) msg += `<br/><span style="color:#cbd5e1;font-size:0.7rem">Custo pago: ${macro.custo}</span>`;
                  
                  let dmgExpr = macro.dano;
                  let dmgTotal = 0;
