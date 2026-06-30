@@ -529,79 +529,11 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           }) || null)
         : null);
 
-  // Macros WoD (token-based, para máquina de rolagem)
-  const macros: Macro[] = tokenData.macros || [];
+
 
   // Macros MD: lidas diretamente do frontmatter da wiki (ataques/rolagens da ficha)
   const macrosMD: Array<{ nome: string; formula: string; tipo?: string; descricao?: string; custo?: string }> =
     Array.isArray(wikiEntry?.metadata?.macros) ? wikiEntry.metadata.macros : [];
-
-  const handleAddMacro = () => {
-    if (!tokenId) return;
-    const newMacro: Macro = {
-      id: 'm_' + Date.now().toString(),
-      name: 'Novo Ataque',
-      formula: 'Atributo + Habilidade',
-      system: 'WoD',
-      pool: 5,
-      hunger: 0,
-      damage: 10
-    };
-    updateTokenProps(tokenId, { macros: [...macros, newMacro] });
-  };
-
-  const handleEditMacro = (macroId: string, updates: Partial<Macro>) => {
-    if (!tokenId) return;
-    const updatedMacros = macros.map(m => m.id === macroId ? { ...m, ...updates } : m);
-    updateTokenProps(tokenId, { macros: updatedMacros });
-  };
-
-  const handleDeleteMacro = (macroId: string) => {
-    if (!tokenId) return;
-    const updatedMacros = macros.filter(m => m.id !== macroId);
-    updateTokenProps(tokenId, { macros: updatedMacros });
-  };
-
-  const handleRoll = (macro: Macro) => {
-    if (macro.system === 'WoD') {
-      const result = WoDParser.rollV5(macro.pool, macro.hunger, 3);
-      const targetsIds = getTargets();
-      
-      let targetNames = "ninguém (Nenhum alvo selecionado)";
-      if (targetsIds.length > 0) {
-        targetNames = targetsIds.map(id => (state.tokens.get(id) as any)?.name || 'Desconhecido').join(', ');
-      }
-
-      let messageHtml = `<b>${tokenData.name}</b> ataca <b>${targetNames}</b> com <b>${macro.name}</b><br/>
-        Sucessos: <b>${result.successes}</b> <br/>
-        <span style="color:var(--text-secondary); font-size: 0.75rem">Dados: [${result.diceResult.normal.join(', ')}] | Estresse: [${result.diceResult.hunger.join(', ')}]</span>`;
-        
-      if (result.isMessyCritical) {
-        messageHtml += `<br/><b style="color: var(--danger)">CRÍTICO CAÓTICO!</b> (Perdeu o controle do ataque)`;
-      } else if (result.isBestialFailure) {
-        messageHtml += `<br/><b style="color: var(--danger)">FALHA CRÍTICA!</b> (Desastre iminente)`;
-      } else if (result.successes >= 3) {
-        if (targetsIds.length > 0) {
-          messageHtml += `<br/><b style="color: var(--success)">Acerto Crítico!</b> Causou ${macro.damage} de dano!`;
-          targetsIds.forEach(targetId => applyDamageToToken(targetId, macro.damage));
-        } else {
-          messageHtml += `<br/><b style="color: var(--warning)">Acerto Crítico!</b> (Mas nenhum alvo estava na mira para receber os ${macro.damage} de dano).`;
-        }
-      } else {
-        messageHtml += `<br/><b>Falhou!</b> O ataque não penetrou as defesas.`;
-      }
-
-      pushChatMessage(messageHtml, result.successes >= 3 && !result.isMessyCritical, result.isBestialFailure || result.isMessyCritical);
-
-      window.dispatchEvent(new CustomEvent('dice-roll', {
-        detail: {
-          title: macro.name,
-          result: result.isBestialFailure ? 'FALHA CRÍTICA' : result.isMessyCritical ? 'CRÍTICO CAÓTICO' : `${result.successes} SUCESSOS`,
-          type: result.isBestialFailure || result.isMessyCritical ? 'attack' : result.successes >= 3 ? 'success' : 'utility'
-        }
-      }));
-    }
-  };
 
   const handleRollInitiative = () => {
     if (!tokenId) return;
