@@ -186,7 +186,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                       key={w.id} 
                       onClick={w.action} 
                       title={w.title} 
-                      className={\`widget-btn \${w.theme}\`} 
+                      className={`widget-btn ${w.theme}`} 
                       style={w.shadow ? { boxShadow: w.shadow } : {}}
                     >
                       <Icon size={28} />
