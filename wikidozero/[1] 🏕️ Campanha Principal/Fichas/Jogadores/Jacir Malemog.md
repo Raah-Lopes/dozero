@@ -1,23 +1,11 @@
 ---
 inventario:
   - nome: Calça de Capoeira Brega
-    desc: >-
-      Uma calça branca de boca larga, feita de um tecido sintético brilhante,
-      com detalhes em azul e verde limão. É um pouco excêntrica, mas
-      incrivelmente confortável e elástica, perfeita para os movimentos
-      acrobáticos de Jacir.
+    desc: Uma calça branca de boca larga, feita de um tecido sintético brilhante, com detalhes em azul e verde limão. É um pouco excêntrica, mas incrivelmente confortável e elástica, perfeita para os movimentos acrobáticos de Jacir.
   - nome: Pasta de Goma de Mascar Mágica
-    desc: >-
-      Um pequeno pote de cerâmica com uma pasta verde e pegajosa. Quando usada,
-      permite a Jacir solidificar momentaneamente partes de seu corpo para
-      ataques mais impactantes ou para reparos rápidos em pequenos ferimentos.
-      Dura 1 minuto (3 usos diários).
+    desc: Um pequeno pote de cerâmica com uma pasta verde e pegajosa. Quando usada, permite a Jacir solidificar momentaneamente partes de seu corpo para ataques mais impactantes ou para reparos rápidos em pequenos ferimentos. Dura 1 minuto (3 usos diários).
   - nome: Berimbau de Slime
-    desc: >-
-      Um berimbau único, feito de um tipo de slime mais denso e resiliente que
-      Jacir mesmo cultivou. Emite sons graves e ressonantes que, além de ritmar
-      a capoeira, podem distrair ou desorientar criaturas fracas por um breve
-      momento (CD 10 de Sabedoria para resistir).
+    desc: Um berimbau único, feito de um tipo de slime mais denso e resiliente que Jacir mesmo cultivou. Emite sons graves e ressonantes que, além de ritmar a capoeira, podem distrair ou desorientar criaturas fracas por um breve momento (CD 10 de Sabedoria para resistir).
   - nome: Cajado do Conjurador
     tipo: equipamento
     efeito: ataque_6
@@ -29,9 +17,7 @@ status: vivo
 nome: Jacir Malemog
 nivel: 3
 XP: 1000
-Ouro: 80
-imagem: >-
-  /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
 tags:
   - personagem
   - slime
@@ -73,19 +59,13 @@ macros:
   - nome: Rasteira de Capoeira
     formula: 1d20+5
     tipo: ataque
-    descricao: >-
-      Ataque corpo-a-corpo que derruba o oponente. Dano: 1d6 + 3 (blunt). Se
-      acertar, o alvo deve fazer um teste de Destreza (CD 13) ou cairá no chão.
+    descricao: 'Ataque corpo-a-corpo que derruba o oponente. Dano: 1d6 + 3 (blunt). Se acertar, o alvo deve fazer um teste de Destreza (CD 13) ou cairá no chão.'
   - nome: Golpe Elástico
     formula: 1d20+5
     tipo: ataque
-    descricao: >-
-      Jacir estica um membro para um ataque surpresa. Dano: 1d8 + 3 (blunt).
-      Gasta 2 PM.
-avatar: >-
-  /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
-imageUrl: >-
-  /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+    descricao: 'Jacir estica um membro para um ataque surpresa. Dano: 1d8 + 3 (blunt). Gasta 2 PM.'
+avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
 sizeScale: 1.4
 showName: true
 energia: 30
@@ -129,39 +109,32 @@ poderes: []
 pocoes: []
 maldicoes: []
 objetos_campanha: []
+po: 80
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -10,7 +10,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
   const [copied, setCopied] = useState(false);
   
   // Use VITE_LOCAL_IP se existir, caso contrário o host atual (fallback)
-  const localIp = import.meta.env.VITE_LOCAL_IP || window.location.hostname;
+  const localIp = (import.meta as any).env.VITE_LOCAL_IP || window.location.hostname;
   const port = window.location.port || '5173';
   
   const inviteLink = `http://${localIp}:${port}/`;

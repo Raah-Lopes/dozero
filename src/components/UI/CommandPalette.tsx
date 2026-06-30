@@ -12,7 +12,7 @@ import { useCommandRegistry } from '../../store';
 interface ActionDef {
   id: string;
   title: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   category: string;
   onSelect: () => void;
 }
@@ -159,8 +159,8 @@ export const CommandPalette: React.FC = () => {
   };
 
   const wikiActions: ActionDef[] = wikiIndex.map(file => {
-    const defaultName = (file.name || file.path.split('/').pop() || 'Documento').replace('.md', '');
-    const title = file.title || defaultName;
+    const defaultName = (file.metadata?.nome || file.slug || file.path.split('/').pop() || 'Documento').replace('.md', '');
+    const title = file.metadata?.titulo || defaultName;
     return {
       id: `wiki_${file.path}`,
       title,

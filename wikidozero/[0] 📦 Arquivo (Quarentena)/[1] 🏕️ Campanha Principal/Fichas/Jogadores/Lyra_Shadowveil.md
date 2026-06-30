@@ -24,7 +24,6 @@ velocidade: 14
 ataque: 14
 status: jogador
 avatar: null
-ouro: 0
 usos_cura: 3
 status_efeitos: []
 saqueado: false
@@ -62,9 +61,35 @@ poderes: []
 pocoes: []
 maldicoes: []
 objetos_campanha: []
-Ouro: 0
 XP: 310
+po: 0
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
+macros: []
 ---
+
 
 
 # Lyra Shadowveil 🌙

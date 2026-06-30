@@ -15,8 +15,7 @@ CAR: 8
 CA: 15
 Deslocamento: 9m
 status: inimigo
-avatar: 
-ouro: 0
+avatar: null
 usos_cura: 0
 status_efeitos: []
 saqueado: false
@@ -26,6 +25,33 @@ Furtividade: 0
 Atletismo: 0
 Percepcao: 0
 inventario: []
+po: 0
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
+poderes: []
+macros: []
 ---
 # 📋 MODELO — Ficha de Inimigo
 

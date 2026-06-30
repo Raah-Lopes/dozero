@@ -58,14 +58,19 @@ interface FichaPersonagem {
 }
 
 interface ItemCatalogo {
+  id?: string;
   nome: string;
-  tipo: 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha' | 'armadura';
+  tipo: string;
+  categoria?: string;
+  dano?: string;
+  peso?: number;
   descricao: string;
+  forca_minima?: number;
+  penalidade_deslocamento?: number;
+  isCustom?: boolean;
   efeito: string;
   custo?: string; // para poderes
-  dano?: string;  // para armas
   quantidade?: number; // para poções
-  categoria?: 'simples' | 'marcial' | 'desarmado' | 'sem_armadura' | 'leve' | 'media' | 'pesada'; // para armas e armaduras
   limite_des?: number; // para armaduras
   nivel?: number | 'truque'; // para poderes (magias)
 }
@@ -79,10 +84,10 @@ const CATALOGO_ITEMS: ItemCatalogo[] = [
   { nome: "Cajado do Conjurador", tipo: "arma", descricao: "Canaliza poderes arcanos (+1 em feitiços).", efeito: "ataque_6", dano: "1d6", categoria: "simples" },
   
   // ARMADURAS
-  { nome: "Vestes de Explorador", tipo: "armadura", descricao: "Roupas grossas para viagem.", efeito: "armadura_0", limite_des: 5, categoria: "sem_armadura", dano: "0" },
-  { nome: "Corselete de Couro", tipo: "armadura", descricao: "Couro fervido, flexível e leve.", efeito: "armadura_1", limite_des: 4, categoria: "leve", dano: "1" },
-  { nome: "Brunea", tipo: "armadura", descricao: "Escamas metálicas espessas.", efeito: "armadura_3", limite_des: 2, categoria: "media", dano: "3" },
-  { nome: "Armadura Completa", tipo: "armadura", descricao: "Placas maciças de aço pesado.", efeito: "armadura_6", limite_des: 0, categoria: "pesada", dano: "6" },
+  { nome: "Vestes de Explorador", tipo: "armadura", descricao: "Roupas grossas para viagem.", efeito: "armadura_0", limite_des: 5, categoria: "sem_armadura", dano: "0", forca_minima: 10, penalidade_deslocamento: 0 },
+  { nome: "Corselete de Couro", tipo: "armadura", descricao: "Couro fervido, flexível e leve.", efeito: "armadura_1", limite_des: 4, categoria: "leve", dano: "1", forca_minima: 10, penalidade_deslocamento: 0 },
+  { nome: "Brunea", tipo: "armadura", descricao: "Escamas metálicas espessas.", efeito: "armadura_3", limite_des: 2, categoria: "media", dano: "3", forca_minima: 14, penalidade_deslocamento: 1.5 },
+  { nome: "Armadura Completa", tipo: "armadura", descricao: "Placas maciças de aço pesado.", efeito: "armadura_6", limite_des: 0, categoria: "pesada", dano: "6", forca_minima: 18, penalidade_deslocamento: 3 },
 
   // PODERES
   { nome: "Luz", tipo: "poder", descricao: "Faz um objeto brilhar iluminando a área.", efeito: "utilidade", custo: "0 PM", nivel: 'truque' },
@@ -450,6 +455,8 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
           efeito: item.efeito,
           dano: item.dano,
           limite_des: item.limite_des,
+          forca_minima: item.forca_minima,
+          penalidade_deslocamento: item.penalidade_deslocamento,
           descricao: item.descricao,
           categoria: item.categoria || 'sem_armadura',
           equipado: false

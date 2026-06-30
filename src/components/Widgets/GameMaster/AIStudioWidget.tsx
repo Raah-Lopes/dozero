@@ -88,7 +88,7 @@ function saveConfig(data: Record<string, string>) {
 
 // ── Componente principal ─────────────────────────────────────────────────────
 export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
-  const { index, repoPath } = useWiki();
+  const { index, repoPath } = useWiki() as any;
   const savedConfig = loadConfig();
 
   // Config de IA

@@ -24,7 +24,6 @@ velocidade: 12
 ataque: 6
 status: npc
 avatar: null
-ouro: 0
 usos_cura: 3
 status_efeitos: []
 saqueado: false
@@ -35,9 +34,36 @@ HP_max: 30
 PM: 9
 PM_max: 10
 usos_cura_atual: 3
-Ouro: 0
 XP: 0
+po: 0
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
+poderes: []
+macros: []
 ---
+
 
 
 # Mira Vendas-ao-Vento 🧭

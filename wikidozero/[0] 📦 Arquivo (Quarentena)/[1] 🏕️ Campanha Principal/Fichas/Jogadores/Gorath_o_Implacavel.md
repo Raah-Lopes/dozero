@@ -23,7 +23,6 @@ defesa: 8
 velocidade: 6
 ataque: 35
 status: inimigo
-ouro: 0
 usos_cura: 3
 saqueado: false
 ativo: false
@@ -35,7 +34,6 @@ HP_max: 120
 PM: 100
 PM_max: 100
 usos_cura_atual: 3
-Ouro: 0
 XP: 0
 energia: 100
 sanidade: 100
@@ -53,7 +51,34 @@ poderes: []
 pocoes: []
 maldicoes: []
 objetos_campanha: []
+po: 0
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
+macros: []
 ---
+
 
 
 

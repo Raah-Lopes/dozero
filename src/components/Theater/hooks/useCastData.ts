@@ -56,9 +56,9 @@ export function useCastData() {
         ataque: Number(e.metadata.ataque) || Number(e.metadata.Ataque) || Number(e.metadata.F) || Number(e.metadata.PdF) || 0,
         defesa: Number(e.metadata.defesa) || Number(e.metadata.Defesa) || Number(e.metadata.A) || 0,
         armadura: Number(e.metadata.armadura) || Number(e.metadata.Armadura) || Number(e.metadata.A) || 0,
-        velocidade: Number(e.metadata.velocidade) || Number(e.metadata.Velocidade) || Number(e.metadata.H) || 0,
-        status: isPC ? 'jogador' : (isEnemy ? 'inimigo' : 'npc'),
-        avatar: e.metadata.avatar || e.metadata.imagem || undefined,
+        velocidade: Number(e.metadata?.velocidade) || Number(e.metadata?.deslocamento) || 9,
+        status: (e.metadata?.status as "npc" | "jogador" | "inimigo") ?? 'npc',
+        avatar: e.metadata?.avatar ?? e.metadata?.imagem ?? e.metadata?.imageUrl ?? undefined,
         ativo: e.metadata.ativo !== false && e.metadata.ativo !== 'false',
         caminhoArquivo: e.path
       };

@@ -32,7 +32,6 @@ status: jogador
 nome: Jubbaer
 nivel: 5
 XP: 0
-Ouro: 1500
 imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jubbaer_1782615737637.webp
 tags:
   - personagem
@@ -122,12 +121,37 @@ objetos_campanha:
     descricao: Abre fechaduras mágicas ancestrais.
 hasVision: true
 sizeScale: 1.4
-ouro: 1500
 mana: 100
 mana_max: 100
 borderColor: '#ffb3f9'
 showName: true
+po: 1500
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
 ---
+
 
 
 

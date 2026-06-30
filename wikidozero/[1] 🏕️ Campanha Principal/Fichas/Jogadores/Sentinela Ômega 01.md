@@ -1,20 +1,11 @@
 ---
 inventario:
   - nome: Pente de Topete Cromado
-    desc: >-
-      Um pente extremamente brilhante e ostentoso, usado constantemente para
-      tentar manter seu topete exagerado no lugar. Reflete a luz de forma um
-      tanto irritante.
+    desc: Um pente extremamente brilhante e ostentoso, usado constantemente para tentar manter seu topete exagerado no lugar. Reflete a luz de forma um tanto irritante.
   - nome: Pistola de Plasma Desgastada (Modo Atordoante)
-    desc: >-
-      Sua antiga arma de exterminador, agora configurada para um modo não-letal
-      de atordoamento. Embora enferrujada e com arranhões, ainda emite um
-      zumbido ameaçador e um brilho azulado característico de sua origem.
+    desc: Sua antiga arma de exterminador, agora configurada para um modo não-letal de atordoamento. Embora enferrujada e com arranhões, ainda emite um zumbido ameaçador e um brilho azulado característico de sua origem.
   - nome: Caderneta de Observações Curiosas
-    desc: >-
-      Uma pequena caderneta de couro surrada, cheia de anotações meticulosas e
-      desenhos infantis sobre fenômenos mundanos: o voo de um inseto, a cor de
-      uma flor, o som de um riso. Acompanha uma caneta de luz holográfica.
+    desc: 'Uma pequena caderneta de couro surrada, cheia de anotações meticulosas e desenhos infantis sobre fenômenos mundanos: o voo de um inseto, a cor de uma flor, o som de um riso. Acompanha uma caneta de luz holográfica.'
   - nome: Espada Longa
     tipo: equipamento
     efeito: ataque_8
@@ -26,9 +17,7 @@ status: vivo
 nome: Sentinela Ômega 01
 nivel: 3
 XP: 0
-Ouro: 50
-imagem: >-
-  http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
+imagem: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
 tags:
   - personagem
   - automato
@@ -69,20 +58,13 @@ macros:
   - nome: Soco de Exterminador Desajeitado
     formula: 1d20+1
     tipo: ataque
-    descricao: >-
-      Um golpe metálico desajeitado, mas ainda capaz de machucar. Dano: 1d4
-      (contundente).
+    descricao: 'Um golpe metálico desajeitado, mas ainda capaz de machucar. Dano: 1d4 (contundente).'
   - nome: Disparo de Plasma Atordoante
     formula: 1d20+5
     tipo: ataque
-    descricao: >-
-      Um disparo de sua pistola de plasma, calibrado para atordoar em vez de
-      matar. Dano: 1d6+3 (energia, não-letal), com chance de causar condição
-      'Atordoado' em falha de salvaguarda de CON (CD 13).
-avatar: >-
-  http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
-imageUrl: >-
-  http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
+    descricao: 'Um disparo de sua pistola de plasma, calibrado para atordoar em vez de matar. Dano: 1d6+3 (energia, não-letal), com chance de causar condição ''Atordoado'' em falha de salvaguarda de CON (CD 13).'
+avatar: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
+imageUrl: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
 titulo: Sentinela Ômega 01
 title: Sentinela Ômega 01
 energia: 100
@@ -124,62 +106,40 @@ poderes: []
 pocoes: []
 maldicoes: []
 objetos_campanha: []
+po: 50
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
+ancestralidade: ''
+heranca: ''
+alinhamento: ''
+biografia: ''
+genero: ''
+nome_jogador: ''
+xp: 0
+classe: ''
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

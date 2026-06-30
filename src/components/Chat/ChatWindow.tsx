@@ -262,7 +262,8 @@ export const ChatWindow: React.FC = () => {
             if(confirm(`Apagar ${selectedIds.size} mensagens definitivamente para todos?`)) {
               const arr = state.chat.toArray();
               for(let i = arr.length - 1; i >= 0; i--) {
-                if(arr[i].id && selectedIds.has(arr[i].id)) state.chat.delete(i, 1);
+                const msg = arr[i] as any;
+                if(msg.id && selectedIds.has(msg.id)) state.chat.delete(i, 1);
               }
               setSelectedIds(new Set());
               setIsSelectMode(false);

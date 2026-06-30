@@ -49,8 +49,6 @@ energia: 100
 mana: 100
 PM: 99
 sanidade: 100
-ouro: 1000
-Ouro: 1000
 status_efeitos:
   - Morto
 HP_max: 100
@@ -107,8 +105,33 @@ ativo: false
 mana_max: 99
 vigor_max: 100
 forca: 19
+po: 1000
+pp: 0
+pc: 0
+defesas:
+  proficiencia_armadura:
+    sem_armadura: 0
+    leve: 0
+    media: 0
+    pesada: 0
+conjuracao:
+  atributo: INT
+  proficiencia: 0
+magias_preparadas:
+  truques:
+    current: 0
+    max: 0
+  nivel_1:
+    current: 0
+    max: 0
+  nivel_2:
+    current: 0
+    max: 0
+  nivel_3:
+    current: 0
+    max: 0
+macros: []
 ---
-
 
 
 
