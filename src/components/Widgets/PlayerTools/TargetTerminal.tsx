@@ -12,8 +12,8 @@ import { WoDParser } from '../../../rules/WoDParser';
 import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, toggleTarget, addCombatParticipant } from '../../../store';
 import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
-import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
-import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
+import { WikiIndexer, WikiEntry, WikiQuery } from '../../../services/wiki/WikiIndexer';
+import { syncTokenFieldToWiki, syncMultipleFieldsToWiki } from '../../../services/wiki/syncWiki';
 import { LevelUpWidget } from './LevelUpWidget';
 import { TrendingUp } from 'lucide-react';
 
@@ -1585,9 +1585,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         onSave={async (updates) => {
           const path = tokenId ? wikiEntry?.path : wikiPath;
           if (path) {
-            for (const [k, v] of Object.entries(updates)) {
-              await syncTokenFieldToWiki(path, k, v);
-            }
+            await syncMultipleFieldsToWiki(path, updates);
             WikiIndexer.clearCache();
             window.dispatchEvent(new Event('wiki-updated'));
           }
