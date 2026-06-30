@@ -930,8 +930,14 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
                  let finalFormula = String(macro.formula).toLowerCase();
                  
-                 if (macro.custo) {
-                   const cMatch = String(macro.custo).toLowerCase().match(/(\d+)\s*(pm|mana|vigor|energia)/);
+                 let costStr = macro.custo || '';
+                 if (!costStr && macro.descricao) {
+                   const descMatch = macro.descricao.match(/(?:gasta|custa|custo)?:?\s*(\d+)\s*(pm|mana|vigor|energia)/i);
+                   if (descMatch) costStr = descMatch[0].trim();
+                 }
+
+                 if (costStr) {
+                   const cMatch = String(costStr).toLowerCase().match(/(\d+)\s*(pm|mana|vigor|energia)/);
                    if (cMatch) {
                      const qtd = parseInt(cMatch[1]);
                      const isMana = cMatch[2] === 'pm' || cMatch[2] === 'mana';
@@ -955,7 +961,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                  const atkEval = evaluateFormula(finalFormula);
                  const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
                  let msg = `🎲 <b>${charName}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
-                 if (macro.custo) msg += `<br/><span style="color:#cbd5e1;font-size:0.7rem">Custo pago: ${macro.custo}</span>`;
+                 if (costStr) msg += `<br/><span style="color:#cbd5e1;font-size:0.7rem">Custo pago: ${costStr}</span>`;
                  
                  let dmgExpr = macro.dano;
                  let dmgTotal = 0;

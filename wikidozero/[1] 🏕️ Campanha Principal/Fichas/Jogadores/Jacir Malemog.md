@@ -147,6 +147,7 @@ carisma: 11
 
 
 
+
 :::info
 Interpretação e Lore
 
