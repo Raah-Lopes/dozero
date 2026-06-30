@@ -405,9 +405,48 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     const title = isAttr ? `Atributo: ${key.toUpperCase()}` : `Teste: ${key.toUpperCase()}`;
     const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
 
-    const messageHtml = `🎲 <b>${charName}</b> realizou um teste de <b>${title}</b> (Pathfinder 2e)<br/>
+    let messageHtml = `🎲 <b>${charName}</b> realizou um teste de <b>${title}</b> (Pathfinder 2e)<br/>
       Fórmula: <b>${formula}</b><br/>
       Rolagem: <b>${total}</b> (Dado: ${dieRoll} | Bônus: ${mod >= 0 ? '+' : ''}${mod})`;
+
+    const targetsIds = getTargets();
+    if (targetsIds.length > 0) {
+      messageHtml += "<br/><b>Resolução:</b>";
+      targetsIds.forEach(tId => {
+        if (tId === tokenId) return;
+        const t = state.tokens.get(tId) as any;
+        if (!t) return;
+        
+        const tName = t.name || t.titulo || 'Alvo';
+        let opposingStatName = '';
+        let opposingDC = 10;
+        
+        const keyLow = key.toLowerCase();
+        
+        if (keyLow.includes('furtividade') || keyLow.includes('enganação') || keyLow.includes('enganacao')) {
+           opposingStatName = 'Percepção';
+           const per = Number(t.Percepcao || t.percepcao || t.pericias?.Percepcao || t.pericias?.percepcao || Math.floor((Number(t.sabedoria || 10) - 10)/2) || 0);
+           opposingDC = 10 + per;
+        } else if (keyLow.includes('intimidacao') || keyLow.includes('intimidação')) {
+           opposingStatName = 'Vontade';
+           const save = Number(t.jogadas_salvamento?.vontade || Math.floor((Number(t.sabedoria || 10) - 10)/2) || 0);
+           opposingDC = 10 + save;
+        } else if (keyLow.includes('atletismo')) {
+           opposingStatName = 'Fortitude';
+           const save = Number(t.jogadas_salvamento?.fortitude || Math.floor((Number(t.constituicao || 10) - 10)/2) || 0);
+           opposingDC = 10 + save;
+        } else {
+           opposingStatName = 'Classe de Armadura (CA)';
+           opposingDC = Number(t.CA || t.defesa || t.armadura || 10);
+        }
+
+        let grau = 'FRACASSO'; let cor = '#ef4444';
+        if (total >= opposingDC + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; }
+        else if (total >= opposingDC) { grau = 'SUCESSO'; cor = '#10b981'; }
+        
+        messageHtml += `<br/>🎯 <b style="color:${cor};">${grau}</b> contra ${tName} (${opposingStatName} CD ${opposingDC})`;
+      });
+    }
 
     pushChatMessage(messageHtml, total >= 15, total < 8);
 
