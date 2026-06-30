@@ -274,8 +274,18 @@ function App() {
         <div style={{ pointerEvents: 'none', display: 'flex', flexDirection: 'column', width: '100%' }}>
           
           <div className="top-bar" style={{ pointerEvents: 'auto', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
-            {/* Left side: (Empty to push tools to right if needed, or we can just justify-end) */}
-            <div style={{ flex: 1 }}></div>
+            {/* Left side: Hub Principal */}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start' }}>
+              <div className="glass-panel" style={{ padding: '0.5rem' }}>
+                <button 
+                  className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`} 
+                  onClick={() => toggleModal('widgets')} 
+                  title="Menu Geral (Hub de Ferramentas)"
+                >
+                  <LayoutGrid size={20} />
+                </button>
+              </div>
+            </div>
 
             {/* Right side: Tools */}
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
@@ -295,9 +305,6 @@ function App() {
                   </button>
                   <button className="btn-icon theme-amber" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
                     <Library size={20} />
-                  </button>
-                  <button className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`} onClick={() => toggleModal('widgets')} title="Hub de Widgets (Ferramentas GM)">
-                    <LayoutGrid size={20} />
                   </button>
                   <button className="btn-icon theme-pink" onClick={() => window.dispatchEvent(new CustomEvent('toggle-ai-bot'))} title="Mostrar/Ocultar Robô Assistente IA">
                     <Bot size={20} />
