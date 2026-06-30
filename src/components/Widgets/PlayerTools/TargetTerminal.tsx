@@ -608,12 +608,12 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
     // Atributos PF2e
     const attrs = [
-      { name: 'FOR', val: fp.forca },
-      { name: 'DES', val: fp.destreza },
-      { name: 'CON', val: fp.constituicao },
-      { name: 'INT', val: fp.inteligencia },
-      { name: 'SAB', val: fp.sabedoria },
-      { name: 'CAR', val: fp.carisma },
+      { name: 'FOR', val: fp.forca ?? fp.FOR ?? 10 },
+      { name: 'DES', val: fp.destreza ?? fp.DES ?? 10 },
+      { name: 'CON', val: fp.constituicao ?? fp.CON ?? 10 },
+      { name: 'INT', val: fp.inteligencia ?? fp.INT ?? 10 },
+      { name: 'SAB', val: fp.sabedoria ?? fp.SAB ?? 10 },
+      { name: 'CAR', val: fp.carisma ?? fp.CAR ?? 10 },
     ];
 
     // Salvamentos PF2e

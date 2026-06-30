@@ -18,7 +18,9 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
     if (tokenData) {
       setLocalData({
         nivel: Number(tokenData.nivel) || 1,
-        hp: Number(tokenData.maxHp || tokenData.hp) || 20,
+        hp: Number(tokenData.maxHp || tokenData.pv_max || tokenData.hp) || 20,
+        pm: Number(tokenData.pm_max || tokenData.mana_max || tokenData.pm || tokenData.mana) || 10,
+        vigor: Number(tokenData.vigor_max || tokenData.energia_max || tokenData.vigor || tokenData.energia) || 10,
         FOR: Number(tokenData.forca || tokenData.FOR) || 10,
         DES: Number(tokenData.destreza || tokenData.DES) || 10,
         CON: Number(tokenData.constituicao || tokenData.CON) || 10,
@@ -41,21 +43,29 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
   const currentTotalAttributes = ['FOR', 'DES', 'CON', 'INT', 'SAB', 'CAR'].reduce((acc, attr) => acc + (localData[attr] || 10), 0);
   const availableAttrPoints = Math.max(0, targetTotalAttributes - currentTotalAttributes);
 
-  // HP Esperado (Considerando Dado de Vida médio 8 + Modificador de CON)
+  // HP, PM e Vigor Esperados
   const conMod = Math.floor(((localData.CON || 10) - 10) / 2);
+  const maxMentalMod = Math.max(0, Math.floor(((localData.INT || 10) - 10) / 2), Math.floor(((localData.SAB || 10) - 10) / 2), Math.floor(((localData.CAR || 10) - 10) / 2));
+  const maxPhysicalMod = Math.max(0, Math.floor(((localData.FOR || 10) - 10) / 2), Math.floor(((localData.DES || 10) - 10) / 2), conMod);
+
   const expectedHp = (8 + conMod) * localData.nivel;
+  const expectedPm = (5 + maxMentalMod) * localData.nivel;
+  const expectedVigor = (5 + maxPhysicalMod) * localData.nivel;
+
   const hpMissing = Math.max(0, expectedHp - localData.hp);
+  const pmMissing = Math.max(0, expectedPm - (localData.pm || 0));
+  const vigorMissing = Math.max(0, expectedVigor - (localData.vigor || 0));
 
   const applyArchetype = (archetype: string) => {
     let pts = availableAttrPoints;
-    if (pts <= 0 && hpMissing <= 0) return;
+    if (pts <= 0 && hpMissing <= 0 && pmMissing <= 0 && vigorMissing <= 0) return;
 
     let newStats = { ...localData };
 
-    // Correção de Vida Automática
-    if (hpMissing > 0) {
-      newStats.hp = expectedHp;
-    }
+    // Correção de Barras Automática
+    if (hpMissing > 0) newStats.hp = expectedHp;
+    if (pmMissing > 0) newStats.pm = expectedPm;
+    if (vigorMissing > 0) newStats.vigor = expectedVigor;
 
     // Distribuição de Atributos
     const distribute = (primary: string, secondary: string, tertiary: string) => {
@@ -73,6 +83,10 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
       case 'Médico': distribute('SAB', 'INT', 'CAR'); break;
       case 'Bárbaro': distribute('FOR', 'CON', 'DES'); break;
       case 'Mago': distribute('INT', 'SAB', 'DES'); break;
+      case 'Bardo': distribute('CAR', 'DES', 'INT'); break;
+      case 'Paladino': distribute('CAR', 'FOR', 'CON'); break;
+      case 'Ranger': distribute('DES', 'SAB', 'FOR'); break;
+      case 'Monge': distribute('DES', 'SAB', 'CON'); break;
       case 'Equilibrado':
         while (pts > 0) {
           // Acha o atributo mais baixo
@@ -95,6 +109,10 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
     await onSave({
       HP_max: localData.hp,
       pv_max: localData.hp, // Atualiza os dois para retrocompatibilidade
+      mana_max: localData.pm,
+      PM_max: localData.pm,
+      energia_max: localData.vigor,
+      vigor_max: localData.vigor,
       FOR: localData.FOR,
       DES: localData.DES,
       CON: localData.CON,
@@ -134,10 +152,24 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: '0.25rem' }}>
             <span>Saúde (HP) vs Esperado:</span>
             <span style={{ color: hpMissing > 0 ? '#ef4444' : '#10b981', fontWeight: 'bold' }}>
               {localData.hp} / {expectedHp} {hpMissing > 0 ? '(Defasado)' : '(Saudável)'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+            <span>Mana (PM) vs Esperado:</span>
+            <span style={{ color: pmMissing > 0 ? '#fbbf24' : '#10b981', fontWeight: 'bold' }}>
+              {localData.pm} / {expectedPm}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+            <span>Vigor vs Esperado:</span>
+            <span style={{ color: vigorMissing > 0 ? '#38bdf8' : '#10b981', fontWeight: 'bold' }}>
+              {localData.vigor} / {expectedVigor}
             </span>
           </div>
         </div>
@@ -149,12 +181,14 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
             <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: '0 0 0.75rem 0' }}>Escolha um caminho para distribuir os pontos e Vida que faltam de forma otimizada para a classe:</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-              <button onClick={() => applyArchetype('Tanque')} style={archetypeBtnStyle}><ShieldAlert size={14}/> Tanque (CON/FOR)</button>
-              <button onClick={() => applyArchetype('Ladino')} style={archetypeBtnStyle}><Eye size={14}/> Ladino (DES/INT)</button>
-              <button onClick={() => applyArchetype('Arqueiro')} style={archetypeBtnStyle}><Crosshair size={14}/> Arqueiro (DES/SAB)</button>
-              <button onClick={() => applyArchetype('Bárbaro')} style={archetypeBtnStyle}><Swords size={14}/> Bárbaro (FOR/CON)</button>
-              <button onClick={() => applyArchetype('Médico')} style={archetypeBtnStyle}><HeartPulse size={14}/> Médico (SAB/CAR)</button>
-              <button onClick={() => applyArchetype('Mago')} style={archetypeBtnStyle}><Brain size={14}/> Mago (INT/SAB)</button>
+              <button onClick={() => applyArchetype('Tanque')} style={archetypeBtnStyle}><ShieldAlert size={14}/> Tanque (CON)</button>
+              <button onClick={() => applyArchetype('Bárbaro')} style={archetypeBtnStyle}><Swords size={14}/> Bárbaro (FOR)</button>
+              <button onClick={() => applyArchetype('Ladino')} style={archetypeBtnStyle}><Eye size={14}/> Ladino (DES)</button>
+              <button onClick={() => applyArchetype('Arqueiro')} style={archetypeBtnStyle}><Crosshair size={14}/> Arqueiro (DES)</button>
+              <button onClick={() => applyArchetype('Mago')} style={archetypeBtnStyle}><Brain size={14}/> Mago (INT)</button>
+              <button onClick={() => applyArchetype('Bardo')} style={archetypeBtnStyle}><Target size={14}/> Bardo (CAR)</button>
+              <button onClick={() => applyArchetype('Médico')} style={archetypeBtnStyle}><HeartPulse size={14}/> Médico (SAB)</button>
+              <button onClick={() => applyArchetype('Paladino')} style={archetypeBtnStyle}><ShieldAlert size={14}/> Paladino (CAR)</button>
               <button onClick={() => applyArchetype('Equilibrado')} style={{...archetypeBtnStyle, gridColumn: 'span 2'}}><Target size={14}/> Equilibrado (Corrigir defasagem)</button>
             </div>
           </div>
@@ -177,7 +211,7 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
 
       <button 
         onClick={handleSave} 
-        disabled={isSaving || (availableAttrPoints > 0 && hpMissing > 0)}
+        disabled={isSaving || (availableAttrPoints > 0 && (hpMissing > 0 || pmMissing > 0 || vigorMissing > 0))}
         style={{
           marginTop: '1rem', padding: '0.75rem', borderRadius: '8px', border: 'none',
           background: isSaving ? '#475569' : ((availableAttrPoints === 0 && hpMissing === 0) ? '#10b981' : '#38bdf8'),
@@ -185,7 +219,7 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
         }}
       >
         <Zap size={16} />
-        {isSaving ? 'Salvando Ficha...' : ((availableAttrPoints > 0 || hpMissing > 0) ? 'Preencha para Salvar' : 'Consolidar Nível no Arquivo')}
+        {isSaving ? 'Salvando Ficha...' : ((availableAttrPoints > 0 || hpMissing > 0 || pmMissing > 0 || vigorMissing > 0) ? 'Preencha para Salvar' : 'Consolidar Nível no Arquivo')}
       </button>
 
     </div>
