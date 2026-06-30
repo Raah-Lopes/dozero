@@ -22,7 +22,7 @@ ativo: true
 origem: Pântano dos Ecos Perdidos
 Localizacao: Algum vilarejo costeiro, treinando.
 HP: 24
-HP_max: 28
+HP_max: 26
 PM: 20
 PM_max: 20
 Energia: 100
@@ -31,11 +31,11 @@ Sanidade: 10
 Sanidade_max: 10
 Fome: 0
 Sede: 0
-FOR: 17
+FOR: 16
 DES: 10
-CON: 22
+CON: 20
 INT: 10
-SAB: 11
+SAB: 14
 CAR: 10
 CA: 15
 Deslocamento: 9m
@@ -72,10 +72,18 @@ tokenShape: hexagon
 borderColor: '#66a1ff'
 titulo: Jacir Malemog
 title: Jacir Malemog
-pv_max: 28
-energia_max: 22
-vigor_max: 22
+pv_max: 26
+energia_max: 20
+vigor_max: 20
+forca: 16
+destreza: 10
+constituicao: 20
+inteligencia: 10
+sabedoria: 14
+carisma: 10
 ---
+
+
 
 
 

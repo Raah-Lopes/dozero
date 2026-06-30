@@ -69,11 +69,14 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     };
   };
 
-  const applyDamageAndSync = (tId: string, damage: number) => {
+  const applyDamageAndSync = async (tId: string, damage: number) => {
     const t = state.tokens.get(tId) as any;
     if (t) {
       const newHp = Math.max(0, (Number(t.hp) || 0) - damage);
       updateTokenProps(tId, { hp: newHp });
+      if (t.wikiPath) {
+        await syncMultipleFieldsToWiki(t.wikiPath, { hp: newHp, pv: newHp, HP: newHp });
+      }
     }
   };
 
@@ -847,12 +850,43 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 </div>
                 <button onClick={() => {
                    const atkEval = evaluateFormula(macro.formula);
-                   let msg = `🎲 <b>${tokenData.nome}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
-                   if (macro.dano) {
-                     const dmgEval = evaluateFormula(macro.dano);
-                     msg += `<br/>Dano: ${dmgEval.breakdown} = <b>${dmgEval.total}</b>`;
+                   const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
+                   let msg = `🎲 <b>${charName}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
+                   
+                   let dmgExpr = macro.dano;
+                   if (!dmgExpr && macro.descricao) {
+                     const dmgMatch = macro.descricao.match(/Dano:\s*([0-9dD+\-\s]+)/i);
+                     if (dmgMatch) dmgExpr = dmgMatch[1].trim();
                    }
-                   pushChatMessage(msg, atkEval.total >= 15, false);
+
+                   if (dmgExpr) {
+                     const dmgEval = evaluateFormula(dmgExpr);
+                     let dmgTotal = dmgEval.total;
+                     msg += `<br/>Dano: ${dmgEval.breakdown} = <b>${dmgTotal}</b>`;
+
+                     const targetsIds = getTargets();
+                     if (targetsIds.length > 0) {
+                       msg += "<br/><b>Resolução:</b>";
+                       targetsIds.forEach(tId => {
+                         if (tId === tokenId) return;
+                         const tStats = getTargetStats(tId);
+                         const effectiveDefense = tStats.defesa;
+                         
+                         let grau = 'FRACASSO'; let cor = '#ef4444';
+                         if (atkEval.total >= effectiveDefense + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; dmgTotal *= 2; }
+                         else if (atkEval.total >= effectiveDefense) { grau = 'SUCESSO'; cor = '#10b981'; }
+                         
+                         if (grau.includes('SUCESSO')) {
+                           msg += `<br/>🎯 <b style="color:${cor};">${grau}</b> em ${tStats.name} (CA ${effectiveDefense})! Dano: <b>${dmgTotal}</b>`;
+                           applyDamageAndSync(tId, dmgTotal);
+                           window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'DANO: ' + (macro.nome), result: String(dmgTotal), type: 'attack' } }));
+                         } else {
+                           msg += `<br/>🛡️ <b style="color:${cor};">${grau}</b> contra ${tStats.name} (CA ${effectiveDefense}).`;
+                         }
+                       });
+                     }
+                   }
+                   pushChatMessage(msg, atkEval.total >= 14, false);
                 }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>ROLAR</button>
               </div>
             ))}
