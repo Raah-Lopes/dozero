@@ -949,7 +949,21 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fórmula: {macro.formula} {macro.dano ? `| Dano: ${macro.dano}` : ''}</span>
               </div>
               <button onClick={() => {
-                 const atkEval = evaluateFormula(macro.formula);
+                 const mods = {
+                   '@for': Math.floor(((tokenData.forca || tokenData.FOR || 10) - 10) / 2),
+                   '@des': Math.floor(((tokenData.destreza || tokenData.DES || 10) - 10) / 2),
+                   '@con': Math.floor(((tokenData.constituicao || tokenData.CON || 10) - 10) / 2),
+                   '@int': Math.floor(((tokenData.inteligencia || tokenData.INT || 10) - 10) / 2),
+                   '@sab': Math.floor(((tokenData.sabedoria || tokenData.SAB || 10) - 10) / 2),
+                   '@car': Math.floor(((tokenData.carisma || tokenData.CAR || 10) - 10) / 2)
+                 };
+
+                 let finalFormula = String(macro.formula).toLowerCase();
+                 for (const [k, v] of Object.entries(mods)) {
+                   finalFormula = finalFormula.replace(new RegExp(k, 'g'), String(v));
+                 }
+                 
+                 const atkEval = evaluateFormula(finalFormula);
                  const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
                  let msg = `🎲 <b>${charName}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
                  
@@ -960,7 +974,12 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                  }
 
                  if (dmgExpr) {
-                   const dmgEval = evaluateFormula(dmgExpr);
+                   let finalDmgExpr = String(dmgExpr).toLowerCase();
+                   for (const [k, v] of Object.entries(mods)) {
+                     finalDmgExpr = finalDmgExpr.replace(new RegExp(k, 'g'), String(v));
+                   }
+
+                   const dmgEval = evaluateFormula(finalDmgExpr);
                    let dmgTotal = dmgEval.total;
                    msg += `<br/>Dano: ${dmgEval.breakdown} = <b>${dmgTotal}</b>`;
 

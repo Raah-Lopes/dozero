@@ -31,11 +31,11 @@ Sanidade: 10
 Sanidade_max: 10
 Fome: 0
 Sede: 0
-FOR: 11
-DES: 21
-CON: 11
+FOR: 10
+DES: 22
+CON: 10
 INT: 18
-SAB: 10
+SAB: 11
 CAR: 11
 CA: 15
 Deslocamento: 9m
@@ -75,13 +75,15 @@ title: Jacir Malemog
 pv_max: 24
 energia_max: 30
 vigor_max: 30
-forca: 11
-destreza: 21
-constituicao: 11
+forca: 10
+destreza: 22
+constituicao: 10
 inteligencia: 18
-sabedoria: 10
+sabedoria: 11
 carisma: 11
 ---
+
+
 
 
 
