@@ -57,6 +57,7 @@ export const EntityForgeWidget: React.FC<{ onClose: () => void }> = ({ onClose }
       const wikiSlug = entry?.slug;
 
       const tokenData = {
+        ...data,
         name: data.nome || data.titulo || (entry?.slug) || path.split('/').pop()?.replace('.md', '') || 'Desconhecido',
         hp: data.HP || data.pv || 100,
         maxHp: data.HP_max || data.pv_max || data.HP || data.pv || 100,
