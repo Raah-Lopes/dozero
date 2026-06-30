@@ -28,7 +28,7 @@ ativo: true
 origem: Forjado nas fornalhas da Corporação Ômega, Setor 7
 Localizacao: ''
 HP: 33
-HP_max: 33
+HP_max: 42
 PM: 15
 PM_max: 15
 Energia: 100
@@ -37,11 +37,11 @@ Sanidade: 10
 Sanidade_max: 10
 Fome: 0
 Sede: 0
-FOR: 21
-DES: 15
-CON: 16
+FOR: 17
+DES: 10
+CON: 21
 INT: 10
-SAB: 10
+SAB: 14
 CAR: 10
 CA: 13
 Deslocamento: 9m
@@ -75,7 +75,7 @@ pv: 33
 sizeScale: 1.4
 showName: true
 tokenShape: hexagon
-pv_max: 33
+pv_max: 42
 mana_max: 15
 energia_max: 100
 vigor_max: 100
@@ -87,7 +87,15 @@ armas:
     dano: 1d8
     descricao: Uma clássica espada de aço temperado.
     equipado: false
+forca: 17
+destreza: 10
+constituicao: 21
+inteligencia: 10
+sabedoria: 14
+carisma: 10
 ---
+
+
 
 
 

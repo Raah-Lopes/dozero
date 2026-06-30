@@ -394,7 +394,7 @@ export const NPCPanel: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file || !uploadingTokenId) return;
 
-    const token = state.tokens.get(uploadingTokenId);
+    const token = state.tokens.get(uploadingTokenId) as any;
     if (!token) return;
 
     const reader = new FileReader();

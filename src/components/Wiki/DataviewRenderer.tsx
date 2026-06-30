@@ -40,7 +40,7 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS 
             // Injetar atalho .where() e encadear os prototypes do array de forma burra
             const arrayWrapper = Object.assign([...results], {
               where: function(predicate: any) {
-                const res = Object.assign(this.filter(predicate), { where: this.where, map: this.map });
+                const res = Object.assign(Array.prototype.filter.call(this, predicate), { where: this.where, map: this.map });
                 return res;
               },
               map: function(fn: any) {

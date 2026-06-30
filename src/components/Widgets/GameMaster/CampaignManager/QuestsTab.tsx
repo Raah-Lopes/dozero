@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Target, Plus, Edit3, Trash2, Award, BookOpen, FileText, ExternalLink, Link2, Image, Users } from 'lucide-react';
 import * as yaml from 'js-yaml';
-import { useStore } from '../../../../store';
-import type { CampaignTabProps } from '../../HUD/types';
+import { state, pushChatMessage, updateTokenProps } from '../../../../store';
+import type { CampaignTabProps } from './types';
 import { WikiLinkedTextarea } from './Shared';
 import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../../utils/githubApi';
 import { slugify, questTemplate } from '../CampaignManagerWidget';
@@ -45,11 +45,6 @@ export const QuestsTab: React.FC<QuestsTabProps> = ({
   linkingId,
   setLinkingId
 }) => {
-  const store = useStore();
-  const pushChatMessage = store.pushChatMessage;
-  const state = store.state as any; // zustand state proxy
-  const updateTokenProps = store.updateTokenProps;
-
   const upd = (changes: any) => updateCampaign(selectedCampaign.id, changes);
 
   // States
@@ -321,7 +316,7 @@ const addQuest = async (type: 'main' | 'side') => {
           const entrySlug = entry.slug;
           const entryName = (entry.metadata?.nome || entry.metadata?.titulo || '').trim().toLowerCase();
 
-          Array.from(state.tokens.entries()).forEach(([tokId, tokData]: [string, any]) => {
+          Array.from(state.tokens.entries() as Iterable<[string, any]>).forEach(([tokId, tokData]) => {
             const matchesSlug = tokData.wikiSlug && tokData.wikiSlug === entrySlug;
             const matchesName = !tokData.wikiSlug && tokData.name && tokData.name.trim().toLowerCase() === entryName;
             if (matchesSlug || matchesName) {
