@@ -14,6 +14,8 @@ import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
 import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
 import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
+import { LevelUpWidget } from './LevelUpWidget';
+import { TrendingUp } from 'lucide-react';
 
 interface Macro {
   id: string;
@@ -46,6 +48,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   const [isEditingMacro, setIsEditingMacro] = useState(false);
   const [newMacro, setNewMacro] = useState({ nome: '', formula: '1d20 + @for', dano: '', tipo: 'ataque', descricao: '' });
   const [isTargeted, setIsTargeted] = useState(false);
+  const [isLevelUpOpen, setIsLevelUpOpen] = useState(false);
 
   useEffect(() => {
     const handleTargetsUpdate = () => {
@@ -227,8 +230,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   };
 
   const handleDelete = () => {
+    if (!tokenId) return;
     if (confirm('Tem certeza que deseja deletar este personagem permanentemente?')) {
-            state.tokens.delete(tokenId);
+      state.tokens.delete(tokenId);
       window.dispatchEvent(new CustomEvent('close-sheet', { detail: { tokenId } }));
     }
   };
@@ -489,6 +493,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     Array.isArray(wikiEntry?.metadata?.macros) ? wikiEntry.metadata.macros : [];
 
   const handleAddMacro = () => {
+    if (!tokenId) return;
     const newMacro: Macro = {
       id: 'm_' + Date.now().toString(),
       name: 'Novo Ataque',
@@ -498,17 +503,19 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
       hunger: 0,
       damage: 10
     };
-        updateTokenProps(tokenId, { macros: [...macros, newMacro] });
+    updateTokenProps(tokenId, { macros: [...macros, newMacro] });
   };
 
   const handleEditMacro = (macroId: string, updates: Partial<Macro>) => {
+    if (!tokenId) return;
     const updatedMacros = macros.map(m => m.id === macroId ? { ...m, ...updates } : m);
-        updateTokenProps(tokenId, { macros: updatedMacros });
+    updateTokenProps(tokenId, { macros: updatedMacros });
   };
 
   const handleDeleteMacro = (macroId: string) => {
+    if (!tokenId) return;
     const updatedMacros = macros.filter(m => m.id !== macroId);
-        updateTokenProps(tokenId, { macros: updatedMacros });
+    updateTokenProps(tokenId, { macros: updatedMacros });
   };
 
   const handleRoll = (macro: Macro) => {
@@ -553,10 +560,11 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   };
 
   const handleRollInitiative = () => {
+    if (!tokenId) return;
     const roll = Math.floor(Math.random() * 20) + 1;
     const finalValue = parseInt(prompt(`Iniciativa para ${tokenData.name}:`, roll.toString()) || '0');
     if (!isNaN(finalValue)) {
-            addCombatParticipant(tokenId, tokenData.name, finalValue, tokenData.imageUrl);
+      addCombatParticipant(tokenId, tokenData.name, finalValue, tokenData.imageUrl);
       pushChatMessage(`<b>${tokenData.name}</b> rolou Iniciativa: <b>${finalValue}</b>`, false, false);
       
       window.dispatchEvent(new CustomEvent('dice-roll', {
@@ -674,7 +682,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                     <button 
                        onClick={() => handleRollAttribute(k, Number(v))}
                        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#6ee7b7', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer', padding: '2px 6px' }}>
-                       {sign}{v}
+                       {sign}{String(v)}
                     </button>
                   </div>
                 );
@@ -1290,7 +1298,10 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-              <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Nível</span>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                Nível
+                <button onClick={() => setIsLevelUpOpen(true)} title="Auditar Progressão" style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', padding: 0 }}><TrendingUp size={10} /></button>
+              </span>
               {isGM ? (
                 <input 
                   type="number" 
@@ -1566,6 +1577,23 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           </div>
         )}
       </div>
+
+      <LevelUpWidget 
+        isOpen={isLevelUpOpen} 
+        onClose={() => setIsLevelUpOpen(false)} 
+        tokenData={tokenData} 
+        onSave={async (updates) => {
+          const path = tokenId ? wikiEntry?.path : wikiPath;
+          if (path) {
+            for (const [k, v] of Object.entries(updates)) {
+              await syncTokenFieldToWiki(path, k, v);
+            }
+            WikiIndexer.clearCache();
+            window.dispatchEvent(new Event('wiki-updated'));
+          }
+        }} 
+      />
+
       {isGM && (
         <input 
           type="file" 

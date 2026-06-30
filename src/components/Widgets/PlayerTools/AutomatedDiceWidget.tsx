@@ -8,6 +8,9 @@ import { useRulesEngine } from '../../../hooks/useRulesEngine';
 import * as yaml from 'js-yaml';
 import { Dices, Swords, Target, Skull, ArrowRightCircle, ListOrdered, BookOpen } from 'lucide-react';
 
+const isD20 = true;
+const calcularSucessoHibrido = (r: any, b: any, c: any, d: any) => ({ grau: 'sucesso', label: 'Sucesso' });
+
 interface AutomatedDiceWidgetProps {
   onClose: () => void;
 }

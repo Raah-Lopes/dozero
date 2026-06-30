@@ -358,6 +358,8 @@ function App() {
                  onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
                  onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
                  onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
+                 onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
+                 onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
                  onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
                  onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
                  onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}

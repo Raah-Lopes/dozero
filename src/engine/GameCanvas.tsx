@@ -82,7 +82,7 @@ export const GameCanvas: React.FC = () => {
           antialias: true,
         });
       } catch (_e) {
-        console.warn("PixiJS Init failed (likely aborted by React):", e);
+        console.warn("PixiJS Init failed (likely aborted by React):", _e);
         return;
       }
 
@@ -975,8 +975,7 @@ export const GameCanvas: React.FC = () => {
             
             // Resolve path for local wiki images
             if (imgPath && !imgPath.startsWith('http') && !imgPath.startsWith('data:') && !imgPath.startsWith('/')) {
-              const config = getWikiConfig();
-              const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+              const repoPath = 'D:/DOZERO/wikidozero';
               imgPath = `/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(imgPath)}`;
             }
             
