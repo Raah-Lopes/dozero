@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { state } from '../../store';
 import { pushAdvancedChatMessage, ChatMessageOptions, createPoll } from '../../store/chat';
-import { useP2PNetwork } from '../../hooks/useP2PNetwork';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plus } from 'lucide-react';
 import { PollWidget } from './PollWidget';
@@ -26,15 +25,6 @@ export const ChatWindow: React.FC = () => {
   const [pollIsAnonymous, setPollIsAnonymous] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // You can set roomId and player info based on your app state
-  const { broadcastMessage } = useP2PNetwork('main-room', true, 'Host', (msg) => {
-    if (msg.type === 'ping') {
-      alert('PING! Alguém chamou sua atenção.');
-    } else if (msg.type === 'chat') {
-      // Handled by Yjs usually, but we can do custom logic
-    }
-  });
 
   useEffect(() => {
     const observer = () => setMessages(state.chat.toArray());
@@ -83,7 +73,7 @@ export const ChatWindow: React.FC = () => {
       setInput('');
       return;
     } else if (text.startsWith('/ping')) {
-      broadcastMessage({ type: 'ping' });
+      pushAdvancedChatMessage(`🔔 PING! @${playerName} chamou a atenção de todos.`, { tipo: 'sistema', autor: 'Sistema' });
       setInput('');
       return;
     } else if (text.startsWith('/help')) {

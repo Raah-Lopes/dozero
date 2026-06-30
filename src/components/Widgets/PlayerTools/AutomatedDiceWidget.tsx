@@ -1,12 +1,13 @@
 // src/components/HUD/AutomatedDiceWidget.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { pushChatMessage, state } from '../../../store';
+import { pushChatMessage, state, updateTokenProps } from '../../../store';
+import { generateAI } from '../../../services/ai/AIProvider';
 import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
 import { usePersonagens, FichaPersonagem } from '../../../hooks/usePersonagens';
 import { useRulesEngine } from '../../../hooks/useRulesEngine';
 import * as yaml from 'js-yaml';
-import { Dices, Swords, Target, Skull, ArrowRightCircle, ListOrdered, BookOpen } from 'lucide-react';
+import { Dices, Swords, Target, Skull, ArrowRightCircle, ListOrdered, BookOpen, Bot, Send, Loader2 } from 'lucide-react';
 
 const isD20 = true;
 const calcularSucessoHibrido = (r: any, b: any, c: any, d: any) => ({ grau: 'sucesso', label: 'Sucesso' });
@@ -26,7 +27,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
   const { personagens, carregando, recarregar } = usePersonagens();
   
   // Abas
-  const [abaAtual, setAbaAtual] = useState<'combate' | 'iniciativa' | 'elenco'>('combate');
+  const [abaAtual, setAbaAtual] = useState<'combate' | 'iniciativa' | 'elenco' | 'assistente'>('combate');
 
   // Seleção
   const [atacante, setAtacante] = useState<FichaPersonagem | null>(null);
@@ -43,11 +44,27 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
   // Novos estados para a Expansão do Motor Tático
   const [mentalAtkPool, setMentalAtkPool] = useState<number | null>(null);
   const [mentalDefPool, setMentalDefPool] = useState<number | null>(null);
-  const [disputeAttr, setDisputeAttr] = useState<string>('forca');
+  const [disputeAttrAtk, setDisputeAttrAtk] = useState<string>('forca');
+  const [disputeAttrDef, setDisputeAttrDef] = useState<string>('forca');
   const [danoAvulsoInput, setDanoAvulsoInput] = useState<string>('1d6');
   const [bonusTestInput, setBonusTestInput] = useState<string>('0');
   const { currentEngine } = useRulesEngine();
   const [sistemaMode, setSistemaMode] = useState<'d20' | 'd100' | 'custom'>('d20');
+
+  // Assistente IA
+  const [aiChat, setAiChat] = useState<{role: string, text: string}[]>([]);
+  const [aiInput, setAiInput] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+  useEffect(() => {
+    if (abaAtual === 'assistente') scrollToBottom();
+  }, [aiChat, abaAtual]);
+
+
   
   // Modificadores Táticos (DLC)
   const [activeDLCs, setActiveDLCs] = useState<string[]>([]);
@@ -427,17 +444,36 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
     adicionarLog(logStr, true);
   };
 
-  // Disputa de Atributo (Atk vs Def)
+  // Disputa de Atributo/Perícia (Atk vs Def)
+  const getDisputeVal = (ficha: FichaPersonagem, attrKey: string) => {
+    const k = attrKey.toLowerCase();
+    switch(k) {
+      case 'forca': return ficha.forca;
+      case 'constituicao': return ficha.constituicao;
+      case 'sabedoria': return ficha.sabedoria;
+      case 'destreza': return ficha.destreza;
+      case 'inteligencia': return ficha.inteligencia;
+      case 'carisma': return ficha.carisma;
+      case 'acrobacia': return ficha.pericias?.acrobacia ?? ficha.destreza;
+      case 'furtividade': return ficha.pericias?.furtividade ?? ficha.destreza;
+      case 'investigacao': return ficha.pericias?.investigacao ?? ficha.inteligencia;
+      case 'medicina': return ficha.pericias?.medicina ?? ficha.inteligencia;
+      case 'percepcao': return ficha.percepcao?.total ?? ficha.pericias?.percepcao ?? ficha.sabedoria;
+      case 'sobrevivencia': return ficha.pericias?.sobrevivencia ?? ficha.sabedoria;
+      case 'intimidacao': return ficha.pericias?.intimidacao ?? ficha.carisma;
+      case 'atletismo': return ficha.pericias?.atletismo ?? ficha.forca;
+      default: return Number((ficha as any)[attrKey]) || 10;
+    }
+  };
+
   const rolarDisputaAtributos = () => {
     if (!atacante || !defensor) {
       alert("Selecione Atacante e Defensor para rolar disputa!");
       return;
     }
     
-    const attrKey = disputeAttr as keyof FichaPersonagem;
-    const valAtk = Number(atacante[attrKey]) || 10;
-    const valDef = Number(defensor[attrKey]) || 10;
-
+    const valAtk = getDisputeVal(atacante, disputeAttrAtk);
+    const valDef = getDisputeVal(defensor, disputeAttrDef);
     
     if (isD20) {
       const modAtk = getMod(valAtk);
@@ -454,9 +490,9 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
       else if (totalDef > totalAtk) vencedor = `🏆 **${defensor.nome}** vence!`;
       else vencedor = `🤝 **Empate!**`;
 
-      adicionarLog(`⚔️ **Disputa de ${disputeAttr.toUpperCase()}**:
-- **${atacante.nome}**: 1d20(${d20Atk})${formatMod(modAtk)} = **${totalAtk}**
-- **${defensor.nome}**: 1d20(${d20Def})${formatMod(modDef)} = **${totalDef}**
+      adicionarLog(`⚔️ **Disputa:** ${disputeAttrAtk.toUpperCase()} vs ${disputeAttrDef.toUpperCase()}
+- **${atacante.nome}** (${disputeAttrAtk.toUpperCase()}): 1d20(${d20Atk})${formatMod(modAtk)} = **${totalAtk}**
+- **${defensor.nome}** (${disputeAttrDef.toUpperCase()}): 1d20(${d20Def})${formatMod(modDef)} = **${totalDef}**
 ${vencedor}`, true);
     } else {
       const rollAtk = Math.floor(Math.random() * 100) + 1;
@@ -477,34 +513,28 @@ ${vencedor}`, true);
 
       let vencedor = "";
       if (scoreAtk > scoreDef) {
-        vencedor = `🏆 **${atacante.nome}** vence (grau de sucesso superior)!`;
+        vencedor = `🏆 **${atacante.nome}** vence!`;
       } else if (scoreDef > scoreAtk) {
-        vencedor = `🏆 **${defensor.nome}** vence (grau de sucesso superior)!`;
+        vencedor = `🏆 **${defensor.nome}** vence!`;
       } else {
         if (valAtk > valDef) {
           vencedor = `🏆 **${atacante.nome}** vence (maior valor de atributo: ${valAtk} vs ${valDef})!`;
         } else if (valDef > valAtk) {
           vencedor = `🏆 **${defensor.nome}** vence (maior valor de atributo: ${valDef} vs ${valAtk})!`;
         } else {
-          if (rollAtk < rollDef) {
-            vencedor = `🏆 **${atacante.nome}** vence (menor rolagem no d100: ${rollAtk} vs ${rollDef})!`;
-          } else if (rollDef < rollAtk) {
-            vencedor = `🏆 **${defensor.nome}** vence (menor rolagem no d100: ${rollDef} vs ${rollAtk})!`;
-          } else {
-            vencedor = `🤝 **Empate absoluto!**`;
-          }
+          vencedor = `🤝 **Empate absoluto!**`;
         }
       }
 
-      adicionarLog(`⚔️ **Disputa de ${disputeAttr.toUpperCase()} (d100)**:
-- **${atacante.nome}**: Rolou **${rollAtk}** vs chance **${valAtk * 5}%** (Atributo ${valAtk}). [**${resAtk.label}**]
-- **${defensor.nome}**: Rolou **${rollDef}** vs chance **${valDef * 5}%** (Atributo ${valDef}). [**${resDef.label}**]
+      adicionarLog(`⚔️ **Disputa:** ${disputeAttrAtk.toUpperCase()} vs ${disputeAttrDef.toUpperCase()} (d100)
+- **${atacante.nome}**: Rolou **${rollAtk}** vs chance **${valAtk * 5}%** (${disputeAttrAtk.toUpperCase()} ${valAtk}). [**${resAtk.label}**]
+- **${defensor.nome}**: Rolou **${rollDef}** vs chance **${valDef * 5}%** (${disputeAttrDef.toUpperCase()} ${valDef}). [**${resDef.label}**]
 ${vencedor}`, true);
     }
   };
 
   // Combate Mental
-  const rolarCombateMental = () => {
+  const rolarCombateMental = async () => {
     if (!atacante || !defensor || mentalAtkPool === null || mentalDefPool === null) {
       alert("Selecione Atacante e Defensor para o combate mental!");
       return;
@@ -539,6 +569,12 @@ ${vencedor}`, true);
         const dmg = Math.floor(Math.random() * 6) + 1 + Math.max(0, modAtk);
         const newDefPool = Math.max(0, mentalDefPool - dmg);
         setMentalDefPool(newDefPool);
+        
+        const def = { ...defensor };
+        def.sanidade = Math.max(0, (def.sanidade || def.sanidade_max) - dmg);
+        await salvarFicha(def);
+        setDefensor(def);
+        
         logStr += `💥 **${atacante.nome}** vence e inflige **${dmg}** de dano mental! Mente de **${defensor.nome}**: **${newDefPool}** HP Mental.`;
         if (newDefPool === 0) {
           logStr += ` ☠️ **A mente de ${defensor.nome} foi QUEBRADA!**`;
@@ -547,6 +583,12 @@ ${vencedor}`, true);
         const dmg = Math.floor(Math.random() * 6) + 1 + Math.max(0, modDef);
         const newAtkPool = Math.max(0, mentalAtkPool - dmg);
         setMentalAtkPool(newAtkPool);
+        
+        const atk = { ...atacante };
+        atk.sanidade = Math.max(0, (atk.sanidade || atk.sanidade_max) - dmg);
+        await salvarFicha(atk);
+        setAtacante(atk);
+        
         logStr += `💥 **${defensor.nome}** vence e inflige **${dmg}** de dano mental de contra-ataque! Mente de **${atacante.nome}**: **${newAtkPool}** HP Mental.`;
         if (newAtkPool === 0) {
           logStr += ` ☠️ **A mente de ${atacante.nome} foi QUEBRADA!**`;
@@ -585,6 +627,12 @@ ${vencedor}`, true);
         const dmg = Math.floor(Math.random() * 6) + 1 + Math.max(0, modAtk);
         const newDefPool = Math.max(0, mentalDefPool - dmg);
         setMentalDefPool(newDefPool);
+
+        const def = { ...defensor };
+        def.sanidade = Math.max(0, (def.sanidade || def.sanidade_max) - dmg);
+        await salvarFicha(def);
+        setDefensor(def);
+
         logStr += `💥 **${atacante.nome}** vence e inflige **${dmg}** de dano mental! Mente de **${defensor.nome}**: **${newDefPool}** HP Mental.`;
         if (newDefPool === 0) {
           logStr += ` ☠️ **A mente de ${defensor.nome} foi QUEBRADA!**`;
@@ -593,6 +641,12 @@ ${vencedor}`, true);
         const dmg = Math.floor(Math.random() * 6) + 1 + Math.max(0, modDef);
         const newAtkPool = Math.max(0, mentalAtkPool - dmg);
         setMentalAtkPool(newAtkPool);
+
+        const atk = { ...atacante };
+        atk.sanidade = Math.max(0, (atk.sanidade || atk.sanidade_max) - dmg);
+        await salvarFicha(atk);
+        setAtacante(atk);
+
         logStr += `💥 **${defensor.nome}** vence e inflige **${dmg}** de dano mental de contra-ataque! Mente de **${atacante.nome}**: **${newAtkPool}** HP Mental.`;
         if (newAtkPool === 0) {
           logStr += ` ☠️ **A mente de ${atacante.nome} foi QUEBRADA!**`;
@@ -893,6 +947,22 @@ ${vencedor}`, true);
           const novaFront = '---\n' + yaml.dump(data) + '---\n';
           const body = textParts.slice(2).join('---');
           await saveMarkdownContent(ficha.caminhoArquivo, novaFront + body);
+
+          // Sincronizar com os tokens do tabuleiro (VTT) para atualizar as barras de vida/mana em tempo real
+          for (const [id, t] of Array.from(state.tokens.entries())) {
+            if ((t as any).wikiPath === ficha.caminhoArquivo || (t as any).name === ficha.nome) {
+              updateTokenProps(id, {
+                hp: ficha.pv,
+                pv: ficha.pv,
+                HP: ficha.pv,
+                mana: Math.floor(ficha.mana),
+                PM: Math.floor(ficha.mana),
+                energia: Math.floor(ficha.energia),
+                sanidade: Math.floor(ficha.sanidade),
+                status_efeitos: ficha.status_efeitos
+              });
+            }
+          }
         }
       }
     } catch (e) {
@@ -1288,22 +1358,43 @@ ${vencedor}`, true);
                   
                   {atacante && (
                     <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#cbd5e1', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                      <span style={{ color: '#ef4444' }}>❤️ HP: {atacante.pv}/{atacante.pv_max}</span>
-                      <span style={{ color: '#a855f7' }}>⚡ Mana: {atacante.mana}/{atacante.mana_max}</span>
-                      <span style={{ color: '#38bdf8' }}>🏃‍♂️ Ener: {atacante.energia}/{atacante.energia_max}</span>
-                      <span style={{ color: '#ec4899' }}>🧠 San: {atacante.sanidade}/{atacante.sanidade_max}</span>
-                      <span style={{ color: '#f59e0b' }}>🍎 Fome: {atacante.fome}/{atacante.fome_max}</span>
-                      <span style={{ color: '#06b6d4' }}>💧 Sede: {atacante.sede}/{atacante.sede_max}</span>
-                      <span style={{ color: '#8b5cf6' }}>💤 Fad: {atacante.cansaco}/{atacante.cansaco_max}</span>
-                      <span style={{ color: '#eab308' }}>💰 Ouro: {atacante.ouro}</span>
-                      <span style={{ color: '#10b981' }}>💎 Riq: {atacante.riquezas}</span>
+                      <span title="Health Points (Pontos de Vida). Representa a saúde física do personagem." style={{ color: '#ef4444', cursor: 'help' }}>❤️ HP: {atacante.pv}/{atacante.pv_max}</span>
+                      <span title="Pontos de Magia/Mana. Usados para conjurar poderes mágicos." style={{ color: '#a855f7', cursor: 'help' }}>⚡ Mana: {atacante.mana}/{atacante.mana_max}</span>
+                      <span title="Energia. Gasta para ações físicas extras ou reações como Esquiva." style={{ color: '#38bdf8', cursor: 'help' }}>🏃‍♂️ Ener: {atacante.energia}/{atacante.energia_max}</span>
+                      <span title="Sanidade. Representa o estado mental e resistência ao terror." style={{ color: '#ec4899', cursor: 'help' }}>🧠 San: {atacante.sanidade}/{atacante.sanidade_max}</span>
+                      <span title="Fome. Nível de necessidade de alimentação do personagem." style={{ color: '#f59e0b', cursor: 'help' }}>🍎 Fome: {atacante.fome}/{atacante.fome_max}</span>
+                      <span title="Sede. Nível de desidratação do personagem." style={{ color: '#06b6d4', cursor: 'help' }}>💧 Sede: {atacante.sede}/{atacante.sede_max}</span>
+                      <span title="Fadiga (Cansaço). Imposição de penalidades físicas cumulativas." style={{ color: '#8b5cf6', cursor: 'help' }}>💤 Fad: {atacante.cansaco}/{atacante.cansaco_max}</span>
+                      <span title="Moedas de Ouro. Dinheiro base do sistema." style={{ color: '#eab308', cursor: 'help' }}>💰 Ouro: {atacante.ouro}</span>
+                      <span title="Pontos de Riqueza. Usados para transações de alto valor." style={{ color: '#10b981', cursor: 'help' }}>💎 Riq: {atacante.riquezas}</span>
                       {atacante.status_efeitos.length > 0 && (
-                        <span style={{ gridColumn: '1 / -1', color: '#f87171' }}>⚠️ Status: {atacante.status_efeitos.join(', ')}</span>
+                        <span title="Status Negativos e Positivos aplicados atualmente ao personagem." style={{ gridColumn: '1 / -1', color: '#f87171', cursor: 'help' }}>⚠️ Status: {atacante.status_efeitos.join(', ')}</span>
                       )}
                     </div>
                   )}
                 </div>
  
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '30px' }}>
+                  <button 
+                    onClick={() => {
+                      const temp = atacante;
+                      setAtacante(defensor);
+                      setDefensor(temp);
+                    }}
+                    title="Inverter Atacante e Defensor"
+                    style={{
+                      background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  >
+                    <ArrowRightCircle size={20} style={{ transform: 'rotate(180deg)' }} />
+                  </button>
+                </div>
+
                 {/* Seleção de defensor */}
                 <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', padding: '12px 16px', borderRadius: '10px', borderLeft: '4px solid #ef4444' }}>
                   <h4 style={{ fontFamily: 'var(--font-display)', color: '#ef4444', margin: '0 0 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem' }}>
@@ -1339,14 +1430,14 @@ ${vencedor}`, true);
  
                   {defensor && (
                     <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#cbd5e1', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-                      <span style={{ color: '#ef4444' }}>❤️ HP: {defensor.pv}/{defensor.pv_max}</span>
-                      <span style={{ color: '#a855f7' }}>⚡ Mana: {defensor.mana}/{defensor.mana_max}</span>
-                      <span style={{ color: '#38bdf8' }}>🏃‍♂️ Ener: {defensor.energia}/{defensor.energia_max}</span>
-                      <span style={{ color: '#ec4899' }}>🧠 San: {defensor.sanidade}/{defensor.sanidade_max}</span>
-                      <span style={{ color: '#8b5cf6' }}>💤 Fad: {defensor.cansaco}/{defensor.cansaco_max}</span>
-                      <span style={{ color: '#10b981' }}>🛡️ Def: {defensor.defesa}</span>
+                      <span title="Health Points (Pontos de Vida). Representa a saúde física do personagem." style={{ color: '#ef4444', cursor: 'help' }}>❤️ HP: {defensor.pv}/{defensor.pv_max}</span>
+                      <span title="Pontos de Magia/Mana. Usados para conjurar poderes mágicos." style={{ color: '#a855f7', cursor: 'help' }}>⚡ Mana: {defensor.mana}/{defensor.mana_max}</span>
+                      <span title="Energia. Gasta para ações físicas extras ou reações como Esquiva." style={{ color: '#38bdf8', cursor: 'help' }}>🏃‍♂️ Ener: {defensor.energia}/{defensor.energia_max}</span>
+                      <span title="Sanidade. Representa o estado mental e resistência ao terror." style={{ color: '#ec4899', cursor: 'help' }}>🧠 San: {defensor.sanidade}/{defensor.sanidade_max}</span>
+                      <span title="Fadiga (Cansaço). Imposição de penalidades físicas cumulativas." style={{ color: '#8b5cf6', cursor: 'help' }}>💤 Fad: {defensor.cansaco}/{defensor.cansaco_max}</span>
+                      <span title="Defesa (Classe de Armadura). Valor alvo que o atacante precisa igualar ou superar." style={{ color: '#10b981', cursor: 'help' }}>🛡️ Def: {defensor.defesa}</span>
                       {defensor.status_efeitos.length > 0 && (
-                        <span style={{ gridColumn: '1 / -1', color: '#f87171' }}>⚠️ Status: {defensor.status_efeitos.join(', ')}</span>
+                        <span title="Status Negativos e Positivos aplicados atualmente ao personagem." style={{ gridColumn: '1 / -1', color: '#f87171', cursor: 'help' }}>⚠️ Status: {defensor.status_efeitos.join(', ')}</span>
                       )}
                     </div>
                   )}
@@ -1388,16 +1479,17 @@ ${vencedor}`, true);
                     {atacante ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
                         {[
-                          { label: 'FOR', val: atacante.forca },
-                          { label: 'CON', val: atacante.constituicao },
-                          { label: 'SAB', val: atacante.sabedoria },
-                          { label: 'DES', val: atacante.destreza },
-                          { label: 'INT', val: atacante.inteligencia },
-                          { label: 'CAR', val: atacante.carisma },
+                          { label: 'FOR', title: 'Força: Determina dano corpo-a-corpo, capacidade de carga e proezas atléticas.', val: atacante.forca },
+                          { label: 'CON', title: 'Constituição: Determina a vida máxima (HP), vigor e resistência a venenos.', val: atacante.constituicao },
+                          { label: 'SAB', title: 'Sabedoria: Intuição, percepção do ambiente, sobrevivência e vontade mística.', val: atacante.sabedoria },
+                          { label: 'DES', title: 'Destreza: Agilidade, esquiva, furtividade e precisão com ataques à distância.', val: atacante.destreza },
+                          { label: 'INT', title: 'Inteligência: Raciocínio, memória, conhecimentos e proficiência com tecnologia/magia arcana.', val: atacante.inteligencia },
+                          { label: 'CAR', title: 'Carisma: Personalidade, liderança, lábia e poder de intimidação.', val: atacante.carisma },
                         ].map(a => (
                           <button
                             key={a.label}
                             onClick={() => rolarAtributoPF2e(a.label, a.val, atacante.nome)}
+                            title={a.title}
                             style={{
                               background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)',
                               borderRadius: '6px', color: '#c084fc', padding: '6px', cursor: 'pointer',
@@ -1784,6 +1876,47 @@ ${vencedor}`, true);
                 {/* RIGHT COLUMN: DEFENDER CONTROLS */}
                 <div style={{ flex: 0.9, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   
+                  {/* APLICAÇÃO DE DANO/CURA RÁPIDA */}
+                  <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', padding: '12px', borderRadius: '8px' }}>
+                    <h5 style={{ margin: '0 0 8px', color: '#fca5a5', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aplicar HP no Alvo</h5>
+                    {defensor ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            type="number"
+                            placeholder="Val"
+                            id="fast-hp-input"
+                            style={{ width: '60px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '4px', borderRadius: '4px', textAlign: 'center' }}
+                          />
+                          <button
+                            onClick={async () => {
+                              const val = parseInt((document.getElementById('fast-hp-input') as HTMLInputElement).value) || 0;
+                              if (!val) return;
+                              const novaFicha = { ...defensor, pv: Math.max(0, defensor.pv - val) };
+                              await salvarFicha(novaFicha);
+                              setDefensor(novaFicha);
+                              adicionarLog(`💥 **${defensor.nome}** sofreu **${val}** de dano! (HP: ${novaFicha.pv}/${novaFicha.pv_max})`, true);
+                            }}
+                            style={{ flex: 1, background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                          >Dano</button>
+                          <button
+                            onClick={async () => {
+                              const val = parseInt((document.getElementById('fast-hp-input') as HTMLInputElement).value) || 0;
+                              if (!val) return;
+                              const novaFicha = { ...defensor, pv: Math.min(defensor.pv_max, defensor.pv + val) };
+                              await salvarFicha(novaFicha);
+                              setDefensor(novaFicha);
+                              adicionarLog(`⚕️ **${defensor.nome}** curou **${val}** de HP! (HP: ${novaFicha.pv}/${novaFicha.pv_max})`, true);
+                            }}
+                            style={{ flex: 1, background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                          >Cura</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Defensor.</div>
+                    )}
+                  </div>
+
                   {/* CONDIÇÕES DO DEFENSOR */}
                   <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
                     <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Condições do Defensor</h5>
@@ -1860,24 +1993,59 @@ ${vencedor}`, true);
                     <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>A Disputa (ATK vs DEF)</h5>
                     {atacante && defensor ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Selecionar Atributo</label>
-                          <select
-                            value={disputeAttr}
-                            onChange={(e) => setDisputeAttr(e.target.value)}
-                            style={{
-                              width: '100%', padding: '6px 10px', borderRadius: '6px',
-                              background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)',
-                              color: 'white', fontSize: '0.75rem', cursor: 'pointer'
-                            }}
-                          >
-                            <option value="forca">FOR (Força)</option>
-                            <option value="constituicao">CON (Constituição)</option>
-                            <option value="sabedoria">SAB (Sabedoria)</option>
-                            <option value="destreza">DES (Destreza)</option>
-                            <option value="inteligencia">INT (Inteligência)</option>
-                            <option value="carisma">CAR (Carisma)</option>
-                          </select>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Atacante usa:</label>
+                            <select
+                              value={disputeAttrAtk}
+                              onChange={(e) => setDisputeAttrAtk(e.target.value)}
+                              style={{
+                                width: '100%', padding: '6px 10px', borderRadius: '6px',
+                                background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)',
+                                color: 'white', fontSize: '0.75rem', cursor: 'pointer'
+                              }}
+                            >
+                              <option value="forca">FOR (Força)</option>
+                              <option value="constituicao">CON (Constituição)</option>
+                              <option value="sabedoria">SAB (Sabedoria)</option>
+                              <option value="destreza">DES (Destreza)</option>
+                              <option value="inteligencia">INT (Inteligência)</option>
+                              <option value="carisma">CAR (Carisma)</option>
+                              <option value="atletismo">Atletismo</option>
+                              <option value="acrobacia">Acrobacia</option>
+                              <option value="furtividade">Furtividade</option>
+                              <option value="percepcao">Percepção</option>
+                              <option value="intimidacao">Intimidação</option>
+                              <option value="investigacao">Investigação</option>
+                              <option value="sobrevivencia">Sobrevivência</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Defensor usa:</label>
+                            <select
+                              value={disputeAttrDef}
+                              onChange={(e) => setDisputeAttrDef(e.target.value)}
+                              style={{
+                                width: '100%', padding: '6px 10px', borderRadius: '6px',
+                                background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)',
+                                color: 'white', fontSize: '0.75rem', cursor: 'pointer'
+                              }}
+                            >
+                              <option value="forca">FOR (Força)</option>
+                              <option value="constituicao">CON (Constituição)</option>
+                              <option value="sabedoria">SAB (Sabedoria)</option>
+                              <option value="destreza">DES (Destreza)</option>
+                              <option value="inteligencia">INT (Inteligência)</option>
+                              <option value="carisma">CAR (Carisma)</option>
+                              <option value="atletismo">Atletismo</option>
+                              <option value="acrobacia">Acrobacia</option>
+                              <option value="furtividade">Furtividade</option>
+                              <option value="percepcao">Percepção</option>
+                              <option value="intimidacao">Intimidação</option>
+                              <option value="investigacao">Investigação</option>
+                              <option value="sobrevivencia">Sobrevivência</option>
+                            </select>
+                          </div>
                         </div>
                         <button
                           onClick={rolarDisputaAtributos}
@@ -2076,6 +2244,7 @@ ${vencedor}`, true);
               </div>
             </div>
           )}
+
 
           {/* ======================= LOG GLOBAL ======================= */}
           <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>

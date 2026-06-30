@@ -155,7 +155,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             cansaco: parseNum(token.cansaco, parseNum(metadata.cansaco, 0)),
             cansacoMax: parseNum(token.cansacoMax, parseNum(metadata.cansaco_max, 100)),
             defesa: parseNum(token.defesa, parseNum(metadata.defesa, 10)),
-            ouro: parseNum(token.ouro, parseNum(metadata.ouro ?? metadata.Ouro, 0)),
+            pc: parseNum(token.pc, parseNum(metadata.pc ?? metadata.PC, 0)),
+            pp: parseNum(token.pp, parseNum(metadata.pp ?? metadata.PP, 0)),
+            po: parseNum(token.po ?? token.ouro, parseNum(metadata.po ?? metadata.PO ?? metadata.ouro ?? metadata.Ouro, 0)),
             riquezas: parseNum(token.riquezas, parseNum(metadata.riquezas ?? metadata.Riquezas, 0)),
             status: token.status ?? metadata.status ?? 'npc',
             ativo: token.ativo ?? (metadata.ativo !== false),
@@ -194,7 +196,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           cansaco: parseNum(metadata.cansaco, 0),
           cansacoMax: parseNum(metadata.cansaco_max, 100),
           defesa: parseNum(metadata.defesa, 10),
-          ouro: parseNum(metadata.ouro ?? metadata.Ouro, 0),
+          pc: parseNum(metadata.pc ?? metadata.PC, 0),
+          pp: parseNum(metadata.pp ?? metadata.PP, 0),
+          po: parseNum(metadata.po ?? metadata.PO ?? metadata.ouro ?? metadata.Ouro, 0),
           riquezas: parseNum(metadata.riquezas ?? metadata.Riquezas, 0),
           status: metadata.status || 'npc',
           ativo: metadata.ativo !== false,
@@ -532,8 +536,57 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
 
   // Macros MD: lidas diretamente do frontmatter da wiki (ataques/rolagens da ficha)
-  const macrosMD: Array<{ nome: string; formula: string; tipo?: string; descricao?: string; custo?: string }> =
-    Array.isArray(wikiEntry?.metadata?.macros) ? wikiEntry.metadata.macros : [];
+  const baseMacrosMD: Array<{ nome: string; formula: string; tipo?: string; descricao?: string; custo?: string, isAuto?: boolean }> =
+    Array.isArray(tokenData?.macros) ? tokenData.macros : (Array.isArray(wikiEntry?.metadata?.macros) ? wikiEntry.metadata.macros : []);
+
+  const currentInv = Array.isArray(tokenData?.inventario) ? tokenData.inventario : (wikiEntry?.metadata?.inventario || []);
+  const autoWeaponsMacros = currentInv
+    .filter((i: any) => i.equipado && (i.tipo === 'arma' || i.tipo === 'equipamento' || (i.efeito && i.efeito.startsWith('ataque'))))
+    .map((w: any) => {
+      const isRanged = w.nome.toLowerCase().includes('arco') || w.nome.toLowerCase().includes('besta') || w.nome.toLowerCase().includes('arma de fogo');
+      const isFinesse = isRanged || w.nome.toLowerCase().includes('adaga') || w.nome.toLowerCase().includes('finesse');
+      const cat = w.categoria || 'simples';
+      let dmg = w.dano || '1d6';
+      if (!isRanged && !dmg.includes('@for')) {
+          dmg += ' + @for';
+      }
+      return {
+        nome: `⚔️ Atacar: ${w.nome}`,
+        formula: isFinesse ? `1d20 + @des + @prof_${cat}` : `1d20 + @for + @prof_${cat}`,
+        dano: dmg,
+        tipo: 'ataque',
+        descricao: `Ataque com ${w.nome} (Cat: ${cat}). ${w.descricao || ''}`,
+        isAuto: true
+      };
+    });
+
+  const macrosToRender = [...baseMacrosMD, ...autoWeaponsMacros];
+
+  const calcDefesa = () => {
+    if (!tokenData) return 10;
+    const inv = Array.isArray(tokenData.inventario) ? tokenData.inventario : [];
+    const equippedArmor = inv.find((i: any) => i.equipado && i.tipo === 'armadura');
+    const armorCat = equippedArmor?.categoria || 'sem_armadura'; // 'sem_armadura', 'leve', 'media', 'pesada'
+    
+    let armorBonus = 0;
+    if (equippedArmor?.dano) armorBonus = Number(equippedArmor.dano);
+    else if (equippedArmor?.efeito?.startsWith('armadura_')) armorBonus = Number(equippedArmor.efeito.replace('armadura_', ''));
+    
+    const dexCap = equippedArmor?.limite_des !== undefined ? Number(equippedArmor.limite_des) : 99;
+    
+    const dexMod = Math.floor((Number(tokenData.destreza ?? tokenData.DES ?? 10) - 10) / 2);
+    const allowedDex = Math.min(dexMod, dexCap);
+    
+    const charLevel = Number(tokenData.nivel || tokenData.level || tokenData.ficha_personagem?.cabecalho?.nivel || 1);
+    const profLevel = Number(tokenData?.defesas?.proficiencia_armadura?.[armorCat] || 0);
+    const profBonus = profLevel > 0 ? (charLevel + profLevel) : 0;
+    
+    return {
+      total: 10 + allowedDex + profBonus + armorBonus,
+      breakdown: `10 (Base) + ${allowedDex} (DES${dexCap < 99 ? ` cap ${dexCap}` : ''}) + ${profBonus} (Prof) + ${armorBonus} (Item)`
+    };
+  };
+  const computedCA = calcDefesa();
 
   const handleRollInitiative = () => {
     if (!tokenId) return;
@@ -584,20 +637,181 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
     // Atributos PF2e
     const attrs = [
-      { name: 'FOR', val: fp.forca ?? fp.FOR ?? 10 },
-      { name: 'DES', val: fp.destreza ?? fp.DES ?? 10 },
-      { name: 'CON', val: fp.constituicao ?? fp.CON ?? 10 },
-      { name: 'INT', val: fp.inteligencia ?? fp.INT ?? 10 },
-      { name: 'SAB', val: fp.sabedoria ?? fp.SAB ?? 10 },
-      { name: 'CAR', val: fp.carisma ?? fp.CAR ?? 10 },
+      { name: 'FOR', title: 'Força: Determina dano corpo-a-corpo e proezas físicas.', val: fp.forca ?? fp.FOR ?? 10 },
+      { name: 'DES', title: 'Destreza: Determina reflexos, CA e pontaria.', val: fp.destreza ?? fp.DES ?? 10 },
+      { name: 'CON', title: 'Constituição: Determina a vida máxima (HP) e vigor.', val: fp.constituicao ?? fp.CON ?? 10 },
+      { name: 'INT', title: 'Inteligência: Determina conhecimentos e intelecto.', val: fp.inteligencia ?? fp.INT ?? 10 },
+      { name: 'SAB', title: 'Sabedoria: Determina percepção e intuição.', val: fp.sabedoria ?? fp.SAB ?? 10 },
+      { name: 'CAR', title: 'Carisma: Determina liderança e interações sociais.', val: fp.carisma ?? fp.CAR ?? 10 },
     ];
 
     // Salvamentos PF2e
-    const saves = fp.jogadas_salvamento ? [
-      { name: 'Fortitude', val: fp.jogadas_salvamento.fortitude },
-      { name: 'Reflexos', val: fp.jogadas_salvamento.reflexos },
-      { name: 'Vontade', val: fp.jogadas_salvamento.vontade }
-    ] : [];
+    const charLevel = Number(tokenData.nivel || tokenData.level || tokenData.ficha_personagem?.cabecalho?.nivel || 1);
+    const conVal = Number(fp.constituicao ?? fp.CON ?? 10);
+    const desVal = Number(fp.destreza ?? fp.DES ?? 10);
+    const sabVal = Number(fp.sabedoria ?? fp.SAB ?? 10);
+    const intVal = Number(fp.inteligencia ?? fp.INT ?? 10);
+    const carVal = Number(fp.carisma ?? fp.CAR ?? 10);
+
+    const renderSaveProf = (label: string, field: string, attrVal: number) => {
+      const currentProf = Number(tokenData?.jogadas_salvamento?.[field] || 0);
+      
+      const setProf = (val: number) => {
+         const newObj = { ...(tokenData.jogadas_salvamento || {}) };
+         newObj[field] = val;
+         if (tokenData.wikiPath) {
+           import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { 'jogadas_salvamento': newObj }));
+         }
+         updateTokenProps(tokenId, { jogadas_salvamento: newObj });
+      };
+
+      const getStyle = (val: number) => ({
+        padding: '2px 4px',
+        borderRadius: '4px',
+        fontSize: '0.55rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        background: currentProf === val ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)',
+        color: currentProf === val ? '#93c5fd' : '#64748b',
+        border: currentProf === val ? '1px solid #38bdf8' : '1px solid transparent'
+      });
+
+      const attrMod = Math.floor((attrVal - 10) / 2);
+      const profBonus = currentProf > 0 ? charLevel + currentProf : 0;
+      const totalVal = attrMod + profBonus;
+      const sign = totalVal >= 0 ? '+' : '';
+
+      return (
+        <div key={field} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.4rem', borderRadius: '6px', gap: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.65rem', color: '#93c5fd', textTransform: 'uppercase', fontWeight: 'bold' }}>{label.substring(0,3)}</span>
+            <button 
+               onClick={() => handleRollAttribute(label, totalVal)}
+               style={{ background: 'rgba(59, 130, 246, 0.2)', border: 'none', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+               {sign}{totalVal} <Dices size={10} />
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: '2px', justifyContent: 'center', marginTop: '2px' }}>
+            <button onClick={() => setProf(0)} style={getStyle(0)} title={`Destreinado (+${attrMod})`}>D</button>
+            <button onClick={() => setProf(2)} style={getStyle(2)} title={`Treinado (+${attrMod + charLevel + 2})`}>T</button>
+            <button onClick={() => setProf(4)} style={getStyle(4)} title={`Especialista (+${attrMod + charLevel + 4})`}>E</button>
+            <button onClick={() => setProf(6)} style={getStyle(6)} title={`Mestre (+${attrMod + charLevel + 6})`}>M</button>
+            <button onClick={() => setProf(8)} style={getStyle(8)} title={`Lenda (+${attrMod + charLevel + 8})`}>L</button>
+          </div>
+        </div>
+      );
+    };
+
+    const renderArmorProf = (label: string, field: string) => {
+      const currentProf = Number(tokenData?.defesas?.proficiencia_armadura?.[field] || 0);
+      
+      const setProf = (val: number) => {
+         const newObj = { ...(tokenData.defesas?.proficiencia_armadura || {}) };
+         newObj[field] = val;
+         const newDefesas = { ...(tokenData.defesas || {}), proficiencia_armadura: newObj };
+         if (tokenData.wikiPath) {
+           import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { 'defesas.proficiencia_armadura': newObj }));
+         }
+         updateTokenProps(tokenId, { defesas: newDefesas });
+      };
+
+      const getStyle = (val: number) => ({
+        padding: '2px 4px',
+        borderRadius: '4px',
+        fontSize: '0.55rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        background: currentProf === val ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.05)',
+        color: currentProf === val ? '#6ee7b7' : '#64748b',
+        border: currentProf === val ? '1px solid #10b981' : '1px solid transparent'
+      });
+
+      return (
+        <div key={field} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '0.4rem', borderRadius: '6px', gap: '4px' }}>
+          <span style={{ fontSize: '0.65rem', color: '#6ee7b7', textTransform: 'uppercase', fontWeight: 'bold', textAlign: 'center' }}>{label}</span>
+          <div style={{ display: 'flex', gap: '2px', justifyContent: 'center' }}>
+            <button onClick={() => setProf(0)} style={getStyle(0)} title="Destreinado">D</button>
+            <button onClick={() => setProf(2)} style={getStyle(2)} title={`Treinado (+${charLevel + 2})`}>T</button>
+            <button onClick={() => setProf(4)} style={getStyle(4)} title={`Especialista (+${charLevel + 4})`}>E</button>
+            <button onClick={() => setProf(6)} style={getStyle(6)} title={`Mestre (+${charLevel + 6})`}>M</button>
+            <button onClick={() => setProf(8)} style={getStyle(8)} title={`Lenda (+${charLevel + 8})`}>L</button>
+          </div>
+        </div>
+      );
+    };
+
+    const renderSpellcastingProf = () => {
+      const spellAttr = tokenData?.conjuracao?.atributo || 'INT';
+      const currentProf = Number(tokenData?.conjuracao?.proficiencia || 0);
+
+      const handleAttrChange = (e: any) => {
+         const newObj = { ...(tokenData.conjuracao || {}), atributo: e.target.value };
+         if (tokenData.wikiPath) {
+           import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { conjuracao: newObj }));
+         }
+         updateTokenProps(tokenId, { conjuracao: newObj });
+      };
+
+      const setProf = (val: number) => {
+         const newObj = { ...(tokenData.conjuracao || {}), proficiencia: val };
+         if (tokenData.wikiPath) {
+           import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { conjuracao: newObj }));
+         }
+         updateTokenProps(tokenId, { conjuracao: newObj });
+      };
+
+      const getStyle = (val: number) => ({
+        padding: '2px 4px',
+        borderRadius: '4px',
+        fontSize: '0.55rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        background: currentProf === val ? 'rgba(236, 72, 153, 0.3)' : 'rgba(255,255,255,0.05)',
+        color: currentProf === val ? '#f472b6' : '#64748b',
+        border: currentProf === val ? '1px solid #ec4899' : '1px solid transparent'
+      });
+
+      const attrVal = spellAttr === 'INT' ? intVal : spellAttr === 'SAB' ? sabVal : carVal;
+      const attrMod = Math.floor((attrVal - 10) / 2);
+      const profBonus = currentProf > 0 ? charLevel + currentProf : 0;
+      
+      const spellAtk = attrMod + profBonus;
+      const spellDC = 10 + attrMod + profBonus;
+      const sign = spellAtk >= 0 ? '+' : '';
+
+      return (
+        <div>
+          <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Conjuração Mágica</h5>
+          <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.3)', padding: '0.4rem', borderRadius: '6px', gap: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <select value={spellAttr} onChange={handleAttrChange} style={{ background: 'rgba(0,0,0,0.4)', color: '#f472b6', border: '1px solid #ec4899', borderRadius: '4px', fontSize: '0.65rem', padding: '2px' }}>
+                <option value="INT">INT</option>
+                <option value="SAB">SAB</option>
+                <option value="CAR">CAR</option>
+              </select>
+              <div style={{ display: 'flex', gap: '2px', justifyContent: 'center' }}>
+                <button onClick={() => setProf(0)} style={getStyle(0)} title="Destreinado">D</button>
+                <button onClick={() => setProf(2)} style={getStyle(2)} title={`Treinado (+${charLevel + 2})`}>T</button>
+                <button onClick={() => setProf(4)} style={getStyle(4)} title={`Especialista (+${charLevel + 4})`}>E</button>
+                <button onClick={() => setProf(6)} style={getStyle(6)} title={`Mestre (+${charLevel + 6})`}>M</button>
+                <button onClick={() => setProf(8)} style={getStyle(8)} title={`Lenda (+${charLevel + 8})`}>L</button>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px' }}>
+              <button 
+                 onClick={() => handleRollAttribute(`Ataque Mágico (${spellAttr})`, spellAtk)}
+                 style={{ flex: 1, background: 'rgba(236, 72, 153, 0.2)', border: 'none', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                 Ataque {sign}{spellAtk} <Dices size={10} />
+              </button>
+              <div style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(236, 72, 153, 0.4)', color: '#f472b6', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 CD {spellDC}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     // Perícias PF2e
     const pericias = fp.pericias ? Object.entries(fp.pericias).filter(([k,v]) => typeof v === 'number' && v > 0) : [];
@@ -612,7 +826,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               const sign = mod >= 0 ? '+' : '';
               return (
                 <div key={attr.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', padding: '0.4rem', borderRadius: '6px' }}>
-                  <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{attr.name}</span>
+                  <span title={attr.title} style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', cursor: 'help' }}>{attr.name}</span>
                   <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'white' }}>{attr.val}</span>
                   <button 
                      onClick={() => handleRollAttribute(attr.name, mod)}
@@ -625,26 +839,26 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           </div>
         </div>
 
-        {saves.length > 0 && (
-          <div>
-            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Salvamentos</h5>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
-              {saves.map((save) => {
-                const sign = save.val >= 0 ? '+' : '';
-                return (
-                  <div key={save.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.4rem', borderRadius: '6px' }}>
-                    <span style={{ fontSize: '0.6rem', color: '#93c5fd', textTransform: 'uppercase' }}>{save.name.substring(0,3)}</span>
-                    <button 
-                       onClick={() => handleRollAttribute(save.name, save.val)}
-                       style={{ background: 'rgba(59, 130, 246, 0.2)', border: 'none', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', padding: '2px 6px' }}>
-                       {sign}{save.val}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+        <div>
+          <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Salvamentos</h5>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+            {renderSaveProf('Fortitude', 'fortitude', conVal)}
+            {renderSaveProf('Reflexos', 'reflexos', desVal)}
+            {renderSaveProf('Vontade', 'vontade', sabVal)}
           </div>
-        )}
+        </div>
+
+        <div>
+          <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Proficiência com Armadura</h5>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
+            {renderArmorProf('Sem Armadura', 'sem_armadura')}
+            {renderArmorProf('Leve', 'leve')}
+            {renderArmorProf('Média', 'media')}
+            {renderArmorProf('Pesada', 'pesada')}
+          </div>
+        </div>
+
+        {renderSpellcastingProf()}
 
         <div>
           <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Perícias (Pathfinder 2e)</h5>
@@ -705,10 +919,57 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     const aDistancia = Array.isArray(ataquesObj.a_distancia) ? ataquesObj.a_distancia : [];
 
     const macrosMD = fp.macros || [];
+    const charLevel = Number(tokenData.nivel || tokenData.level || tokenData.ficha_personagem?.cabecalho?.nivel || 1);
+
+    const renderProf = (label: string, field: string) => {
+      const currentProf = Number(tokenData?.ataques_armas?.proficiencia?.[field] || 0);
+      
+      const setProf = (val: number) => {
+         const newObj = { ...(tokenData.ataques_armas?.proficiencia || {}) };
+         newObj[field] = val;
+         const newAtaques = { ...(tokenData.ataques_armas || {}), proficiencia: newObj };
+         if (tokenData.wikiPath) {
+           import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { 'ataques_armas.proficiencia': newObj }));
+         }
+         updateTokenProps(tokenId, { ataques_armas: newAtaques });
+      };
+
+      const getStyle = (val: number) => ({
+        padding: '2px 6px',
+        borderRadius: '4px',
+        fontSize: '0.6rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        background: currentProf === val ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.05)',
+        color: currentProf === val ? '#38bdf8' : '#64748b',
+        border: currentProf === val ? '1px solid #38bdf8' : '1px solid transparent'
+      });
+
+      return (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.65rem', color: '#cbd5e1' }}>{label}</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button onClick={() => setProf(0)} style={getStyle(0)} title="Destreinado (+0)">D</button>
+            <button onClick={() => setProf(2)} style={getStyle(2)} title={`Treinado (+${charLevel + 2})`}>T</button>
+            <button onClick={() => setProf(4)} style={getStyle(4)} title={`Especialista (+${charLevel + 4})`}>E</button>
+            <button onClick={() => setProf(6)} style={getStyle(6)} title={`Mestre (+${charLevel + 6})`}>M</button>
+            <button onClick={() => setProf(8)} style={getStyle(8)} title={`Lenda (+${charLevel + 8})`}>L</button>
+          </div>
+        </div>
+      );
+    };
 
     const evaluateFormula = (form: string) => {
        let parsed = form.replace(/@([a-zA-Z0-9_]+)/g, (match, p1) => {
           const key = p1.toLowerCase();
+          
+          if (key.startsWith('prof_')) {
+             const profCat = key.replace('prof_', '');
+             const profLevel = Number(tokenData?.ataques_armas?.proficiencia?.[profCat] || 0);
+             if (profLevel > 0) return (charLevel + profLevel).toString();
+             return '0';
+          }
+
           const attrKeys = ['for', 'des', 'con', 'int', 'sab', 'car'];
           let val = 0;
           if (key === 'for') val = Number(tokenData.forca ?? tokenData.FOR) || 10;
@@ -823,6 +1084,17 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           </div>
         </div>
 
+        <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.6rem' }}>
+          <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            ⚔️ Proficiência com Armas
+          </h5>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {renderProf('Simples', 'simples')}
+            {renderProf('Marcial', 'marcial')}
+            {renderProf('Desarmado', 'desarmado')}
+          </div>
+        </div>
+
         {corpoACorpo.length > 0 && (
           <div>
             <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#f87171', textTransform: 'uppercase' }}>Corpo-a-Corpo</h5>
@@ -836,6 +1108,45 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             {aDistancia.map((item) => renderWeapon(item, true))}
           </div>
         )}
+
+        {(() => {
+          const levels = [
+            { id: 'truques', label: 'Truques Mágicos' },
+            { id: 'nivel_1', label: 'Magias 1º Nível' },
+            { id: 'nivel_2', label: 'Magias 2º Nível' },
+            { id: 'nivel_3', label: 'Magias 3º Nível' }
+          ];
+          return (
+            <div style={{ marginBottom: '4px' }}>
+              <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#f472b6', textTransform: 'uppercase' }}>Espaços de Magia / Preparadas</h5>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+                {levels.map(lvl => {
+                   const slots = tokenData?.magias_preparadas?.[lvl.id] || { current: 0, max: 0 };
+                   
+                   const setSlots = (k: string, v: number) => {
+                     const newObj = { ...(tokenData.magias_preparadas || {}) };
+                     newObj[lvl.id] = { ...slots, [k]: v };
+                     if (tokenData.wikiPath) {
+                       import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { magias_preparadas: newObj }));
+                     }
+                     updateTokenProps(tokenId, { magias_preparadas: newObj });
+                   };
+
+                   return (
+                     <div key={lvl.id} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(236,72,153,0.1)', padding: '4px', borderRadius: '4px', border: '1px solid rgba(236,72,153,0.2)' }}>
+                       <span style={{ fontSize: '0.55rem', color: '#fbcfe8', fontWeight: 'bold' }}>{lvl.label}</span>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '2px' }}>
+                         <input type="number" value={slots.current} onChange={e => setSlots('current', parseInt(e.target.value)||0)} style={{ width: '30px', background: 'rgba(0,0,0,0.4)', color: 'white', border: 'none', borderRadius: '2px', fontSize: '0.65rem', textAlign: 'center' }} title="Usos Restantes / Preparadas Restantes" />
+                         <span style={{ color: '#f472b6', fontSize: '0.65rem' }}>/</span>
+                         <input type="number" value={slots.max} onChange={e => setSlots('max', parseInt(e.target.value)||0)} style={{ width: '30px', background: 'transparent', color: '#f472b6', border: 'none', borderBottom: '1px dashed rgba(236,72,153,0.4)', fontSize: '0.65rem', textAlign: 'center' }} title="Máximo por Dia" />
+                       </div>
+                     </div>
+                   );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.4rem 0' }}>
@@ -895,31 +1206,35 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               }} style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>Salvar Macro</button>
             </div>
           )}
-          {macrosMD.map((macro: any, idx: number) => (
+          {macrosToRender.map((macro: any, idx: number) => (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', border: `1px solid rgba(251, 191, 36, 0.3)`, borderRadius: '6px', padding: '0.4rem 0.6rem', marginBottom: '4px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fbbf24' }}>{macro.nome}</span>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fórmula: {macro.formula} {macro.dano ? `| Dano: ${macro.dano}` : ''}</span>
               </div>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                <button onClick={() => {
-                  if (confirm('Deseja excluir esta macro?')) {
-                    const updatedMacros = [...(tokenData.macros || macrosMD || [])];
-                    updatedMacros.splice(idx, 1);
-                    if (tokenData.wikiPath) import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
-                    updateTokenProps(tokenId, { macros: updatedMacros });
-                  }
-                }} style={{ padding: '2px 6px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', height: '24px' }} title="Excluir">🗑️</button>
-                <button onClick={() => {
-                  setNewMacro({ nome: macro.nome, formula: macro.formula, dano: macro.dano || '', custo: macro.custo || '', tipo: macro.tipo || 'ataque', descricao: macro.descricao || '' });
-                  setIsEditingMacro(true);
-                  const updatedMacros = [...(tokenData.macros || macrosMD || [])];
-                  updatedMacros.splice(idx, 1);
-                  if (tokenData.wikiPath) import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
-                  updateTokenProps(tokenId, { macros: updatedMacros });
-                }} style={{ padding: '2px 6px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', height: '24px' }} title="Editar">✏️</button>
+                {!macro.isAuto && (
+                  <>
+                    <button onClick={() => {
+                      if (confirm('Deseja excluir esta macro?')) {
+                        const updatedMacros = [...(tokenData.macros || baseMacrosMD || [])];
+                        updatedMacros.splice(idx, 1);
+                        if (tokenData.wikiPath) import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+                        updateTokenProps(tokenId, { macros: updatedMacros });
+                      }
+                    }} style={{ padding: '2px 6px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', height: '24px' }} title="Excluir">🗑️</button>
+                    <button onClick={() => {
+                      setNewMacro({ nome: macro.nome, formula: macro.formula, dano: macro.dano || '', custo: macro.custo || '', tipo: macro.tipo || 'ataque', descricao: macro.descricao || '' });
+                      setIsEditingMacro(true);
+                      const updatedMacros = [...(tokenData.macros || baseMacrosMD || [])];
+                      updatedMacros.splice(idx, 1);
+                      if (tokenData.wikiPath) import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+                      updateTokenProps(tokenId, { macros: updatedMacros });
+                    }} style={{ padding: '2px 6px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', height: '24px' }} title="Editar">✏️</button>
+                  </>
+                )}
               <button onClick={() => {
-                 const mods = {
+                 const mods: any = {
                    '@for': Math.floor(((tokenData.forca || tokenData.FOR || 10) - 10) / 2),
                    '@des': Math.floor(((tokenData.destreza || tokenData.DES || 10) - 10) / 2),
                    '@con': Math.floor(((tokenData.constituicao || tokenData.CON || 10) - 10) / 2),
@@ -927,6 +1242,10 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                    '@sab': Math.floor(((tokenData.sabedoria || tokenData.SAB || 10) - 10) / 2),
                    '@car': Math.floor(((tokenData.carisma || tokenData.CAR || 10) - 10) / 2)
                  };
+                 ['simples', 'marcial', 'desarmado', 'outra'].forEach(cat => {
+                    const pLvl = Number(tokenData?.ataques_armas?.proficiencia?.[cat] || 0);
+                    mods[`@prof_${cat}`] = pLvl > 0 ? (charLevel + pLvl) : 0;
+                 });
 
                  let finalFormula = String(macro.formula).toLowerCase();
                  
@@ -956,6 +1275,15 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
                  for (const [k, v] of Object.entries(mods)) {
                    finalFormula = finalFormula.replace(new RegExp(k, 'g'), String(v));
+                 }
+                 
+                 let condBonusAtk = 0;
+                 if (macro.tipo === 'ataque' || macro.nome?.toLowerCase().includes('atacar')) {
+                   condBonusAtk += activeConditions.flanqueando ? 2 : 0;
+                   condBonusAtk += activeConditions.inspirado ? 1 : 0;
+                 }
+                 if (condBonusAtk > 0) {
+                   finalFormula = `${finalFormula} + ${condBonusAtk}`;
                  }
                  
                  const atkEval = evaluateFormula(finalFormula);
@@ -1076,7 +1404,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           </div>
         )}
 
-        {showGeral && (!showPocoes && !showObjetos) && (
+        {showGeral && (
           <div>
             <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Outros Itens</h5>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -1090,6 +1418,14 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                       {item.tipo || 'item'} | {item.efeito || 'nenhum'}
                     </span>
                   </div>
+                  {(item.tipo === 'arma' || item.tipo === 'equipamento' || (item.efeito && (item.efeito.startsWith('ataque') || item.efeito.startsWith('defesa') || item.efeito.startsWith('armadura')))) && (
+                    <button 
+                      style={{ padding: '2px 6px', background: item.equipado ? 'rgba(239,68,68,0.2)' : 'rgba(56,189,248,0.2)', border: item.equipado ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(56,189,248,0.4)', color: item.equipado ? '#fca5a5' : '#7dd3fc', borderRadius: '4px', fontSize: '0.6rem', cursor: 'pointer', marginLeft: '4px', height: 'fit-content' }}
+                      onClick={() => handleItemAction('inventario', idx, 'equipar')}
+                    >
+                      {item.equipado ? 'DESEQUIPAR' : 'EQUIPAR'}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1493,53 +1829,72 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-              <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Defesa</span>
-              {isGM ? (
-                <input 
-                  type="number" 
-                  value={tokenData.defesa ?? 10} 
-                  onChange={e => handlePropChange('defesa', parseInt(e.target.value) || 0)}
-                  onBlur={async (e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    const path = tokenId ? wikiEntry?.path : wikiPath;
-                    if (path) {
-                      await syncTokenFieldToWiki(path, 'defesa', val);
-                      WikiIndexer.clearCache();
-                      window.dispatchEvent(new Event('wiki-updated'));
-                    }
-                  }}
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px', padding: '1px 2px', width: '100%', fontSize: '0.65rem', textAlign: 'center' }} 
-                />
-              ) : (
-                <span style={{ fontWeight: 'bold' }}>{tokenData.defesa ?? 10}</span>
-              )}
+              <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>CA / Defesa</span>
+              <div 
+                title={computedCA.breakdown}
+                style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid var(--glass-border)', color: '#38bdf8', borderRadius: '4px', padding: '1px 2px', width: '100%', fontSize: '0.65rem', textAlign: 'center', cursor: 'help', fontWeight: 'bold' }}
+              >
+                {computedCA.total}
+              </div>
             </div>
           </div>
           
           {/* Riches */}
-          <div style={{ display: 'flex', gap: '10px', fontSize: '0.7rem', marginTop: '2px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              🪙 Ouro: 
-              {isGM ? (
-                <input 
-                  type="number" 
-                  value={tokenData.ouro ?? 0}
-                  onChange={e => handlePropChange('ouro', parseInt(e.target.value) || 0)}
-                  onBlur={async (e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    const path = tokenId ? wikiEntry?.path : wikiPath;
-                    if (path) {
-                      await syncTokenFieldToWiki(path, 'ouro', val);
-                      WikiIndexer.clearCache();
-                      window.dispatchEvent(new Event('wiki-updated'));
-                    }
-                  }}
-                  style={{ width: '36px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(255,255,255,0.2)', color: '#fbbf24', padding: 0, fontWeight: 'bold', fontSize: '0.7rem' }}
-                />
-              ) : (
-                <b style={{ color: '#fbbf24' }}>{tokenData.ouro ?? 0}</b>
-              )}
+          <div style={{ display: 'flex', gap: '8px', fontSize: '0.7rem', marginTop: '4px', flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }} title="Peças de Cobre">
+              🥉 PC: 
+              <input 
+                type="number" 
+                value={tokenData.pc ?? 0}
+                onChange={e => handlePropChange('pc', parseInt(e.target.value) || 0)}
+                onBlur={async (e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  const path = tokenId ? wikiEntry?.path : wikiPath;
+                  if (path) { await syncTokenFieldToWiki(path, 'pc', val); }
+                }}
+                style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(255,255,255,0.2)', color: '#b45309', padding: 0, fontWeight: 'bold', fontSize: '0.7rem' }}
+              />
             </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }} title="Peças de Prata (1 PP = 10 PC)">
+              🥈 PP: 
+              <input 
+                type="number" 
+                value={tokenData.pp ?? 0}
+                onChange={e => handlePropChange('pp', parseInt(e.target.value) || 0)}
+                onBlur={async (e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  const path = tokenId ? wikiEntry?.path : wikiPath;
+                  if (path) { await syncTokenFieldToWiki(path, 'pp', val); }
+                }}
+                style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(255,255,255,0.2)', color: '#94a3b8', padding: 0, fontWeight: 'bold', fontSize: '0.7rem' }}
+              />
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }} title="Peças de Ouro (1 PO = 10 PP)">
+              🥇 PO: 
+              <input 
+                type="number" 
+                value={tokenData.po ?? tokenData.ouro ?? 0}
+                onChange={e => {
+                  handlePropChange('po', parseInt(e.target.value) || 0);
+                  handlePropChange('ouro', parseInt(e.target.value) || 0); // legacy sync
+                }}
+                onBlur={async (e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  const path = tokenId ? wikiEntry?.path : wikiPath;
+                  if (path) { 
+                    await syncTokenFieldToWiki(path, 'po', val); 
+                    await syncTokenFieldToWiki(path, 'ouro', val); // legacy sync
+                  }
+                }}
+                style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(255,255,255,0.2)', color: '#fbbf24', padding: 0, fontWeight: 'bold', fontSize: '0.7rem' }}
+              />
+            </span>
+            <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', fontStyle: 'italic', display: 'flex', alignItems: 'center' }}>
+              Total em PO: {(((tokenData.pc ?? 0) / 100) + ((tokenData.pp ?? 0) / 10) + (tokenData.po ?? tokenData.ouro ?? 0)).toFixed(2)}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', fontSize: '0.7rem', marginTop: '2px' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
               💎 Riq: 
               {isGM ? (
@@ -1571,7 +1926,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         {/* HP */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', marginBottom: '1px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 'bold', color: '#f87171' }}><Heart size={10} /> Integridade (HP / PV)</span>
+            <span title="Pontos de Vida. A saúde atual do alvo." style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 'bold', color: '#f87171', cursor: 'help' }}><Heart size={10} /> Integridade (HP / PV)</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
               {isGM ? (
                 <>
@@ -1590,7 +1945,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         {/* Mana */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', marginBottom: '1px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 'bold', color: '#38bdf8' }}><Zap size={10} /> Bateria Core (Mana / PM)</span>
+            <span title="Pontos de Mana. Usados para magias e poderes." style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 'bold', color: '#38bdf8', cursor: 'help' }}><Zap size={10} /> Bateria Core (Mana / PM)</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
               {isGM ? (
                 <>
@@ -1609,7 +1964,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         {/* Vigor / Energia */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', marginBottom: '1px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 'bold', color: '#34d399' }}><Activity size={10} /> Vigor / Energia</span>
+            <span title="Energia. Usada para reações, bloqueios ou ações extras." style={{ display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 'bold', color: '#34d399', cursor: 'help' }}><Activity size={10} /> Vigor / Energia</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
               {isGM ? (
                 <>

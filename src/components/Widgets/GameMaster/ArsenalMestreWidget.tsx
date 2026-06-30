@@ -59,29 +59,38 @@ interface FichaPersonagem {
 
 interface ItemCatalogo {
   nome: string;
-  tipo: 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha';
+  tipo: 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha' | 'armadura';
   descricao: string;
   efeito: string;
   custo?: string; // para poderes
   dano?: string;  // para armas
   quantidade?: number; // para poções
-  isCustom?: boolean;
+  categoria?: 'simples' | 'marcial' | 'desarmado' | 'sem_armadura' | 'leve' | 'media' | 'pesada'; // para armas e armaduras
+  limite_des?: number; // para armaduras
+  nivel?: number | 'truque'; // para poderes (magias)
 }
 
 const CATALOGO_ITEMS: ItemCatalogo[] = [
   // ARMAS
-  { nome: "Espada Longa", tipo: "arma", descricao: "Uma clássica espada de aço temperado.", efeito: "ataque_8", dano: "1d8" },
-  { nome: "Arco Curto de Caça", tipo: "arma", descricao: "Arco leve e flexível para disparo rápido.", efeito: "ataque_6", dano: "1d6" },
-  { nome: "Adaga Rúnica", tipo: "arma", descricao: "Lâmina ágil com entalhes rúnicos mágicos.", efeito: "ataque_4", dano: "1d4" },
-  { nome: "Machado de Batalha", tipo: "arma", descricao: "Machado pesado capaz de fender escudos.", efeito: "ataque_10", dano: "1d10" },
-  { nome: "Cajado do Conjurador", tipo: "arma", descricao: "Canaliza poderes arcanos (+1 em feitiços).", efeito: "ataque_6", dano: "1d6" },
+  { nome: "Espada Longa", tipo: "arma", descricao: "Uma clássica espada de aço temperado.", efeito: "ataque_8", dano: "1d8", categoria: "marcial" },
+  { nome: "Arco Curto de Caça", tipo: "arma", descricao: "Arco leve e flexível para disparo rápido.", efeito: "ataque_6", dano: "1d6", categoria: "simples" },
+  { nome: "Adaga Rúnica", tipo: "arma", descricao: "Lâmina ágil com entalhes rúnicos mágicos.", efeito: "ataque_4", dano: "1d4", categoria: "simples" },
+  { nome: "Machado de Batalha", tipo: "arma", descricao: "Machado pesado capaz de fender escudos.", efeito: "ataque_10", dano: "1d10", categoria: "marcial" },
+  { nome: "Cajado do Conjurador", tipo: "arma", descricao: "Canaliza poderes arcanos (+1 em feitiços).", efeito: "ataque_6", dano: "1d6", categoria: "simples" },
   
+  // ARMADURAS
+  { nome: "Vestes de Explorador", tipo: "armadura", descricao: "Roupas grossas para viagem.", efeito: "armadura_0", limite_des: 5, categoria: "sem_armadura", dano: "0" },
+  { nome: "Corselete de Couro", tipo: "armadura", descricao: "Couro fervido, flexível e leve.", efeito: "armadura_1", limite_des: 4, categoria: "leve", dano: "1" },
+  { nome: "Brunea", tipo: "armadura", descricao: "Escamas metálicas espessas.", efeito: "armadura_3", limite_des: 2, categoria: "media", dano: "3" },
+  { nome: "Armadura Completa", tipo: "armadura", descricao: "Placas maciças de aço pesado.", efeito: "armadura_6", limite_des: 0, categoria: "pesada", dano: "6" },
+
   // PODERES
-  { nome: "Bola de Fogo", tipo: "poder", descricao: "Causa dano de fogo em área a múltiplos alvos.", efeito: "dano_4d6", custo: "3 PM" },
-  { nome: "Mísseis Mágicos", tipo: "poder", descricao: "Dardos de luz que acertam infalivelmente.", efeito: "dano_1d4+1", custo: "1 PM" },
-  { nome: "Sopro Congelante", tipo: "poder", descricao: "Sopra uma rajada fria retardando os alvos.", efeito: "dano_2d6", custo: "2 PM" },
-  { nome: "Cura Divina", tipo: "poder", descricao: "Restaura vida através de oração sagrada.", efeito: "cura_2d8", custo: "2 PM" },
-  { nome: "Escudo de Mana", tipo: "poder", descricao: "Converte mana em barreira física temporária.", efeito: "defesa_4", custo: "1 PM" },
+  { nome: "Luz", tipo: "poder", descricao: "Faz um objeto brilhar iluminando a área.", efeito: "utilidade", custo: "0 PM", nivel: 'truque' },
+  { nome: "Mísseis Mágicos", tipo: "poder", descricao: "Dardos de luz que acertam infalivelmente.", efeito: "dano_1d4+1", custo: "1 PM", nivel: 1 },
+  { nome: "Escudo Místico", tipo: "poder", descricao: "Barreira mágica de proteção temporária.", efeito: "defesa_1", custo: "1 PM", nivel: 1 },
+  { nome: "Cura Divina", tipo: "poder", descricao: "Restaura vida através de oração sagrada.", efeito: "cura_1d8", custo: "2 PM", nivel: 1 },
+  { nome: "Sopro Congelante", tipo: "poder", descricao: "Sopra uma rajada fria retardando os alvos.", efeito: "dano_2d6", custo: "2 PM", nivel: 2 },
+  { nome: "Bola de Fogo", tipo: "poder", descricao: "Causa dano de fogo em área a múltiplos alvos.", efeito: "dano_6d6", custo: "3 PM", nivel: 3 },
 
   // POÇÕES
   { nome: "Elixir de Vida P", tipo: "pocao", descricao: "Cura ferimentos superficiais instantaneamente.", efeito: "heal_15", quantidade: 1 },
@@ -108,7 +117,13 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
   const [personagens, setPersonagens] = useState<FichaPersonagem[]>([]);
   const [selectedChar, setSelectedChar] = useState<FichaPersonagem | null>(null);
   const [activeTab, setActiveTab] = useState<'pools' | 'atributos' | 'catalogo'>('pools');
-  const [catalogoFilter, setCatalogoFilter] = useState<'todos' | 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha'>('todos');
+  const [catalogoFilter, setCatalogoFilter] = useState<'todos' | 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha' | 'armadura'>('todos');
+
+  // Form states for creating a new char
+  const [showCreateChar, setShowCreateChar] = useState(false);
+  const [newCharNome, setNewCharNome] = useState('');
+  const [newCharStatus, setNewCharStatus] = useState<'npc' | 'inimigo'>('npc');
+  const [newCharHP, setNewCharHP] = useState(10);
 
   const [customItems, setCustomItems] = useState<ItemCatalogo[]>(() => {
     try {
@@ -161,6 +176,38 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
     setNewItemDamage('');
     setNewItemQty(1);
     setShowCreateItem(false);
+  };
+
+  const handleCreateChar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCharNome.trim()) return;
+
+    const slug = newCharNome.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const path = `/fichas/${slug}.md`;
+
+    const frontmatter = {
+      tipo: 'Personagem',
+      nome: newCharNome.trim(),
+      status: newCharStatus,
+      pv: newCharHP,
+      pv_max: newCharHP,
+      nivel: 1,
+      forca: 10,
+      destreza: 10,
+      constituicao: 10,
+      inteligencia: 10,
+      sabedoria: 10,
+      carisma: 10
+    };
+
+    const content = `---\n${yaml.dump(frontmatter)}---\n\n# ${newCharNome.trim()}\n`;
+    await saveMarkdownContent(path, content);
+    
+    setNewCharNome('');
+    setNewCharHP(10);
+    setShowCreateChar(false);
+    refresh?.();
+    pushChatMessage(`👤 <b>Mestre</b> criou rapidamente o ${newCharStatus === 'inimigo' ? 'inimigo' : 'NPC'} <b>${newCharNome.trim()}</b>.`, false, false);
   };
 
   const handleDeleteCustomItem = (name: string, tipo: string) => {
@@ -391,19 +438,45 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
           efeito: item.efeito,
           dano: item.dano,
           descricao: item.descricao,
+          categoria: item.categoria || 'simples',
           equipado: false
         });
         data.armas = arr;
+      } else if (item.tipo === 'armadura') {
+        const inv = Array.isArray(data.inventario) ? data.inventario : [];
+        inv.push({
+          nome: item.nome,
+          tipo: 'armadura',
+          efeito: item.efeito,
+          dano: item.dano,
+          limite_des: item.limite_des,
+          descricao: item.descricao,
+          categoria: item.categoria || 'sem_armadura',
+          equipado: false
+        });
+        data.inventario = inv;
       } else if (item.tipo === 'poder') {
         const arr = Array.isArray(data.poderes) ? data.poderes : [];
         arr.push({
           nome: item.nome,
-          tipo: 'poder',
-          custo: item.custo,
+          descricao: item.descricao,
           efeito: item.efeito,
-          descricao: item.descricao
+          custo: item.custo,
+          nivel: item.nivel || 'truque'
         });
         data.poderes = arr;
+        
+        // Também adiciona como macro para facilitar uso
+        const macrosArr = Array.isArray(data.macros) ? data.macros : [];
+        macrosArr.push({
+          nome: `✨ Lançar: ${item.nome}`,
+          descricao: `Nível: ${item.nivel || 'truque'}. ${item.descricao}`,
+          tipo: 'ataque',
+          dano: item.dano || (item.efeito.startsWith('dano_') ? item.efeito.replace('dano_', '') : undefined),
+          custo: item.custo,
+          formula: `1d20 + @int + @prof_magia` // @prof_magia não existe explicitamente nas mods ainda, usamos apenas ataque mágico customizável ou macro genérica
+        });
+        data.macros = macrosArr;
       } else if (item.tipo === 'pocao') {
         const arr = Array.isArray(data.pocoes) ? data.pocoes : [];
         arr.push({
@@ -439,8 +512,10 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
       inv.push({
         nome: item.nome,
         tipo: item.tipo === 'pocao' ? 'consumivel' : item.tipo === 'arma' ? 'equipamento' : item.tipo,
-        efeito: item.efeito,
+        categoria: item.categoria || 'simples',
         quantidade: item.quantidade || 1,
+        efeito: item.efeito,
+        dano: item.dano,
         descricao: item.descricao,
         equipado: false
       });
@@ -488,6 +563,12 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
           
           {/* Seletor de Ficha do Personagem */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              onClick={() => setShowCreateChar(!showCreateChar)}
+              style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid #10b981', color: '#34d399', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+            >
+              <Plus size={14} /> Novo NPC
+            </button>
             <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fbbf24' }}>FICHA ATIVA:</span>
             <select
               value={selectedChar?.caminhoArquivo || ''}
@@ -577,7 +658,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Vida (HP) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span style={{ color: '#f87171', fontWeight: 'bold' }}>❤️ HP / Integridade</span>
+                        <span title="Health Points (Pontos de Vida). Saúde e integridade física." style={{ color: '#f87171', fontWeight: 'bold', cursor: 'help' }}>❤️ HP / Integridade</span>
                         <span>{selectedChar.pv} / {selectedChar.pv_max}</span>
                       </div>
                       <input type="range" min={0} max={selectedChar.pv_max} value={selectedChar.pv} onChange={e => handlePropChange('pv', parseInt(e.target.value))} style={{ accentColor: '#ef4444', width: '100%' }} />
@@ -586,7 +667,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Mana (PM) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>⚡ Mana Core</span>
+                        <span title="Pontos de Magia (Mana). Usados para conjurar magias e poderes." style={{ color: '#60a5fa', fontWeight: 'bold', cursor: 'help' }}>⚡ Mana Core</span>
                         <span>{selectedChar.mana} / {selectedChar.mana_max}</span>
                       </div>
                       <input type="range" min={0} max={selectedChar.mana_max || 100} value={selectedChar.mana} onChange={e => handlePropChange('mana', parseInt(e.target.value))} style={{ accentColor: '#3b82f6', width: '100%' }} />
@@ -595,7 +676,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Energia */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span style={{ color: '#34d399', fontWeight: 'bold' }}>🏃‍♂️ Vigor / Energia</span>
+                        <span title="Energia / Vigor. Recurso para reações ou ações extras." style={{ color: '#34d399', fontWeight: 'bold', cursor: 'help' }}>🏃‍♂️ Vigor / Energia</span>
                         <span>{selectedChar.energia} / {selectedChar.energia_max}</span>
                       </div>
                       <input type="range" min={0} max={selectedChar.energia_max} value={selectedChar.energia} onChange={e => handlePropChange('energia', parseInt(e.target.value))} style={{ accentColor: '#10b981', width: '100%' }} />
@@ -604,7 +685,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Sanidade */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span style={{ color: '#c084fc', fontWeight: 'bold' }}>👁️ Sanidade Mental</span>
+                        <span title="Sanidade Mental. Resistência a traumas psicológicos." style={{ color: '#c084fc', fontWeight: 'bold', cursor: 'help' }}>👁️ Sanidade Mental</span>
                         <span>{selectedChar.sanidade} / {selectedChar.sanidade_max}</span>
                       </div>
                       <input type="range" min={0} max={selectedChar.sanidade_max} value={selectedChar.sanidade} onChange={e => handlePropChange('sanidade', parseInt(e.target.value))} style={{ accentColor: '#a855f7', width: '100%' }} />
@@ -613,19 +694,19 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Fome, Sede, Cansaço, Defesa */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.65rem', color: '#eab308' }}>🍖 Fome (0-100)</span>
+                        <span title="Necessidade de alimentação." style={{ fontSize: '0.65rem', color: '#eab308', cursor: 'help' }}>🍖 Fome (0-100)</span>
                         <input type="number" value={selectedChar.fome} onChange={e => handlePropChange('fome', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.65rem', color: '#60a5fa' }}>💧 Sede (0-100)</span>
+                        <span title="Necessidade de hidratação." style={{ fontSize: '0.65rem', color: '#60a5fa', cursor: 'help' }}>💧 Sede (0-100)</span>
                         <input type="number" value={selectedChar.sede} onChange={e => handlePropChange('sede', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.65rem', color: '#f87171' }}>💤 Cansaço (0-100)</span>
+                        <span title="Cansaço físico ou exaustão." style={{ fontSize: '0.65rem', color: '#f87171', cursor: 'help' }}>💤 Cansaço (0-100)</span>
                         <input type="number" value={selectedChar.cansaco} onChange={e => handlePropChange('cansaco', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.65rem', color: '#fbbf24' }}>🛡️ Classe Armadura</span>
+                        <span title="Classe de Armadura (CA). Dificuldade para ser atingido." style={{ fontSize: '0.65rem', color: '#fbbf24', cursor: 'help' }}>🛡️ Classe Armadura</span>
                         <input type="number" value={selectedChar.defesa} onChange={e => handlePropChange('defesa', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                     </div>
@@ -633,11 +714,11 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Finanças */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.65rem', color: '#fbbf24' }}>🪙 Ouro</span>
+                        <span title="Moedas de Ouro." style={{ fontSize: '0.65rem', color: '#fbbf24', cursor: 'help' }}>🪙 Ouro</span>
                         <input type="number" value={selectedChar.ouro} onChange={e => handlePropChange('ouro', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '0.65rem', color: '#a855f7' }}>💎 Riquezas</span>
+                        <span title="Joias ou objetos de alto valor." style={{ fontSize: '0.65rem', color: '#a855f7', cursor: 'help' }}>💎 Riquezas</span>
                         <input type="number" value={selectedChar.riquezas} onChange={e => handlePropChange('riquezas', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                     </div>
@@ -691,20 +772,20 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 {activeTab === 'atributos' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     
-                    {/* Atributos 4DET */}
+                    {/* Atributos Pathfinder */}
                     <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '10px' }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#c084fc', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Sistema 4DET</span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#c084fc', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Sistema Pathfinder 2e</span>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                         {[
-                          { label: 'FOR (Força)', val: selectedChar.forca, key: 'forca' },
-                          { label: 'CON (Constituição)', val: selectedChar.constituicao, key: 'constituicao' },
-                          { label: 'SAB (Sabedoria)', val: selectedChar.sabedoria, key: 'sabedoria' },
-                          { label: 'DES (Destreza)', val: selectedChar.destreza, key: 'destreza' },
-                          { label: 'INT (Inteligência)', val: selectedChar.inteligencia, key: 'inteligencia' },
-                          { label: 'CAR (Carisma)', val: selectedChar.carisma, key: 'carisma' },
+                          { label: 'FOR (Força)', title: 'Determina dano e capacidade atlética.', val: selectedChar.forca, key: 'forca' },
+                          { label: 'CON (Constituição)', title: 'Determina HP e vigor.', val: selectedChar.constituicao, key: 'constituicao' },
+                          { label: 'SAB (Sabedoria)', title: 'Determina percepção e vontade.', val: selectedChar.sabedoria, key: 'sabedoria' },
+                          { label: 'DES (Destreza)', title: 'Determina reflexos e acrobacia.', val: selectedChar.destreza, key: 'destreza' },
+                          { label: 'INT (Inteligência)', title: 'Determina conhecimentos.', val: selectedChar.inteligencia, key: 'inteligencia' },
+                          { label: 'CAR (Carisma)', title: 'Determina interações sociais.', val: selectedChar.carisma, key: 'carisma' },
                         ].map(a => (
                           <div key={a.key} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <span style={{ fontSize: '0.65rem', color: '#cbd5e1' }}>{a.label}</span>
+                            <span title={a.title} style={{ fontSize: '0.65rem', color: '#cbd5e1', cursor: 'help' }}>{a.label}</span>
                             <input
                               type="number"
                               value={a.val}
@@ -722,6 +803,31 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 )}
 
               </div>
+            ) : showCreateChar ? (
+              <form onSubmit={handleCreateChar} style={{ display: 'flex', flexDirection: 'column', gap: '15px', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.3)' }}>
+                <h4 style={{ margin: 0, color: '#34d399', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Gerador Rápido</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Nome do Personagem</label>
+                  <input type="text" value={newCharNome} onChange={e => setNewCharNome(e.target.value)} autoFocus required style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                    <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Vida Máxima (HP)</label>
+                    <input type="number" min={1} value={newCharHP} onChange={e => setNewCharHP(parseInt(e.target.value) || 10)} required style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px', borderRadius: '4px' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+                    <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Tipo</label>
+                    <select value={newCharStatus} onChange={e => setNewCharStatus(e.target.value as any)} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px', borderRadius: '4px' }}>
+                      <option value="npc">NPC (Aliado/Neutro)</option>
+                      <option value="inimigo">Inimigo (Monstro)</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setShowCreateChar(false)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#cbd5e1', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
+                  <button type="submit" style={{ flex: 2, background: 'rgba(16,185,129,0.2)', border: '1px solid #10b981', color: '#34d399', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Salvar Ficha</button>
+                </div>
+              </form>
             ) : (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '0.8rem', fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>
                 Selecione uma ficha no topo para carregar os controles de status e atributos.
@@ -739,6 +845,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 { label: '⚔️ Armas', val: 'arma' },
                 { label: '✨ Poderes', val: 'poder' },
                 { label: '🧪 Poções', val: 'pocao' },
+                { label: '🛡️ Armaduras', val: 'armadura' },
                 { label: '💀 Maldições', val: 'maldicao' },
                 { label: '📦 Campanha', val: 'objeto_campanha' }
               ].map(cat => (
@@ -926,6 +1033,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                       style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none' }}
                     >
                       <option value="arma">⚔️ Arma / Equipamento</option>
+                      <option value="armadura">🛡️ Armadura</option>
                       <option value="poder">✨ Poder / Magia</option>
                       <option value="pocao">🧪 Poção / Consumível</option>
                       <option value="maldicao">💀 Maldição / Condição</option>

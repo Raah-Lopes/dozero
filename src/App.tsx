@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid, Library, Film, DoorOpen } from 'lucide-react';
+import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid, Library, Film, DoorOpen, Bot } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
 import { ChatWindow } from './components/Chat/ChatWindow';
+import { PlayerOverlay } from './components/HUD/PlayerOverlay';
 import { SettingsModal } from './components/Modals/SettingsModal';
+import { AIAssistantBot } from './components/HUD/AIAssistantBot';
+import { MusicHUD } from './components/HUD/MusicHUD';
 import { DiceOverlay } from './components/UI/DiceOverlay';
 import { PPROverlay } from './components/UI/PPROverlay';
 import { SoftTimer } from './components/UI/SoftTimer';
@@ -17,7 +20,7 @@ import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
 import { TextContextBar } from './components/UI/TextContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
-import { PlayersLobby } from './components/HUD/PlayersLobby';
+import { InviteModal } from './components/Modals/InviteModal';
 import { CombatTracker } from './components/HUD/CombatTracker';
 import { MapContextMenu } from './components/UI/MapContextMenu';
 import { ClockConfigModal } from './components/Modals/ClockConfigModal';
@@ -263,6 +266,7 @@ function App() {
           <MapContextMenu />
           <TextContextBar />
           <PropInteractionPanel />
+          <AIAssistantBot />
         </div>
 
       {/* Layer 10: React HUD */}
@@ -285,7 +289,7 @@ function App() {
                   <button onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} className={`btn-icon theme-violet ${viewMode === 'theater' ? 'active' : ''}`} title="Teatro da Mente">
                     <Film size={20} />
                   </button>
-                  <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} title="Jogadores e Lobby">
+                  <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} title="Convidar Jogadores (Compartilhar Mesa)">
                     <Users size={20} />
                   </button>
                   <button className="btn-icon theme-blue" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário e Grade">
@@ -296,6 +300,9 @@ function App() {
                   </button>
                   <button className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`} onClick={() => toggleModal('widgets')} title="Hub de Widgets (Ferramentas GM)">
                     <LayoutGrid size={20} />
+                  </button>
+                  <button className="btn-icon theme-pink" onClick={() => window.dispatchEvent(new CustomEvent('toggle-ai-bot'))} title="Mostrar/Ocultar Robô Assistente IA">
+                    <Bot size={20} />
                   </button>
                   <button className={`btn-icon theme-red ${openWindows.combatLog ? 'active' : ''}`} onClick={() => toggleWindow('combatLog')} title="Registro de Rolagens (Log)">
                     <MessageSquare size={20} />
@@ -345,7 +352,7 @@ function App() {
         {/* Modal Layer */}
         {activeModal !== 'none' && (
            <div style={{ position: 'absolute', top: '90px', right: 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
-             {activeModal === 'players' && <PlayersLobby onClose={() => setActiveModal('none')} />}
+             {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
              {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
              {activeModal === 'widgets' && (
                <WidgetHubModal 

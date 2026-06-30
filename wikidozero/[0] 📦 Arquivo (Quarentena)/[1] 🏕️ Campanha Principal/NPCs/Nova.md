@@ -23,6 +23,6 @@
 
 (Adicione as anotações sobre como os jogadores conheceram este NPC aqui)
 
-<img height="342" width="256" src="http://localhost:5174/api/wiki/media?repoPath=D%3A%5Cwikidozero&path=ANEXOS/Nova_crie.webp" />
 
-inferior:: [[GOMA]]
+
+inferior:: \[\[GOMA]]

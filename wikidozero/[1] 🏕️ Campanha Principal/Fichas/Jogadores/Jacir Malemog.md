@@ -1,18 +1,37 @@
 ---
 inventario:
   - nome: Calça de Capoeira Brega
-    desc: Uma calça branca de boca larga, feita de um tecido sintético brilhante, com detalhes em azul e verde limão. É um pouco excêntrica, mas incrivelmente confortável e elástica, perfeita para os movimentos acrobáticos de Jacir.
+    desc: >-
+      Uma calça branca de boca larga, feita de um tecido sintético brilhante,
+      com detalhes em azul e verde limão. É um pouco excêntrica, mas
+      incrivelmente confortável e elástica, perfeita para os movimentos
+      acrobáticos de Jacir.
   - nome: Pasta de Goma de Mascar Mágica
-    desc: Um pequeno pote de cerâmica com uma pasta verde e pegajosa. Quando usada, permite a Jacir solidificar momentaneamente partes de seu corpo para ataques mais impactantes ou para reparos rápidos em pequenos ferimentos. Dura 1 minuto (3 usos diários).
+    desc: >-
+      Um pequeno pote de cerâmica com uma pasta verde e pegajosa. Quando usada,
+      permite a Jacir solidificar momentaneamente partes de seu corpo para
+      ataques mais impactantes ou para reparos rápidos em pequenos ferimentos.
+      Dura 1 minuto (3 usos diários).
   - nome: Berimbau de Slime
-    desc: Um berimbau único, feito de um tipo de slime mais denso e resiliente que Jacir mesmo cultivou. Emite sons graves e ressonantes que, além de ritmar a capoeira, podem distrair ou desorientar criaturas fracas por um breve momento (CD 10 de Sabedoria para resistir).
+    desc: >-
+      Um berimbau único, feito de um tipo de slime mais denso e resiliente que
+      Jacir mesmo cultivou. Emite sons graves e ressonantes que, além de ritmar
+      a capoeira, podem distrair ou desorientar criaturas fracas por um breve
+      momento (CD 10 de Sabedoria para resistir).
+  - nome: Cajado do Conjurador
+    tipo: equipamento
+    efeito: ataque_6
+    quantidade: 1
+    descricao: Canaliza poderes arcanos (+1 em feitiços).
+    equipado: true
 tipo: PC
 status: vivo
 nome: Jacir Malemog
 nivel: 3
 XP: 1000
 Ouro: 80
-imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+imagem: >-
+  /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
 tags:
   - personagem
   - slime
@@ -23,7 +42,7 @@ origem: Pântano dos Ecos Perdidos
 Localizacao: Algum vilarejo costeiro, treinando.
 HP: 24
 HP_max: 24
-PM: 20
+PM: 27
 PM_max: 27
 Energia: 100
 Energia_max: 100
@@ -46,25 +65,32 @@ Investigacao: 0
 Medicina: 0
 Percepcao: 2
 Sobrevivencia: 0
-status_efeitos: []
+status_efeitos:
+  - Morto
 imagens: []
 magias: []
 macros:
   - nome: Rasteira de Capoeira
     formula: 1d20+5
     tipo: ataque
-    descricao: 'Ataque corpo-a-corpo que derruba o oponente. Dano: 1d6 + 3 (blunt). Se acertar, o alvo deve fazer um teste de Destreza (CD 13) ou cairá no chão.'
+    descricao: >-
+      Ataque corpo-a-corpo que derruba o oponente. Dano: 1d6 + 3 (blunt). Se
+      acertar, o alvo deve fazer um teste de Destreza (CD 13) ou cairá no chão.
   - nome: Golpe Elástico
     formula: 1d20+5
     tipo: ataque
-    descricao: 'Jacir estica um membro para um ataque surpresa. Dano: 1d8 + 3 (blunt). Gasta 2 PM.'
-avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
-imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+    descricao: >-
+      Jacir estica um membro para um ataque surpresa. Dano: 1d8 + 3 (blunt).
+      Gasta 2 PM.
+avatar: >-
+  /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+imageUrl: >-
+  /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
 sizeScale: 1.4
 showName: true
-energia: 20
+energia: 30
 mana_max: 27
-mana: 20
+mana: 27
 energiaMax: 20
 pv: 24
 sanidade: 100
@@ -81,7 +107,40 @@ constituicao: 10
 inteligencia: 18
 sabedoria: 11
 carisma: 11
+usos_cura_atual: 3
+saqueado: false
+sanidade_max: 10
+fome: 0
+fome_max: 100
+sede: 0
+sede_max: 100
+cansaco: 0
+cansaco_max: 100
+defesa: 15
+riquezas: 0
+armas:
+  - nome: Cajado do Conjurador
+    tipo: equipamento
+    efeito: ataque_6
+    dano: 1d6
+    descricao: Canaliza poderes arcanos (+1 em feitiços).
+    equipado: false
+poderes: []
+pocoes: []
+maldicoes: []
+objetos_campanha: []
 ---
+
+
+
+
+
+
+
+
+
+
+
 
 
 
