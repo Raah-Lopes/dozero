@@ -12,7 +12,7 @@ import { WoDParser } from '../../../rules/WoDParser';
 import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, toggleTarget, addCombatParticipant } from '../../../store';
 import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
-import { WikiIndexer, WikiEntry, WikiQuery } from '../../../services/wiki/WikiIndexer';
+import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 import { syncTokenFieldToWiki, syncMultipleFieldsToWiki } from '../../../services/wiki/syncWiki';
 import { LevelUpWidget } from './LevelUpWidget';
 import { TrendingUp } from 'lucide-react';
