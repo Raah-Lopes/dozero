@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, Loader2, X, Sparkles } from 'lucide-react';
 import { generateAI } from '../../services/ai/AIProvider';
+import { state } from '../../store';
 
 export const AIAssistantBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,10 +14,30 @@ export const AIAssistantBot: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Contexto do Jogo
+  const [tokensMap, setTokensMap] = useState<Map<string, any>>(new Map());
+  const [backgroundStr, setBackgroundStr] = useState('');
+
   useEffect(() => {
     const handler = () => setIsVisible(v => !v);
     window.addEventListener('toggle-ai-bot', handler);
     return () => window.removeEventListener('toggle-ai-bot', handler);
+  }, []);
+
+  useEffect(() => {
+    const updateTokens = () => setTokensMap(new Map(state.tokens as any));
+    const updateBg = () => setBackgroundStr((state.theater?.get('background') as string) || '');
+    
+    state.tokens.observe(updateTokens);
+    if (state.theater) state.theater.observe(updateBg);
+    
+    updateTokens();
+    updateBg();
+    
+    return () => {
+      state.tokens.unobserve(updateTokens);
+      if (state.theater) state.theater.unobserve(updateBg);
+    };
   }, []);
 
   // Define position on mount
@@ -63,9 +84,12 @@ export const AIAssistantBot: React.FC = () => {
       const apiKey = config.apiKey || '';
       const ollamaUrl = config.ollamaUrl;
       
+      const contextTokens = Array.from(tokensMap.values()).map(t => `- ${t.name} (HP: ${t.hp}/${t.maxHp})`).join('\n');
+      const systemContext = `\n\n--- CONTEXTO ATUAL DO JOGO ---\nCena Atual: ${backgroundStr}\nTokens no Mapa:\n${contextTokens || 'Nenhum token no mapa.'}`;
+
       const res = await generateAI({
         provider, model, apiKey, ollamaUrl,
-        systemPrompt: "Você é um pequeno e sagaz robô assistente de mestre de RPG (sistema DoZero). Ajude o mestre dizendo quais rolagens pedir, quais atributos usar ou qual o custo de mana/hp dependendo da ação. Seja muito direto, prático, e amigável. Responda em formato markdown, de forma curta.",
+        systemPrompt: "Você é um pequeno e sagaz robô assistente de mestre de RPG (sistema DoZero/Pathfinder 2e). Ajude o mestre dizendo quais rolagens pedir, quais atributos usar ou qual o custo de mana/hp dependendo da ação. Seja muito direto, prático, e amigável. Responda em formato markdown, de forma curta." + systemContext,
         userPrompt: prompt
       });
       setAiChat(prev => [...prev, { role: 'ai', text: res.text }]);

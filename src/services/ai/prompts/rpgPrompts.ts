@@ -43,6 +43,16 @@ inventario: []
 tipo: PC
 status: vivo
 ativo: true
+ancestralidade: ""
+heranca: ""
+biografia: ""
+classe: ""
+alinhamento: ""
+genero: ""
+nome_jogador: ""
+xp: 0
+registro_aventura: ""
+anotacoes: ""
 imagens: []
 magias: []
 macros:
@@ -174,6 +184,16 @@ inventario: []
 tipo: NPC
 status: vivo
 ativo: true
+ancestralidade: ""
+heranca: ""
+biografia: ""
+classe: ""
+alinhamento: ""
+genero: ""
+nome_jogador: "Mestre"
+xp: 0
+registro_aventura: ""
+anotacoes: ""
 imagens: []
 magias: []
 macros:
