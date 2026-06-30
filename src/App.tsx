@@ -279,7 +279,7 @@ function App() {
               <div className="glass-panel" style={{ padding: '0.5rem' }}>
                 <button 
                   className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`} 
-                  onClick={() => toggleModal('widgets')} 
+                  onClick={(e) => { e.stopPropagation(); setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets'); }} 
                   title="Menu Geral (Hub de Ferramentas)"
                 >
                   <LayoutGrid size={20} />
@@ -356,7 +356,7 @@ function App() {
 
         {/* Modal Layer */}
         {activeModal !== 'none' && (
-           <div style={{ position: 'absolute', top: '90px', right: 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
+           <div style={{ position: 'absolute', top: '90px', left: activeModal === 'widgets' ? 'var(--hud-padding)' : 'auto', right: activeModal === 'widgets' ? 'auto' : 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
              {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
              {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
              {activeModal === 'widgets' && (
