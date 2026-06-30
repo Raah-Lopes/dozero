@@ -4,17 +4,17 @@ tipo: Personagem
 classe: Monge de Geleia
 raça: Slime Humanóide
 força: 14
-destreza: 18
+destreza: 13
 constituicao: 16
-inteligencia: 8
+inteligencia: 10
 sabedoria: 10
-carisma: 15
+carisma: 10
 ataque_basico: Soco Gelatinoso (1d6+4 contundente)
 habilidade_especial: Absorção de Impacto (Reduz dano físico)
 tags: \[jogador, slime, linha de frente]
-FOR: 10
-DES: 10
-CON: 10
+FOR: 19
+DES: 13
+CON: 16
 INT: 10
 SAB: 10
 CAR: 10
@@ -55,10 +55,10 @@ status_efeitos:
   - Morto
 HP_max: 100
 pv_max: 100
-PM_max: 100
+PM_max: 99
 usos_cura_atual: 3
 saqueado: false
-energia_max: .nan
+energia_max: 100
 sanidade_max: .nan
 fome: .nan
 fome_max: .nan
@@ -104,7 +104,12 @@ showName: true
 sizeScale: 1.4
 hpBarMode: always
 ativo: false
+mana_max: 99
+vigor_max: 100
+forca: 19
 ---
+
+
 
 
 

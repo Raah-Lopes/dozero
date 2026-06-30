@@ -839,59 +839,93 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           </div>
         )}
 
-        {macrosMD.length > 0 && (
-          <div>
-            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase' }}>Ações & Magias (Macros)</h5>
-            {macrosMD.map((macro: any, idx: number) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', border: `1px solid rgba(251, 191, 36, 0.3)`, borderRadius: '6px', padding: '0.4rem 0.6rem', marginBottom: '4px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fbbf24' }}>{macro.nome}</span>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fórmula: {macro.formula} {macro.dano ? `| Dano: ${macro.dano}` : ''}</span>
-                </div>
-                <button onClick={() => {
-                   const atkEval = evaluateFormula(macro.formula);
-                   const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
-                   let msg = `🎲 <b>${charName}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
-                   
-                   let dmgExpr = macro.dano;
-                   if (!dmgExpr && macro.descricao) {
-                     const dmgMatch = macro.descricao.match(/Dano:\s*([0-9dD+\-\s]+)/i);
-                     if (dmgMatch) dmgExpr = dmgMatch[1].trim();
-                   }
-
-                   if (dmgExpr) {
-                     const dmgEval = evaluateFormula(dmgExpr);
-                     let dmgTotal = dmgEval.total;
-                     msg += `<br/>Dano: ${dmgEval.breakdown} = <b>${dmgTotal}</b>`;
-
-                     const targetsIds = getTargets();
-                     if (targetsIds.length > 0) {
-                       msg += "<br/><b>Resolução:</b>";
-                       targetsIds.forEach(tId => {
-                         if (tId === tokenId) return;
-                         const tStats = getTargetStats(tId);
-                         const effectiveDefense = tStats.defesa;
-                         
-                         let grau = 'FRACASSO'; let cor = '#ef4444';
-                         if (atkEval.total >= effectiveDefense + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; dmgTotal *= 2; }
-                         else if (atkEval.total >= effectiveDefense) { grau = 'SUCESSO'; cor = '#10b981'; }
-                         
-                         if (grau.includes('SUCESSO')) {
-                           msg += `<br/>🎯 <b style="color:${cor};">${grau}</b> em ${tStats.name} (CA ${effectiveDefense})! Dano: <b>${dmgTotal}</b>`;
-                           applyDamageAndSync(tId, dmgTotal);
-                           window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'DANO: ' + (macro.nome), result: String(dmgTotal), type: 'attack' } }));
-                         } else {
-                           msg += `<br/>🛡️ <b style="color:${cor};">${grau}</b> contra ${tStats.name} (CA ${effectiveDefense}).`;
-                         }
-                       });
-                     }
-                   }
-                   pushChatMessage(msg, atkEval.total >= 14, false);
-                }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>ROLAR</button>
-              </div>
-            ))}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.4rem 0' }}>
+            <h5 style={{ margin: 0, fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase' }}>Ações & Magias (Macros)</h5>
+            <button onClick={() => {
+              const nome = prompt('Nome do Ataque/Magia (Ex: Bola de Fogo):');
+              if (!nome) return;
+              const formula = prompt('Fórmula de Rolagem (Ex: 1d20 + 5):');
+              if (!formula) return;
+              const dano = prompt('Dano (Ex: 2d6 + 3) ou deixe em branco:');
+              
+              const newMacro = { nome, formula, tipo: 'ataque', descricao: dano ? `Dano: ${dano}` : '' };
+              const currentMacros = tokenData.macros || [];
+              const updatedMacros = [...currentMacros, newMacro];
+              
+              if (tokenData.wikiPath) {
+                import('../../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+              }
+              updateTokenProps(tokenId, { macros: updatedMacros });
+            }} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ADICIONAR</button>
           </div>
-        )}
+          
+          {macrosMD.map((macro: any, idx: number) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', border: `1px solid rgba(251, 191, 36, 0.3)`, borderRadius: '6px', padding: '0.4rem 0.6rem', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fbbf24' }}>{macro.nome}</span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fórmula: {macro.formula} {macro.dano ? `| Dano: ${macro.dano}` : ''}</span>
+              </div>
+              <button onClick={() => {
+                 const atkEval = evaluateFormula(macro.formula);
+                 const charName = tokenData?.titulo || tokenData?.nome || tokenData?.name || tokenData?.title || 'Personagem';
+                 let msg = `🎲 <b>${charName}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
+                 
+                 let dmgExpr = macro.dano;
+                 if (!dmgExpr && macro.descricao) {
+                   const dmgMatch = macro.descricao.match(/Dano:\s*([0-9dD+\-\s@a-zA-Z]+)/i);
+                   if (dmgMatch) dmgExpr = dmgMatch[1].trim();
+                 }
+
+                 if (dmgExpr) {
+                   const dmgEval = evaluateFormula(dmgExpr);
+                   let dmgTotal = dmgEval.total;
+                   msg += `<br/>Dano: ${dmgEval.breakdown} = <b>${dmgTotal}</b>`;
+
+                   const targetsIds = getTargets();
+                   if (targetsIds.length > 0) {
+                     msg += "<br/><b>Resolução:</b>";
+                     targetsIds.forEach(tId => {
+                       if (tId === tokenId) return;
+                       const tStats = getTargetStats(tId);
+                       const effectiveDefense = tStats.defesa;
+                       
+                       let grau = 'FRACASSO'; let cor = '#ef4444';
+                       if (atkEval.total >= effectiveDefense + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; dmgTotal *= 2; }
+                       else if (atkEval.total >= effectiveDefense) { grau = 'SUCESSO'; cor = '#10b981'; }
+                       
+                       if (grau.includes('SUCESSO')) {
+                         msg += `<br/>🎯 <b style="color:${cor};">${grau}</b> em ${tStats.name} (CA ${effectiveDefense})! Dano: <b>${dmgTotal}</b>`;
+                         applyDamageAndSync(tId, dmgTotal);
+                         window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'DANO: ' + (macro.nome), result: String(dmgTotal), type: 'attack' } }));
+                       } else {
+                         msg += `<br/>🛡️ <b style="color:${cor};">${grau}</b> contra ${tStats.name} (CA ${effectiveDefense}).`;
+                       }
+                     });
+                   }
+                 }
+                 pushChatMessage(msg, atkEval.total >= 14, false);
+              }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '8px' }}>ROLAR</button>
+            </div>
+          ))}
+          
+          {macrosMD.length === 0 && (
+            <div style={{ padding: '0.8rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+              Nenhuma macro cadastrada.<br/>
+              <button onClick={() => {
+                const basicos = [
+                  { nome: 'Golpe Desarmado', formula: '1d20 + @for', tipo: 'ataque', descricao: 'Dano: 1d4 + @for' },
+                  { nome: 'Arremesso de Pedra', formula: '1d20 + @des', tipo: 'ataque', descricao: 'Dano: 1d4 + @for' },
+                  { nome: 'Esquiva', formula: '1d20 + @des', tipo: 'defesa', descricao: 'Você tenta se esquivar do próximo ataque.' }
+                ];
+                if (tokenData.wikiPath) {
+                  import('../../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: basicos }));
+                }
+                updateTokenProps(tokenId, { macros: basicos });
+              }} style={{ marginTop: '0.5rem', padding: '6px 12px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Adicionar Ataques Básicos</button>
+            </div>
+          )}
+        </div>
 
       </div>
     );
