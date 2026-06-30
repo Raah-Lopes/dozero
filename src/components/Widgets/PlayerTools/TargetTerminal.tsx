@@ -968,8 +968,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                  let msg = `🎲 <b>${charName}</b> usa <b>${macro.nome}</b>!<br/>Resultado: ${atkEval.breakdown} = <b>${atkEval.total}</b>`;
                  
                  let dmgExpr = macro.dano;
+                 let dmgTotal = 0;
                  if (!dmgExpr && macro.descricao) {
-                   const dmgMatch = macro.descricao.match(/Dano:\s*([0-9dD+\-\s@a-zA-Z]+)/i);
+                   const dmgMatch = macro.descricao.match(/Dano:\s*([0-9dD+\-\s@a-zA-Z]+)(?:\.|$)/i);
                    if (dmgMatch) dmgExpr = dmgMatch[1].trim();
                  }
 
@@ -979,32 +980,39 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                      finalDmgExpr = finalDmgExpr.replace(new RegExp(k, 'g'), String(v));
                    }
 
-                   const dmgEval = evaluateFormula(finalDmgExpr);
-                   let dmgTotal = dmgEval.total;
-                   msg += `<br/>Dano: ${dmgEval.breakdown} = <b>${dmgTotal}</b>`;
+                   // Limpar caracteres estranhos que possam ter vindo do match, exceto letras pro dice parser
+                   finalDmgExpr = finalDmgExpr.replace(/[^0-9d+\-\s]/g, '');
 
-                   const targetsIds = getTargets();
-                   if (targetsIds.length > 0) {
-                     msg += "<br/><b>Resolução:</b>";
-                     targetsIds.forEach(tId => {
-                       if (tId === tokenId) return;
-                       const tStats = getTargetStats(tId);
-                       const effectiveDefense = tStats.defesa;
-                       
-                       let grau = 'FRACASSO'; let cor = '#ef4444';
-                       if (atkEval.total >= effectiveDefense + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; dmgTotal *= 2; }
-                       else if (atkEval.total >= effectiveDefense) { grau = 'SUCESSO'; cor = '#10b981'; }
-                       
-                       if (grau.includes('SUCESSO')) {
-                         msg += `<br/>🎯 <b style="color:${cor};">${grau}</b> em ${tStats.name} (CA ${effectiveDefense})! Dano: <b>${dmgTotal}</b>`;
+                   const dmgEval = evaluateFormula(finalDmgExpr);
+                   dmgTotal = dmgEval.total;
+                   msg += `<br/>Dano: ${dmgEval.breakdown} = <b>${dmgTotal}</b>`;
+                 }
+
+                 const targetsIds = getTargets();
+                 if (targetsIds.length > 0) {
+                   msg += "<br/><b>Resolução:</b>";
+                   targetsIds.forEach(tId => {
+                     if (tId === tokenId) return;
+                     const tStats = getTargetStats(tId);
+                     const effectiveDefense = tStats.defesa;
+                     
+                     let grau = 'FRACASSO'; let cor = '#ef4444';
+                     if (atkEval.total >= effectiveDefense + 10) { grau = 'SUCESSO CRÍTICO'; cor = '#fbbf24'; if (dmgTotal > 0) dmgTotal *= 2; }
+                     else if (atkEval.total >= effectiveDefense) { grau = 'SUCESSO'; cor = '#10b981'; }
+                     
+                     if (grau.includes('SUCESSO')) {
+                       msg += `<br/>🎯 <b style="color:${cor};">${grau}</b> em ${tStats.name} (CA ${effectiveDefense})!`;
+                       if (dmgTotal > 0) {
+                         msg += ` Dano: <b>${dmgTotal}</b>`;
                          applyDamageAndSync(tId, dmgTotal);
                          window.dispatchEvent(new CustomEvent('dice-roll', { detail: { title: 'DANO: ' + (macro.nome), result: String(dmgTotal), type: 'attack' } }));
-                       } else {
-                         msg += `<br/>🛡️ <b style="color:${cor};">${grau}</b> contra ${tStats.name} (CA ${effectiveDefense}).`;
                        }
-                     });
-                   }
+                     } else {
+                       msg += `<br/>🛡️ <b style="color:${cor};">${grau}</b> contra ${tStats.name} (CA ${effectiveDefense}).`;
+                     }
+                   });
                  }
+
                  pushChatMessage(msg, atkEval.total >= 14, false);
               }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '8px' }}>ROLAR</button>
             </div>
