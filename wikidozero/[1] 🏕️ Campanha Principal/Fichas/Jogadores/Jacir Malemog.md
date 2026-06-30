@@ -9,7 +9,7 @@ inventario:
 tipo: PC
 status: vivo
 nome: Jacir Malemog
-nivel: 2
+nivel: 3
 XP: 1000
 Ouro: 80
 imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
@@ -24,16 +24,16 @@ Localizacao: Algum vilarejo costeiro, treinando.
 HP: 24
 HP_max: 24
 PM: 20
-PM_max: 20
+PM_max: 27
 Energia: 100
 Energia_max: 100
 Sanidade: 10
 Sanidade_max: 10
 Fome: 0
 Sede: 0
-FOR: 10
+FOR: 11
 DES: 21
-CON: 10
+CON: 11
 INT: 18
 SAB: 10
 CAR: 11
@@ -63,7 +63,7 @@ imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_
 sizeScale: 1.4
 showName: true
 energia: 20
-mana_max: 20
+mana_max: 27
 mana: 20
 energiaMax: 20
 pv: 24
@@ -73,15 +73,17 @@ borderColor: '#66a1ff'
 titulo: Jacir Malemog
 title: Jacir Malemog
 pv_max: 24
-energia_max: 20
-vigor_max: 20
-forca: 10
+energia_max: 30
+vigor_max: 30
+forca: 11
 destreza: 21
-constituicao: 10
+constituicao: 11
 inteligencia: 18
 sabedoria: 10
 carisma: 11
 ---
+
+
 
 
 
