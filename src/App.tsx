@@ -354,39 +354,11 @@ function App() {
           setActiveModal('clockConfig');
         }} />
 
-        {/* Modal Layer */}
-        {activeModal !== 'none' && (
-           <div style={{ position: 'absolute', top: '90px', left: activeModal === 'widgets' ? 'var(--hud-padding)' : 'auto', right: activeModal === 'widgets' ? 'auto' : 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
+        {/* Modal Layer (players, settings, chat) */}
+        {(activeModal === 'players' || activeModal === 'settings' || activeModal === 'chat') && (
+           <div style={{ position: 'absolute', top: '90px', right: 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
              {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
              {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
-             {activeModal === 'widgets' && (
-               <WidgetHubModal 
-                 onClose={() => setActiveModal('none')} 
-                 onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }} 
-                 onOpenClockConfig={() => setActiveModal('clockConfig')} 
-                 onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
-                 onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
-                 onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
-                 onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
-                 onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
-                 onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
-                 onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
-                 onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
-                 onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
-                 onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
-                 onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
-                 onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
-                 onOpenDLCManager={() => { toggleWindow('dlcManager'); setActiveModal('none'); }}
-                 onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
-                 onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
-                 onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
-                 onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
-                 onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
-                 onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
-                 onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
-                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
-               />
-             )}
              {activeModal === 'chat' && (
                <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -531,6 +503,38 @@ function App() {
 
         <TextContextBar />
         <WidgetLayer />
+
+        {/* WidgetHubModal fora da hud-layer para evitar interferencia do canvas PixiJS */}
+        {activeModal === 'widgets' && (
+          <div style={{ position: 'fixed', top: '90px', left: 'var(--hud-padding)', zIndex: 9999, pointerEvents: 'auto' }}>
+            <WidgetHubModal 
+              onClose={() => setActiveModal('none')} 
+              onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }} 
+              onOpenClockConfig={() => setActiveModal('clockConfig')} 
+              onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
+              onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
+              onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
+              onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
+              onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
+              onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
+              onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
+              onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
+              onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
+              onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
+              onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
+              onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
+              onOpenDLCManager={() => { toggleWindow('dlcManager'); setActiveModal('none'); }}
+              onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
+              onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
+              onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
+              onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
+              onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
+              onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
+              onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
+              onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
+            />
+          </div>
+        )}
       </>
 
     </div>
