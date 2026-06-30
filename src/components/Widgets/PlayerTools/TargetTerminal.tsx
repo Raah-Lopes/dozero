@@ -854,7 +854,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               const updatedMacros = [...currentMacros, newMacro];
               
               if (tokenData.wikiPath) {
-                import('../../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+                import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
               }
               updateTokenProps(tokenId, { macros: updatedMacros });
             }} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ADICIONAR</button>
@@ -919,7 +919,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   { nome: 'Esquiva', formula: '1d20 + @des', tipo: 'defesa', descricao: 'Você tenta se esquivar do próximo ataque.' }
                 ];
                 if (tokenData.wikiPath) {
-                  import('../../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: basicos }));
+                  import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: basicos }));
                 }
                 updateTokenProps(tokenId, { macros: basicos });
               }} style={{ marginTop: '0.5rem', padding: '6px 12px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>+ Adicionar Ataques Básicos</button>
