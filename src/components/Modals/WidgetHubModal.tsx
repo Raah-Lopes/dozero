@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -28,7 +28,46 @@ interface Props {
   onOpenSystemAuditor: () => void;
 }
 
-export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpenClockConfig, onOpenOracleV2, onOpenNPCGenerator, onOpenLocationGenerator, onOpenEncounterGenerator, onOpenCampaignManager, onOpenMindMap, onOpenAutomatedDice, onOpenCharacterRoster, onOpenChronos, onOpenLoreMachine, onOpenDLCManager, onOpenWorldEngine, onOpenEntityForge, onOpenStronghold, onOpenArsenalMestre, onOpenAudioDirector, onOpenWebFrame, onOpenDiceRoller, onOpenAIStudio, onOpenTradeShop, onOpenSystemAuditor }) => {
+export const WidgetHubModal: React.FC<Props> = (props) => {
+  const [search, setSearch] = useState('');
+
+  const widgets = [
+    // Game Master
+    { id: 'ai', cat: 'Game Master', title: 'Estúdio IA do Mestre', icon: Bot, action: props.onOpenAIStudio, theme: 'theme-purple', shadow: '0 0 10px rgba(168,85,247,0.4)' },
+    { id: 'arsenal', cat: 'Game Master', title: 'Arsenal do Mestre', icon: Shield, action: props.onOpenArsenalMestre, theme: 'theme-amber' },
+    { id: 'campaign', cat: 'Game Master', title: 'Gestor de Campanhas', icon: BookOpen, action: props.onOpenCampaignManager, theme: 'theme-indigo' },
+    { id: 'encounter', cat: 'Game Master', title: 'Forja de Encontros', icon: Skull, action: props.onOpenEncounterGenerator, theme: 'theme-orange' },
+    { id: 'tracker', cat: 'Game Master', title: 'Iniciativa (Combate)', icon: Swords, action: props.onOpenTracker, theme: 'theme-red' },
+    { id: 'clock', cat: 'Game Master', title: 'Relógio de Tensão', icon: Timer, action: props.onOpenClockConfig, theme: 'theme-amber' },
+    { id: 'chronos', cat: 'Game Master', title: 'Motor Chronos', icon: Sun, action: props.onOpenChronos, theme: 'theme-yellow' },
+
+    // Player Tools
+    { id: 'diceroller', cat: 'Player Tools', title: 'Rolador de Dados', icon: Dices, action: props.onOpenDiceRoller, theme: 'theme-yellow' },
+    { id: 'autodice', cat: 'Player Tools', title: 'Dados Automáticos', icon: Dices, action: props.onOpenAutomatedDice, theme: 'theme-red' },
+    { id: 'roster', cat: 'Player Tools', title: 'Lista de Personagens', icon: Users, action: props.onOpenCharacterRoster, theme: 'theme-green' },
+    { id: 'mindmap', cat: 'Player Tools', title: 'Painel de Conspiração', icon: Network, action: props.onOpenMindMap, theme: 'theme-pink' },
+    { id: 'webframe', cat: 'Player Tools', title: 'Navegador Integrado', icon: Globe, action: props.onOpenWebFrame, theme: 'theme-pink' },
+    { id: 'tradeshop', cat: 'Player Tools', title: 'Sistema Comercial & Lojas', icon: Coins, action: props.onOpenTradeShop, theme: 'theme-amber', shadow: '0 0 10px rgba(245,158,11,0.3)' },
+
+    // Generators & AI
+    { id: 'npcgen', cat: 'Generators & AI', title: 'Forja de NPCs', icon: UserPlus, action: props.onOpenNPCGenerator, theme: 'theme-green' },
+    { id: 'locgen', cat: 'Generators & AI', title: 'Forja de Mundos', icon: Map, action: props.onOpenLocationGenerator, theme: 'theme-blue' },
+    { id: 'oraclev2', cat: 'Generators & AI', title: 'Mega Oráculo', icon: Eye, action: props.onOpenOracleV2, theme: 'theme-purple' },
+    { id: 'lore', cat: 'Generators & AI', title: 'Máquina de Lores', icon: Sparkles, action: props.onOpenLoreMachine, theme: 'theme-purple' },
+    { id: 'worldengine', cat: 'Generators & AI', title: 'Motor de Mundo', icon: Globe, action: props.onOpenWorldEngine, theme: 'theme-indigo' },
+    { id: 'entityforge', cat: 'Generators & AI', title: 'Forja de Entidades', icon: Anvil, action: props.onOpenEntityForge, theme: 'theme-red' },
+    { id: 'stronghold', cat: 'Generators & AI', title: 'Fortaleza da Party', icon: Castle, action: props.onOpenStronghold, theme: 'theme-green' },
+
+    // System
+    { id: 'audiodir', cat: 'System', title: 'Audio Director', icon: Sparkles, action: props.onOpenAudioDirector, theme: 'theme-blue' },
+    { id: 'dlc', cat: 'System', title: 'Gerenciador de Complementos', icon: ToyBrick, action: props.onOpenDLCManager, theme: 'theme-orange' },
+    { id: 'auditor', cat: 'System', title: 'Auditor de Sistema (Linter)', icon: Shield, action: props.onOpenSystemAuditor, theme: 'theme-red' },
+  ];
+
+  const categories = ['Game Master', 'Player Tools', 'Generators & AI', 'System'];
+  
+  const filteredWidgets = widgets.filter(w => w.title.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '550px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -36,7 +75,7 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
           Hub de Widgets
         </h3>
         <button 
-          onClick={onClose} 
+          onClick={props.onClose} 
           style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} 
           onMouseOver={e => e.currentTarget.style.color = 'white'} 
           onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}
@@ -45,8 +84,19 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
         </button>
       </div>
 
+      <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
+        <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+        <input 
+          type="search" 
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar ferramentas..." 
+          style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px 10px 8px 34px', borderRadius: '6px', fontSize: '0.85rem' }}
+        />
+      </div>
+
       <style>
-        {`
+        {\`
           .widget-category {
             margin-bottom: 1.5rem;
           }
@@ -117,108 +167,36 @@ export const WidgetHubModal: React.FC<Props> = ({ onClose, onOpenTracker, onOpen
 
           .theme-pink { color: #f9a8d4; border-color: rgba(236, 72, 153, 0.5); }
           .theme-pink:hover { background: rgba(236, 72, 153, 0.2); border-color: #ec4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); }
-        `}
+        \`}
       </style>
 
-      <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '600px', overflowY: 'auto', paddingRight: '10px' }}>
-        
-        {/* GameMaster */}
-        <div className="widget-category">
-          <div className="widget-category-title">Game Master</div>
-          <div className="widget-grid">
-            <button onClick={onOpenAIStudio} title="Estúdio IA do Mestre" className="widget-btn theme-purple" style={{ boxShadow: '0 0 10px rgba(168,85,247,0.4)' }}>
-              <Bot size={28} />
-            </button>
-            <button onClick={onOpenArsenalMestre} title="Arsenal do Mestre" className="widget-btn theme-amber">
-              <Shield size={28} />
-            </button>
-            <button onClick={onOpenCampaignManager} title="Gestor de Campanhas" className="widget-btn theme-indigo">
-              <BookOpen size={28} />
-            </button>
-            <button onClick={onOpenEncounterGenerator} title="Forja de Encontros" className="widget-btn theme-orange">
-              <Skull size={28} />
-            </button>
-            <button onClick={onOpenTracker} title="Iniciativa (Combate)" className="widget-btn theme-red">
-              <Swords size={28} />
-            </button>
-            <button onClick={onOpenClockConfig} title="Relógio de Tensão" className="widget-btn theme-amber">
-              <Timer size={28} />
-            </button>
-            <button onClick={onOpenChronos} title="Motor Chronos" className="widget-btn theme-yellow">
-              <Sun size={28} />
-            </button>
-          </div>
-        </div>
-
-        {/* PlayerTools */}
-        <div className="widget-category">
-          <div className="widget-category-title">Player Tools</div>
-          <div className="widget-grid">
-            <button onClick={onOpenDiceRoller} title="Rolador de Dados" className="widget-btn theme-yellow">
-              <Dices size={28} />
-            </button>
-            <button onClick={onOpenAutomatedDice} title="Dados Automáticos" className="widget-btn theme-red">
-              <Dices size={28} />
-            </button>
-            <button onClick={onOpenCharacterRoster} title="Lista de Personagens" className="widget-btn theme-green">
-              <Users size={28} />
-            </button>
-            <button onClick={onOpenMindMap} title="Painel de Conspiração" className="widget-btn theme-pink">
-              <Network size={28} />
-            </button>
-            <button onClick={onOpenWebFrame} title="Navegador Integrado" className="widget-btn theme-pink">
-              <Globe size={28} />
-            </button>
-            <button onClick={onOpenTradeShop} title="Sistema Comercial & Lojas" className="widget-btn theme-amber" style={{ boxShadow: '0 0 10px rgba(245,158,11,0.3)' }}>
-              <Coins size={28} />
-            </button>
-          </div>
-        </div>
-
-        {/* Generators */}
-        <div className="widget-category">
-          <div className="widget-category-title">Generators & AI</div>
-          <div className="widget-grid">
-            <button onClick={onOpenNPCGenerator} title="Forja de NPCs" className="widget-btn theme-green">
-              <UserPlus size={28} />
-            </button>
-            <button onClick={onOpenLocationGenerator} title="Forja de Mundos" className="widget-btn theme-blue">
-              <Map size={28} />
-            </button>
-            <button onClick={onOpenOracleV2} title="Mega Oráculo" className="widget-btn theme-purple">
-              <Eye size={28} />
-            </button>
-            <button onClick={onOpenLoreMachine} title="Máquina de Lores" className="widget-btn theme-purple">
-              <Sparkles size={28} />
-            </button>
-            <button onClick={onOpenWorldEngine} title="Motor de Mundo" className="widget-btn theme-indigo">
-              <Globe size={28} />
-            </button>
-            <button onClick={onOpenEntityForge} title="Forja de Entidades" className="widget-btn theme-red">
-              <Anvil size={28} />
-            </button>
-            <button onClick={onOpenStronghold} title="Fortaleza da Party" className="widget-btn theme-green">
-              <Castle size={28} />
-            </button>
-          </div>
-        </div>
-
-        {/* System */}
-        <div className="widget-category">
-          <div className="widget-category-title">System</div>
-          <div className="widget-grid" style={{ justifyContent: 'start' }}>
-            <button onClick={onOpenAudioDirector} title="Audio Director" className="widget-btn theme-blue">
-              <Sparkles size={28} />
-            </button>
-            <button onClick={onOpenDLCManager} title="Gerenciador de Complementos" className="widget-btn theme-orange">
-              <ToyBrick size={28} />
-            </button>
-            <button onClick={onOpenSystemAuditor} title="Auditor de Sistema (Linter)" className="widget-btn theme-red">
-              <Shield size={28} />
-            </button>
-          </div>
-        </div>
-
+      <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '500px', overflowY: 'auto', paddingRight: '10px' }}>
+        {categories.map(cat => {
+          const catWidgets = filteredWidgets.filter(w => w.cat === cat);
+          if (catWidgets.length === 0) return null;
+          
+          return (
+            <div className="widget-category" key={cat}>
+              <div className="widget-category-title">{cat}</div>
+              <div className="widget-grid" style={{ justifyContent: cat === 'System' ? 'start' : 'center' }}>
+                {catWidgets.map(w => {
+                  const Icon = w.icon;
+                  return (
+                    <button 
+                      key={w.id} 
+                      onClick={w.action} 
+                      title={w.title} 
+                      className={\`widget-btn \${w.theme}\`} 
+                      style={w.shadow ? { boxShadow: w.shadow } : {}}
+                    >
+                      <Icon size={28} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
