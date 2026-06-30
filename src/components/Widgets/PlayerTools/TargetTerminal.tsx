@@ -674,26 +674,52 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           </div>
         )}
 
-        {pericias.length > 0 && (
-          <div>
-            <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Perícias Treinadas</h5>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
-              {pericias.map(([k, v]) => {
-                const sign = Number(v) >= 0 ? '+' : '';
-                return (
-                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.35rem 0.45rem', borderRadius: '4px' }}>
-                    <span style={{ fontSize: '0.65rem', color: '#cbd5e1', textTransform: 'capitalize' }}>{k}</span>
-                    <button 
-                       onClick={() => handleRollAttribute(k, Number(v))}
-                       style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#6ee7b7', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer', padding: '2px 6px' }}>
-                       {sign}{String(v)}
-                    </button>
+        <div>
+          <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Perícias (Pathfinder 2e)</h5>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
+            {[
+              { id: 'Acrobacia', attr: 'DES' },
+              { id: 'Arcanismo', attr: 'INT' },
+              { id: 'Atletismo', attr: 'FOR' },
+              { id: 'Diplomacia', attr: 'CAR' },
+              { id: 'Enganacao', name: 'Enganação', attr: 'CAR' },
+              { id: 'Furtividade', attr: 'DES' },
+              { id: 'Intimidacao', name: 'Intimidação', attr: 'CAR' },
+              { id: 'Manha', attr: 'DES' },
+              { id: 'Medicina', attr: 'SAB' },
+              { id: 'Natureza', attr: 'SAB' },
+              { id: 'Ocultismo', attr: 'INT' },
+              { id: 'Percepcao', name: 'Percepção', attr: 'SAB' },
+              { id: 'Performance', attr: 'CAR' },
+              { id: 'Religiao', name: 'Religião', attr: 'SAB' },
+              { id: 'Sociedade', attr: 'INT' },
+              { id: 'Sobrevivencia', name: 'Sobrevivência', attr: 'SAB' }
+            ].map((skill) => {
+              const attrData = attrs.find(a => a.name === skill.attr);
+              const attrMod = attrData ? Math.floor((Number(attrData.val) - 10) / 2) : 0;
+              
+              // Tenta pegar o valor salvo na ficha (root ou dentro de pericias)
+              const savedVal = fp[skill.id] ?? fp[skill.name || skill.id] ?? fp.pericias?.[skill.id] ?? fp.pericias?.[skill.name || skill.id];
+              const totalVal = savedVal !== undefined && savedVal !== null && savedVal !== '' ? Number(savedVal) : attrMod;
+              const isTrained = savedVal !== undefined && savedVal !== null && savedVal !== '';
+              
+              const sign = totalVal >= 0 ? '+' : '';
+              return (
+                <div key={skill.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.35rem 0.45rem', borderRadius: '4px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.65rem', color: isTrained ? '#6ee7b7' : '#94a3b8', textTransform: 'capitalize', fontWeight: isTrained ? 'bold' : 'normal' }}>{skill.name || skill.id}</span>
+                    <span style={{ fontSize: '0.5rem', color: 'var(--text-secondary)' }}>{skill.attr}</span>
                   </div>
-                );
-              })}
-            </div>
+                  <button 
+                     onClick={() => handleRollAttribute(skill.name || skill.id, totalVal)}
+                     style={{ background: isTrained ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: 'none', color: isTrained ? '#6ee7b7' : '#cbd5e1', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                     {sign}{totalVal} <Dices size={10} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
       </div>
     );
   };
