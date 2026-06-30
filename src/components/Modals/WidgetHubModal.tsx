@@ -96,7 +96,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
       </div>
 
       <style>
-        {\`
+        {`
           .widget-category {
             margin-bottom: 1.5rem;
           }
@@ -167,7 +167,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
 
           .theme-pink { color: #f9a8d4; border-color: rgba(236, 72, 153, 0.5); }
           .theme-pink:hover { background: rgba(236, 72, 153, 0.2); border-color: #ec4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); }
-        \`}
+        `}
       </style>
 
       <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '500px', overflowY: 'auto', paddingRight: '10px' }}>
