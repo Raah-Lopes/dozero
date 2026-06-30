@@ -924,25 +924,44 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 }
                 updateTokenProps(tokenId, { macros: updatedMacros });
               }} style={{ fontSize: '0.65rem', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontWeight: 'bold' }}>+ BÁSICOS</button>
+              <button onClick={() => setIsEditingMacro(!isEditingMacro)} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ASSISTENTE</button>
+            </div>
+          </div>
+          
+          {isEditingMacro && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'rgba(0,0,0,0.5)', padding: '0.5rem', borderRadius: '6px', marginBottom: '8px' }}>
+              <select onChange={(e) => {
+                const v = e.target.value;
+                if (v === 'ataque_forca') setNewMacro({ nome: 'Golpe de Força', formula: '1d20 + @for', dano: '1d8 + @for', tipo: 'ataque', descricao: 'Ataque corpo-a-corpo pesado' });
+                if (v === 'ataque_des') setNewMacro({ nome: 'Ataque Rápido', formula: '1d20 + @des', dano: '1d6 + @des', tipo: 'ataque', descricao: 'Ataque ágil/finesse' });
+                if (v === 'magia_atk') setNewMacro({ nome: 'Raio Mágico', formula: '1d20 + @int', dano: '3d6', tipo: 'ataque', descricao: 'Dano elemental mágico' });
+                if (v === 'cura') setNewMacro({ nome: 'Curar Ferimentos', formula: '1d20 + @sab', dano: '1d8', tipo: 'cura', descricao: 'Cura aliada' });
+                if (v === 'teste_gen') setNewMacro({ nome: 'Teste de Atributo', formula: '1d20 + @for', dano: '', tipo: 'teste', descricao: 'Teste sem alvo' });
+              }} style={{ background: '#334155', color: 'white', border: 'none', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }}>
+                <option value="">-- Escolher Template Pronto --</option>
+                <option value="ataque_forca">Ataque Pesado (Usa Força)</option>
+                <option value="ataque_des">Ataque Ágil (Usa Destreza)</option>
+                <option value="magia_atk">Magia Ofensiva (Usa Inteligência)</option>
+                <option value="cura">Magia de Cura (Usa Sabedoria)</option>
+                <option value="teste_gen">Teste de Habilidade (S/ Dano)</option>
+              </select>
+              <input value={newMacro.nome} onChange={e => setNewMacro({...newMacro, nome: e.target.value})} placeholder="Nome da Macro" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <input value={newMacro.formula} onChange={e => setNewMacro({...newMacro, formula: e.target.value})} placeholder="Fórmula (Ex: 1d20+@for)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+                <input value={newMacro.dano} onChange={e => setNewMacro({...newMacro, dano: e.target.value})} placeholder="Dano (Ex: 1d8)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+              </div>
               <button onClick={() => {
-                const nome = prompt('Nome do Ataque/Magia (Ex: Bola de Fogo):');
-                if (!nome) return;
-                const formula = prompt('Fórmula de Rolagem (Ex: 1d20 + 5):');
-                if (!formula) return;
-                const dano = prompt('Dano (Ex: 2d6 + 3) ou deixe em branco:');
-                
-                const newMacro = { nome, formula, tipo: 'ataque', descricao: dano ? `Dano: ${dano}` : '' };
-                const currentMacros = tokenData.macros || [];
-                const updatedMacros = [...currentMacros, newMacro];
-                
+                if (!newMacro.nome || !newMacro.formula) return;
+                const macroObj = { nome: newMacro.nome, formula: newMacro.formula, tipo: newMacro.tipo, descricao: newMacro.dano ? `Dano: ${newMacro.dano}` : (newMacro.descricao || '') };
+                const updatedMacros = [...(tokenData.macros || []), macroObj];
                 if (tokenData.wikiPath) {
                   import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
                 }
                 updateTokenProps(tokenId, { macros: updatedMacros });
-              }} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ADICIONAR</button>
+                setIsEditingMacro(false);
+              }} style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>Salvar Macro</button>
             </div>
-          </div>
-          
+          )}
           {macrosMD.map((macro: any, idx: number) => (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', border: `1px solid rgba(251, 191, 36, 0.3)`, borderRadius: '6px', padding: '0.4rem 0.6rem', marginBottom: '4px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
