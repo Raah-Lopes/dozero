@@ -901,6 +901,23 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fbbf24' }}>{macro.nome}</span>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fórmula: {macro.formula} {macro.dano ? `| Dano: ${macro.dano}` : ''}</span>
               </div>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <button onClick={() => {
+                  if (confirm('Deseja excluir esta macro?')) {
+                    const updatedMacros = [...(tokenData.macros || macrosMD || [])];
+                    updatedMacros.splice(idx, 1);
+                    if (tokenData.wikiPath) import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+                    updateTokenProps(tokenId, { macros: updatedMacros });
+                  }
+                }} style={{ padding: '2px 6px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', height: '24px' }} title="Excluir">🗑️</button>
+                <button onClick={() => {
+                  setNewMacro({ nome: macro.nome, formula: macro.formula, dano: macro.dano || '', custo: macro.custo || '', tipo: macro.tipo || 'ataque', descricao: macro.descricao || '' });
+                  setIsEditingMacro(true);
+                  const updatedMacros = [...(tokenData.macros || macrosMD || [])];
+                  updatedMacros.splice(idx, 1);
+                  if (tokenData.wikiPath) import('../../../store').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
+                  updateTokenProps(tokenId, { macros: updatedMacros });
+                }} style={{ padding: '2px 6px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', height: '24px' }} title="Editar">✏️</button>
               <button onClick={() => {
                  const mods = {
                    '@for': Math.floor(((tokenData.forca || tokenData.FOR || 10) - 10) / 2),
@@ -987,7 +1004,8 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                  }
 
                  pushChatMessage(msg, atkEval.total >= 14, false);
-              }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '8px' }}>ROLAR</button>
+              }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px', height: '24px' }}>ROLAR</button>
+              </div>
             </div>
           ))}
           
