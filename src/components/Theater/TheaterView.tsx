@@ -8,6 +8,7 @@ import { EnemyBoard } from './EnemyBoard';
 import { ClockRail } from './ClockRail';
 import { DirectorBar } from './DirectorBar';
 import { SessionDiary } from './SessionDiary';
+import { DistanceBands } from './DistanceBands';
 import { useSceneState } from './hooks/useSceneState';
 
 const COL_STYLE = (width: string): React.CSSProperties => ({
@@ -63,6 +64,10 @@ export const TheaterView: React.FC = () => {
           <div style={{ ...COL_STYLE('1fr'), flex: 1, minWidth: 0 }}>
             <div style={{ ...PANEL_STYLE, flex: 1 }}>
               <ScenePanel />
+            </div>
+            {/* ZONAS DE COMBATE (Bands) */}
+            <div style={{ ...PANEL_STYLE, flex: '0 0 auto', height: '140px' }}>
+              <DistanceBands />
             </div>
           </div>
 

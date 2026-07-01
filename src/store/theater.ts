@@ -71,6 +71,7 @@ export interface TheaterStateData {
   timeOfDay: TimeOfDay;
   diaryEntries: DiaryEntry[];
   distanceMap: DistanceEntry[];
+  entityBands: Record<string, DistanceZone>; // Track absolute position in bands
 }
 
 const THEATER_DEFAULT: TheaterStateData = {
@@ -83,6 +84,7 @@ const THEATER_DEFAULT: TheaterStateData = {
   timeOfDay: 'day',
   diaryEntries: [],
   distanceMap: [],
+  entityBands: {},
 };
 
 export function getTheaterState(): TheaterStateData {
@@ -146,6 +148,17 @@ export function removeTheaterEnemy(id: string) {
 export function setTheaterMood(mood: MoodType) {
   updateTheaterState({ mood });
   addTheaterDiaryEntry({ timestamp: Date.now(), type: 'narrative', text: `🎭 Atmosfera alterada: ${mood}` });
+}
+
+export function updateDistanceMap(newMap: DistanceEntry[]) {
+  updateTheaterState({ distanceMap: newMap });
+}
+
+export function setEntityBand(entityId: string, zone: DistanceZone) {
+  const current = getTheaterState();
+  const newBands = { ...current.entityBands };
+  newBands[entityId] = zone;
+  updateTheaterState({ entityBands: newBands });
 }
 
 export function setTheaterWeather(weather: WeatherType) {
