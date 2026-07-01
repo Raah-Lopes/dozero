@@ -136,9 +136,9 @@ export const TheaterView: React.FC = () => {
 
           {/* CENTER — Scene Info */}
           <div style={{ ...COL_STYLE('1fr'), flex: 1, minWidth: 0, pointerEvents: 'none' }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', opacity: centerOpen ? 1 : 0, transform: centerOpen ? 'translateY(0)' : 'translateY(-20px)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', opacity: centerOpen ? 1 : 0, transform: centerOpen ? 'translateY(0)' : 'translateY(-20px)' }}>
               {centerOpen && (
-                <div style={{ ...PANEL_STYLE, width: '100%', maxWidth: '600px', flex: '0 0 auto', pointerEvents: 'auto', background: 'rgba(15,23,42,0.8)', maxHeight: '100%', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', animation: 'fadeIn 0.2s ease-out' }}>
+                <div style={{ ...PANEL_STYLE, width: '100%', maxWidth: '600px', flex: 1, pointerEvents: 'auto', background: 'rgba(15,23,42,0.8)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', animation: 'fadeIn 0.2s ease-out', minHeight: 0 }}>
                   <ScenePanel />
                 </div>
               )}
