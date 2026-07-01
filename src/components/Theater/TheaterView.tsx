@@ -8,7 +8,7 @@ import { EnemyBoard } from './EnemyBoard';
 import { ClockRail } from './ClockRail';
 import { DirectorBar } from './DirectorBar';
 import { SessionDiary } from './SessionDiary';
-import { DistanceBands } from './DistanceBands';
+import { TacticalRadar } from './TacticalRadar';
 import { useSceneState } from './hooks/useSceneState';
 
 const COL_STYLE = (width: string): React.CSSProperties => ({
@@ -161,7 +161,7 @@ export const TheaterView: React.FC = () => {
                 <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   {rightTab === 'cast' && <CastPanel />}
                   {rightTab === 'enemies' && <EnemyBoard />}
-                  {rightTab === 'zones' && <DistanceBands />}
+                  {rightTab === 'zones' && <TacticalRadar />}
                   {rightTab === 'clocks' && <ClockRail />}
                 </div>
               </div>
