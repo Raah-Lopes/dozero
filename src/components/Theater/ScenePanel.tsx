@@ -1085,9 +1085,9 @@ export const ScenePanel: React.FC = () => {
             <button
               onClick={async () => {
                 if (!currentScene) return;
-                const prompt = \`Gere uma missão curta e dramática para os jogadores num RPG de mesa, considerando esta cena: \${currentScene.title} (\${mood}). Aja como um Mestre. Retorne apenas o texto da missão (máximo 15 palavras).\`;
+                const prompt = `Gere uma missão curta e dramática para os jogadores num RPG de mesa, considerando esta cena: ${currentScene.title} (${mood}). Aja como um Mestre. Retorne apenas o texto da missão (máximo 15 palavras).`;
                 try {
-                  const res = await fetch(\`https://text.pollinations.ai/\${encodeURIComponent(prompt)}\`);
+                  const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
                   const text = await res.text();
                   addObjective(text.trim());
                 } catch (e) {
@@ -1182,7 +1182,7 @@ export const ScenePanel: React.FC = () => {
                   flexDirection: 'column',
                   gap: '6px',
                   background: bg,
-                  border: \`1px solid \${borderColor}\`,
+                  border: `1px solid ${borderColor}`,
                   borderRadius: '8px',
                   padding: '8px 10px',
                   position: 'relative',
