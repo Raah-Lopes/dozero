@@ -207,7 +207,6 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   border-radius: 8px;
-  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.05);
   margin-top: 1rem;
 }
@@ -224,7 +223,9 @@
 .dozero-mdx [role="textbox"], .dozero-mdx [contenteditable="true"] {
   background-color: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
-  min-height: 400px;
+  min-height: 500px;
+  height: auto !important;
+  overflow: visible !important;
 }
 
 .dozero-mdx .mdxeditor-toolbar {
