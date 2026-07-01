@@ -12,10 +12,11 @@ const ZONES: { id: DistanceZone; label: string; icon: React.ReactNode; color: st
   { id: 'extreme', label: 'Extremo', icon: <MapIcon size={14} />, color: '#64748b' }
 ];
 
+let globalDraggedId: string | null = null;
+
 export const DistanceBands: React.FC = () => {
   const { theaterData, enemies } = useSceneState();
   const { members } = useCastData();
-  const draggedEntityRef = useRef<string | null>(null);
 
   const bands = theaterData.entityBands || {};
 
@@ -41,8 +42,6 @@ export const DistanceBands: React.FC = () => {
     return list;
   };
 
-
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
       <h3 style={{ margin: 0, fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Zonas de Combate</h3>
@@ -57,10 +56,10 @@ export const DistanceBands: React.FC = () => {
               onDrop={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const droppedId = e.dataTransfer.getData('text/plain') || draggedEntityRef.current;
+                const droppedId = e.dataTransfer.getData('text/plain') || globalDraggedId;
                 if (droppedId) {
                   setEntityBand(droppedId, zone.id);
-                  draggedEntityRef.current = null;
+                  globalDraggedId = null;
                 }
               }}
               style={{
@@ -85,14 +84,14 @@ export const DistanceBands: React.FC = () => {
                     key={ent.id}
                     draggable
                     onDragStart={(e) => {
-                      draggedEntityRef.current = ent.id;
+                      globalDraggedId = ent.id;
                       e.dataTransfer.setData('text/plain', ent.id);
                       e.dataTransfer.effectAllowed = 'move';
                       // Optional: make it look slightly transparent while dragging
                       setTimeout(() => { if (e.target instanceof HTMLElement) e.target.style.opacity = '0.5'; }, 0);
                     }}
                     onDragEnd={(e) => {
-                      draggedEntityRef.current = null;
+                      globalDraggedId = null;
                       if (e.target instanceof HTMLElement) e.target.style.opacity = '1';
                     }}
                     style={{
