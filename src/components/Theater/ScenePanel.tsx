@@ -217,7 +217,7 @@ Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). N
       <div
         style={{
           position: 'relative',
-          height: '220px',
+          height: '140px',
           background: currentScene.imageUrl
             ? `url(${currentScene.imageUrl}) center/cover no-repeat`
             : 'linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(59,130,246,0.08) 100%)',
