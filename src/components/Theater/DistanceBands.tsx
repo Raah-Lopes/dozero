@@ -52,7 +52,7 @@ export const DistanceBands: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
       <h3 style={{ margin: 0, fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Zonas de Combate</h3>
-      <div style={{ display: 'flex', flex: 1, gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '8px', overflowY: 'auto', paddingRight: '4px' }}>
         {ZONES.map(zone => {
           const entities = getEntitiesInZone(zone.id);
           return (
@@ -61,11 +61,10 @@ export const DistanceBands: React.FC = () => {
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, zone.id)}
               style={{
-                flex: 1,
-                minWidth: '80px',
+                minHeight: '100px',
                 background: 'rgba(0,0,0,0.4)',
                 border: `1px solid ${zone.color}40`,
-                borderTop: `3px solid ${zone.color}`,
+                borderLeft: `4px solid ${zone.color}`,
                 borderRadius: '8px',
                 display: 'flex',
                 flexDirection: 'column',

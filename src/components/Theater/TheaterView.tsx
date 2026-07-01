@@ -37,7 +37,7 @@ export const TheaterView: React.FC = () => {
   const [leftOpen, setLeftOpen] = React.useState(true);
   const [leftTab, setLeftTab] = React.useState<'narrative' | 'diary'>('narrative');
   const [rightOpen, setRightOpen] = React.useState(true);
-  const [rightTab, setRightTab] = React.useState<'cast' | 'enemies' | 'clocks'>('cast');
+  const [rightTab, setRightTab] = React.useState<'cast' | 'enemies' | 'clocks' | 'zones'>('cast');
   const [centerOpen, setCenterOpen] = React.useState(false);
 
   const bgStyle = currentScene?.imageUrl 
@@ -112,7 +112,7 @@ export const TheaterView: React.FC = () => {
           flex: 1,
           display: 'flex',
           gap: '16px',
-          padding: '60px 14px 140px', // Extra padding at bottom for distance bands
+          padding: '60px 14px 60px', // Restored padding since distance bands are gone from bottom
           overflow: 'hidden',
           minHeight: 0,
         }}>
@@ -151,15 +151,17 @@ export const TheaterView: React.FC = () => {
               <div style={{ ...PANEL_STYLE, flex: 1, background: 'rgba(15,23,42,0.65)', display: 'flex', flexDirection: 'column' }}>
                 {/* TABS */}
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                  <button onClick={() => setRightTab('cast')} style={{ flex: 1, background: rightTab === 'cast' ? 'rgba(168,85,247,0.2)' : 'transparent', border: 'none', color: rightTab === 'cast' ? '#c084fc' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Elenco</button>
-                  <button onClick={() => setRightTab('enemies')} style={{ flex: 1, background: rightTab === 'enemies' ? 'rgba(239,68,68,0.2)' : 'transparent', border: 'none', color: rightTab === 'enemies' ? '#fca5a5' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Ameaças</button>
-                  <button onClick={() => setRightTab('clocks')} style={{ flex: 1, background: rightTab === 'clocks' ? 'rgba(59,130,246,0.2)' : 'transparent', border: 'none', color: rightTab === 'clocks' ? '#93c5fd' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>Relógios</button>
+                  <button onClick={() => setRightTab('cast')} style={{ flex: 1, background: rightTab === 'cast' ? 'rgba(168,85,247,0.2)' : 'transparent', border: 'none', color: rightTab === 'cast' ? '#c084fc' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>Heróis</button>
+                  <button onClick={() => setRightTab('enemies')} style={{ flex: 1, background: rightTab === 'enemies' ? 'rgba(239,68,68,0.2)' : 'transparent', border: 'none', color: rightTab === 'enemies' ? '#fca5a5' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>Ameaças</button>
+                  <button onClick={() => setRightTab('zones')} style={{ flex: 1, background: rightTab === 'zones' ? 'rgba(234,179,8,0.2)' : 'transparent', border: 'none', color: rightTab === 'zones' ? '#fde047' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>Zonas</button>
+                  <button onClick={() => setRightTab('clocks')} style={{ flex: 1, background: rightTab === 'clocks' ? 'rgba(59,130,246,0.2)' : 'transparent', border: 'none', color: rightTab === 'clocks' ? '#93c5fd' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>Relógios</button>
                 </div>
                 
                 {/* TAB CONTENT */}
                 <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   {rightTab === 'cast' && <CastPanel />}
                   {rightTab === 'enemies' && <EnemyBoard />}
+                  {rightTab === 'zones' && <DistanceBands />}
                   {rightTab === 'clocks' && <ClockRail />}
                 </div>
               </div>
@@ -179,24 +181,7 @@ export const TheaterView: React.FC = () => {
           alignItems: 'center',
           pointerEvents: 'none',
         }}>
-          {/* ZONAS DE COMBATE */}
-          <div style={{
-            width: '80%',
-            maxWidth: '1200px',
-            height: '140px',
-            background: 'linear-gradient(to bottom, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.7) 100%)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderBottom: 'none',
-            borderRadius: '24px 24px 0 0',
-            padding: '16px',
-            pointerEvents: 'auto',
-            boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          }}>
-            <DistanceBands />
-          </div>
-
-          {/* DIRECTOR BAR */}
+          {/* DIRECTOR BAR ONLY */}
           <div style={{ width: '100%', pointerEvents: 'auto', flexShrink: 0, background: '#0a0f1c' }}>
             <DirectorBar />
           </div>

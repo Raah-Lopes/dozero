@@ -52,6 +52,7 @@ export const ScenePanel: React.FC = () => {
   // AI Copilot state
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isGeneratingAssetImage, setIsGeneratingAssetImage] = useState(false);
 
   // States for visual elements (assets)
   const [showAddForm, setShowAddForm] = useState(false);
@@ -150,6 +151,33 @@ Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). N
     setTimeout(() => {
       patchCurrentScene({ imageUrl: url });
       setIsGeneratingImage(false);
+    }, 1500);
+  };
+
+  const handleGenerateAssetImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!assetTitle.trim()) {
+      alert("Por favor, preencha o Título primeiro para a IA saber o que desenhar!");
+      return;
+    }
+    
+    setIsGeneratingAssetImage(true);
+    
+    // Convert asset type to english prompt helper
+    let typePrompt = "fantasy concept art";
+    if (assetType === 'npc') typePrompt = "fantasy character portrait, portrait, face";
+    if (assetType === 'monster') typePrompt = "scary fantasy monster creature concept, full body";
+    if (assetType === 'location') typePrompt = "fantasy landscape scenery, environment art";
+    if (assetType === 'prop') typePrompt = "fantasy item prop icon, magic artifact, centered on dark background";
+    
+    const promptText = `Epic RPG art, ${assetTitle.trim()}, ${typePrompt}, highly detailed, masterpiece, 4k`;
+    const encodedPrompt = encodeURIComponent(promptText);
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
+    
+    setTimeout(() => {
+      setAssetUrl(url);
+      setIsGeneratingAssetImage(false);
     }, 1500);
   };
 
@@ -649,6 +677,28 @@ Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). N
                   >
                     <Image size={13} />
                     Carregar Local
+                  </button>
+
+                  <button
+                    onClick={handleGenerateAssetImage}
+                    disabled={isGeneratingAssetImage}
+                    style={{
+                      padding: '6px 12px',
+                      background: 'linear-gradient(to right, rgba(59,130,246,0.2), rgba(168,85,247,0.2))',
+                      border: '1px solid rgba(168,85,247,0.4)',
+                      borderRadius: '6px',
+                      color: '#e2e8f0',
+                      fontSize: '0.75rem',
+                      cursor: isGeneratingAssetImage ? 'wait' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      opacity: isGeneratingAssetImage ? 0.6 : 1,
+                      fontWeight: 600
+                    }}
+                  >
+                    <Wand2 size={13} color="#fcd34d" />
+                    {isGeneratingAssetImage ? 'Criando...' : 'IA Mágica (Grátis)'}
                   </button>
                   {assetUrl && (
                     <button
