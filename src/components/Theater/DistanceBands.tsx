@@ -68,8 +68,16 @@ export const DistanceBands: React.FC = () => {
             <div 
               key={zone.id}
               onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, zone.id)}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const droppedId = e.dataTransfer.getData('text/plain') || draggedEntity;
+                if (droppedId) {
+                  setEntityBand(droppedId, zone.id);
+                  setDraggedEntity(null);
+                }
+              }}
               style={{
                 minHeight: '100px',
                 background: 'rgba(0,0,0,0.4)',
@@ -78,14 +86,15 @@ export const DistanceBands: React.FC = () => {
                 borderRadius: '8px',
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                transition: 'all 0.2s'
               }}
             >
-              <div style={{ padding: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', color: '#cbd5e1', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ pointerEvents: 'none', padding: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', color: '#cbd5e1', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <span style={{ color: zone.color }}>{zone.icon}</span>
                 {zone.label}
               </div>
-              <div style={{ padding: '8px', flex: 1, display: 'flex', flexWrap: 'wrap', gap: '6px', alignContent: 'flex-start' }}>
+              <div style={{ padding: '8px', flex: 1, display: 'flex', flexWrap: 'wrap', gap: '6px', alignContent: 'flex-start', pointerEvents: draggedEntity ? 'none' : 'auto' }}>
                 {entities.map(ent => (
                   <div
                     key={ent.id}
@@ -94,6 +103,12 @@ export const DistanceBands: React.FC = () => {
                       setDraggedEntity(ent.id);
                       e.dataTransfer.setData('text/plain', ent.id);
                       e.dataTransfer.effectAllowed = 'move';
+                      // Optional: make it look slightly transparent while dragging
+                      setTimeout(() => { if (e.target instanceof HTMLElement) e.target.style.opacity = '0.5'; }, 0);
+                    }}
+                    onDragEnd={(e) => {
+                      setDraggedEntity(null);
+                      if (e.target instanceof HTMLElement) e.target.style.opacity = '1';
                     }}
                     style={{
                       width: '42px',
