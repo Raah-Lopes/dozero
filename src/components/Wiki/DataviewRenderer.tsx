@@ -56,6 +56,9 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
             outputHeaders = headers;
             outputData = rows;
           },
+          fileLink: (path: string, embed?: boolean, display?: string) => {
+            return `<a href="${path}" data-path="${path}" class="dataview-file-link" style="color: var(--accent-primary); text-decoration: none; font-weight: bold;">${display || path.split('/').pop()}</a>`;
+          },
           list: (items: any[]) => {
             outputType = 'LIST';
             outputData = items;
@@ -156,11 +159,25 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
     );
   }
 
+  // Handler genérico para cliques em links dentro do HTML gerado pelo Dataview
+  const handleHtmlClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const anchor = target.closest('a');
+    if (anchor) {
+      const path = anchor.getAttribute('data-path') || anchor.getAttribute('href');
+      if (path && !path.startsWith('http')) {
+        e.preventDefault();
+        const cleanPath = path.replace(/^#/, ''); // Remove # se existir
+        window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: cleanPath } }));
+      }
+    }
+  };
+
   // Renderização da Tabela JS
   if (isJS && data.type === 'TABLE') {
     return (
       <>
-        {data.htmlOutput && <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} />}
+        {data.htmlOutput && <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} onClick={handleHtmlClick} />}
         <div style={{ margin: '1rem 0', overflowX: 'auto', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--glass-border)', padding: '0.5rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
@@ -198,7 +215,7 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
   if (isJS && data.type === 'LIST') {
     return (
       <>
-        {data.htmlOutput && <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} />}
+        {data.htmlOutput && <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} onClick={handleHtmlClick} />}
         <ul style={{ margin: '1rem 0', paddingLeft: '1.5rem', background: 'rgba(0,0,0,0.3)', padding: '1rem 1rem 1rem 2.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
           {data.results.map((row, i) => {
             const isObj = typeof row === 'object' && row !== null;
@@ -226,7 +243,7 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
   }
 
   if (isJS) {
-    return <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} />;
+    return <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} onClick={handleHtmlClick} />;
   }
 
   // Renderização da Lista Clássica
