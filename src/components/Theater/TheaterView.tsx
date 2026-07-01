@@ -35,8 +35,10 @@ const PANEL_STYLE: React.CSSProperties = {
 export const TheaterView: React.FC = () => {
   const { mood, weather, currentScene } = useSceneState();
   const [leftOpen, setLeftOpen] = React.useState(true);
+  const [leftTab, setLeftTab] = React.useState<'narrative' | 'diary'>('narrative');
   const [rightOpen, setRightOpen] = React.useState(true);
   const [rightTab, setRightTab] = React.useState<'cast' | 'enemies' | 'clocks'>('cast');
+  const [centerOpen, setCenterOpen] = React.useState(false);
 
   const bgStyle = currentScene?.imageUrl 
     ? `url(${currentScene.imageUrl}) center/cover no-repeat` 
@@ -69,14 +71,38 @@ export const TheaterView: React.FC = () => {
         position: 'relative',
         zIndex: 1
       }}>
-        {/* TOP CONTROLS FOR SIDEBARS */}
-        <div style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 50, display: 'flex', gap: '8px' }}>
-          <button onClick={() => setLeftOpen(!leftOpen)} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
-            {leftOpen ? '◀ Narrativa' : '▶ Narrativa'}
+        {/* UNIFIED TOP BAR */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '60px',
+          background: 'linear-gradient(to bottom, rgba(15,23,42,0.8) 0%, transparent 100%)',
+          zIndex: 50,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '0 20px',
+        }}>
+          {/* Left toggle */}
+          <button onClick={() => setLeftOpen(!leftOpen)} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
+            {leftOpen ? '◀ Trilha' : '▶ Trilha'}
           </button>
-        </div>
-        <div style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 50, display: 'flex', gap: '8px' }}>
-          <button onClick={() => setRightOpen(!rightOpen)} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+
+          {/* Center Info / Scene Control Trigger */}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+            <button 
+              onClick={() => setCenterOpen(!centerOpen)}
+              style={{ background: centerOpen ? 'rgba(59,130,246,0.3)' : 'rgba(0,0,0,0.5)', padding: '6px 20px', borderRadius: '20px', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0', fontWeight: 600, letterSpacing: '1px', pointerEvents: 'auto', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              {currentScene?.title || 'Teatro da Mente'} 
+              <span style={{ fontSize: '0.8em', opacity: 0.7 }}>{centerOpen ? '▲' : '▼'}</span>
+            </button>
+          </div>
+
+          {/* Right toggle */}
+          <button onClick={() => setRightOpen(!rightOpen)} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
             {rightOpen ? 'Gestão ▶' : '◀ Gestão'}
           </button>
         </div>
@@ -86,26 +112,36 @@ export const TheaterView: React.FC = () => {
           flex: 1,
           display: 'flex',
           gap: '16px',
-          padding: '60px 14px 120px', // Extra padding at bottom for distance bands
+          padding: '60px 14px 140px', // Extra padding at bottom for distance bands
           overflow: 'hidden',
           minHeight: 0,
         }}>
-          {/* LEFT — Narrative Track */}
+          {/* LEFT — Narrative Track & Diary */}
           {leftOpen && (
-            <div style={{ ...COL_STYLE('280px'), flexShrink: 0 }}>
-              <div style={{ ...PANEL_STYLE, flex: 1, background: 'rgba(15,23,42,0.65)' }}>
-                <NarrativeTrack />
+            <div style={{ ...COL_STYLE('300px'), flexShrink: 0, animation: 'fadeIn 0.2s ease-out' }}>
+              <div style={{ ...PANEL_STYLE, flex: 1, background: 'rgba(15,23,42,0.65)', display: 'flex', flexDirection: 'column' }}>
+                {/* TABS LEFT */}
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+                  <button onClick={() => setLeftTab('narrative')} style={{ flex: 1, background: leftTab === 'narrative' ? 'rgba(59,130,246,0.2)' : 'transparent', border: 'none', color: leftTab === 'narrative' ? '#93c5fd' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s' }}>Cenas</button>
+                  <button onClick={() => setLeftTab('diary')} style={{ flex: 1, background: leftTab === 'diary' ? 'rgba(16,185,129,0.2)' : 'transparent', border: 'none', color: leftTab === 'diary' ? '#6ee7b7' : '#94a3b8', padding: '6px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.2s' }}>Anotações</button>
+                </div>
+                {/* CONTENT */}
+                <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  {leftTab === 'narrative' && <NarrativeTrack />}
+                  {leftTab === 'diary' && <SessionDiary />}
+                </div>
               </div>
             </div>
           )}
 
           {/* CENTER — Scene Info */}
           <div style={{ ...COL_STYLE('1fr'), flex: 1, minWidth: 0, pointerEvents: 'none' }}>
-            {/* The ScenePanel is now just a floating card for scene info/objectives, aligned top or bottom */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-              <div style={{ ...PANEL_STYLE, width: '100%', maxWidth: '600px', flex: '0 0 auto', pointerEvents: 'auto', background: 'rgba(15,23,42,0.65)', maxHeight: '100%' }}>
-                <ScenePanel />
-              </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', opacity: centerOpen ? 1 : 0, transform: centerOpen ? 'translateY(0)' : 'translateY(-20px)' }}>
+              {centerOpen && (
+                <div style={{ ...PANEL_STYLE, width: '100%', maxWidth: '600px', flex: '0 0 auto', pointerEvents: 'auto', background: 'rgba(15,23,42,0.8)', maxHeight: '100%', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', animation: 'fadeIn 0.2s ease-out' }}>
+                  <ScenePanel />
+                </div>
+              )}
             </div>
           </div>
 
@@ -131,41 +167,39 @@ export const TheaterView: React.FC = () => {
           )}
         </div>
 
-        {/* ZONAS DE COMBATE (Bands) - Overlayed at bottom */}
+        {/* HUD INFERIOR (Cockpit) */}
         <div style={{
           position: 'absolute',
-          bottom: '50px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '80%',
-          maxWidth: '1000px',
-          height: '140px',
-          zIndex: 10,
-          background: 'rgba(15,23,42,0.4)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '16px 16px 0 0',
-          borderBottom: 'none',
-          padding: '10px',
-        }}>
-          <DistanceBands />
-        </div>
-
-        {/* SESSION DIARY — floating bottom-left */}
-        <div style={{
-          position: 'absolute',
-          bottom: '64px',
-          left: '14px',
-          width: '280px',
+          bottom: 0,
+          left: 0,
+          right: 0,
           zIndex: 20,
-          pointerEvents: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          pointerEvents: 'none',
         }}>
-          <SessionDiary />
-        </div>
+          {/* ZONAS DE COMBATE */}
+          <div style={{
+            width: '80%',
+            maxWidth: '1200px',
+            height: '140px',
+            background: 'linear-gradient(to bottom, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.7) 100%)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderBottom: 'none',
+            borderRadius: '24px 24px 0 0',
+            padding: '16px',
+            pointerEvents: 'auto',
+            boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
+          }}>
+            <DistanceBands />
+          </div>
 
-        {/* DIRECTOR BAR — fixed bottom */}
-        <div style={{ flexShrink: 0, zIndex: 20 }}>
-          <DirectorBar />
+          {/* DIRECTOR BAR */}
+          <div style={{ width: '100%', pointerEvents: 'auto', flexShrink: 0, background: '#0a0f1c' }}>
+            <DirectorBar />
+          </div>
         </div>
       </div>
     </MoodEngine>
