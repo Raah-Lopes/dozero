@@ -1,1 +1,200 @@
-/* Empty CSS */
+/* src/components/Wiki/wiki.css */
+
+.wiki-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.wiki-sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 10;
+}
+
+.wiki-sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.wiki-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.wiki-sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
+.wiki-sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wiki-sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.wiki-sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.wiki-content-area {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-secondary);
+}
+
+.wiki-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  text-align: center;
+  gap: 1rem;
+}
+
+.wiki-empty-state svg {
+  opacity: 0.5;
+}
+
+.wiki-markdown {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.wiki-markdown::-webkit-scrollbar {
+  width: 8px;
+}
+.wiki-markdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wiki-markdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Tree View Styles */
+.wiki-tree-root {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wiki-tree-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.wiki-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  user-select: none;
+  font-size: 0.9rem;
+}
+
+.wiki-tree-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.wiki-tree-item.active {
+  background: rgba(var(--accent-primary-rgb), 0.15);
+  color: var(--accent-primary);
+}
+
+.wiki-tree-item.drag-over {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px dashed rgba(16, 185, 129, 0.5);
+}
+
+.wiki-tree-children {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  margin-left: 0.75rem;
+  padding-left: 0.25rem;
+}
+
+.wiki-tree-rename-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.wiki-tree-item:hover .wiki-tree-rename-btn {
+  opacity: 1;
+}
+
+.wiki-tree-rename-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+/* Cheat Sheet */
+.cheat-sheet-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cheat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cheat-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
