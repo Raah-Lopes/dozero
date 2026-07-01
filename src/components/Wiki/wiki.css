@@ -198,3 +198,36 @@
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Editor MDX Styles (Fixing white background issue) */
+.wiki-mdx-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 1rem;
+}
+
+.dozero-mdx, .dark-theme, .mdxeditor {
+  --mdxeditor-bg-color: var(--bg-secondary) !important;
+  --mdxeditor-text-color: var(--text-primary) !important;
+  --mdxeditor-toolbar-bg: rgba(0, 0, 0, 0.3) !important;
+  --mdxeditor-toolbar-text-color: var(--text-secondary) !important;
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dozero-mdx [role="textbox"], .dozero-mdx [contenteditable="true"] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  min-height: 400px;
+}
+
+.dozero-mdx .mdxeditor-toolbar {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
