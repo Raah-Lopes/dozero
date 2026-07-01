@@ -45,9 +45,17 @@ Regras:
 - Preencha com os valores existentes na ficha original. Se uma chave não existir na fonte, coloque "" (string vazia) ou 0 para números.
 - Mantenha o corpo do Markdown original abaixo do frontmatter.
 - Retorne APENAS o texto cru do arquivo, começando com --- `;
+      const config = JSON.parse(localStorage.getItem('dozero_ai_studio') || '{}');
+      const provider = config.provider || 'groq';
+      const model = config.modelId || 'llama-3.3-70b-versatile';
+      const apiKey = config.apiKey || '';
+      const ollamaUrl = config.ollamaUrl;
+
       const result = await generateAI({
-        provider: 'groq',
-        model: 'llama-3.3-70b-versatile',
+        provider,
+        model,
+        apiKey,
+        ollamaUrl,
         systemPrompt,
         userPrompt: `Converta esta ficha para o padrão do sistema:\n\n${importedContent}`,
         temperature: 0.1

@@ -114,9 +114,17 @@ export const ScenePanel: React.FC = () => {
 ${activeObjs ? `- Objetivos atuais: ${activeObjs}` : ''}
 Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). Não diga 'Aqui está a descrição', apenas retorne o texto literário.`;
 
+      const config = JSON.parse(localStorage.getItem('dozero_ai_studio') || '{}');
+      const provider = config.provider || 'groq';
+      const model = config.modelId || 'llama-3.3-70b-versatile';
+      const apiKey = config.apiKey || '';
+      const ollamaUrl = config.ollamaUrl;
+
       const result = await generateAI({
-        provider: 'groq',
-        model: 'llama-3.3-70b-versatile',
+        provider,
+        model,
+        apiKey,
+        ollamaUrl,
         systemPrompt: 'Você é um mestre de RPG (Dungeon Master) descritivo e literário.',
         userPrompt: prompt,
         temperature: 0.7
