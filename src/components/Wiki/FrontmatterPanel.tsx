@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { Database, ChevronDown, ChevronRight, Plus, Trash2, Wand2 } from 'lucide-react';
 
 interface FrontmatterPanelProps {
   rawYaml: string;
@@ -9,6 +9,22 @@ interface FrontmatterPanelProps {
 export const FrontmatterPanel: React.FC<FrontmatterPanelProps> = ({ rawYaml, onChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [fields, setFields] = useState<{key: string, value: string}[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateAvatar = (index: number) => {
+    const nomeField = fields.find(f => f.key.toLowerCase() === 'nome' || f.key.toLowerCase() === 'name');
+    const nome = nomeField ? nomeField.value : 'Aventureiro Misterioso';
+    
+    setIsGenerating(true);
+    const promptText = `Epic RPG character portrait, ${nome}, detailed face, fantasy art concept, masterpiece, 4k`;
+    const encodedPrompt = encodeURIComponent(promptText);
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
+    
+    setTimeout(() => {
+      updateField(index, fields[index].key, url);
+      setIsGenerating(false);
+    }, 1500);
+  };
 
   // Parse very simple flat YAML
   useEffect(() => {
@@ -95,6 +111,28 @@ export const FrontmatterPanel: React.FC<FrontmatterPanelProps> = ({ rawYaml, onC
                 style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: '4px', padding: '4px 8px', color: 'var(--text-primary)', fontSize: '0.8rem' }}
                 placeholder="Valor"
               />
+              {(f.key.toLowerCase() === 'avatar' || f.key.toLowerCase() === 'imagem' || f.key.toLowerCase() === 'image') && (
+                <button
+                  onClick={() => handleGenerateAvatar(i)}
+                  disabled={isGenerating}
+                  style={{
+                    background: 'linear-gradient(to right, rgba(59,130,246,0.2), rgba(168,85,247,0.2))',
+                    border: '1px solid rgba(168,85,247,0.4)',
+                    color: '#e2e8f0',
+                    cursor: isGenerating ? 'wait' : 'pointer',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.75rem',
+                    opacity: isGenerating ? 0.6 : 1
+                  }}
+                  title="Gerar imagem de avatar com IA Mágica"
+                >
+                  <Wand2 size={13} color="#fcd34d" />
+                </button>
+              )}
               <button 
                 onClick={() => removeField(i)}
                 style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px' }}

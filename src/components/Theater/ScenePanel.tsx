@@ -110,31 +110,18 @@ export const ScenePanel: React.FC = () => {
     setIsGeneratingDesc(true);
     try {
       const activeObjs = currentScene.objectives.filter(o => !o.completed).map(o => o.text).join(', ');
-      const prompt = `Gere uma descrição narrativa imersiva (MÁXIMO 2 PARÁGRAFOS) para uma cena de RPG com as seguintes características:
-- Título: ${currentScene.title}
-- Clima: ${weather}, Atmosfera/Humor: ${mood}, Horário: ${currentScene.timeOfDay}
-${activeObjs ? `- Objetivos atuais: ${activeObjs}` : ''}
-Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). Não diga 'Aqui está a descrição', apenas retorne o texto literário.`;
+      const prompt = `Gere uma descrição narrativa literária e imersiva (MÁXIMO 2 PARÁGRAFOS curtos) para uma cena de RPG de mesa com as seguintes características: Título da Cena: ${currentScene.title}. Clima: ${weather}. Atmosfera: ${mood}. Horário: ${currentScene.timeOfDay}. ${activeObjs ? `Objetivos dos jogadores: ${activeObjs}.` : ''} Foque em criar tensão e ambientação sensorial (visões, sons, cheiros). Aja como um Mestre de Jogo experiente. Não inclua comentários fora do personagem, responda apenas com a narrativa em Português do Brasil.`;
 
-      const config = JSON.parse(localStorage.getItem('dozero_ai_studio') || '{}');
-      const provider = config.provider || 'groq';
-      const model = config.modelId || 'llama-3.3-70b-versatile';
-      const apiKey = config.apiKey || '';
-      const ollamaUrl = config.ollamaUrl;
-
-      const result = await generateAI({
-        provider,
-        model,
-        apiKey,
-        ollamaUrl,
-        systemPrompt: 'Você é um mestre de RPG (Dungeon Master) descritivo e literário.',
-        userPrompt: prompt,
-        temperature: 0.7
-      });
-      patchCurrentScene({ description: result.text.trim() });
+      const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+      if (response.ok) {
+        const text = await response.text();
+        patchCurrentScene({ description: text.trim() });
+      } else {
+        throw new Error('Falha na resposta do Pollinations API');
+      }
     } catch (e) {
       console.error(e);
-      alert('Erro ao gerar descrição por IA.');
+      alert('Erro ao gerar descrição pela IA Mágica (Pollinations). Verifique sua conexão.');
     } finally {
       setIsGeneratingDesc(false);
     }
