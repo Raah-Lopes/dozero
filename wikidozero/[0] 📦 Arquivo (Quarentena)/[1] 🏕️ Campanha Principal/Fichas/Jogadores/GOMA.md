@@ -43,8 +43,8 @@ inventario:
     quantidade: 1
     descricao: Converte mana em barreira física temporária.
     equipado: false
-pv: 0
-HP: 0
+pv: 100
+HP: 100
 energia: 100
 mana: 100
 PM: 99
@@ -132,97 +132,6 @@ magias_preparadas:
     max: 0
 macros: []
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Goma, O Monge Gelatinoso
 

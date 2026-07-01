@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Skull, Plus, X, Copy, Zap } from 'lucide-react';
+import { Skull, Plus, X, Copy, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import {
   addTheaterEnemy,
@@ -8,6 +8,7 @@ import {
   type NarrativeStatus,
   type TheaterEnemy,
 } from '../../store';
+import { GlassAccordion } from '../UI/GlassAccordion';
 
 const STATUS_ORDER: NarrativeStatus[] = ['intact', 'hurt', 'wounded', 'critical', 'dead'];
 
@@ -28,9 +29,10 @@ const CONDITIONS = [
   { id: 'shielded',  label: '🛡', title: 'Protegido',  color: '#3b82f6' },
 ];
 
-function EnemyCard({ enemy }: { enemy: TheaterEnemy }) {
+function EnemyCompactCard({ enemy }: { enemy: TheaterEnemy }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState(enemy.name);
+  const [expanded, setExpanded] = useState(false);
   const cfg = STATUS_CONFIG[enemy.status];
   const isDead = enemy.status === 'dead';
 
@@ -41,8 +43,8 @@ function EnemyCard({ enemy }: { enemy: TheaterEnemy }) {
     }
   };
 
-  const handleClone = () => {
-    // Tenta encontrar um número no final do nome, ex: "Goblin 1" -> "Goblin 2"
+  const handleClone = (e: React.MouseEvent) => {
+    e.stopPropagation();
     let newName = enemy.name;
     const match = newName.match(/(\d+)$/);
     if (match) {
@@ -72,120 +74,128 @@ function EnemyCard({ enemy }: { enemy: TheaterEnemy }) {
   return (
     <div
       style={{
-        position: 'relative',
         background: isDead ? 'rgba(0,0,0,0.1)' : enemy.isBoss ? 'rgba(239,68,68,0.08)' : 'rgba(0,0,0,0.2)',
         border: enemy.isBoss
-          ? `1px solid rgba(239,68,68,0.3)`
-          : `1px solid rgba(255,255,255,${isDead ? '0.03' : '0.06'})`,
-        borderRadius: '10px',
-        padding: '10px',
-        opacity: isDead ? 0.5 : 1,
-        transition: 'all 0.3s',
-        boxShadow: (enemy.isBoss && !isDead) ? '0 0 20px rgba(239,68,68,0.15), inset 0 0 30px rgba(239,68,68,0.03)' : cfg.glow ? '0 0 12px rgba(239,68,68,0.15)' : 'none',
+          ? `1px solid rgba(239,68,68,${expanded ? '0.5' : '0.2'})`
+          : `1px solid rgba(255,255,255,${isDead ? '0.03' : expanded ? '0.1' : '0.05'})`,
+        borderRadius: '8px',
+        opacity: isDead ? 0.6 : 1,
+        transition: 'all 0.2s',
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px'
+        overflow: 'hidden'
       }}
     >
-      {/* Name and Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Header Compacto */}
+      <div 
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px',
+          cursor: 'pointer', background: expanded ? 'rgba(255,255,255,0.03)' : 'transparent'
+        }}
+      >
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Skull size={14} color={isDead ? '#374151' : cfg.color} />
-          {enemy.isBoss && <div style={{ position: 'absolute', top: -10, left: -6, fontSize: '0.6rem' }}>👑</div>}
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isDead ? '#374151' : cfg.color, boxShadow: cfg.glow ? `0 0 8px ${cfg.color}` : 'none' }} />
         </div>
         
-        {isEditingName ? (
-          <input
-            autoFocus
-            value={editNameValue}
-            onChange={(e) => setEditNameValue(e.target.value)}
-            onBlur={handleSave}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSave();
-              if (e.key === 'Escape') setIsEditingName(false);
-            }}
-            style={{
-              flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(239,68,68,0.4)',
-              borderRadius: '4px', color: 'white', padding: '2px 6px', fontSize: '0.8rem'
-            }}
-          />
-        ) : (
-          <span
-            onDoubleClick={() => { setIsEditingName(true); setEditNameValue(enemy.name); }}
-            style={{
-              flex: 1, fontSize: '0.85rem', fontWeight: 600, color: isDead ? '#374151' : '#f1f5f9',
-              textDecoration: isDead ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text'
-            }}
-          >
-            {enemy.name} {enemy.isElite && !enemy.isBoss && <span style={{ color: '#f59e0b', fontSize: '0.65rem', verticalAlign: 'top', marginLeft: '4px' }}>[Elite]</span>}
-          </span>
-        )}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+          {isEditingName ? (
+            <input
+              autoFocus
+              value={editNameValue}
+              onChange={(e) => setEditNameValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSave();
+                if (e.key === 'Escape') setIsEditingName(false);
+              }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(239,68,68,0.4)',
+                borderRadius: '4px', color: 'white', padding: '2px 6px', fontSize: '0.8rem'
+              }}
+            />
+          ) : (
+            <span
+              onDoubleClick={(e) => { e.stopPropagation(); setIsEditingName(true); setEditNameValue(enemy.name); }}
+              style={{
+                fontSize: '0.82rem', fontWeight: enemy.isBoss ? 700 : 600, color: isDead ? '#374151' : (enemy.isBoss ? '#fca5a5' : '#f1f5f9'),
+                textDecoration: isDead ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+              }}
+            >
+              {enemy.name}
+            </span>
+          )}
+        </div>
 
-        <button onClick={handleClone} title="Clonar Ameaça" style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px' }}>
-          <Copy size={13} />
-        </button>
-        <button onClick={() => removeTheaterEnemy(enemy.id)} title="Remover" style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }}>
-          <X size={14} />
-        </button>
+        {/* Action icons right side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: expanded ? 1 : 0.4 }}>
+          {expanded ? <ChevronUp size={14} color="#94a3b8" /> : <ChevronDown size={14} color="#94a3b8" />}
+        </div>
       </div>
 
-      {/* Clickable Status Bar */}
-      <div style={{ display: 'flex', width: '100%', height: '14px', background: 'rgba(0,0,0,0.4)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-        {STATUS_ORDER.map((s) => {
-          const sCfg = STATUS_CONFIG[s];
-          const isActive = enemy.status === s;
-          const isPassed = STATUS_ORDER.indexOf(s) <= STATUS_ORDER.indexOf(enemy.status);
+      {/* Área Expansível */}
+      {expanded && (
+        <div style={{ padding: '8px 10px 10px 10px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           
-          return (
-            <div
-              key={s}
-              onClick={() => updateTheaterEnemy(enemy.id, { status: s })}
-              title={sCfg.label}
-              style={{
-                flex: 1,
-                borderRight: '1px solid rgba(0,0,0,0.3)',
-                background: isActive ? sCfg.color : (isPassed ? sCfg.color + '40' : 'transparent'),
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.background = sCfg.color + '80'; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = isActive ? sCfg.color : (isPassed ? sCfg.color + '40' : 'transparent'); }}
-            >
-              {isActive && <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'white' }} />}
-            </div>
-          );
-        })}
-      </div>
+          {/* Barra de Status */}
+          <div style={{ display: 'flex', width: '100%', height: '14px', background: 'rgba(0,0,0,0.4)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+            {STATUS_ORDER.map((s) => {
+              const sCfg = STATUS_CONFIG[s];
+              const isActive = enemy.status === s;
+              const isPassed = STATUS_ORDER.indexOf(s) <= STATUS_ORDER.indexOf(enemy.status);
+              return (
+                <div
+                  key={s}
+                  onClick={(e) => { e.stopPropagation(); updateTheaterEnemy(enemy.id, { status: s }); }}
+                  title={sCfg.label}
+                  style={{
+                    flex: 1, borderRight: '1px solid rgba(0,0,0,0.3)',
+                    background: isActive ? sCfg.color : (isPassed ? sCfg.color + '40' : 'transparent'),
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  {isActive && <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'white' }} />}
+                </div>
+              );
+            })}
+          </div>
 
-      {/* Conditions Toggle Bar */}
-      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-        {CONDITIONS.map(c => {
-          const active = enemy.conditions.includes(c.id);
-          return (
-            <button
-              key={c.id}
-              onClick={() => toggleCondition(c.id)}
-              title={c.title}
-              style={{
-                padding: '2px 6px',
-                borderRadius: '4px',
-                background: active ? `${c.color}20` : 'rgba(255,255,255,0.02)',
-                border: `1px solid ${active ? c.color : 'rgba(255,255,255,0.05)'}`,
-                color: active ? c.color : '#64748b',
-                fontSize: '0.75rem',
-                cursor: 'pointer',
-                opacity: active ? 1 : 0.5,
-                transition: 'all 0.2s'
-              }}
-            >
-              {c.label}
-            </button>
-          );
-        })}
-      </div>
+          {/* Botões de Condições e Ações */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', flex: 1 }}>
+              {CONDITIONS.map(c => {
+                const active = enemy.conditions.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    onClick={(e) => { e.stopPropagation(); toggleCondition(c.id); }}
+                    title={c.title}
+                    style={{
+                      padding: '2px 4px', borderRadius: '4px',
+                      background: active ? `${c.color}20` : 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${active ? c.color : 'rgba(255,255,255,0.05)'}`,
+                      color: active ? c.color : '#64748b', fontSize: '0.7rem',
+                      cursor: 'pointer', opacity: active ? 1 : 0.5,
+                    }}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button onClick={handleClone} title="Clonar Ameaça" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}>
+                <Copy size={13} />
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); removeTheaterEnemy(enemy.id); }} title="Remover" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}>
+                <X size={13} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -206,28 +216,14 @@ export const EnemyArsenal: React.FC = () => {
     setIsElite(false);
   };
 
-  const handleMagicGenerate = async () => {
-    if (!addingName.trim()) {
-      alert('Digite um conceito para gerar (ex: "Lobo Gigante")');
-      return;
-    }
-    const promptBase = encodeURIComponent(`Crie uma ficha super curta de RPG para o monstro "${addingName.trim()}". Retorne apenas o nome gerado (mais imponente).`);
-    try {
-      const res = await fetch(`https://text.pollinations.ai/${promptBase}`);
-      const text = await res.text();
-      addTheaterEnemy({ name: text.substring(0, 40).trim() || addingName, status: 'intact', conditions: [], isElite, isBoss, notes: '' });
-      setAddingName('');
-      setAddingMode(false);
-    } catch (err) {
-      console.error(err);
-      handleAdd();
-    }
-  };
+  const bosses = enemies.filter(e => e.isBoss);
+  const elites = enemies.filter(e => e.isElite && !e.isBoss);
+  const minions = enemies.filter(e => !e.isBoss && !e.isElite);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '10px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Skull size={15} color="#fca5a5" /> Arsenal de Ameaças
         </span>
@@ -238,7 +234,7 @@ export const EnemyArsenal: React.FC = () => {
 
       {/* Add enemy form */}
       {addingMode && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '10px', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '8px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             <input
               autoFocus
@@ -248,37 +244,54 @@ export const EnemyArsenal: React.FC = () => {
               onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setAddingMode(false); }}
               style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(239,68,68,0.2)', color: 'white', fontSize: '0.82rem', width: '100%' }}
             />
-            <button onClick={handleMagicGenerate} title="Gerar com IA Mágica" style={{ padding: '0 10px', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: '6px', color: '#c084fc', cursor: 'pointer' }}>
-              <Zap size={14} />
+            <button onClick={handleAdd} style={{ padding: '0 10px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: '#fca5a5', cursor: 'pointer' }}>
+              <Plus size={14} />
             </button>
           </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#64748b', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingLeft: '2px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#94a3b8', cursor: 'pointer' }}>
               <input type="checkbox" checked={isElite} onChange={e => setIsElite(e.target.checked)} style={{ cursor: 'pointer' }} /> Elite
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#64748b', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#94a3b8', cursor: 'pointer' }}>
               <input type="checkbox" checked={isBoss} onChange={e => setIsBoss(e.target.checked)} style={{ cursor: 'pointer' }} /> Boss
             </label>
-            <button onClick={handleAdd} style={{ marginLeft: 'auto', padding: '5px 12px', borderRadius: '6px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>
-              Adicionar
-            </button>
           </div>
         </div>
       )}
 
-      {/* Enemy list */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+      {/* Area de scroll nativo sem afetar o layout pai */}
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }}>
+        
         {enemies.length === 0 && !addingMode && (
-          <div style={{ color: '#374151', textAlign: 'center', padding: '16px', fontSize: '0.8rem', fontStyle: 'italic' }}>
-            Nenhuma ameaça no arsenal
+          <div style={{ color: '#475569', textAlign: 'center', padding: '24px 16px', fontSize: '0.8rem', fontStyle: 'italic', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+            O campo de batalha está limpo.
           </div>
         )}
-        {/* Boss first */}
-        {enemies.filter(e => e.isBoss).map(e => <EnemyCard key={e.id} enemy={e} />)}
-        {/* Elite */}
-        {enemies.filter(e => e.isElite && !e.isBoss).map(e => <EnemyCard key={e.id} enemy={e} />)}
-        {/* Regular */}
-        {enemies.filter(e => !e.isBoss && !e.isElite).map(e => <EnemyCard key={e.id} enemy={e} />)}
+
+        {bosses.length > 0 && (
+          <GlassAccordion title={<><span style={{ color: '#fca5a5' }}>👑</span> Chefes ({bosses.length})</>} defaultOpen>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {bosses.map(e => <EnemyCompactCard key={e.id} enemy={e} />)}
+            </div>
+          </GlassAccordion>
+        )}
+
+        {elites.length > 0 && (
+          <GlassAccordion title={<><span style={{ color: '#f59e0b' }}>⚔️</span> Elites ({elites.length})</>} defaultOpen>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {elites.map(e => <EnemyCompactCard key={e.id} enemy={e} />)}
+            </div>
+          </GlassAccordion>
+        )}
+
+        {minions.length > 0 && (
+          <GlassAccordion title={<><span style={{ color: '#94a3b8' }}>🗡️</span> Lacaios ({minions.length})</>} defaultOpen>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {minions.map(e => <EnemyCompactCard key={e.id} enemy={e} />)}
+            </div>
+          </GlassAccordion>
+        )}
+
       </div>
     </div>
   );

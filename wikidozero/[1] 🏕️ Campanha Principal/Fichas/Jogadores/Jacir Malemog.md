@@ -135,52 +135,6 @@ magias_preparadas:
     current: 0
     max: 0
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 :::info
 Interpretação e Lore
 
@@ -245,6 +199,8 @@ Embora não conjurador tradicional, Jacir possui "magias" em sua forma de arte m
 **Objetivos:** Provar Valor dos Slimes, Expandir Capoeira Slime, Fundar Escola Inclusiva
 :::
 
-:::tip[🌟 PROGRESSO: Nível 2]
+:::tip
+🌟 PROGRESSO: Nível 2
+
 **XP Atual:** 1
 :::
