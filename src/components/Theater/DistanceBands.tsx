@@ -83,20 +83,21 @@ export const DistanceBands: React.FC = () => {
                     draggable
                     onDragStart={() => setDraggedEntity(ent.id)}
                     style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
+                      width: '42px',
+                      height: '56px',
+                      borderRadius: '6px',
                       background: ent.isEnemy ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)',
-                      border: `1px solid ${ent.isEnemy ? '#ef4444' : '#10b981'}`,
+                      border: `1.5px solid ${ent.isEnemy ? '#ef4444' : '#10b981'}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '0.7rem',
+                      fontSize: '0.8rem',
                       fontWeight: 'bold',
                       color: 'white',
                       cursor: 'grab',
                       overflow: 'hidden',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
+                      position: 'relative'
                     }}
                     title={ent.name}
                   >
@@ -105,6 +106,10 @@ export const DistanceBands: React.FC = () => {
                     ) : (
                       ent.name.substring(0, 2).toUpperCase()
                     )}
+                    {/* Name overlay */}
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.7)', fontSize: '0.45rem', textAlign: 'center', padding: '2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {ent.name.split(' ')[0]}
+                    </div>
                   </div>
                 ))}
               </div>

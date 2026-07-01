@@ -91,7 +91,7 @@ export const CastPanel: React.FC = () => {
               <img 
                 src={m.avatar} 
                 alt={m.nome} 
-                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: m.status === 'jogador' ? '1px solid #10b981' : '1px solid #3b82f6' }} 
+                style={{ width: '32px', height: '42px', borderRadius: '4px', objectFit: 'cover', border: m.status === 'jogador' ? '1px solid #10b981' : '1px solid #3b82f6' }} 
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             ) : (

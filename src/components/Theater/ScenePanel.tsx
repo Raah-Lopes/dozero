@@ -1,6 +1,6 @@
 // src/components/Theater/ScenePanel.tsx
 import React, { useState, useRef } from 'react';
-import { Edit2, Check, X, Plus, CheckSquare, Square, Lock, Eye, EyeOff, Sun, Moon, Sunset, Sunrise, Image, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { Edit2, Check, X, Plus, CheckSquare, Square, Lock, Eye, EyeOff, Sun, Moon, Sunset, Sunrise, Image, Trash2, Link as LinkIcon, ExternalLink, Wand2 } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import { useWiki } from '../../hooks/useWiki';
 import { setTheaterMood, setTheaterWeather, type MoodType, type WeatherType, type TimeOfDay, type SceneAsset } from '../../store';
@@ -51,6 +51,7 @@ export const ScenePanel: React.FC = () => {
 
   // AI Copilot state
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // States for visual elements (assets)
   const [showAddForm, setShowAddForm] = useState(false);
@@ -138,6 +139,20 @@ Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). N
     }
   };
 
+  const handleGenerateImage = () => {
+    if (!currentScene) return;
+    setIsGeneratingImage(true);
+    const promptText = `Epic RPG scenery, ${currentScene.title}, ${mood} atmosphere, ${weather} weather, ${currentScene.timeOfDay}, highly detailed, digital painting, masterpiece, 4k`;
+    const encodedPrompt = encodeURIComponent(promptText);
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=400&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
+    
+    // Simulate loading to allow user to see it happening
+    setTimeout(() => {
+      patchCurrentScene({ imageUrl: url });
+      setIsGeneratingImage(false);
+    }, 1500);
+  };
+
   const startEditAsset = (asset: SceneAsset, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingAsset(asset);
@@ -223,6 +238,31 @@ Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). N
         )}
         {/* Gradient overlay */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', borderRadius: '0 0 12px 12px' }} />
+
+        {/* Generate Image Button overlay */}
+        <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
+          <button 
+            onClick={(e) => { e.stopPropagation(); handleGenerateImage(); }}
+            disabled={isGeneratingImage}
+            style={{ 
+              background: 'rgba(168,85,247,0.7)', 
+              border: '1px solid rgba(255,255,255,0.2)', 
+              color: 'white', 
+              borderRadius: '8px', 
+              padding: '6px 10px', 
+              fontSize: '0.75rem', 
+              cursor: isGeneratingImage ? 'wait' : 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              backdropFilter: 'blur(4px)',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+            }}
+          >
+            <Wand2 size={14} />
+            {isGeneratingImage ? 'Gerando Fundo...' : 'Gerar Fundo IA'}
+          </button>
+        </div>
 
         {/* Title overlay */}
         <div style={{ position: 'absolute', bottom: '12px', left: '14px', right: '14px' }}>
