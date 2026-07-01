@@ -61,8 +61,15 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS 
           }
         };
 
-        const func = new Function('dv', query);
-        func(dv);
+        const fakeApp = {
+          workspace: {},
+          plugins: { plugins: {} },
+          metadataCache: {},
+          vault: {}
+        };
+
+        const func = new Function('dv', 'app', query);
+        func(dv, fakeApp);
 
         return { type: outputType, parsed: null, results: outputData, headers: outputHeaders, error: null };
       }
