@@ -104,18 +104,47 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
           vault: {}
         };
 
-        const func = new Function('dv', 'app', query);
-        func(dv, fakeApp);
+        const container = document.createElement('div');
+        
+        const patchElement = (el: HTMLElement) => {
+          (el as any).createDiv = (options?: any) => {
+            const div = document.createElement('div');
+            if (options?.attr) {
+              Object.keys(options.attr).forEach(k => div.setAttribute(k, options.attr[k]));
+            }
+            if (options?.text) div.textContent = String(options.text);
+            if (options?.cls) div.className = options.cls;
+            el.appendChild(div);
+            return patchElement(div);
+          };
+          (el as any).createEl = (tag: string, options?: any) => {
+            const newEl = document.createElement(tag);
+            if (options?.attr) {
+              Object.keys(options.attr).forEach(k => newEl.setAttribute(k, options.attr[k]));
+            }
+            if (options?.text) newEl.textContent = String(options.text);
+            if (options?.cls) newEl.className = options.cls;
+            el.appendChild(newEl);
+            return patchElement(newEl);
+          };
+          return el;
+        };
+        
+        patchElement(container);
+        (dv as any).container = container;
 
-        return { type: outputType, parsed: null, results: outputData, headers: outputHeaders, error: null };
+        const func = new Function('dv', 'app', query);
+        func.call({ container }, dv, fakeApp);
+
+        return { type: outputType, parsed: null, results: outputData, headers: outputHeaders, error: null, htmlOutput: container.innerHTML };
       }
 
       // Classic Dataview
       const parsed = parseDataview(query);
       const results = executeDataview(parsed, index);
-      return { type: parsed.type, parsed, results, headers: null, error: null };
+      return { type: parsed.type, parsed, results, headers: null, error: null, htmlOutput: '' };
     } catch (err: any) {
-      return { type: 'ERROR', parsed: null, results: [], headers: null, error: err.message };
+      return { type: 'ERROR', parsed: null, results: [], headers: null, error: err.message, htmlOutput: '' };
     }
   }, [query, index, isJS]);
 
@@ -130,7 +159,9 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
   // Renderização da Tabela JS
   if (isJS && data.type === 'TABLE') {
     return (
-      <div style={{ margin: '1rem 0', overflowX: 'auto', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--glass-border)', padding: '0.5rem' }}>
+      <>
+        {data.htmlOutput && <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} />}
+        <div style={{ margin: '1rem 0', overflowX: 'auto', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--glass-border)', padding: '0.5rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
@@ -159,11 +190,47 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
           </tbody>
         </table>
       </div>
+      </>
     );
   }
 
-  // Renderização da Lista Clássica ou JS
-  if (data.type === 'LIST' || (isJS && data.type === 'LIST')) {
+  // Renderização da Lista JS
+  if (isJS && data.type === 'LIST') {
+    return (
+      <>
+        {data.htmlOutput && <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} />}
+        <ul style={{ margin: '1rem 0', paddingLeft: '1.5rem', background: 'rgba(0,0,0,0.3)', padding: '1rem 1rem 1rem 2.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+          {data.results.map((row, i) => {
+            const isObj = typeof row === 'object' && row !== null;
+            const isCustomLink = isObj && row.isLink;
+            const linkPath = isCustomLink ? row.path : (isObj && row.path ? row.path : (isObj && row.file?.path ? row.file.path : null));
+            const label = isCustomLink ? row.name : (isObj && row.file?.name ? row.file.name : (isObj && row.name ? row.name : String(row)));
+            
+            return (
+              <li key={i} style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
+                {linkPath && <FileText size={14} color="var(--accent-secondary)" />}
+                {linkPath ? (
+                  <a href="#" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: linkPath } })); }} style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 'bold' }}>
+                    {label}
+                  </a>
+                ) : (
+                  <span>{label}</span>
+                )}
+              </li>
+            );
+          })}
+          {data.results.length === 0 && <span style={{ color: 'var(--text-secondary)' }}>Nenhum resultado encontrado.</span>}
+        </ul>
+      </>
+    );
+  }
+
+  if (isJS) {
+    return <div dangerouslySetInnerHTML={{ __html: data.htmlOutput }} />;
+  }
+
+  // Renderização da Lista Clássica
+  if (data.type === 'LIST') {
     return (
       <div style={{ margin: '1rem 0' }}>
         <ul style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem 1rem 1rem 2.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
