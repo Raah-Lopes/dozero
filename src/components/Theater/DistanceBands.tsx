@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
 import { setEntityBand, type DistanceZone } from '../../store';
@@ -15,7 +15,7 @@ const ZONES: { id: DistanceZone; label: string; icon: React.ReactNode; color: st
 export const DistanceBands: React.FC = () => {
   const { theaterData, enemies } = useSceneState();
   const { members } = useCastData();
-  const [draggedEntity, setDraggedEntity] = useState<string | null>(null);
+  const draggedEntityRef = useRef<string | null>(null);
 
   const bands = theaterData.entityBands || {};
 
@@ -44,11 +44,11 @@ export const DistanceBands: React.FC = () => {
   const handleDrop = (e: React.DragEvent, zone: DistanceZone) => {
     e.preventDefault();
     e.stopPropagation();
-    const droppedId = e.dataTransfer.getData('text/plain') || draggedEntity;
+    const droppedId = e.dataTransfer.getData('text/plain') || draggedEntityRef.current;
     console.log('Drop ID:', droppedId, 'Zone:', zone);
     if (droppedId) {
       setEntityBand(droppedId, zone);
-      setDraggedEntity(null);
+      draggedEntityRef.current = null;
     }
   };
 
@@ -90,24 +90,24 @@ export const DistanceBands: React.FC = () => {
                 transition: 'all 0.2s'
               }}
             >
-              <div style={{ pointerEvents: 'none', padding: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', color: '#cbd5e1', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ padding: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px', color: '#cbd5e1', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <span style={{ color: zone.color }}>{zone.icon}</span>
                 {zone.label}
               </div>
-              <div style={{ padding: '8px', flex: 1, display: 'flex', flexWrap: 'wrap', gap: '6px', alignContent: 'flex-start', pointerEvents: draggedEntity ? 'none' : 'auto' }}>
+              <div style={{ padding: '8px', flex: 1, display: 'flex', flexWrap: 'wrap', gap: '6px', alignContent: 'flex-start' }}>
                 {entities.map(ent => (
                   <div
                     key={ent.id}
                     draggable
                     onDragStart={(e) => {
-                      setDraggedEntity(ent.id);
+                      draggedEntityRef.current = ent.id;
                       e.dataTransfer.setData('text/plain', ent.id);
                       e.dataTransfer.effectAllowed = 'move';
                       // Optional: make it look slightly transparent while dragging
                       setTimeout(() => { if (e.target instanceof HTMLElement) e.target.style.opacity = '0.5'; }, 0);
                     }}
                     onDragEnd={(e) => {
-                      setDraggedEntity(null);
+                      draggedEntityRef.current = null;
                       if (e.target instanceof HTMLElement) e.target.style.opacity = '1';
                     }}
                     style={{
