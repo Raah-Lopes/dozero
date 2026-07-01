@@ -43,10 +43,16 @@ export const DistanceBands: React.FC = () => {
 
   const handleDrop = (e: React.DragEvent, zone: DistanceZone) => {
     e.preventDefault();
-    if (draggedEntity) {
-      setEntityBand(draggedEntity, zone);
+    const droppedId = e.dataTransfer.getData('text/plain') || draggedEntity;
+    if (droppedId) {
+      setEntityBand(droppedId, zone);
       setDraggedEntity(null);
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
   };
 
   return (
@@ -58,7 +64,7 @@ export const DistanceBands: React.FC = () => {
           return (
             <div 
               key={zone.id}
-              onDragOver={(e) => e.preventDefault()}
+              onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, zone.id)}
               style={{
                 minHeight: '100px',
@@ -80,7 +86,11 @@ export const DistanceBands: React.FC = () => {
                   <div
                     key={ent.id}
                     draggable
-                    onDragStart={() => setDraggedEntity(ent.id)}
+                    onDragStart={(e) => {
+                      setDraggedEntity(ent.id);
+                      e.dataTransfer.setData('text/plain', ent.id);
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
                     style={{
                       width: '42px',
                       height: '56px',
