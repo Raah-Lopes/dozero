@@ -110,24 +110,25 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
           codeBlockPlugin({
             codeBlockEditorDescriptors: [
               {
-                match: (language) => language === 'dataview',
+                match: (language) => language === 'dataview' || language === 'dataviewjs',
                 priority: 10,
-                Editor: (props: any) => (
-                  <div style={{ margin: '1rem 0' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '0.5rem' }}>Dataview</div>
-                    <DataviewRenderer query={props.code} isJS={false} />
-                  </div>
-                )
-              },
-              {
-                match: (language) => language === 'dataviewjs',
-                priority: 10,
-                Editor: (props: any) => (
-                  <div style={{ margin: '1rem 0' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#eab308', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '0.5rem' }}>Dataview JS</div>
-                    <DataviewRenderer query={props.code} isJS={true} />
-                  </div>
-                )
+                Editor: (props: any) => {
+                  if (props.language === 'dataview') {
+                    return (
+                      <div className="not-prose my-4">
+                        <DataviewRenderer query={props.code} isJS={false} activeFile={activeFile} />
+                      </div>
+                    );
+                  }
+                  if (props.language === 'dataviewjs') {
+                    return (
+                      <div className="not-prose my-4">
+                        <DataviewRenderer query={props.code} isJS={true} activeFile={activeFile} />
+                      </div>
+                    );
+                  }
+                  return null;
+                }
               },
               {
                 match: (language) => language === 'mermaid',

@@ -6,9 +6,10 @@ import { FileText } from 'lucide-react';
 interface DataviewRendererProps {
   query: string;
   isJS?: boolean;
+  activeFile?: string;
 }
 
-export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS }) => {
+export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS, activeFile }) => {
   const { index } = useWiki();
   
   const data = useMemo(() => {
@@ -58,11 +59,35 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS 
           list: (items: any[]) => {
             outputType = 'LIST';
             outputData = items;
+          },
+          current: () => {
+            if (!activeFile) return null;
+            const entry = index.find((e: any) => e.path === activeFile);
+            if (!entry) return { file: { path: activeFile, name: activeFile.split('/').pop() } };
+            const meta = entry.metadata || {};
+            return {
+              file: {
+                name: meta.nome || meta.titulo || entry.slug,
+                path: entry.path,
+                link: { isLink: true, path: entry.path, name: meta.nome || meta.titulo || entry.slug }
+              },
+              ...meta
+            };
           }
         };
 
         const fakeApp = {
-          workspace: {},
+          workspace: {
+            getActiveFile: () => {
+              if (!activeFile) return { path: '', basename: '', extension: 'md' };
+              const parts = activeFile.split('/');
+              const fileWithExt = parts[parts.length - 1];
+              const extIndex = fileWithExt.lastIndexOf('.');
+              const basename = extIndex !== -1 ? fileWithExt.substring(0, extIndex) : fileWithExt;
+              const extension = extIndex !== -1 ? fileWithExt.substring(extIndex + 1) : '';
+              return { path: activeFile, basename, extension };
+            }
+          },
           plugins: { plugins: {} },
           metadataCache: {},
           vault: {}
