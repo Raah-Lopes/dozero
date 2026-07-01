@@ -89,7 +89,18 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
             }
           },
           plugins: { plugins: {} },
-          metadataCache: {},
+          metadataCache: {
+            getFileCache: (fileObj: any) => {
+              if (!fileObj || !fileObj.path) return null;
+              const entry = index.find((e: any) => e.path === fileObj.path);
+              if (!entry) return null;
+              return {
+                frontmatter: entry.metadata || {},
+                tags: entry.metadata?.tags || [],
+                links: []
+              };
+            }
+          },
           vault: {}
         };
 
