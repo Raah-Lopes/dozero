@@ -15,7 +15,7 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
   const data = useMemo(() => {
     try {
       if (isJS) {
-        let outputType = 'LIST';
+        let outputType = 'NONE';
         let outputData: any[] = [];
         let outputHeaders: string[] = [];
 
