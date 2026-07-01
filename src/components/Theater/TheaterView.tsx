@@ -4,7 +4,7 @@ import { MoodEngine } from './MoodEngine';
 import { NarrativeTrack } from './NarrativeTrack';
 import { ScenePanel } from './ScenePanel';
 import { CastPanel } from './CastPanel';
-import { EnemyBoard } from './EnemyBoard';
+import { EnemyArsenal } from './EnemyArsenal';
 import { ClockRail } from './ClockRail';
 import { DirectorBar } from './DirectorBar';
 import { SessionDiary } from './SessionDiary';
@@ -160,7 +160,7 @@ export const TheaterView: React.FC = () => {
                 {/* TAB CONTENT */}
                 <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   {rightTab === 'cast' && <CastPanel />}
-                  {rightTab === 'enemies' && <EnemyBoard />}
+                  {rightTab === 'enemies' && <EnemyArsenal />}
                   {rightTab === 'zones' && <TacticalRadar />}
                   {rightTab === 'clocks' && <ClockRail />}
                 </div>
