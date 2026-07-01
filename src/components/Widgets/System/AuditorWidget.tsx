@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useWiki } from '../../../hooks/useWiki';
 import { generateAI } from '../../../services/ai/AIProvider';
 import { fetchMarkdownContent, saveMarkdownContent } from '../../../utils/githubApi';
-import { ShieldAlert, RefreshCw, Wand2, X, AlertTriangle, Search } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Wand2, X, AlertTriangle, Search, Upload, Copy, Download } from 'lucide-react';
 
 interface AuditorWidgetProps {
   onClose: () => void;
@@ -18,6 +18,46 @@ export const AuditorWidget: React.FC<AuditorWidgetProps> = ({ onClose }) => {
   const [isFixing, setIsFixing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [logs, setLogs] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importedFileName, setImportedFileName] = useState('');
+  const [importedContent, setImportedContent] = useState('');
+  const [importResult, setImportResult] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportedFileName(file.name);
+    setImportResult('');
+    const reader = new FileReader();
+    reader.onload = ev => setImportedContent(ev.target?.result as string || '');
+    reader.readAsText(file, 'utf-8');
+  };
+
+  const handleImportAndFormat = async () => {
+    if (!importedContent) return;
+    setIsImporting(true);
+    setImportResult('');
+    try {
+      const systemPrompt = `Você é um conversor de fichas de RPG para o sistema DoZero (Pathfinder 2e adaptado). O usuário vai enviar uma ficha em Markdown com qualquer formato.
+Seu objetivo é retornar APENAS o arquivo Markdown reformatado com o Frontmatter YAML no padrão do sistema, com as chaves: nome, tipo, classe, nivel, ancestralidade, heranca, background, HP, HP_max, PM, PM_max, CA, For, Des, Con, Int, Sab, Car, habilidades, equipamentos, biografia.
+Regras:
+- Preencha com os valores existentes na ficha original. Se uma chave não existir na fonte, coloque "" (string vazia) ou 0 para números.
+- Mantenha o corpo do Markdown original abaixo do frontmatter.
+- Retorne APENAS o texto cru do arquivo, começando com --- `;
+      const result = await generateAI({
+        provider: 'groq',
+        model: 'llama-3.3-70b-versatile',
+        systemPrompt,
+        userPrompt: `Converta esta ficha para o padrão do sistema:\n\n${importedContent}`,
+        temperature: 0.1
+      });
+      setImportResult(result.text.trim());
+    } catch (err: any) {
+      setImportResult(`❌ Erro: ${err.message}`);
+    }
+    setIsImporting(false);
+  };
 
   const handleScan = () => {
     setIsScanning(true);
@@ -203,7 +243,61 @@ Seu objetivo é:
           </div>
         )}
 
-        {/* Logs */}
+        {/* === IMPORTAR MD EXTERNO === */}
+        <div style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.3)', borderRadius: '8px', padding: '1rem' }}>
+          <h3 style={{ color: '#67e8f9', margin: '0 0 1rem 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Upload size={18} /> Importar Ficha Externa (.MD)
+          </h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1rem 0' }}>
+            Faça upload de qualquer ficha .MD de outro sistema. A IA converte para o padrão DoZero.
+          </p>
+
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{ padding: '0.6rem 1.2rem', background: 'rgba(6,182,212,0.2)', border: '1px solid rgba(6,182,212,0.5)', color: '#67e8f9', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <Upload size={14} /> {importedFileName || 'Escolher arquivo .MD'}
+            </button>
+            <input ref={fileInputRef} type="file" accept=".md,.markdown" style={{ display: 'none' }} onChange={handleFileUpload} />
+
+            <button
+              onClick={handleImportAndFormat}
+              disabled={!importedContent || isImporting}
+              style={{ padding: '0.6rem 1.2rem', background: importedContent && !isImporting ? '#0891b2' : '#475569', color: 'white', border: 'none', borderRadius: '6px', cursor: importedContent && !isImporting ? 'pointer' : 'not-allowed', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              {isImporting ? <RefreshCw size={14} className="spin" /> : <Wand2 size={14} />}
+              {isImporting ? 'Convertendo...' : 'Converter com IA'}
+            </button>
+
+            {importResult && importResult.startsWith('---') && (
+              <>
+                <button
+                  onClick={() => navigator.clipboard.writeText(importResult)}
+                  style={{ padding: '0.6rem 1rem', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.5)', color: '#34d399', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Copy size={14} /> Copiar
+                </button>
+                <button
+                  onClick={() => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([importResult], {type:'text/markdown'})); a.download = importedFileName || 'ficha_convertida.md'; a.click(); }}
+                  style={{ padding: '0.6rem 1rem', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#c084fc', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Download size={14} /> Baixar
+                </button>
+              </>
+            )}
+          </div>
+
+          {importResult && (
+            <textarea
+              readOnly
+              value={importResult}
+              style={{ marginTop: '1rem', width: '100%', height: '200px', background: '#000', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.75rem', color: importResult.startsWith('---') ? '#10b981' : '#f87171', fontFamily: 'monospace', fontSize: '0.75rem', resize: 'vertical', boxSizing: 'border-box' }}
+            />
+          )}
+        </div>
+
+
         {logs.length > 0 && (
           <div style={{ flex: 1, background: '#000', borderRadius: '8px', padding: '1rem', overflowY: 'auto', fontFamily: 'monospace', fontSize: '0.75rem', color: '#10b981' }}>
             {logs.map((log, i) => (
