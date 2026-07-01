@@ -581,8 +581,9 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                         }
                       });
                    }
-                   if (parsedMeta && parsedMeta.nome && parsedMeta.imagem) {
-                     let imgUrl = parsedMeta.imagem.replace(/[\[\]!]/g, "").split("|")[0].trim();
+                   if (parsedMeta && parsedMeta.nome && (parsedMeta.imagem || parsedMeta.avatar)) {
+                     let imgUrlRaw = parsedMeta.imagem || parsedMeta.avatar;
+                     let imgUrl = imgUrlRaw.replace(/[\[\]!]/g, "").split("|")[0].trim();
                      if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
                        const configStr = localStorage.getItem('dozero_wiki_config');
                        const repoPath = configStr ? JSON.parse(configStr).repoPath : '';
