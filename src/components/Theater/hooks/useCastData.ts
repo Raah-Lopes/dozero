@@ -33,7 +33,7 @@ export function useCastData() {
       const status = String(e.metadata?.status || '').toLowerCase();
       const path = e.path.toLowerCase();
       
-      if (path.includes('_modelo')) return false;
+      if (path.includes('_modelo') || path.includes('_exemplo')) return false;
       
       return ['pc', 'npc', 'monstro', 'personagem', 'jogador', 'inimigo'].includes(tipo) ||
              ['jogador', 'npc', 'inimigo'].includes(status) ||
