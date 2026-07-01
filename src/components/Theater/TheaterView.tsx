@@ -85,8 +85,8 @@ export const TheaterView: React.FC = () => {
           alignItems: 'center',
           padding: '0 20px',
         }}>
-          {/* Left toggle */}
-          <button onClick={() => setLeftOpen(!leftOpen)} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
+          {/* Left toggle - margem para não encavalar com o botão de sair do teatro */}
+          <button onClick={() => setLeftOpen(!leftOpen)} style={{ marginLeft: '50px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
             {leftOpen ? '◀ Trilha' : '▶ Trilha'}
           </button>
 
