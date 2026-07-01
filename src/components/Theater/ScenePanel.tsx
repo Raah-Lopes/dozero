@@ -4,6 +4,7 @@ import { Edit2, Check, X, Plus, CheckSquare, Square, Lock, Eye, EyeOff, Sun, Moo
 import { useSceneState } from './hooks/useSceneState';
 import { useWiki } from '../../hooks/useWiki';
 import { setTheaterMood, setTheaterWeather, type MoodType, type WeatherType, type TimeOfDay, type SceneAsset } from '../../store';
+import { generateAI } from '../../services/ai/AIProvider';
 
 const MOODS: { value: MoodType; label: string; icon: string }[] = [
   { value: 'neutral', label: 'Neutro', icon: '⬜' },
@@ -47,6 +48,9 @@ export const ScenePanel: React.FC = () => {
   const [addingObj, setAddingObj] = useState(false);
   const [showSecretObjs, setShowSecretObjs] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // AI Copilot state
+  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
 
   // States for visual elements (assets)
   const [showAddForm, setShowAddForm] = useState(false);
@@ -97,6 +101,33 @@ export const ScenePanel: React.FC = () => {
     setAssetType('npc');
     setEditingAsset(null);
     setShowAddForm(false);
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!currentScene) return;
+    setIsGeneratingDesc(true);
+    try {
+      const activeObjs = currentScene.objectives.filter(o => !o.completed).map(o => o.text).join(', ');
+      const prompt = `Gere uma descrição narrativa imersiva (MÁXIMO 2 PARÁGRAFOS) para uma cena de RPG com as seguintes características:
+- Título: ${currentScene.title}
+- Clima: ${weather}, Atmosfera/Humor: ${mood}, Horário: ${currentScene.timeOfDay}
+${activeObjs ? `- Objetivos atuais: ${activeObjs}` : ''}
+Foque em criar tensão e ambientação sensorial (visão, audição, cheiros). Não diga 'Aqui está a descrição', apenas retorne o texto literário.`;
+
+      const result = await generateAI({
+        provider: 'groq',
+        model: 'llama-3.3-70b-versatile',
+        systemPrompt: 'Você é um mestre de RPG (Dungeon Master) descritivo e literário.',
+        userPrompt: prompt,
+        temperature: 0.7
+      });
+      patchCurrentScene({ description: result.text.trim() });
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao gerar descrição por IA.');
+    } finally {
+      setIsGeneratingDesc(false);
+    }
   };
 
   const startEditAsset = (asset: SceneAsset, e: React.MouseEvent) => {
@@ -265,9 +296,14 @@ export const ScenePanel: React.FC = () => {
       <div style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Descrição Narrativa</label>
-          <button onClick={() => { setDescDraft(currentScene.description || ''); setEditingDesc(!editingDesc); }} style={{ background: 'transparent', border: 'none', color: editingDesc ? '#a855f7' : '#475569', cursor: 'pointer' }}>
-            <Edit2 size={12} />
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleGenerateDescription} disabled={isGeneratingDesc} style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '4px', padding: '2px 8px', fontSize: '0.65rem', cursor: isGeneratingDesc ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {isGeneratingDesc ? 'Gerando...' : 'Copiloto IA'}
+            </button>
+            <button onClick={() => { setDescDraft(currentScene.description || ''); setEditingDesc(!editingDesc); }} style={{ background: 'transparent', border: 'none', color: editingDesc ? '#a855f7' : '#475569', cursor: 'pointer' }}>
+              <Edit2 size={12} />
+            </button>
+          </div>
         </div>
         {editingDesc ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
