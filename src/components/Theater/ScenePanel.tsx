@@ -228,6 +228,7 @@ export const ScenePanel: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0', overflowY: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'min-content', flexShrink: 0 }}>
       {/* Scene image */}
       <div
         style={{
@@ -1231,7 +1232,7 @@ export const ScenePanel: React.FC = () => {
           </div>
         );
       })()}
-
+    </div>
     </div>
   );
 };
