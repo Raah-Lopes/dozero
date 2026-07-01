@@ -1,6 +1,6 @@
 // src/components/Theater/ScenePanel.tsx
 import React, { useState, useRef } from 'react';
-import { Edit2, Check, X, Plus, CheckSquare, Square, Lock, Eye, EyeOff, Sun, Moon, Sunset, Sunrise, Image, Trash2, Link as LinkIcon, ExternalLink, Wand2 } from 'lucide-react';
+import { Edit2, Check, X, Plus, CheckSquare, Square, Lock, Eye, EyeOff, Sun, Moon, Sunset, Sunrise, Image, Trash2, Link as LinkIcon, ExternalLink, Wand2, Target, CheckCircle2, XCircle } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import { useWiki } from '../../hooks/useWiki';
 import { setTheaterMood, setTheaterWeather, type MoodType, type WeatherType, type TimeOfDay, type SceneAsset } from '../../store';
@@ -1075,15 +1075,30 @@ export const ScenePanel: React.FC = () => {
         );
       })()}
 
-      {/* Objectives */}
-      <div>
+      {/* Painel de Missões (Quest Board) */}
+      <div style={{ marginTop: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <button onClick={() => setShowObjectives(!showObjectives)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontFamily: 'var(--font-display)', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {showObjectives ? '▼' : '▶'} Objetivos ({visibleObjectives.filter(o => o.completed).length}/{visibleObjectives.length})
-          </button>
+          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Target size={13} color="#fca5a5" /> Painel de Missões
+          </label>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button onClick={() => setShowSecretObjs(!showSecretObjs)} style={{ background: 'transparent', border: 'none', color: showSecretObjs ? '#a855f7' : '#374151', cursor: 'pointer' }} title={showSecretObjs ? 'Ocultar secretos' : 'Mostrar secretos'}>
-              {showSecretObjs ? <Eye size={13} /> : <EyeOff size={13} />}
+            <button
+              onClick={async () => {
+                if (!currentScene) return;
+                const prompt = \`Gere uma missão curta e dramática para os jogadores num RPG de mesa, considerando esta cena: \${currentScene.title} (\${mood}). Aja como um Mestre. Retorne apenas o texto da missão (máximo 15 palavras).\`;
+                try {
+                  const res = await fetch(\`https://text.pollinations.ai/\${encodeURIComponent(prompt)}\`);
+                  const text = await res.text();
+                  addObjective(text.trim());
+                } catch (e) {
+                  console.error(e);
+                  alert('Erro ao gerar missão com IA');
+                }
+              }}
+              style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '4px', padding: '2px 8px', fontSize: '0.65rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              title="Sugerir Missão com IA"
+            >
+              <Wand2 size={12} /> IA
             </button>
             <button onClick={() => setAddingObj(!addingObj)} style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer' }}>
               <Plus size={14} />
@@ -1091,31 +1106,131 @@ export const ScenePanel: React.FC = () => {
           </div>
         </div>
 
-        {showObjectives && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {addingObj && (
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <input autoFocus value={newObjText} onChange={e => setNewObjText(e.target.value)} placeholder="Novo objetivo..." onKeyDown={e => { if (e.key === 'Enter' && newObjText.trim()) { addObjective(newObjText.trim()); setNewObjText(''); setAddingObj(false); } if (e.key === 'Escape') setAddingObj(false); }} style={{ flex: 1, padding: '5px 8px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(168,85,247,0.3)', color: 'white', fontSize: '0.8rem', fontFamily: 'var(--font-body)' }} />
-                <button onClick={() => { if (newObjText.trim()) { addObjective(newObjText.trim()); setNewObjText(''); setAddingObj(false); } }} style={{ padding: '5px 8px', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: '6px', color: '#c084fc', cursor: 'pointer' }}><Check size={13} /></button>
-              </div>
-            )}
-            {visibleObjectives.map(obj => (
-              <div key={obj.id} className="group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button onClick={() => toggleObjective(obj.id)} style={{ background: 'transparent', border: 'none', color: obj.completed ? '#10b981' : '#475569', cursor: 'pointer', padding: '2px', flexShrink: 0 }}>
-                  {obj.completed ? <CheckSquare size={15} /> : <Square size={15} />}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {addingObj && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <input
+                autoFocus
+                value={newObjText}
+                onChange={e => setNewObjText(e.target.value)}
+                placeholder="Descreva a missão..."
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && newObjText.trim()) {
+                    addObjective(newObjText.trim(), false);
+                    setNewObjText('');
+                    setAddingObj(false);
+                  }
+                  if (e.key === 'Escape') setAddingObj(false);
+                }}
+                style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(239,68,68,0.2)', color: 'white', fontSize: '0.8rem', fontFamily: 'var(--font-body)' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: '#94a3b8', cursor: 'pointer' }}>
+                  <input type="checkbox" id="secret-quest" /> Missão Secreta (Mestre)
+                </label>
+                <button
+                  onClick={() => {
+                    if (newObjText.trim()) {
+                      const isSecret = (document.getElementById('secret-quest') as HTMLInputElement)?.checked;
+                      addObjective(newObjText.trim(), isSecret);
+                      setNewObjText('');
+                      setAddingObj(false);
+                    }
+                  }}
+                  style={{ padding: '4px 10px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', color: '#fca5a5', cursor: 'pointer', fontSize: '0.7rem' }}
+                >
+                  Adicionar
                 </button>
-                <span style={{ flex: 1, fontSize: '0.8rem', color: obj.completed ? '#4b5563' : '#cbd5e1', textDecoration: obj.completed ? 'line-through' : 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {obj.secret && <Lock size={10} color="#a855f7" />}
-                  {obj.text}
-                </span>
-                <button onClick={() => removeObjective(obj.id)} style={{ background: 'transparent', border: 'none', color: '#1f2937', cursor: 'pointer', padding: '2px', opacity: 0, transition: 'opacity 0.2s' }} className="obj-remove-btn">
-                  <X size={11} />
-                </button>
-                <style>{`.obj-remove-btn:hover { opacity: 1 !important; color: #ef4444 !important; }`}</style>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+
+          {currentScene.objectives.length === 0 && !addingObj && (
+            <div style={{ color: '#475569', fontSize: '0.75rem', textAlign: 'center', padding: '10px', fontStyle: 'italic' }}>
+              Nenhuma missão nesta cena.
+            </div>
+          )}
+
+          {currentScene.objectives.map(obj => {
+            const isSuccess = obj.completed;
+            const isFailed = obj.failed;
+            const isActive = !isSuccess && !isFailed;
+            
+            let bg = 'rgba(0,0,0,0.3)';
+            let borderColor = 'rgba(255,255,255,0.06)';
+            let icon = <Target size={14} color="#94a3b8" />;
+            
+            if (isSuccess) {
+              bg = 'rgba(16,185,129,0.05)';
+              borderColor = 'rgba(16,185,129,0.3)';
+              icon = <CheckCircle2 size={14} color="#10b981" />;
+            } else if (isFailed) {
+              bg = 'rgba(239,68,68,0.05)';
+              borderColor = 'rgba(239,68,68,0.3)';
+              icon = <XCircle size={14} color="#ef4444" />;
+            }
+            
+            if (obj.secret) {
+              borderColor = 'rgba(168,85,247,0.5)';
+            }
+
+            return (
+              <div
+                key={obj.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  background: bg,
+                  border: \`1px solid \${borderColor}\`,
+                  borderRadius: '8px',
+                  padding: '8px 10px',
+                  position: 'relative',
+                  opacity: isActive ? 1 : 0.6,
+                  transition: 'all 0.2s',
+                  boxShadow: obj.secret ? '0 0 10px rgba(168,85,247,0.1)' : 'none'
+                }}
+              >
+                {obj.secret && (
+                  <div style={{ position: 'absolute', top: '-8px', right: '10px', background: '#a855f7', color: 'white', fontSize: '0.55rem', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <Lock size={8} /> SECRETO
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{ marginTop: '2px' }}>{icon}</div>
+                  <div style={{ flex: 1, fontSize: '0.85rem', color: isSuccess ? '#a7f3d0' : isFailed ? '#fecaca' : '#e2e8f0', textDecoration: (isSuccess || isFailed) ? 'line-through' : 'none', lineHeight: 1.4 }}>
+                    {obj.text}
+                  </div>
+                  <button onClick={() => removeObjective(obj.id)} style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', padding: '0' }}>
+                    <X size={14} />
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '4px', marginTop: '4px', marginLeft: '22px' }}>
+                  <button
+                    onClick={() => setObjectiveStatus(obj.id, 'active')}
+                    style={{ flex: 1, padding: '3px', background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: isActive ? 'white' : '#64748b', fontSize: '0.65rem', cursor: 'pointer' }}
+                  >
+                    ⏳ Andamento
+                  </button>
+                  <button
+                    onClick={() => setObjectiveStatus(obj.id, 'success')}
+                    style={{ flex: 1, padding: '3px', background: isSuccess ? 'rgba(16,185,129,0.2)' : 'transparent', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '4px', color: isSuccess ? '#6ee7b7' : '#64748b', fontSize: '0.65rem', cursor: 'pointer' }}
+                  >
+                    🏆 Sucesso
+                  </button>
+                  <button
+                    onClick={() => setObjectiveStatus(obj.id, 'failed')}
+                    style={{ flex: 1, padding: '3px', background: isFailed ? 'rgba(239,68,68,0.2)' : 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '4px', color: isFailed ? '#fca5a5' : '#64748b', fontSize: '0.65rem', cursor: 'pointer' }}
+                  >
+                    💀 Falha
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

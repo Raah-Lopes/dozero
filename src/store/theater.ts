@@ -11,6 +11,7 @@ export interface TheaterObjective {
   id: string;
   text: string;
   completed: boolean;
+  failed?: boolean;
   secret: boolean;
 }
 

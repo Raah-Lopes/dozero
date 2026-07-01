@@ -65,20 +65,35 @@ export function useSceneState() {
     removeTheaterScene(id);
   }, []);
 
-  const toggleObjective = useCallback((objectiveId: string) => {
+  const setObjectiveStatus = useCallback((objectiveId: string, status: 'active' | 'success' | 'failed') => {
     if (!currentScene) return;
-    const objectives = currentScene.objectives.map(o =>
-      o.id === objectiveId ? { ...o, completed: !o.completed } : o
-    );
+    const objectives = currentScene.objectives.map(o => {
+      if (o.id !== objectiveId) return o;
+      return { 
+        ...o, 
+        completed: status === 'success', 
+        failed: status === 'failed' 
+      };
+    });
     updateTheaterScene(currentScene.id, { objectives });
+    
     const obj = currentScene.objectives.find(o => o.id === objectiveId);
     if (obj) {
+      const emoji = status === 'success' ? '🏆' : status === 'failed' ? '💀' : '⏳';
       addTheaterDiaryEntry({
         timestamp: Date.now(),
         type: 'objective',
-        text: `${obj.completed ? '☐' : '☑'} Objetivo: "${obj.text}"`,
+        text: `${emoji} Missão: "${obj.text}"`,
       });
     }
+  }, [currentScene]);
+
+  const toggleObjectiveSecret = useCallback((objectiveId: string) => {
+    if (!currentScene) return;
+    const objectives = currentScene.objectives.map(o =>
+      o.id === objectiveId ? { ...o, secret: !o.secret } : o
+    );
+    updateTheaterScene(currentScene.id, { objectives });
   }, [currentScene]);
 
   const addObjective = useCallback((text: string, secret = false) => {
@@ -87,6 +102,7 @@ export function useSceneState() {
       id: `obj_${Date.now()}`,
       text,
       completed: false,
+      failed: false,
       secret,
     };
     updateTheaterScene(currentScene.id, { objectives: [...currentScene.objectives, newObj] });
