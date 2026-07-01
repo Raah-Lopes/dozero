@@ -41,22 +41,7 @@ export const DistanceBands: React.FC = () => {
     return list;
   };
 
-  const handleDrop = (e: React.DragEvent, zone: DistanceZone) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const droppedId = e.dataTransfer.getData('text/plain') || draggedEntityRef.current;
-    console.log('Drop ID:', droppedId, 'Zone:', zone);
-    if (droppedId) {
-      setEntityBand(droppedId, zone);
-      draggedEntityRef.current = null;
-    }
-  };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'move';
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
@@ -72,10 +57,10 @@ export const DistanceBands: React.FC = () => {
               onDrop={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const droppedId = e.dataTransfer.getData('text/plain') || draggedEntity;
+                const droppedId = e.dataTransfer.getData('text/plain') || draggedEntityRef.current;
                 if (droppedId) {
                   setEntityBand(droppedId, zone.id);
-                  setDraggedEntity(null);
+                  draggedEntityRef.current = null;
                 }
               }}
               style={{
