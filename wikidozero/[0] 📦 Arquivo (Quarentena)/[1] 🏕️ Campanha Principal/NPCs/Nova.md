@@ -23,6 +23,4 @@
 
 (Adicione as anotações sobre como os jogadores conheceram este NPC aqui)
 
-
-
 inferior:: \[\[GOMA]]
