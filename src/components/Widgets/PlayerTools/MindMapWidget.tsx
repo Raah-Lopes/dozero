@@ -128,7 +128,7 @@ export const MapasMentaisWidget: React.FC<MapasMentaisWidgetProps> = ({ onClose 
         }
       }
     } catch {
-      console.log('Nenhum mapa anterior encontrado em', mapPath);
+      // Nenhum mapa anterior encontrado, mantendo o vazio
     } finally {
       setIsLoading(false);
       setShowLoadPicker(false);

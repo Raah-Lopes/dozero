@@ -2,16 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid, Library, Film, DoorOpen, Bot } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
+import { LivingBrain } from './components/Wiki/LivingBrain';
 import { GameCanvas } from './engine/GameCanvas';
 import { CombatLog } from './components/Chat/CombatLog';
 import { ChatWindow } from './components/Chat/ChatWindow';
 import { SettingsModal } from './components/Modals/SettingsModal';
 import { AIAssistantBot } from './components/HUD/AIAssistantBot';
-import { DiceOverlay } from './components/UI/DiceOverlay';
-import { PPROverlay } from './components/UI/PPROverlay';
-import { SoftTimer } from './components/UI/SoftTimer';
-import { ClimaxOverlay } from './components/UI/ClimaxOverlay';
-
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
@@ -19,7 +15,12 @@ import { TextContextBar } from './components/UI/TextContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
 import { InviteModal } from './components/Modals/InviteModal';
+import { ClimaxOverlay } from './components/UI/ClimaxOverlay';
+import { SoftTimer } from './components/UI/SoftTimer';
+import { DiceOverlay } from './components/UI/DiceOverlay';
+import { PPROverlay } from './components/UI/PPROverlay';
 import { CombatTracker } from './components/HUD/CombatTracker';
+import { ConspiracyBoardWidget } from './components/Widgets/ConspiracyBoard/ConspiracyBoardWidget';
 import { MapContextMenu } from './components/UI/MapContextMenu';
 import { ClockConfigModal } from './components/Modals/ClockConfigModal';
 import { WidgetHubModal } from './components/Modals/WidgetHubModal';
@@ -27,6 +28,7 @@ import { TensionClockManager } from './components/HUD/TensionClockManager';
 import { FloatingDocument } from './components/UI/FloatingDocument';
 import { TheaterView } from './components/Theater/TheaterView';
 import { WidgetLayer } from './components/HUD/WidgetLayer';
+import { MainToolbar } from './components/HUD/MainToolbar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps } from './store';
 import type { TensionClock } from './store';
@@ -47,28 +49,31 @@ function App() {
     showToolsDropdown, setShowToolsDropdown,
     openSheets, setOpenSheets,
     openWikiDocs, setOpenWikiDocs,
-    wikiInitialFile, setWikiInitialFile,
-    editingClockId, setEditingClockId
+    editingClockId, setEditingClockId,
+    wikiInitialFile, setWikiInitialFile
   } = useWindowManager();
 
   const handleCloseActorLibrary = useCallback(() => setShowActors(false), [setShowActors]);
   const handleCloseCombatLog = useCallback(() => toggleWindow('combatLog'), [toggleWindow]);
   const handleCloseChatWindow = useCallback(() => toggleWindow('chatWindow'), [toggleWindow]);
   const handleCloseMapSettings = useCallback(() => setShowMapSettings(false), [setShowMapSettings]);
-  
+
   const handleCloseSheet = useCallback((sheetKey: string) => {
-    setOpenSheets((prev: string[]) => prev.filter((id) => id !== sheetKey));
+    setOpenSheets(prev => prev.filter(id => id !== sheetKey));
   }, [setOpenSheets]);
 
   const handleCloseWikiDoc = useCallback((docId: string) => {
-    setOpenWikiDocs((prev: any[]) => prev.filter((d) => d.id !== docId));
+    setOpenWikiDocs(prev => prev.filter(doc => doc.id !== docId));
   }, [setOpenWikiDocs]);
 
+  // ===== SPLIT INTO MULTIPLE useEffects ===== //
+
+  // 1. Handle wiki document opening
   useEffect(() => {
     const handleOpenWikiDoc = (e: Event) => {
       const filepath = (e as CustomEvent).detail;
       if (filepath) {
-        setOpenWikiDocs((prev: { id: string, filepath: string }[]) => {
+        setOpenWikiDocs(prev => {
           if (prev.some(doc => doc.filepath === filepath)) return prev;
           return [...prev, { id: `doc-${Date.now()}`, filepath }];
         });
@@ -78,24 +83,26 @@ function App() {
     return () => window.removeEventListener('open-wiki-doc', handleOpenWikiDoc);
   }, []);
 
+  // 2. Handle view mode persistence
   useEffect(() => {
     localStorage.setItem('dozero_viewMode', viewMode);
   }, [viewMode]);
 
+  // 3. Handle double-click token actions
   useEffect(() => {
     const handleDblClick = (e: Event) => {
       const { tokenId } = (e as CustomEvent).detail;
-      setOpenSheets((prev: string[]) => {
+      setOpenSheets(prev => {
         if (prev.includes(tokenId)) return prev;
         return [...prev, tokenId];
       });
     };
     window.addEventListener('token-dblclick', handleDblClick);
-    
+
     const handleOpenClockConfig = () => setActiveModal('clockConfig');
     window.addEventListener('open-clock-config', handleOpenClockConfig);
 
-    // Auto-limpeza de Coordenadas Fantasmas (Reset de posição de fichas)
+    // Auto-limpeza de Coordenadas Fantasmas
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -105,7 +112,7 @@ function App() {
     }
     keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    // Evento disparado pelo CampaignManagerWidget para abrir um arquivo na Wiki
+    // Event listeners for wiki integration
     const handleOpenWikiFile = (e: Event) => {
       const path = (e as CustomEvent).detail?.path || (e as CustomEvent).detail?.filePath;
       if (path) {
@@ -118,16 +125,18 @@ function App() {
     const handleOpenWiki = () => setViewMode('wiki');
     window.addEventListener('open-wiki', handleOpenWiki);
 
-    const handleOpenWikiGraph = () => setViewMode('wiki'); // open-wiki-graph is handled by WikiViewer internally, but we need to ensure the Wiki itself is open
+    const handleOpenWikiGraph = () => setViewMode('brain');
     window.addEventListener('open-wiki-graph', handleOpenWikiGraph);
+
+    const handleOpenBrain = () => setViewMode('brain');
+    window.addEventListener('open-brain', handleOpenBrain);
 
     const handleOpenSheetByWiki = (e: Event) => {
       const wikiPath = (e as CustomEvent).detail;
       if (wikiPath) {
-        setOpenSheets((prev: string[]) => {
+        setOpenSheets(prev => {
           const key = `wiki:${wikiPath}`;
           if (prev.includes(key)) {
-            // Ficha já está mapeada! Trazemos ela pra frente da tela e desminimizamos
             setTimeout(() => window.dispatchEvent(new CustomEvent('bring-window-to-front', { detail: `sheet-${key}` })), 10);
             return prev;
           }
@@ -146,7 +155,6 @@ function App() {
         const parts = rawMd.split('---');
         if (parts.length < 3) return;
         const data = yaml.load(parts[1]) as any;
-        if (!data) return;
 
         const tipo = String(data.tipo || '').toLowerCase();
         const status = String(data.status || '').toLowerCase();
@@ -178,7 +186,7 @@ function App() {
           y,
           ...tokenData
         });
-        
+
         const chatMsg = `⚡ <b>${tokenData.name}</b> foi conjurado(a) no mapa!`;
         state.chat.push([{ text: chatMsg, timestamp: Date.now(), isCritical: true, isFailure: false }]);
       } catch (err) {
@@ -195,7 +203,13 @@ function App() {
       window.removeEventListener('open-wiki-graph', handleOpenWikiGraph);
       window.removeEventListener('open-sheet-by-wiki', handleOpenSheetByWiki);
       window.removeEventListener('spawn-token-from-wiki', handleSpawnTokenFromWiki);
-    }
+    };
+  }, []);
+
+  // 4. Handle cleanup - separate effect with functional updates
+  useEffect(() => {
+    // No-op cleanup effect to avoid race conditions in setOpenWikiDocs/setOpenSheets
+    return;
   }, []);
 
   if (!isReady) {
@@ -212,53 +226,41 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* PÁGINA DO CÉREBRO GRÁFICO */}
+      <div className={`view-layer brain-layer ${viewMode === 'brain' ? 'active' : ''}`}>
+        {viewMode === 'brain' && <LivingBrain />}
+      </div>
+
       {/* PÁGINA DEDICADA DA WIKI */}
-      <div style={{ display: viewMode === 'wiki' ? 'block' : 'none', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 1000, background: 'var(--bg-primary)' }}>
+      <div className={`view-layer wiki-layer ${viewMode === 'wiki' ? 'active' : ''}`}>
         {viewMode === 'wiki' && <WikiViewer initialFile={wikiInitialFile} />}
-        <div style={{ position: 'fixed', top: '15px', right: '15px', zIndex: 99999 }}>
-          <button 
-            onClick={() => setViewMode('canvas')} 
-            className="glass-panel hover-glow" 
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', cursor: 'pointer', border: '1px solid var(--accent-primary)', color: 'white', background: 'rgba(20,20,20,0.85)', borderRadius: '8px', pointerEvents: 'auto', fontWeight: 'bold', transition: 'all 0.2s' }}
-          >
-            <Swords size={18} color="var(--accent-primary)" /> 
-            Voltar para a Mesa
-          </button>
-        </div>
       </div>
 
       {/* PÁGINA DO TEATRO DA MENTE */}
-      <div style={{ display: viewMode === 'theater' ? 'flex' : 'none', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 900, flexDirection: 'column' }}>
+      <div className={`view-layer theater-layer ${viewMode === 'theater' ? 'active' : ''}`}>
         {viewMode === 'theater' && <TheaterView />}
-        {viewMode === 'theater' && (
-          <div style={{ position: 'fixed', top: '15px', left: '15px', zIndex: 99999 }}>
-            <button 
-              onClick={() => setViewMode('canvas')} 
-              className="glass-panel exit-door-btn" 
-              style={{ display: 'flex', alignItems: 'center', gap: '0', padding: '0.6rem', cursor: 'pointer', border: '1px solid var(--accent-primary)', color: 'white', background: 'rgba(20,20,20,0.85)', borderRadius: '8px', pointerEvents: 'auto', transition: 'all 0.3s ease', overflow: 'hidden', whiteSpace: 'nowrap' }}
-            >
-              <DoorOpen size={20} color="var(--accent-primary)" style={{ flexShrink: 0 }} /> 
-              <span className="exit-text" style={{ maxWidth: 0, opacity: 0, transition: 'all 0.3s ease', display: 'inline-block', overflow: 'hidden', fontFamily: 'var(--font-display)', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                Painel Principal
-              </span>
-            </button>
-            <style>{`
-              .exit-door-btn:hover {
-                box-shadow: 0 0 15px var(--accent-glow);
-                background: rgba(30,30,30,0.95) !important;
-              }
-              .exit-door-btn:hover .exit-text { 
-                max-width: 150px !important; 
-                opacity: 1 !important; 
-                margin-left: 0.5rem !important; 
-              }
-            `}</style>
-          </div>
-        )}
       </div>
 
+      {viewMode === 'wiki' && (
+        <div className="exit-door-container-right">
+          <button onClick={() => setViewMode('canvas')} className="glass-panel exit-door-btn-hoverable">
+            <span className="exit-text">Voltar para a Mesa</span>
+            <DoorOpen size={20} color="var(--accent-primary)" className="exit-icon" />
+          </button>
+        </div>
+      )}
+
+      {viewMode === 'theater' && (
+        <div className="exit-door-container-left">
+          <button onClick={() => setViewMode('canvas')} className="glass-panel exit-door-btn-hoverable">
+            <DoorOpen size={20} color="var(--accent-primary)" className="exit-icon" />
+            <span className="exit-text">Painel Principal</span>
+          </button>
+        </div>
+      )}
+
       {/* PÁGINA DA MESA (HUD + MAPA) */}
-      <div style={{ display: viewMode === 'canvas' ? 'block' : 'none', width: '100%', height: '100%' }}>
+      <div className={`view-layer canvas-layer-container ${viewMode === 'canvas' ? 'active' : ''}`}>
         <div className="canvas-layer" id="canvas-container">
           <GameCanvas />
           <MapContextMenu />
@@ -266,82 +268,21 @@ function App() {
           <PropInteractionPanel />
           <AIAssistantBot />
         </div>
+      </div>
 
-      {/* Layer 10: React HUD */}
-      <div className="hud-layer" style={{ pointerEvents: 'none' }}>
-        
-        {/* Top HUD Area */}
-        <div style={{ pointerEvents: 'none', display: 'flex', flexDirection: 'column', width: '100%' }}>
-          
-          <div className="top-bar" style={{ pointerEvents: 'auto', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'flex-start' }}>
-            {/* Left side: Hub Principal */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start' }}>
-              <div className="glass-panel" style={{ padding: '0.5rem' }}>
-                <button 
-                  className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`} 
-                  onClick={(e) => { e.stopPropagation(); setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets'); }} 
-                  title="Menu Geral (Hub de Ferramentas)"
-                >
-                  <LayoutGrid size={20} />
-                </button>
-              </div>
-            </div>
+      {/* Layer 10: React HUD (moved out of canvas-layer so it works in Theater view too) */}
+      <div className="hud-layer hud-grid">
+        <MainToolbar />
 
-            {/* Right side: Tools */}
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-              {showToolsDropdown && (
-                <div className="glass-panel animate-fade-in" style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem' }}>
-                  <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon theme-cyan ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki da Campanha">
-                    <BookOpen size={20} />
-                  </button>
-                  <button onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} className={`btn-icon theme-violet ${viewMode === 'theater' ? 'active' : ''}`} title="Teatro da Mente">
-                    <Film size={20} />
-                  </button>
-                  <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} title="Convidar Jogadores (Compartilhar Mesa)">
-                    <Users size={20} />
-                  </button>
-                  <button className="btn-icon theme-blue" onClick={() => setShowMapSettings(!showMapSettings)} title="Configurar Cenário e Grade">
-                    <MapIcon size={20} />
-                  </button>
-                  <button className="btn-icon theme-amber" onClick={() => setShowActors(!showActors)} title="Biblioteca de Atores">
-                    <Library size={20} />
-                  </button>
-                  <button className="btn-icon theme-pink" onClick={() => window.dispatchEvent(new CustomEvent('toggle-ai-bot'))} title="Mostrar/Ocultar Robô Assistente IA">
-                    <Bot size={20} />
-                  </button>
-                  <button className={`btn-icon theme-red ${openWindows.combatLog ? 'active' : ''}`} onClick={() => toggleWindow('combatLog')} title="Registro de Rolagens (Log)">
-                    <MessageSquare size={20} />
-                  </button>
-                  <button className={`btn-icon theme-blue ${openWindows.chatWindow ? 'active' : ''}`} onClick={() => toggleWindow('chatWindow')} title="Chat P2P (Mensagens)">
-                    <MessageSquare size={20} />
-                  </button>
-                  <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações do Sistema">
-                    <Settings size={20} />
-                  </button>
-                </div>
-              )}
-              <div className="glass-panel" style={{ padding: '0.5rem' }}>
-                <button 
-                  className={`btn-icon ${showToolsDropdown ? 'active' : ''}`} 
-                  onClick={() => setShowToolsDropdown(!showToolsDropdown)} 
-                  title="Ferramentas"
-                >
-                  <Settings size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
         {/* Combat Tracker Widget */}
         {openWindows.combatTracker && (
-          <DraggableWindow 
-            id="tracker" 
-            title="Iniciativa" 
-            initialX={window.innerWidth - 360} 
-            initialY={80} 
-            width={340} 
-            height={500} 
+          <DraggableWindow
+            id="tracker"
+            title="Iniciativa"
+            initialX={window.innerWidth - 360}
+            initialY={80}
+            width={340}
+            height={500}
             variant="default"
             onClose={() => toggleWindow('combatTracker')}
           >
@@ -349,195 +290,184 @@ function App() {
           </DraggableWindow>
         )}
 
-        <TensionClockManager onEditClock={(id) => {
-          setEditingClockId(id);
-          setActiveModal('clockConfig');
-        }} />
+          <TensionClockManager onEditClock={(id) => {
+            setEditingClockId(id);
+            setActiveModal('clockConfig');
+          }} />
 
-        {/* Modal Layer (players, settings, chat) */}
-        {(activeModal === 'players' || activeModal === 'settings' || activeModal === 'chat') && (
-           <div style={{ position: 'absolute', top: '90px', right: 'var(--hud-padding)', zIndex: 50, pointerEvents: 'auto' }}>
-             {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
-             {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
-             {activeModal === 'chat' && (
-               <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                   <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Mensagens Diretas</h3>
-                   <button onClick={() => setActiveModal('none')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'white'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}><X size={18} /></button>
-                 </div>
-                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
-               </div>
-             )}
-           </div>
-        )}
-
-        {/* Clock Config Modal (Must be outside the right-aligned container because it is a DraggableWindow) */}
-        {activeModal === 'clockConfig' && (
-           <ClockConfigModal 
-             existingClock={editingClockId ? state.clocks.get(editingClockId) as TensionClock : undefined}
-             onClose={() => {
-               setActiveModal('none');
-               setEditingClockId(null);
-             }} 
-             onConfirm={(config, isEdit) => {
-               if (isEdit && editingClockId) {
-                 // Atualizar relógio existente
-                 const current = state.clocks.get(editingClockId) as TensionClock;
-                 if (current) {
-                   const now = Date.now();
-                   // Se estava pausado, não mexemos no tempo de fim até ele ser despausado.
-                   // Mas como o usuário editou a duração, precisamos refazer as contas:
-                   // Se mudou a duração, o novo endTime será agora + nova duração
-                   updateTensionClockProps(editingClockId, {
-                     label: config.label,
-                     durationMs: config.durationMs,
-                     endTime: now + config.durationMs,
-                     pausedRemainingMs: undefined, // retoma ou reseta
-                     isRunning: true,
-                     hpMod: config.hpMod,
-                     mpMod: config.mpMod
-                   });
-                   state.chat.push([{ text: `RELÓGIO MODIFICADO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
-                 }
-               } else {
-                 // Criar novo
-                 const id = 'clock_' + Date.now();
-                 state.chat.push([{ text: `CRIANDO RELÓGIO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
-                 addTensionClock({
-                   id,
-                   x: 0,
-                   y: 0,
-                   label: config.label,
-                   durationMs: config.durationMs,
-                   endTime: Date.now() + config.durationMs,
-                   isRunning: true,
-                   hpMod: config.hpMod,
-                   mpMod: config.mpMod
-                 });
-               }
-               setActiveModal('none');
-               setEditingClockId(null);
-             }} 
-           />
-        )}
-
-      </div> {/* Fim da hud-layer */}
-
-      {/* GM Profile (Moved to Bottom Left) */}
-      <div className="glass-panel" style={{ position: 'absolute', bottom: 'var(--hud-padding)', left: 'var(--hud-padding)', pointerEvents: 'auto', padding: '0.5rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', zIndex: 10 }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', color: 'white', fontSize: '0.8rem', boxShadow: '0 0 10px var(--accent-glow)' }}>
-          GM
-        </div>
-        <div>
-          <h2 style={{ fontSize: '0.9rem', margin: 0, color: 'var(--text-primary)' }}>Mestre</h2>
-          <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '500' }}>Edição Ativa</span>
-        </div>
-      </div>
-
-      {/* UI Overlays */}
-      <DiceOverlay />
-      <PPROverlay />
-      <SoftTimer />
-      <ClimaxOverlay />
-      
-      </div> {/* Fim da div da PÁGINA DA MESA */}
-
-      {/* Free-Floating Window Layer (MOVED OUTSIDE TO ALWAYS RENDER) */}
-      <>
-        {showActors && (
-          <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={handleCloseActorLibrary}>
-            <div style={{ height: '400px' }}>
-              <NPCPanel />
+          {/* Modal Layer (players, settings, chat) */}
+          {(activeModal === 'players' || activeModal === 'settings' || activeModal === 'chat') && (
+            <div className="hud-modal-layer">
+              {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
+              {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
+              {activeModal === 'chat' && (
+                <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Mensagens Diretas</h3>
+                    <button onClick={() => setActiveModal('none')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'white'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}><X size={18} /></button>
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
+                </div>
+              )}
             </div>
-          </DraggableWindow>
-        )}
+          )}
 
-        {openSheets.map((sheetKey: string, index: number) => {
-          const isWiki = sheetKey.startsWith('wiki:');
-          const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
-          const tokenId = isWiki ? undefined : sheetKey;
-
-          return (
-            <DraggableWindow 
-              key={sheetKey} 
-              id={`sheet-${sheetKey}`} 
-              title="Ficha do Personagem" 
-              initialX={20 + (index * 40)} 
-              initialY={100 + (index * 40)} 
-              width={340}
-              onClose={() => handleCloseSheet(sheetKey)}
-            >
-              <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />
-            </DraggableWindow>
-          );
-        })}
-
-        {openWikiDocs.map((doc: { id: string, filepath: string }, index: number) => (
-          <FloatingDocument
-            key={doc.id}
-            id={doc.id}
-            filepath={doc.filepath}
-            initialX={window.innerWidth / 2 - 200 + (index * 30)}
-            initialY={100 + (index * 30)}
-            onClose={() => handleCloseWikiDoc(doc.id)}
-          />
-        ))}
-
-        {openWindows.combatLog && (
-          <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={handleCloseCombatLog}>
-            <CombatLog />
-          </DraggableWindow>
-        )}
-
-        {openWindows.chatWindow && (
-          <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={100} width={320} height={400} onClose={handleCloseChatWindow}>
-            <ChatWindow />
-          </DraggableWindow>
-        )}
-
-        {showMapSettings && (
-          <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={200} width={300} onClose={handleCloseMapSettings}>
-            <MapSettingsPanel />
-          </DraggableWindow>
-        )}
-
-        <TextContextBar />
-        <WidgetLayer />
-
-        {/* WidgetHubModal fora da hud-layer para evitar interferencia do canvas PixiJS */}
-        {activeModal === 'widgets' && (
-          <div style={{ position: 'fixed', top: '90px', left: 'var(--hud-padding)', zIndex: 9999, pointerEvents: 'auto' }}>
-            <WidgetHubModal 
-              onClose={() => setActiveModal('none')} 
-              onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }} 
-              onOpenClockConfig={() => setActiveModal('clockConfig')} 
-              onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
-              onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
-              onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
-              onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
-              onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
-              onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
-              onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
-              onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
-              onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
-              onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
-              onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
-              onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
-              onOpenDLCManager={() => { toggleWindow('dlcManager'); setActiveModal('none'); }}
-              onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
-              onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
-              onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
-              onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
-              onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
-              onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
-              onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
-              onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
+          {/* Clock Config Modal (Must be outside the right-aligned container because it is a DraggableWindow) */}
+          {activeModal === 'clockConfig' && (
+            <ClockConfigModal
+              existingClock={editingClockId ? state.clocks.get(editingClockId) as TensionClock : undefined}
+              onClose={() => {
+                setActiveModal('none');
+                setEditingClockId(null);
+              }}
+              onConfirm={(config, isEdit) => {
+                if (isEdit && editingClockId) {
+                  // Atualizar relógio existente
+                  const current = state.clocks.get(editingClockId) as TensionClock;
+                  if (current) {
+                    const now = Date.now();
+                    updateTensionClockProps(editingClockId, {
+                      label: config.label,
+                      durationMs: config.durationMs,
+                      endTime: now + config.durationMs,
+                      pausedRemainingMs: undefined,
+                      isRunning: true,
+                      hpMod: config.hpMod,
+                      mpMod: config.mpMod
+                    });
+                    state.chat.push([{ text: `RELÓGIO MODIFICADO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
+                  }
+                } else {
+                  // Criar novo
+                  const id = 'clock_' + Date.now();
+                  state.chat.push([{ text: `CRIANDO RELÓGIO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
+                  addTensionClock({
+                    id,
+                    x: 0,
+                    y: 0,
+                    label: config.label,
+                    durationMs: config.durationMs,
+                    endTime: Date.now() + config.durationMs,
+                    isRunning: true,
+                    hpMod: config.hpMod,
+                    mpMod: config.mpMod
+                  });
+                }
+                setActiveModal('none');
+                setEditingClockId(null);
+              }}
             />
-          </div>
-        )}
-      </>
+          )}
 
-    </div>
+        </div> {/* Fim da hud-layer */}
+
+        {/* Free-Floating Window Layer (MOVED OUTSIDE TO ALWAYS RENDER) */}
+        <>
+          {showActors && (
+            <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={handleCloseActorLibrary}>
+              <div style={{ height: '400px' }}>
+                <NPCPanel />
+              </div>
+            </DraggableWindow>
+          )}
+
+          {openSheets.map((sheetKey: string, index: number) => {
+            const isWiki = sheetKey.startsWith('wiki:');
+            const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
+            const tokenId = isWiki ? undefined : sheetKey;
+
+            return (
+              <DraggableWindow
+                key={sheetKey}
+                id={`sheet-${sheetKey}`}
+                title="Ficha do Personagem"
+                initialX={20 + (index * 40)}
+                initialY={100 + (index * 40)}
+                width={340}
+                onClose={() => handleCloseSheet(sheetKey)}
+              >
+                <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />
+              </DraggableWindow>
+            );
+          })}
+
+          {openWikiDocs.map((doc: { id: string, filepath: string }, index: number) => (
+            <FloatingDocument
+              key={doc.id}
+              id={doc.id}
+              filepath={doc.filepath}
+              initialX={window.innerWidth / 2 - 200 + (index * 30)}
+              initialY={100 + (index * 30)}
+              onClose={() => handleCloseWikiDoc(doc.id)}
+            />
+          ))}
+
+          {openWindows.combatLog && (
+            <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={handleCloseCombatLog}>
+              <CombatLog />
+            </DraggableWindow>
+          )}
+
+          {openWindows.chatWindow && (
+            <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={100} width={320} height={400} onClose={handleCloseChatWindow}>
+              <ChatWindow />
+            </DraggableWindow>
+          )}
+
+          {showMapSettings && (
+            <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={200} width={300} onClose={handleCloseMapSettings}>
+              <MapSettingsPanel />
+            </DraggableWindow>
+          )}
+
+          {/* Overlays Visuais e Funcionais */}
+          <ClimaxOverlay />
+          <SoftTimer />
+          <DiceOverlay />
+          <PPROverlay />
+
+          <WidgetLayer />
+
+          {openWindows.mindMap && (
+            <ConspiracyBoardWidget onClose={() => toggleWindow('mindMap')} />
+          )}
+
+          {/* WidgetHubModal fora da hud-layer para evitar interferencia do canvas PixiJS */}
+          {activeModal === 'widgets' && (
+            <div style={{ position: 'fixed', top: '90px', left: 'var(--hud-padding)', zIndex: 9999, pointerEvents: 'auto' }}>
+              <WidgetHubModal
+                onClose={() => setActiveModal('none')}
+                onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
+                onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
+                onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
+                onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
+                onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
+                onOpenClockConfig={() => setActiveModal('clockConfig')}
+                onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
+                onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
+                onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
+                onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
+                onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
+                onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
+                onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
+                onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
+                onOpenDLCManager={() => { toggleWindow('dlcManager'); setActiveModal('none'); }}
+                onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
+                onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
+                onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
+                onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
+                onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
+                onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
+                onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
+                onOpenMapSettings={() => { setShowMapSettings(true); setActiveModal('none'); }}
+                onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
+                onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
+                onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
+              />
+            </div>
+          )}
+        </>
+      </div>
   );
 }
 

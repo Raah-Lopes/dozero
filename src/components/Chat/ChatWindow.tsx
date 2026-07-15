@@ -3,10 +3,12 @@ import { createPortal } from 'react-dom';
 import { state } from '../../store';
 import { pushAdvancedChatMessage, ChatMessageOptions, createPoll } from '../../store/chat';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
-import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plus } from 'lucide-react';
+import { useCastData } from '../Theater/hooks/useCastData';
+import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plus, Mail } from 'lucide-react';
 import { PollWidget } from './PollWidget';
 
 export const ChatWindow: React.FC = () => {
+  const { members } = useCastData();
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [playerName, setPlayerName] = useState('Jogador');
@@ -23,6 +25,7 @@ export const ChatWindow: React.FC = () => {
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
   const [pollIsAnonymous, setPollIsAnonymous] = useState(false);
+  const [openedWhispers, setOpenedWhispers] = useState<Set<string>>(new Set());
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -137,6 +140,31 @@ export const ChatWindow: React.FC = () => {
     let bubbleClass = 'chat-bubble-player';
     if (msg.tipo === 'sistema') bubbleClass = 'chat-bubble-system';
     if (msg.autor_alias) bubbleClass = 'chat-bubble-npc';
+    if (msg.tipo === 'whisper') bubbleClass = 'chat-bubble-whisper';
+
+    if (msg.tipo === 'whisper') {
+      const isOpened = msg.id && openedWhispers.has(msg.id);
+      if (!isOpened) {
+        return (
+          <div 
+            key={i} 
+            style={{ background: 'linear-gradient(135deg, #4c1d95, #7c3aed)', padding: '16px', borderRadius: '12px', cursor: 'pointer', textAlign: 'center', marginBottom: '8px', border: '2px solid #a78bfa', boxShadow: '0 4px 16px rgba(124,58,237,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
+            onClick={() => msg.id && setOpenedWhispers(new Set([...openedWhispers, msg.id]))}
+          >
+            <Mail size={24} color="#f3f4f6" />
+            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.05em' }}>CARTA SECRETA</div>
+            <div style={{ color: '#e5e7eb', fontSize: '0.75rem' }}>Para: <span style={{color: '#facc15'}}>{msg.alvo}</span></div>
+            <div style={{ color: '#9ca3af', fontSize: '0.65rem' }}>De: {autorName}</div>
+          </div>
+        );
+      }
+    }
+
+    // Find avatar if possible (for players/NPCs)
+    const autorMember = members.find(m => 
+      m.nome.toLowerCase() === (msg.autor_alias || msg.autor || '').toLowerCase()
+    );
+    const avatarUrl = autorMember?.avatar;
 
     return (
       <div key={i} className={bubbleClass} style={{ marginBottom: '8px', padding: '6px', borderRadius: '4px', display: 'flex', gap: '8px' }}>
@@ -153,6 +181,17 @@ export const ChatWindow: React.FC = () => {
             style={{ marginTop: '4px', cursor: 'pointer', transform: 'scale(1.2)' }}
           />
         )}
+        
+        {/* Avatar Section */}
+        {avatarUrl && msg.tipo !== 'sistema' && (
+          <img 
+            src={avatarUrl} 
+            alt={autorName} 
+            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', alignSelf: 'flex-start' }}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        )}
+
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', marginBottom: '2px', display: 'flex', justifyContent: 'space-between' }}>
             <span className="chat-author">
@@ -287,7 +326,16 @@ export const ChatWindow: React.FC = () => {
 
       {/* MESSAGES */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        {messages.filter(m => m.timestamp >= clearedAt && (tab === 'geral' ? true : m.tipo === tab)).map((msg, i) => renderMessage(msg, i))}
+        {messages.filter(m => {
+          if (m.timestamp < clearedAt) return false;
+          if (tab !== 'geral' && m.tipo !== tab) return false;
+          if (m.tipo === 'whisper') {
+            const isTarget = m.alvo === playerName || m.alvo?.toLowerCase() === playerName.toLowerCase();
+            const isSender = m.autor === playerName || m.autor_alias === playerName;
+            if (!isTarget && !isSender) return false;
+          }
+          return true;
+        }).map((msg, i) => renderMessage(msg, i))}
       </div>
 
       {/* INPUT */}

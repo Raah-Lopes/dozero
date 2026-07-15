@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Swords, Trash2, ChevronRight, Play, Square, Dices, Skull, PlusCircle, Activity, Zap, Flame, Shield, Clock, Target, MessageSquare, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { state, removeCombatParticipant, nextCombatTurn, clearCombat, pushChatMessage, addConditionToParticipant, removeConditionFromParticipant, updateTokenProps } from '../../store';
 import type { CombatParticipant, CombatCondition } from '../../store';
@@ -40,6 +40,13 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
   const [showStakes, setShowStakes] = useState(false);
   const [stakesSuccess, setStakesSuccess] = useState('');
   const [stakesFailure, setStakesFailure] = useState('');
+  const climaxTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (climaxTimerRef.current) window.clearTimeout(climaxTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const observer = () => {
@@ -140,7 +147,8 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
   const launchClimaxRoll = () => {
     state.combat.set('climax', { active: true, stakes: { success: stakesSuccess || 'Sucesso!', failure: stakesFailure || 'Falha!' }, result: null });
     setShowStakes(false); setStakesSuccess(''); setStakesFailure('');
-    setTimeout(() => {
+    if (climaxTimerRef.current) window.clearTimeout(climaxTimerRef.current);
+    climaxTimerRef.current = window.setTimeout(() => {
       const roll = Math.floor(Math.random() * 20) + 1;
       const result = roll >= 10 ? 'success' : 'failure';
       const climax = state.combat.get('climax') as any;

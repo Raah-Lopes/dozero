@@ -241,6 +241,13 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
 }
 
+.chat-bubble-whisper {
+  background: rgba(76, 29, 149, 0.3); /* Purple background */
+  border: 1px solid rgba(167, 139, 250, 0.5) !important;
+  border-left: 4px solid #a78bfa !important;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+}
+
 .chat-drop-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -479,7 +486,6 @@ details.glass-accordion .accordion-content {
 .mdxeditor .tip, .mdxeditor .success, .mdxeditor .admonition-tip, .mdxeditor .admonition-success, .mdxeditor [data-type="tip"], .mdxeditor [data-mdx-directive="tip"], .mdxeditor [data-type="success"], .mdxeditor [data-mdx-directive="success"] {
   border-left-color: #10b981 !important;
 }
-
 
 /* FIX: ESCONDER CANVAS DUPLICADO DO REACT STRICT MODE */
 .wiki-graph-container canvas:first-of-type:not(:last-of-type) {

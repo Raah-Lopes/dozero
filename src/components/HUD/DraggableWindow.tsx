@@ -24,26 +24,29 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   const storageKey = `window_prefs_${id}`;
   
   const getInitialPrefs = () => {
+    const screenW = typeof window !== 'undefined' ? window.innerWidth : 1920;
+    const screenH = typeof window !== 'undefined' ? window.innerHeight : 1080;
+    
+    // Clamp initial positions so new windows never spawn off-screen
+    const safeInitialX = Math.min(Math.max(0, initialX), screenW - 100);
+    const safeInitialY = Math.min(Math.max(0, initialY), screenH - 100);
+    
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
          const parsed = JSON.parse(saved);
-         // Clamping to screen bounds to prevent invisible windows
-         const screenW = window.innerWidth;
-         const screenH = window.innerHeight;
-         
          // Protection against NaN or corrupted values
          if (typeof parsed.x !== 'number' || typeof parsed.y !== 'number' || 
              isNaN(parsed.x) || isNaN(parsed.y) ||
              parsed.x < -100 || parsed.x > screenW - 50 || 
              parsed.y < 0 || parsed.y > screenH - 50) {
-            return { x: initialX, y: Math.max(0, initialY), w: width, h: height, pinned: false };
+            return { x: safeInitialX, y: safeInitialY, w: width, h: height, pinned: false };
          }
          if (parsed.y < 0) parsed.y = 0;
          return { ...parsed, pinned: parsed.pinned || false };
       }
     } catch (e) {}
-    return { x: initialX, y: Math.max(0, initialY), w: width, h: height, pinned: false };
+    return { x: safeInitialX, y: safeInitialY, w: width, h: height, pinned: false };
   };
 
   const initialPrefs = getInitialPrefs();
@@ -381,7 +384,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
 
       {/* Content Area */}
       {!isMinimized && (
-        <div style={{ flex: 1, padding: variant === 'default' ? '1rem' : '0', display: 'flex', flexDirection: 'column', overflow: (variant === 'default' || variant === 'glass') ? 'hidden' : 'visible', containerType: (variant === 'default' || variant === 'glass') ? 'inline-size' : 'normal', containerName: 'windowcontainer' }}>
+        <div style={{ flex: 1, padding: variant === 'default' ? '1rem' : '0', display: 'flex', flexDirection: 'column', overflow: (variant === 'default' || variant === 'glass') ? 'auto' : 'visible', containerType: (variant === 'default' || variant === 'glass') ? 'inline-size' : 'normal', containerName: 'windowcontainer' }}>
           <ErrorBoundary fallbackMessage={`Erro no módulo: ${title}`}>
             {children}
           </ErrorBoundary>

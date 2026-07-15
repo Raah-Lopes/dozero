@@ -1,3 +1,3 @@
 # NPCs\_Exemplo.md
 
-Este � um arquivo de exemplo. Escreva sua lore aqui!
+Este  um arquivo de exemplo. Escreva sua lore aqui!

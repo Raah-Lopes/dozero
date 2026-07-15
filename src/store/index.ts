@@ -12,14 +12,3 @@ export * from './world';
 export * from './mapTexts';
 export * from './props';
 export * from './useCommandRegistry';
-
-export interface LoreEntry {
-  id: string;
-  title: string;
-  content: string;
-}
-
-export const useStore = () => ({
-  combatLog: [],
-  addLoreEntry: (entry: LoreEntry) => {}
-});

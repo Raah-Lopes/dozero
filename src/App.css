@@ -20,7 +20,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 10;
+  z-index: 50;
   pointer-events: none; /* Let clicks pass through to canvas by default */
   display: flex;
   flex-direction: column;
@@ -112,4 +112,177 @@
     min-width: auto;
     width: 100%;
   }
+}
+
+/* ==========================================================================
+   APP LAYOUT & VIEW TRANSITIONS
+   ========================================================================== */
+
+/* Base View Layer */
+.view-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.4s ease-in-out, visibility 0.4s;
+  z-index: 100;
+}
+
+.view-layer.active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Specific Views */
+.canvas-layer-container {
+  z-index: 10; /* Base game layer */
+}
+
+.theater-layer {
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+}
+
+.wiki-layer {
+  z-index: 1000;
+  background: var(--bg-primary);
+}
+
+/* ==========================================================================
+   HUD GRID SYSTEM
+   ========================================================================== */
+.hud-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "top-left top-center top-right"
+    "mid-left mid-center mid-right"
+    "bot-left bot-center bot-right";
+  pointer-events: none; /* Passes clicks through */
+}
+
+/* Top Toolbar Area (Spans top-left to top-right) */
+.hud-top-area {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  pointer-events: none;
+}
+
+.hud-hub-btn {
+  display: flex;
+  align-items: flex-start;
+}
+
+.hud-tools-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.hud-tools-dropdown {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
+/* Modal Layer positioning */
+.hud-modal-layer {
+  position: absolute;
+  top: 80px;
+  right: var(--hud-padding);
+  z-index: 50;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   EXIT DOORS & BUTTONS (Theater & Wiki)
+   ========================================================================== */
+.exit-door-container-left {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 99999;
+}
+
+.exit-door-container-right {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 99999;
+}
+
+.exit-door-btn-hoverable {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0.6rem;
+  cursor: pointer;
+  border: 1px solid var(--accent-primary);
+  color: white;
+  background: rgba(20,20,20,0.85);
+  border-radius: 8px;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.exit-door-btn-hoverable .exit-icon {
+  flex-shrink: 0;
+}
+
+.exit-door-btn-hoverable .exit-text {
+  max-width: 0;
+  opacity: 0;
+  display: inline-block;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.exit-door-btn-hoverable:hover {
+  box-shadow: 0 0 15px var(--accent-glow);
+  background: rgba(30,30,30,0.95);
+}
+
+.exit-door-btn-hoverable:hover .exit-text {
+  max-width: 150px;
+  opacity: 1;
+  margin-left: 0.5rem;
+}
+
+.exit-door-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  border: 1px solid var(--accent-primary);
+  color: white;
+  background: rgba(20,20,20,0.85);
+  border-radius: 8px;
+  pointer-events: auto;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 15px var(--accent-glow);
+  background: rgba(30,30,30,0.95);
 }

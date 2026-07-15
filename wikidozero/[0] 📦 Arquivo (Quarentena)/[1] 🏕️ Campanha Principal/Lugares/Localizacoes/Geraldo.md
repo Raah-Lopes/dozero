@@ -5,3 +5,4 @@ Aqui estamos nós em mais uma jornada épica pelas masmorras de Eldorado![](http
 Lago preto
 
 amigo:: [[arcanus]]
+amigo:: [[eldorado]]

@@ -20,7 +20,7 @@ export const TacticalRadar: React.FC = () => {
 
   const allEntities = [
     ...members.map(m => ({ id: m.caminhoArquivo, name: m.nome, avatar: m.avatar, isEnemy: false })),
-    ...enemies.map(e => ({ id: e.id, name: e.name, isEnemy: true }))
+    ...enemies.map(e => ({ id: e.id, name: e.name, avatar: undefined, isEnemy: true }))
   ];
 
   return (

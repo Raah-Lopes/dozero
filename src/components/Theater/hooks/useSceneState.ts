@@ -31,10 +31,53 @@ export function useSceneState() {
   const setCurrentScene = useCallback((id: string) => {
     const scene = theaterData.scenes.find(s => s.id === id);
     if (scene) {
-      updateTheaterState({ currentSceneId: id });
+      // Disparar transição visual (TheaterView escuta)
+      const transition = scene.transitionType || 'fade';
+      if (transition !== 'none') {
+        window.dispatchEvent(new CustomEvent('theater-scene-transition', { detail: { type: transition } }));
+      }
+
+      updateTheaterState({ currentSceneId: id, mood: scene.mood, weather: scene.weather });
       addTheaterDiaryEntry({ timestamp: Date.now(), type: 'scene', text: `🎬 Cena: "${scene.title}"` });
+
+      // Auto-trigger áudio vinculado à cena
+      if (scene.musicPresetId || scene.ambiencePresetId) {
+        import('../../../store/audioStore').then(({ useAudioStore }) => {
+          const { scenePresets, localTracks, musicVolume, ambienceVolume } = useAudioStore.getState();
+          // Procurar primeiro por preset, depois por track ID direto
+          const preset = scenePresets.find(p => p.id === scene.musicPresetId);
+          if (preset) {
+            useAudioStore.getState().triggerMacro(preset.id);
+          } else {
+            // IDs diretos de track (sem preset intermediário)
+            import('../../../services/AudioEngine').then(({ audioEngine }) => {
+              if (scene.musicPresetId) {
+                const t = localTracks.find(t => t.id === scene.musicPresetId);
+                if (t) audioEngine.playMusic(t, musicVolume);
+              }
+              if (scene.ambiencePresetId) {
+                const t = localTracks.find(t => t.id === scene.ambiencePresetId);
+                if (t) audioEngine.playAmbience(t, ambienceVolume);
+              }
+            });
+          }
+        });
+      }
     }
   }, [theaterData.scenes]);
+
+  /** Vincula a música e ambiente atualmente tocando à cena atual */
+  const linkAudioToScene = useCallback(() => {
+    if (!theaterData.currentSceneId) return;
+    import('../../../store/audioStore').then(({ useAudioStore }) => {
+      const { currentMusicId, currentAmbienceId } = useAudioStore.getState();
+      updateTheaterScene(theaterData.currentSceneId, {
+        musicPresetId: currentMusicId,
+        ambiencePresetId: currentAmbienceId,
+      });
+      addTheaterDiaryEntry({ timestamp: Date.now(), type: 'narrative', text: `🔗 Áudio vinculado à cena atual` });
+    });
+  }, [theaterData.currentSceneId]);
 
   const createScene = useCallback((overrides: Partial<TheaterScene> = {}) => {
     const defaultScene: Omit<TheaterScene, 'id'> = {
@@ -47,6 +90,7 @@ export function useSceneState() {
       objectives: [],
       tags: [],
       assets: [],
+      props: [],
       ...overrides,
     };
     const id = addTheaterScene(defaultScene);
@@ -143,7 +187,9 @@ export function useSceneState() {
     diaryEntries: theaterData.diaryEntries,
     enemies: theaterData.enemies,
     castConditions: theaterData.castConditions,
-    distanceMap: theaterData.distanceMap,
+    selectedCastMemberId: theaterData.selectedCastMemberId,
+    vnModeActive: theaterData.vnModeActive,
+    setSelectedCastMemberId: (id: string) => updateTheaterState({ selectedCastMemberId: id }),
     setCurrentScene,
     createScene,
     patchCurrentScene,
@@ -154,5 +200,6 @@ export function useSceneState() {
     removeObjective,
     goToNextScene,
     goToPrevScene,
+    linkAudioToScene,
   };
 }

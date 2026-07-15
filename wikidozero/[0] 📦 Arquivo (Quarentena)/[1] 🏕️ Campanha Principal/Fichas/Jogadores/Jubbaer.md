@@ -151,19 +151,6 @@ magias_preparadas:
     current: 0
     max: 0
 ---
-
-
-
-
-
-
-
-
-
-
-
-
-
 > \[!quote]- Interpretação e Lore
 > **Nome Completo:** Jubbaer, a Guerreira Bebada | **Imagem:**
 > **Resumo:**
@@ -240,12 +227,6 @@ magias_preparadas:
 
 *(Veja os itens e armas na aba de Inventário da Ficha Visual no DOZERO)*
 
-
-
-
-
-
-
 *\`\`\`dataview*
 
 *TABLE nivel, hp, faccao AS "Clã", classe*
@@ -257,3 +238,4 @@ magias_preparadas:
 *SORT hp DESC*
 
 *\`\`\`*
+aliado:: \[\[eldorado]]

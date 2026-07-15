@@ -1,0 +1,954 @@
+/* ============================================================
+   Teatro da Mente — Redesign completo
+   Filosofia: Palco (fullscreen) + Cockpit (bottom) + Camarim (drawer)
+   ============================================================ */
+
+/* ---------- ROOT ---------- */
+.theater-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #020617;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+}
+
+/* ---------- PALCO (fundo fullscreen) ---------- */
+.theater-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.theater-stage-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: background-image 0.6s ease, opacity 0.6s ease;
+}
+
+/* Vignette cinematic nas bordas */
+.theater-stage-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 25%, transparent 70%, rgba(0,0,0,0.65) 100%);
+  pointer-events: none;
+}
+
+/* Background layers wrapper — filter applied only here */
+.theater-fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: filter 1.2s ease;
+}
+
+/* Mood color tint */
+.theater-mood-tint {
+  position: absolute;
+  inset: 0;
+  transition: background 1.5s ease;
+}
+
+/* Particles */
+.theater-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ---------- UI LAYER (acima do stage) ---------- */
+.theater-ui {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.theater-ui > * {
+  pointer-events: auto;
+}
+
+/* ---------- TOPBAR ---------- */
+.theater-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 200px; /* 200px padding left and right to clear MainToolbar */
+  background: linear-gradient(to bottom, rgba(2,6,23,0.92) 0%, transparent 100%);
+  height: 52px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .theater-topbar {
+    padding: 8px 120px; /* reduce padding on smaller screens */
+  }
+  .theater-topbar-title {
+    display: none; /* hide title to make space for buttons */
+  }
+}
+
+@media (max-width: 600px) {
+  .theater-topbar {
+    padding: 8px 60px;
+  }
+}
+
+.theater-topbar-title {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.theater-topbar-title:hover {
+  color: white;
+}
+
+/* Pill buttons (mood/weather) */
+.theater-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.55);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.theater-pill:hover {
+  background: rgba(255,255,255,0.08);
+  color: white;
+  border-color: rgba(255,255,255,0.25);
+}
+
+.theater-pill.active {
+  border-color: currentColor;
+  background: rgba(0,0,0,0.5);
+}
+
+/* Topbar icon button */
+.theater-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.theater-icon-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border-color: rgba(255,255,255,0.25);
+}
+
+.theater-icon-btn.active {
+  background: rgba(168,85,247,0.25);
+  border-color: rgba(168,85,247,0.6);
+  color: #c084fc;
+}
+
+/* ---------- CENTRO DO PALCO (NPC + Hero badges) ---------- */
+.theater-stage-content {
+  flex: 1;
+  position: relative;
+  pointer-events: none;
+}
+
+/* Hero badges — bottom left */
+.theater-hero-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  gap: 8px;
+  padding: 0 0 8px 12px;
+  pointer-events: auto;
+}
+
+/* NPC Portrait — appears center or right */
+.theater-npc-portrait {
+  position: absolute;
+  bottom: 0;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  animation: npcSlideIn 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes npcSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.theater-npc-portrait-img {
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px 12px 0 0;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+}
+
+.theater-npc-portrait-img-placeholder {
+  width: 120px;
+  height: 160px;
+  border-radius: 12px 12px 0 0;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(15,23,42,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+}
+
+.theater-npc-portrait-name {
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-top: none;
+  width: 120px;
+  text-align: center;
+  padding: 6px 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #e2e8f0;
+  border-radius: 0 0 8px 8px;
+}
+
+/* ---------- HERO BADGE ---------- */
+.theater-hero-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.theater-hero-badge:hover {
+  transform: translateY(-4px);
+}
+
+.theater-hero-badge-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(15,23,42,0.8);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.theater-hero-badge-hp {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 0 0 50% 50%;
+}
+
+.theater-hero-badge-name {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.04em;
+  text-align: center;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- COCKPIT (bottom bar) ---------- */
+.theater-cockpit {
+  flex-shrink: 0;
+  background: rgba(2,6,23,0.97);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(16px);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 52px;
+}
+
+.theater-cockpit-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.theater-cockpit-label {
+  font-size: 0.58rem;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+/* Quick buttons in cockpit */
+.theater-qbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.6);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.theater-qbtn:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+/* Color variants */
+.theater-qbtn.red    { color: #fca5a5; border-color: rgba(239,68,68,0.25); }
+.theater-qbtn.red:hover    { background: rgba(239,68,68,0.18); border-color: #ef4444; }
+.theater-qbtn.orange { color: #fdba74; border-color: rgba(249,115,22,0.25); }
+.theater-qbtn.orange:hover { background: rgba(249,115,22,0.18); border-color: #f97316; }
+.theater-qbtn.blue   { color: #93c5fd; border-color: rgba(59,130,246,0.25); }
+.theater-qbtn.blue:hover   { background: rgba(59,130,246,0.18); border-color: #3b82f6; }
+.theater-qbtn.purple { color: #c084fc; border-color: rgba(168,85,247,0.25); }
+.theater-qbtn.purple:hover { background: rgba(168,85,247,0.18); border-color: #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.3); }
+.theater-qbtn.green  { color: #6ee7b7; border-color: rgba(16,185,129,0.25); }
+.theater-qbtn.green:hover  { background: rgba(16,185,129,0.18); border-color: #10b981; }
+.theater-qbtn.amber  { color: #fcd34d; border-color: rgba(245,158,11,0.25); }
+.theater-qbtn.amber:hover  { background: rgba(245,158,11,0.18); border-color: #f59e0b; }
+.theater-qbtn.active-pill  { opacity: 1; }
+
+/* ---------- DIRECTOR PANEL (drawer) ---------- */
+.theater-drawer-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.theater-drawer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  background: rgba(4,9,26,0.97);
+  border-right: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(20px);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  z-index: 40;
+  overflow: hidden;
+}
+
+.theater-drawer.open {
+  transform: translateX(0);
+}
+
+.theater-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.theater-drawer-header h3 {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c084fc;
+  margin: 0;
+}
+
+.theater-drawer-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.theater-drawer-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #475569;
+  padding: 8px 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+}
+
+.theater-drawer-tab:hover { color: #94a3b8; }
+.theater-drawer-tab.active {
+  color: #c084fc;
+  border-bottom-color: #a855f7;
+  background: rgba(168,85,247,0.06);
+}
+
+.theater-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* Section headers inside drawer */
+.theater-drawer-section {
+  margin-bottom: 16px;
+}
+
+.theater-drawer-section-title {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #334155;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Background gallery grid */
+.theater-bg-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.theater-bg-thumb {
+  aspect-ratio: 16/9;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(15,23,42,0.8);
+  position: relative;
+}
+
+.theater-bg-thumb:hover {
+  border-color: rgba(168,85,247,0.5);
+  transform: scale(1.03);
+}
+
+.theater-bg-thumb.active {
+  border-color: #a855f7;
+  box-shadow: 0 0 10px rgba(168,85,247,0.4);
+}
+
+.theater-bg-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.theater-bg-thumb-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #334155;
+  font-size: 1.4rem;
+  aspect-ratio: 16/9;
+  border-radius: 6px;
+  border: 2px dashed rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(15,23,42,0.4);
+}
+
+.theater-bg-thumb-add:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.4);
+}
+
+/* NPC roster in drawer */
+.theater-npc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 6px;
+}
+
+.theater-npc-row:hover {
+  background: rgba(168,85,247,0.1);
+  border-color: rgba(168,85,247,0.3);
+}
+
+.theater-npc-row.active {
+  background: rgba(168,85,247,0.15);
+  border-color: rgba(168,85,247,0.5);
+}
+
+.theater-npc-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(30,40,80,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.theater-npc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.theater-npc-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theater-npc-type {
+  font-size: 0.62rem;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Scene switcher */
+.theater-scene-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.theater-scene-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-scene-row:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.theater-scene-row.active {
+  background: rgba(59,130,246,0.15);
+  border-color: rgba(59,130,246,0.4);
+}
+
+.theater-scene-row-title {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theater-scene-row-sub {
+  font-size: 0.64rem;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cinematic mode */
+.theater-cinematic-ui {
+  transition: opacity 0.5s ease;
+}
+.theater-cinematic-ui.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theater-cinematic-exit {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.45);
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  pointer-events: auto;
+  font-family: var(--font-display);
+}
+
+.theater-cinematic-exit:hover {
+  background: rgba(168,85,247,0.2);
+  color: #c084fc;
+  border-color: rgba(168,85,247,0.4);
+}
+
+/* Animations shared */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Theater keyframes (rain, snow, etc.) defined in MoodEngine.tsx as inline style */
+
+/* ============================================================
+   FLOATING WINDOWS & STAGE PROPS
+   ============================================================ */
+
+.floating-window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, width 0.3s ease, height 0.3s ease;
+  pointer-events: auto; /* Let clicks pass to window */
+}
+
+.floating-window.active {
+  box-shadow: 0 15px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 0 1px rgba(168, 85, 247, 0.3);
+}
+
+.floating-window.minimized {
+  /* Height is auto, content is hidden */
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.floating-window-header {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.floating-window-header:active {
+  cursor: grabbing;
+}
+
+.floating-window-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.floating-window-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.floating-window-actions button {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.floating-window-actions button:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.floating-window-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  position: relative;
+}
+.floating-window-content::-webkit-scrollbar { width: 4px; }
+.floating-window-content::-webkit-scrollbar-track { background: transparent; }
+.floating-window-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.floating-window-content::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+.floating-window-resizer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.2) 50%);
+  border-bottom-right-radius: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.floating-window-resizer:hover {
+  opacity: 1;
+}
+
+/* --- Stage Props Layer --- */
+
+.stage-props-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5; /* Above bg/particles, below UI */
+  pointer-events: none; /* Only the props themselves are clickable */
+}
+
+.stage-prop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: grab;
+  user-select: none;
+  pointer-events: auto;
+  transform-origin: top left;
+}
+
+.stage-prop:active {
+  cursor: grabbing;
+}
+
+.stage-prop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.stage-prop-token {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.1);
+  pointer-events: none;
+}
+
+/* Selected Prop Styles */
+.stage-prop.selected {
+  outline: 2px dashed rgba(168, 85, 247, 0.5);
+  outline-offset: 2px;
+}
+
+.stage-prop-delete {
+  position: absolute;
+  top: -24px;
+  right: -24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.stage-prop.selected .stage-prop-delete {
+  opacity: 1;
+}
+
+.stage-prop-delete:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Resize Handles */
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #c084fc;
+  border: 1px solid #000;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stage-prop.selected .resize-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.resize-handle.nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.resize-handle.ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.resize-handle.sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.resize-handle.se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+/* Snap Guides */
+.snap-guide {
+  position: absolute;
+  background: rgba(168, 85, 247, 0.6);
+  pointer-events: none;
+  z-index: 100;
+}
+
+.snap-guide.vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.snap-guide.horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+/* ---------- IMERSÃO SENSORIAL & COLOR GRADING ---------- */
+
+/* Efeito Ken Burns no background da cena (Parallax/Zoom leve e contínuo) */
+@keyframes kenBurns {
+  0%   { transform: scale(1.0) translate(0, 0); }
+  50%  { transform: scale(1.05) translate(-1%, -1%); }
+  100% { transform: scale(1.0) translate(0, 0); }
+}
+
+.theater-ken-burns {
+  animation: kenBurns 60s ease-in-out infinite;
+}
+
+/* Filtros Globais Baseados em Mood */
+.mood-filter-suspense {
+  background-color: rgba(30, 20, 60, 0.2);
+  mix-blend-mode: multiply;
+}
+
+.mood-filter-horror {
+  box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.9);
+  background-color: rgba(20, 0, 0, 0.15);
+  backdrop-filter: contrast(1.1) brightness(0.8);
+}
+
+.mood-filter-sadness {
+  backdrop-filter: grayscale(0.8) sepia(0.2) brightness(0.8);
+  background-color: rgba(10, 20, 40, 0.1);
+}
+
+.mood-filter-mystery {
+  backdrop-filter: blur(1px) contrast(1.2);
+  background-color: rgba(10, 40, 30, 0.2);
+  mix-blend-mode: overlay;
+}
+
+.mood-filter-combat {
+  box-shadow: inset 0 0 80px rgba(220, 20, 20, 0.3);
+  backdrop-filter: saturate(1.3) contrast(1.1);
+}
+
+.theater-global-filter-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15; /* Atrás da UI mas em cima da imagem */
+  transition: all 1s ease-in-out;
+}

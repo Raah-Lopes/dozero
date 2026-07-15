@@ -25,20 +25,24 @@ export const ClimaxOverlay: React.FC = () => {
       const current = readClimax();
       setClimax(current);
 
+      let innerTimer: number;
       if (current.active && current.result) {
         setPhase('result');
 
         // Auto-close after 4 seconds
-        const closeTimer = setTimeout(() => {
+        const closeTimer = window.setTimeout(() => {
           setPhase('closing');
-          setTimeout(() => {
+          innerTimer = window.setTimeout(() => {
             state.combat.set('climax', { active: false });
             setClimax({ active: false });
             setPhase('stakes');
           }, 600);
         }, 4000);
 
-        return () => clearTimeout(closeTimer);
+        return () => {
+          clearTimeout(closeTimer);
+          clearTimeout(innerTimer);
+        };
       } else if (current.active) {
         setPhase('stakes');
       }

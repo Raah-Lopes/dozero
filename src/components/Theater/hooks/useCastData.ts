@@ -47,7 +47,7 @@ export function useCastData() {
       
       let finalStatus: 'jogador' | 'npc' | 'inimigo' = 'npc';
       if (['jogador', 'npc', 'inimigo'].includes(rawStatus)) {
-        finalStatus = rawStatus as any;
+        finalStatus = rawStatus as 'jogador' | 'npc' | 'inimigo';
       } else if (rawTipo === 'pc' || rawTipo === 'personagem') {
         finalStatus = 'jogador';
       } else if (rawTipo === 'monstro' || rawTipo === 'inimigo') {

@@ -89,9 +89,14 @@ function EnemyCompactCard({ enemy }: { enemy: TheaterEnemy }) {
       {/* Header Compacto */}
       <div 
         onClick={() => setExpanded(!expanded)}
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'prop', url: undefined, title: enemy.name, hp: undefined }));
+        }}
+        title="Arraste para o palco ou clique para expandir"
         style={{
           display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px',
-          cursor: 'pointer', background: expanded ? 'rgba(255,255,255,0.03)' : 'transparent'
+          cursor: 'grab', background: expanded ? 'rgba(255,255,255,0.03)' : 'transparent'
         }}
       >
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

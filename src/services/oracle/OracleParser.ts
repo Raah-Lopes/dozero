@@ -27,7 +27,7 @@ export class OracleParser {
 
     try {
       // Usamos a mesma API local que usamos para a Wiki
-      const res = await fetch(`http://localhost:5174/api/wiki/tree?repoPath=${encodeURIComponent(this.ORACLES_PATH)}`);
+      const res = await fetch(`/api/wiki/tree?repoPath=${encodeURIComponent(this.ORACLES_PATH)}`);
       if (!res.ok) throw new Error('Falha ao carregar tree do Oráculo');
       const data = await res.json();
       const tree: any[] = data.tree || [];
@@ -48,7 +48,7 @@ export class OracleParser {
             };
           }
 
-          const fileRes = await fetch(`http://localhost:5174/api/wiki/file?repoPath=${encodeURIComponent(this.ORACLES_PATH)}&path=${encodeURIComponent(item.path)}`);
+          const fileRes = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(this.ORACLES_PATH)}&path=${encodeURIComponent(item.path)}`);
           if (fileRes.ok) {
             const fileData = await fileRes.json();
             const table = this.parseTable(item.path, fileData.content);
@@ -62,7 +62,7 @@ export class OracleParser {
       // 2. Carregar e parsear os JSONs na raiz
       const jsonFiles = ['Ironsmith-Expanded-Oracles.JSON', 'Starsmith-Expanded-Oracles.json'];
       for (const jf of jsonFiles) {
-        const fileRes = await fetch(`http://localhost:5174/api/wiki/file?repoPath=${encodeURIComponent('D:/DOZERO/wikidozero')}&path=${encodeURIComponent(jf)}`);
+        const fileRes = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent('D:/DOZERO/wikidozero')}&path=${encodeURIComponent(jf)}`);
         if (fileRes.ok) {
           try {
              const fileData = await fileRes.json();

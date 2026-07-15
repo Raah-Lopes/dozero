@@ -1,4 +1,3 @@
-// src/components/Theater/CastPanel.tsx
 import React, { useState } from 'react';
 import { User, Skull, Cpu, Heart, Droplets, RefreshCw,  X, Edit2 } from 'lucide-react';
 import { useCastData } from './hooks/useCastData';
@@ -39,9 +38,13 @@ function ManaBar({ current, max }: { current: number; max: number }) {
   );
 }
 
-export const CastPanel: React.FC = () => {
-  const { members, players, npcs, loading, reload } = useCastData();
-  const { castConditions } = useSceneState();
+interface CastPanelProps {
+  type?: 'jogador' | 'npc' | 'inimigo';
+}
+
+export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
+  const { members: allMembers, loading, reload } = useCastData();
+  const { castConditions, selectedCastMemberId, setSelectedCastMemberId } = useSceneState();
   const [showNPCs, setShowNPCs] = useState(false);
   const [activeCondMenu, setActiveCondMenu] = useState<string | null>(null);
   const [editingPath, setEditingPath] = useState<string | null>(null);
@@ -55,6 +58,8 @@ export const CastPanel: React.FC = () => {
       reload();
     }
   };
+
+  const members = type ? allMembers.filter(m => m.status === type) : allMembers;
 
   const statusIcon = (s: string) => {
     if (s === 'npc') return <Cpu size={13} color="#93c5fd" />;
@@ -70,22 +75,32 @@ export const CastPanel: React.FC = () => {
     return (
       <div
         key={m.caminhoArquivo}
+        onClick={() => setSelectedCastMemberId(m.caminhoArquivo)}
         style={{
-          background: 'rgba(0,0,0,0.25)',
-          border: pvPct < 30 ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.06)',
+          background: selectedCastMemberId === m.caminhoArquivo ? 'rgba(99,102,241,0.1)' : 'rgba(0,0,0,0.25)',
+          border: selectedCastMemberId === m.caminhoArquivo 
+            ? '1px solid rgba(129,140,248,0.8)' 
+            : (pvPct < 30 ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.06)'),
           borderRadius: '10px',
           padding: '12px',
           position: 'relative',
           transition: 'all 0.2s',
-          boxShadow: pvPct < 30 ? '0 0 12px rgba(239,68,68,0.1)' : 'none',
+          boxShadow: selectedCastMemberId === m.caminhoArquivo 
+            ? '0 0 15px rgba(99,102,241,0.2)' 
+            : (pvPct < 30 ? '0 0 12px rgba(239,68,68,0.1)' : 'none'),
+          cursor: 'pointer'
         }}
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <div 
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'pointer', overflow: 'hidden' }}
-            onClick={() => window.dispatchEvent(new CustomEvent('open-sheet-by-wiki', { detail: m.caminhoArquivo }))}
-            title="Abrir Ficha do Personagem"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'grab', overflow: 'hidden' }}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'prop', url: m.avatar, title: m.nome, hp: m.pv_max > 0 ? m.pv_max : undefined }));
+            }}
+            onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('open-sheet-by-wiki', { detail: m.caminhoArquivo })); }}
+            title="Arraste para o palco ou clique para abrir a ficha"
           >
             {m.avatar ? (
               <img 
@@ -241,18 +256,12 @@ export const CastPanel: React.FC = () => {
         {loading && (
           <div style={{ color: '#374151', textAlign: 'center', padding: '20px', fontSize: '0.8rem' }}>Carregando...</div>
         )}
-        {!loading && players.length === 0 && (
+        {!loading && members.length === 0 && (
           <div style={{ color: '#374151', textAlign: 'center', padding: '12px', fontSize: '0.8rem', fontStyle: 'italic' }}>
-            Crie fichas em <code style={{ fontSize: '0.75rem', color: '#475569' }}>Personagens/</code> na Wiki
+            Nenhum personagem encontrado.
           </div>
         )}
-        {players.map(renderMember)}
-        {showNPCs && npcs.length > 0 && (
-          <>
-            <div style={{ fontSize: '0.65rem', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-display)', padding: '4px 0 0' }}>NPCs</div>
-            {npcs.map(renderMember)}
-          </>
-        )}
+        {members.map(renderMember)}
       </div>
     </div>
   );

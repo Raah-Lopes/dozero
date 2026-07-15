@@ -47,7 +47,10 @@ const uniqueRoomName = `dozero-vtt-${window.location.host.replace(/[^a-zA-Z0-9]/
 export const provider = new WebsocketProvider(
   wsUrl, 
   isInternet ? uniqueRoomName : roomName, 
-  doc
+  doc,
+  // Não conectar automaticamente em localhost — sem servidor WS local.
+  // BroadcastChannel (acima) já sincroniza entre abas; IndexedDB persiste o estado.
+  { connect: isInternet }
 );
 
 export const state = {
@@ -69,6 +72,7 @@ export const state = {
   mapTexts: doc.getMap('mapTexts'),
   props: doc.getMap('props'),
   trades: doc.getMap('trades'),
+  conspiracy: doc.getMap('conspiracy')
 };
 
 export function connectProvider() {

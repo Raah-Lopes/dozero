@@ -26,8 +26,32 @@ function buildFsTree(dir: string, baseDir: string, tree: any[] = []) {
 }
 
 // Helper to build graph data
-function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[] = []) {
+function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[] = [], parentId: string | null = null, ignoredPaths: Set<string> = new Set()) {
   if (!fs.existsSync(dir)) return { nodes, links };
+  
+  let currentFolderId = parentId;
+  if (dir !== baseDir) {
+    const relativePath = path.relative(baseDir, dir).replace(/\\/g, '/');
+    if (ignoredPaths.has(relativePath)) return { nodes, links };
+    currentFolderId = relativePath;
+    const name = path.basename(dir);
+    
+    // Add folder as a node
+    nodes.push({
+      id: currentFolderId,
+      name: name,
+      path: currentFolderId,
+      group: path.dirname(currentFolderId),
+      isFolder: true,
+      avatar: null
+    });
+    
+    // Link folder to its parent folder
+    if (parentId) {
+      links.push({ source: currentFolderId, target: parentId, label: '' });
+    }
+  }
+
   const files = fs.readdirSync(dir);
   for (const file of files) {
     if (file === '.git' || file === 'node_modules' || file === 'ANEXOS') continue;
@@ -36,25 +60,63 @@ function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[
     const stat = fs.statSync(fullPath);
     
     if (stat.isDirectory()) {
-      buildGraph(fullPath, baseDir, nodes, links);
+      buildGraph(fullPath, baseDir, nodes, links, currentFolderId, ignoredPaths);
     } else if (file.endsWith('.md')) {
       const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
+      if (ignoredPaths.has(relativePath)) continue;
       const id = relativePath;
       const name = file.replace('.md', '');
       const content = fs.readFileSync(fullPath, 'utf-8');
       
       // Buscar avatar (primeira imagem)
-      let avatar = null;
+      let avatar: string | null = null;
       const imgRegex = /!\[.*?\]\((.*?)\)|!\[\[(.*?)\]\]/;
       const imgMatch = imgRegex.exec(content);
       if (imgMatch) {
         let extracted = imgMatch[1] || imgMatch[2];
         if (extracted) {
-          avatar = extracted.replace(/\\/g, '').split('|')[0].trim();
+          extracted = extracted.replace(/\\/g, '').split('|')[0].trim();
+          // Extrair apenas o nome do arquivo, independentemente se é URL completa ou caminho relativo
+          // ponytail: lida com URLs absolutas legadas (http://localhost:5174/api/wiki/media?...path=ANEXOS/foo.webp)
+          if (extracted.includes('path=')) {
+            const m = extracted.match(/path=([^&]+)/);
+            if (m) extracted = decodeURIComponent(m[1]);
+          }
+          // Agora extracted pode ser "ANEXOS/zerim_.webp" ou apenas "zerim_.webp"
+          // Resolver para o caminho real via busca recursiva
+          const targetName = path.basename(extracted).toLowerCase();
+          let resolvedPath: string | null = null;
+          function findImage(searchDir: string): void {
+            if (resolvedPath) return;
+            if (!fs.existsSync(searchDir)) return;
+            try {
+              const entries = fs.readdirSync(searchDir);
+              for (const entry of entries) {
+                if (resolvedPath) break;
+                if (entry === '.git' || entry === 'node_modules') continue;
+                const entryPath = path.join(searchDir, entry);
+                const entryStat = fs.statSync(entryPath);
+                if (entryStat.isDirectory()) {
+                  findImage(entryPath);
+                } else if (entry.toLowerCase() === targetName) {
+                  resolvedPath = path.relative(baseDir, entryPath).replace(/\\/g, '/');
+                }
+              }
+            } catch {}
+          }
+          findImage(baseDir);
+          if (resolvedPath) {
+            avatar = resolvedPath; // caminho relativo limpo, ex: "[3] 📎 Anexos/zerim_.webp"
+          }
         }
       }
 
-      nodes.push({ id, name, path: relativePath, group: path.dirname(relativePath), avatar });
+      nodes.push({ id, name, path: relativePath, group: path.dirname(relativePath), avatar, isFolder: false });
+      
+      // Link file to its parent folder
+      if (currentFolderId) {
+        links.push({ source: id, target: currentFolderId, label: '' });
+      }
       
       // MDXEditor pode escapar os colchetes gerando \[\[nome\]\]
       // Regex captura opcionalmente "Rótulo::" antes do link
@@ -148,8 +210,42 @@ export function wikiLocalApi(): Plugin {
           }
 
           if (req.method === 'GET' && pathname === '/api/wiki/graph') {
-            const graphData = buildGraph(repoPath, repoPath);
+            const ignorePath = path.join(repoPath, '.graphignore');
+            let ignoredPaths = new Set<string>();
+            if (fs.existsSync(ignorePath)) {
+              fs.readFileSync(ignorePath, 'utf-8').split('\n').map(l => l.trim()).filter(Boolean).forEach(l => ignoredPaths.add(l));
+            }
+            const graphData = buildGraph(repoPath, repoPath, [], [], null, ignoredPaths);
             return sendResponse(200, graphData);
+          }
+
+          if (req.method === 'GET' && pathname === '/api/wiki/ignored') {
+            const ignorePath = path.join(repoPath, '.graphignore');
+            let ignored: string[] = [];
+            if (fs.existsSync(ignorePath)) {
+               ignored = fs.readFileSync(ignorePath, 'utf-8').split('\n').map(l => l.trim()).filter(Boolean);
+            }
+            return sendResponse(200, { ignored });
+          }
+
+          if (req.method === 'POST' && pathname === '/api/wiki/toggle-ignore') {
+            const filepath = body.path;
+            if (!filepath) return sendResponse(400, { error: 'path required' });
+            
+            const ignorePath = path.join(repoPath, '.graphignore');
+            let ignored = new Set<string>();
+            if (fs.existsSync(ignorePath)) {
+               fs.readFileSync(ignorePath, 'utf-8').split('\n').map(l => l.trim()).filter(Boolean).forEach(l => ignored.add(l));
+            }
+            
+            if (ignored.has(filepath)) {
+               ignored.delete(filepath);
+            } else {
+               ignored.add(filepath);
+            }
+            
+            fs.writeFileSync(ignorePath, Array.from(ignored).join('\n'));
+            return sendResponse(200, { success: true, ignored: Array.from(ignored) });
           }
           
           if (req.method === 'GET' && pathname === '/api/wiki/file') {
@@ -165,7 +261,33 @@ export function wikiLocalApi(): Plugin {
           if (req.method === 'GET' && pathname === '/api/wiki/raw') {
             const filepath = url.searchParams.get('path');
             if (!filepath) return sendResponse(400, { error: 'path required' });
-            const full = path.join(repoPath, filepath);
+            
+            let full = path.join(repoPath, filepath);
+            
+            // Se o arquivo não existir no caminho direto (ex: foi linkado apenas pelo nome), busca recursivamente
+            if (!fs.existsSync(full)) {
+               const targetName = path.basename(filepath).toLowerCase();
+               let found = false;
+               function searchFile(dir: string) {
+                 if (found) return;
+                 if (!fs.existsSync(dir)) return;
+                 const files = fs.readdirSync(dir);
+                 for (const file of files) {
+                   if (found) break;
+                   if (file === '.git' || file === 'node_modules') continue;
+                   const fullP = path.join(dir, file);
+                   const stat = fs.statSync(fullP);
+                   if (stat.isDirectory()) {
+                     searchFile(fullP);
+                   } else if (file.toLowerCase() === targetName) {
+                     full = fullP;
+                     found = true;
+                   }
+                 }
+               }
+               searchFile(repoPath);
+            }
+
             if (!fs.existsSync(full)) return sendResponse(404, { error: 'file not found' });
             
             const ext = path.extname(full).toLowerCase();
@@ -445,7 +567,32 @@ export function wikiLocalApi(): Plugin {
             const filepath = url.searchParams.get('path');
             if (!filepath) return sendResponse(400, { error: 'path required' });
             
-            const full = path.join(repoPath, filepath);
+            let full = path.join(repoPath, filepath);
+            
+            // Busca recursiva caso não exista o caminho exato
+            if (!fs.existsSync(full)) {
+               const targetName = path.basename(filepath).toLowerCase();
+               let found = false;
+               function searchFile(dir: string) {
+                 if (found) return;
+                 if (!fs.existsSync(dir)) return;
+                 const files = fs.readdirSync(dir);
+                 for (const file of files) {
+                   if (found) break;
+                   if (file === '.git' || file === 'node_modules') continue;
+                   const fullP = path.join(dir, file);
+                   const stat = fs.statSync(fullP);
+                   if (stat.isDirectory()) {
+                     searchFile(fullP);
+                   } else if (file.toLowerCase() === targetName) {
+                     full = fullP;
+                     found = true;
+                   }
+                 }
+               }
+               searchFile(repoPath);
+            }
+
             if (!fs.existsSync(full)) return sendResponse(404, { error: 'file not found' });
             
             const ext = path.extname(full).toLowerCase();

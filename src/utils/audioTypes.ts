@@ -8,15 +8,16 @@ export interface AudioPlaylist {
 
 export interface AudioTrack {
   id: string;
-  title: string;
+  title: string;       // Nome original do arquivo (imutável)
+  name?: string;       // Nome editável pelo usuário
   provider: AudioProviderType;
-  url: string; // URL completa ou ID do vídeo/track
-  fileHandle?: any; // Armazena a referência para o arquivo local
+  url: string;
+  fileHandle?: any;
   thumbnail?: string;
   duration?: number;
   category: 'ambience' | 'combat' | 'exploration' | 'narrative' | 'sfx';
   tags: string[];
-  volume: number; // 0.0 a 1.0
+  volume: number;
   isFavorite: boolean;
 }
 
@@ -35,9 +36,6 @@ export interface AudioScenePreset {
   name: string;
   musicTrackId?: string;
   ambienceTrackId?: string;
-  sfxTriggerIds?: string[];
-  chatMessage?: string; // Mensagem automática no chat
-  fadeDuration?: number; // ms
 }
 
 export interface AudioState {

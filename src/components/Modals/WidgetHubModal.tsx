@@ -26,6 +26,9 @@ interface Props {
   onOpenAIStudio: () => void;
   onOpenTradeShop: () => void;
   onOpenSystemAuditor: () => void;
+  onOpenMapSettings: () => void;
+  onOpenActorLibrary: () => void;
+  onToggleAIBot: () => void;
 }
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
@@ -40,6 +43,8 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'tracker', cat: 'Game Master', title: 'Iniciativa (Combate)', icon: Swords, action: props.onOpenTracker, theme: 'theme-red' },
     { id: 'clock', cat: 'Game Master', title: 'Relógio de Tensão', icon: Timer, action: props.onOpenClockConfig, theme: 'theme-amber' },
     { id: 'chronos', cat: 'Game Master', title: 'Motor Chronos', icon: Sun, action: props.onOpenChronos, theme: 'theme-yellow' },
+    { id: 'mapsettings', cat: 'Game Master', title: 'Configurar Cenário', icon: Map, action: props.onOpenMapSettings, theme: 'theme-blue' },
+    { id: 'actors', cat: 'Game Master', title: 'Biblioteca de Atores', icon: Users, action: props.onOpenActorLibrary, theme: 'theme-amber' },
 
     // Player Tools
     { id: 'diceroller', cat: 'Player Tools', title: 'Rolador de Dados', icon: Dices, action: props.onOpenDiceRoller, theme: 'theme-yellow' },
@@ -62,6 +67,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'audiodir', cat: 'System', title: 'Audio Director', icon: Sparkles, action: props.onOpenAudioDirector, theme: 'theme-blue' },
     { id: 'dlc', cat: 'System', title: 'Gerenciador de Complementos', icon: ToyBrick, action: props.onOpenDLCManager, theme: 'theme-orange' },
     { id: 'auditor', cat: 'System', title: 'Auditor de Sistema (Linter)', icon: Shield, action: props.onOpenSystemAuditor, theme: 'theme-red' },
+    { id: 'aibot', cat: 'System', title: 'Robô Assistente IA', icon: Bot, action: props.onToggleAIBot, theme: 'theme-pink' },
   ];
 
   const categories = ['Game Master', 'Player Tools', 'Generators & AI', 'System'];

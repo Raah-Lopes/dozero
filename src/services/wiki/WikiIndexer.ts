@@ -35,7 +35,7 @@ export class WikiIndexer {
 
     try {
       // Faz a busca na API local do projeto configurada no vite-plugins
-      const res = await fetch(`http://localhost:5174/api/wiki/search?q=.md&repoPath=${encodeURIComponent(repoPath)}`);
+      const res = await fetch(`/api/wiki/search?q=.md&repoPath=${encodeURIComponent(repoPath)}`);
       if (!res.ok) throw new Error('Falha ao buscar arquivos da API local');
       
       const data = await res.json();
@@ -48,7 +48,7 @@ export class WikiIndexer {
         if (filePath.toLowerCase().includes('readme.md')) continue;
 
         try {
-          const fileRes = await fetch(`http://localhost:5174/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(filePath)}`);
+          const fileRes = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(filePath)}`);
           if (!fileRes.ok) continue;
           
           const fileData = await fileRes.json();
@@ -82,7 +82,7 @@ export class WikiIndexer {
       const config = getWikiConfig();
       const repoPath = config.repoUrl;
 
-      const fileRes = await fetch(`http://localhost:5174/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}`);
+      const fileRes = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}`);
       if (!fileRes.ok) return null;
       
       const fileData = await fileRes.json();

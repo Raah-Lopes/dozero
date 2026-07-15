@@ -4,10 +4,9 @@ import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
 import { 
   Folder, FileText, ChevronRight, ChevronDown, 
-  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus, FolderOpen
+  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus, FolderOpen, Trash2, Eye, EyeOff
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
-import { WikiGraph } from './WikiGraph';
 import { FrontmatterPanel } from './FrontmatterPanel';
 import { getWikiConfig } from '../../store';
 import './wiki.css';
@@ -50,11 +49,13 @@ const TreeView: React.FC<{
   node: TreeNode; 
   level: number; 
   activePath: string | null;
+  ignoredFolders: string[];
   onSelect: (path: string) => void;
   onMove: (oldPath: string, newPath: string) => void;
   onRename: (oldPath: string, newName: string) => void;
   onDropExternal: (files: FileList, targetPath: string) => void;
-}> = ({ node, level, activePath, onSelect, onMove, onRename, onDropExternal }) => {
+  onToggleIgnore: (path: string) => void;
+}> = ({ node, level, activePath, ignoredFolders, onSelect, onMove, onRename, onDropExternal, onToggleIgnore }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const isDir = node.type === 'tree';
@@ -65,7 +66,7 @@ const TreeView: React.FC<{
     return (
       <div className="wiki-tree-root">
         {Object.values(node.children).map(child => (
-          <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} onSelect={onSelect} onMove={onMove} onRename={onRename} onDropExternal={onDropExternal} />
+          <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} ignoredFolders={ignoredFolders} onSelect={onSelect} onMove={onMove} onRename={onRename} onDropExternal={onDropExternal} onToggleIgnore={onToggleIgnore} />
         ))}
       </div>
     );
@@ -148,12 +149,24 @@ const TreeView: React.FC<{
         >
           <Edit2 size={12} />
         </button>
+        {/* Toggle Ignore Button */}
+        <button 
+          className="wiki-tree-rename-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleIgnore(node.path);
+          }}
+          title={ignoredFolders.includes(node.path) ? "Mostrar no Cérebro" : "Ocultar do Cérebro"}
+          style={{ color: ignoredFolders.includes(node.path) ? 'var(--text-secondary)' : 'var(--text-primary)' }}
+        >
+          {ignoredFolders.includes(node.path) ? <EyeOff size={12} /> : <Eye size={12} />}
+        </button>
       </div>
       
       {isDir && isOpen && hasChildren && (
         <div className="wiki-tree-children">
           {Object.values(node.children).map(child => (
-            <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} onSelect={onSelect} onMove={onMove} onRename={onRename} onDropExternal={onDropExternal} />
+            <TreeView key={child.path} node={child} level={level + 1} activePath={activePath} ignoredFolders={ignoredFolders} onSelect={onSelect} onMove={onMove} onRename={onRename} onDropExternal={onDropExternal} onToggleIgnore={onToggleIgnore} />
           ))}
         </div>
       )}
@@ -168,6 +181,7 @@ interface WikiViewerProps {
 
 export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   const [treeItems, setTreeItems] = useState<GithubTreeItem[]>([]);
+  const [ignoredFolders, setIgnoredFolders] = useState<string[]>([]);
   const [loadingTree, setLoadingTree] = useState(false);
   const [errorTree, setErrorTree] = useState<string | null>(null);
 
@@ -179,7 +193,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
-  const [showGraph, setShowGraph] = useState(false);
+  
   
   const editorRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -263,6 +277,34 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       const currentMarkdown = editorRef.current.getMarkdown();
       handleEditorChange(currentMarkdown);
     }
+  };
+
+  const loadIgnored = async () => {
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+      const res = await fetch(`/api/wiki/ignored?repoPath=${encodeURIComponent(repoPath)}`);
+      if (res.ok) {
+         const data = await res.json();
+         setIgnoredFolders(data.ignored || []);
+      }
+    } catch {}
+  };
+
+  const toggleIgnore = async (path: string) => {
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+      const res = await fetch('/api/wiki/toggle-ignore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoPath, path })
+      });
+      if (res.ok) {
+         const data = await res.json();
+         setIgnoredFolders(data.ignored || []);
+      }
+    } catch {}
   };
 
   const loadTree = async () => {
@@ -376,6 +418,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
 
   useEffect(() => {
     loadTree();
+    loadIgnored();
   }, []);
 
   // Escuta eventos de navegação do CampaignManagerWidget (quando já montado)
@@ -384,14 +427,9 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       const path = (e as CustomEvent).detail?.path || (e as CustomEvent).detail?.filePath;
       if (path) setActiveFile(path);
     };
-    const handlerGraph = () => {
-      setShowGraph(true);
-    };
     window.addEventListener('open-wiki-file', handler);
-    window.addEventListener('open-wiki-graph', handlerGraph);
     return () => {
       window.removeEventListener('open-wiki-file', handler);
-      window.removeEventListener('open-wiki-graph', handlerGraph);
     };
   }, []);
 
@@ -399,7 +437,6 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   useEffect(() => {
     if (initialFile) {
       setActiveFile(initialFile);
-      setShowGraph(false);
     }
   }, [initialFile]);
 
@@ -470,17 +507,17 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
             />
           
           <button 
-            onClick={() => setShowGraph(!showGraph)} 
+            onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-graph'))} 
             style={{ 
               width: '100%', padding: '0.6rem', 
-              background: showGraph ? 'var(--accent-primary)' : 'rgba(168, 85, 247, 0.1)', 
-              color: showGraph ? 'white' : 'var(--accent-primary)',
-              border: showGraph ? 'none' : '1px solid rgba(168, 85, 247, 0.3)',
+              background: 'rgba(168, 85, 247, 0.1)', 
+              color: 'var(--accent-primary)',
+              border: '1px solid rgba(168, 85, 247, 0.3)',
               borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', 
               justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 'bold',
               transition: 'all 0.2s'
             }}>
-            <BookOpen size={16} /> {showGraph ? 'Voltar aos Pergaminhos' : 'Abrir Cérebro (Grafo)'}
+            <BookOpen size={16} /> Abrir Cérebro (Grafo)
           </button>
         </div>
         <div className="wiki-sidebar-content">
@@ -514,24 +551,26 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
             </div>
           )}
           {!errorTree && (
-            <TreeView 
-            node={tree} 
-            level={0} 
-            activePath={activeFile} 
-            onSelect={setActiveFile} 
-            onMove={handleMove} 
-            onRename={handleRename}
-            onDropExternal={handleDropExternal}
-          />
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.2rem', marginTop: '0.5rem' }}>
+              <TreeView 
+                node={tree} 
+                level={0} 
+                activePath={activeFile} 
+                ignoredFolders={ignoredFolders}
+                onSelect={(path) => setActiveFile(path)}
+                onMove={handleMove}
+                onRename={handleRename}
+                onDropExternal={handleDropExternal}
+                onToggleIgnore={toggleIgnore}
+              />
+            </div>
           )}
         </div>
       </div>
 
       {/* Main Content Viewer */}
       <div className="wiki-content-area" style={{ position: 'relative' }}>
-        {showGraph ? (
-          <WikiGraph onNodeClick={(path) => { setActiveFile(path); setShowGraph(false); }} />
-        ) : activeFile ? (
+        {activeFile ? (
           activeFile.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? (
             <div className="wiki-empty-state">
               <ImagePlus size={64} color="var(--glass-border)" />
@@ -548,13 +587,37 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
             <div className="wiki-markdown" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Editando: {activeFile}</span>
-                <button 
-                  onClick={handleSave} 
-                  disabled={saving}
-                  style={{ background: 'var(--accent-secondary)', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                  <Save size={14} />
-                  {saving ? 'Salvando...' : (justSaved ? '✅ Salvo!' : 'Salvar Local')}
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Tem certeza que deseja excluir ${activeFile}?`)) return;
+                      try {
+                        const config = getWikiConfig();
+                        const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+                        const res = await fetch('/api/wiki/file', {
+                          method: 'DELETE',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ repoPath, path: activeFile })
+                        });
+                        if (!res.ok) throw new Error("Failed to delete file");
+                        setActiveFile(null);
+                        await loadTree();
+                      } catch (err) {
+                        console.error(err);
+                        alert("Erro ao excluir arquivo.");
+                      }
+                    }}
+                    style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.5)', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <Trash2 size={14} /> Excluir
+                  </button>
+                  <button 
+                    onClick={handleSave} 
+                    disabled={saving}
+                    style={{ background: 'var(--accent-secondary)', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <Save size={14} />
+                    {saving ? 'Salvando...' : (justSaved ? '✅ Salvo!' : 'Salvar Local')}
+                  </button>
+                </div>
               </div>
               
               <FrontmatterPanel 
@@ -587,7 +650,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                      if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:') && !imgUrl.startsWith('/')) {
                        const configStr = localStorage.getItem('dozero_wiki_config');
                        const repoPath = configStr ? JSON.parse(configStr).repoPath : '';
-                       imgUrl = `/api/wiki/raw?path=${encodeURIComponent(imgUrl)}&repoPath=${encodeURIComponent(repoPath)}`;
+                       imgUrl = `/api/wiki/raw?path=${encodeURIComponent(imgUrl)}&repoPath=${encodeURIComponent(repoPath)}&t=${Date.now()}`;
                      }
                      return (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '20px', paddingTop: '10px' }}>
@@ -655,7 +718,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
           <div className="wiki-empty-state">
             <BookOpen size={64} color="var(--glass-border)" />
             <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>Bem-vindo ao Conhecimento</h2>
-            <p>Selecione um pergaminho ou pasta à esquerda para começar a leitura, ou abra o <strong style={{color: 'var(--accent-primary)', cursor: 'pointer'}} onClick={() => setShowGraph(true)}>Cérebro</strong>.</p>
+            <p>Selecione um pergaminho ou pasta à esquerda para começar a leitura, ou abra o <strong style={{color: 'var(--accent-primary)', cursor: 'pointer'}} onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-graph'))}>Cérebro</strong>.</p>
           </div>
         )}
       </div>

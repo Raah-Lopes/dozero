@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Target, CheckCircle2, XCircle, Plus, Edit2, Check, X, Wand2 } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
-import { updateTheaterScene, type Objective } from '../../store';
+import { type TheaterObjective } from '../../store';
 import { GlassAccordion } from '../UI/GlassAccordion';
+import { askAI } from '../../services/ai';
 
 export const QuestLog: React.FC = () => {
-  const { currentScene } = useSceneState();
+  const { currentScene, patchCurrentScene } = useSceneState();
   const [addingObj, setAddingObj] = useState(false);
   const [newObjText, setNewObjText] = useState('');
   const [newObjSecret, setNewObjSecret] = useState(false);
@@ -18,13 +19,14 @@ export const QuestLog: React.FC = () => {
 
   const addObjective = (text: string, secret: boolean = false) => {
     if (!text.trim()) return;
-    const newObj: Objective = {
+    const newObj: TheaterObjective = {
       id: Date.now().toString(),
       text: text.trim(),
-      status: 'pending',
+      completed: false,
+      failed: false,
       secret
     };
-    updateTheaterScene({ objectives: [...currentScene.objectives, newObj] });
+    patchCurrentScene({ objectives: [...currentScene.objectives, newObj] });
   };
 
   const handleAddSubmit = () => {
@@ -33,15 +35,17 @@ export const QuestLog: React.FC = () => {
     setAddingObj(false);
   };
 
-  const setObjectiveStatus = (id: string, status: 'pending' | 'success' | 'failed') => {
-    updateTheaterScene({
-      objectives: currentScene.objectives.map(o => o.id === id ? { ...o, status } : o)
+  const setObjectiveStatus = (id: string, status: 'success' | 'failed' | 'pending') => {
+    patchCurrentScene({
+      objectives: currentScene.objectives.map(o => 
+        o.id === id ? { ...o, completed: status === 'success', failed: status === 'failed' } : o
+      )
     });
   };
 
   const saveEdit = (id: string) => {
     if (editText.trim()) {
-      updateTheaterScene({
+      patchCurrentScene({
         objectives: currentScene.objectives.map(o => o.id === id ? { ...o, text: editText.trim() } : o)
       });
     }
@@ -57,9 +61,8 @@ export const QuestLog: React.FC = () => {
             onClick={async () => {
               const prompt = `Gere uma missão curta e dramática para os jogadores num RPG de mesa, considerando esta cena: ${currentScene.title}. Aja como um Mestre. Retorne apenas o texto da missão (máximo 15 palavras).`;
               try {
-                const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
-                const text = await res.text();
-                addObjective(text.trim());
+                const text = await askAI(prompt);
+                addObjective(text);
               } catch (e) {
                 console.error(e);
                 alert('Erro ao gerar missão com IA');
@@ -109,8 +112,8 @@ export const QuestLog: React.FC = () => {
         )}
         
         {currentScene.objectives.map(obj => {
-          const isSuccess = obj.status === 'success';
-          const isFailed = obj.status === 'failed';
+          const isSuccess = obj.completed;
+          const isFailed = obj.failed;
           const isEditing = editingId === obj.id;
 
           return (
@@ -154,7 +157,7 @@ export const QuestLog: React.FC = () => {
                   )}
                   <button
                     onClick={() => {
-                      updateTheaterScene({ objectives: currentScene.objectives.filter(o => o.id !== obj.id) });
+                      patchCurrentScene({ objectives: currentScene.objectives.filter(o => o.id !== obj.id) });
                     }}
                     style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                   >
@@ -173,7 +176,7 @@ export const QuestLog: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setObjectiveStatus(obj.id, 'pending')}
-                  style={{ flex: 1, padding: '4px', background: obj.status === 'pending' ? 'rgba(255,255,255,0.05)' : 'transparent', border: 'none', borderRight: '1px solid rgba(255,255,255,0.02)', color: obj.status === 'pending' ? '#94a3b8' : '#64748b', fontSize: '0.65rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                  style={{ flex: 1, padding: '4px', background: (!obj.completed && !obj.failed) ? 'rgba(255,255,255,0.05)' : 'transparent', border: 'none', borderRight: '1px solid rgba(255,255,255,0.02)', color: (!obj.completed && !obj.failed) ? '#94a3b8' : '#64748b', fontSize: '0.65rem', cursor: 'pointer', transition: 'all 0.2s' }}
                 >
                   Pendente
                 </button>

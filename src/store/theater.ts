@@ -7,6 +7,16 @@ export type NarrativeStatus = 'intact' | 'hurt' | 'wounded' | 'critical' | 'dead
 export type DistanceZone = 'melee' | 'close' | 'medium' | 'far' | 'extreme';
 export type DiaryEntryType = 'scene' | 'combat' | 'clock' | 'objective' | 'condition' | 'narrative';
 
+export interface SavedCutscene {
+  id: string;
+  name: string;       // Internal label (ex: "Capítulo 4 - A Capital")
+  title: string;      // Displayed on screen
+  subtitle?: string;
+  imageUrl?: string;
+  durationMs: number; // ms
+  createdAt: number;
+}
+
 export interface TheaterObjective {
   id: string;
   text: string;
@@ -24,6 +34,24 @@ export interface SceneAsset {
   type?: 'npc' | 'monster' | 'location' | 'prop' | 'other';
 }
 
+export interface StageProp {
+  id: string;
+  type: 'image' | 'token';
+  url?: string;
+  color?: string;
+  label?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  zIndex: number;
+  hp?: number;
+  maxHp?: number;
+  status?: string[];
+}
+
+export type SceneTransition = 'none' | 'fade' | 'dissolve' | 'wipe';
+
 export interface TheaterScene {
   id: string;
   title: string;
@@ -36,6 +64,12 @@ export interface TheaterScene {
   objectives: TheaterObjective[];
   tags: string[];
   assets?: SceneAsset[];
+  props?: StageProp[];
+  // Integração áudio ↔ cena
+  musicPresetId?: string;
+  ambiencePresetId?: string;
+  // Transição visual ao entrar nesta cena
+  transitionType?: SceneTransition;
 }
 
 export interface TheaterEnemy {
@@ -55,12 +89,7 @@ export interface DiaryEntry {
   text: string;
 }
 
-export interface DistanceEntry {
-  id: string;
-  entityA: string;
-  entityB: string;
-  zone: DistanceZone;
-}
+// ponytail: DistanceEntry removida — era código morto, TacticalRadar usa entityBands
 
 export interface TheaterStateData {
   currentSceneId: string;
@@ -71,8 +100,10 @@ export interface TheaterStateData {
   weather: WeatherType;
   timeOfDay: TimeOfDay;
   diaryEntries: DiaryEntry[];
-  distanceMap: DistanceEntry[];
-  entityBands: Record<string, DistanceZone>; // Track absolute position in bands
+  entityBands: Record<string, DistanceZone>;
+  cutscenes: SavedCutscene[];
+  selectedCastMemberId: string;
+  vnModeActive?: boolean;
 }
 
 const THEATER_DEFAULT: TheaterStateData = {
@@ -84,8 +115,10 @@ const THEATER_DEFAULT: TheaterStateData = {
   weather: 'clear',
   timeOfDay: 'day',
   diaryEntries: [],
-  distanceMap: [],
   entityBands: {},
+  cutscenes: [],
+  selectedCastMemberId: '',
+  vnModeActive: false,
 };
 
 export function getTheaterState(): TheaterStateData {
@@ -151,9 +184,7 @@ export function setTheaterMood(mood: MoodType) {
   addTheaterDiaryEntry({ timestamp: Date.now(), type: 'narrative', text: `🎭 Atmosfera alterada: ${mood}` });
 }
 
-export function updateDistanceMap(newMap: DistanceEntry[]) {
-  updateTheaterState({ distanceMap: newMap });
-}
+// ponytail: updateDistanceMap removida — nunca chamada, era código morto
 
 export function setEntityBand(entityId: string, zone: DistanceZone) {
   const current = getTheaterState();
@@ -167,6 +198,11 @@ export function setTheaterWeather(weather: WeatherType) {
   addTheaterDiaryEntry({ timestamp: Date.now(), type: 'narrative', text: `🌦️ Clima alterado: ${weather}` });
 }
 
+export function toggleVnMode() {
+  const current = getTheaterState();
+  updateTheaterState({ vnModeActive: !current.vnModeActive });
+}
+
 export function toggleCastCondition(personagemId: string, conditionId: string) {
   const current = getTheaterState();
   const existing = current.castConditions[personagemId] || [];
@@ -178,4 +214,25 @@ export function toggleCastCondition(personagemId: string, conditionId: string) {
     ...current,
     castConditions: { ...current.castConditions, [personagemId]: updated },
   });
+}
+
+// ── Cutscene CRUD ─────────────────────────────────────────────────────────────
+
+export function saveCutscene(data: Omit<SavedCutscene, 'id' | 'createdAt'>): string {
+  const current = getTheaterState();
+  const id = `cut_${Date.now()}`;
+  const cutscene: SavedCutscene = { ...data, id, createdAt: Date.now() };
+  state.theater.set('global', { ...current, cutscenes: [...(current.cutscenes ?? []), cutscene] });
+  return id;
+}
+
+export function updateCutscene(id: string, updates: Partial<Omit<SavedCutscene, 'id' | 'createdAt'>>) {
+  const current = getTheaterState();
+  const cutscenes = (current.cutscenes ?? []).map(c => c.id === id ? { ...c, ...updates } : c);
+  state.theater.set('global', { ...current, cutscenes });
+}
+
+export function deleteCutscene(id: string) {
+  const current = getTheaterState();
+  state.theater.set('global', { ...current, cutscenes: (current.cutscenes ?? []).filter(c => c.id !== id) });
 }

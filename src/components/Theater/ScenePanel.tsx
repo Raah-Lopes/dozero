@@ -1,11 +1,13 @@
 // src/components/Theater/ScenePanel.tsx
-import React, { useState, useRef } from 'react';
-import { Edit2, Check, X, Plus, CheckSquare, Square, Lock, Eye, EyeOff, Sun, Moon, Sunset, Sunrise, Image, Trash2, Link as LinkIcon, ExternalLink, Wand2, Target, CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { askAI } from '../../services/ai';
+import { Image as ImageIcon, X, Edit2, Check, Download, Upload, Plus, Wand2, Sunrise, Sun, Sunset, Moon, MapPin, Search, Music, Sparkles, Trash2, Link as LinkIcon, ExternalLink, Target, CheckCircle2, XCircle, Lock, Eye, EyeOff } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import { useWiki } from '../../hooks/useWiki';
 import { setTheaterMood, setTheaterWeather, type MoodType, type WeatherType, type TimeOfDay, type SceneAsset } from '../../store';
 import { generateAI } from '../../services/ai/AIProvider';
 import { QuestLog } from './QuestLog';
+import { exportSceneAsMarkdown } from './sceneExport';
 import { GlassAccordion } from '../UI/GlassAccordion';
 
 const MOODS: { value: MoodType; label: string; icon: string }[] = [
@@ -37,7 +39,7 @@ const TIME_ICONS: Record<TimeOfDay, React.ReactNode> = {
 };
 
 export const ScenePanel: React.FC = () => {
-  const { currentScene, patchCurrentScene, setObjectiveStatus, toggleObjectiveSecret, addObjective, removeObjective, mood, weather, theaterData } = useSceneState();
+  const { currentScene, patchCurrentScene, setObjectiveStatus, toggleObjectiveSecret, addObjective, removeObjective, mood, weather, theaterData, linkAudioToScene } = useSceneState();
   const { index: wikiIndex } = useWiki();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
@@ -55,6 +57,11 @@ export const ScenePanel: React.FC = () => {
   const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isGeneratingAssetImage, setIsGeneratingAssetImage] = useState(false);
+  
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => {
+    return () => timersRef.current.forEach(clearTimeout);
+  }, []);
 
   // States for visual elements (assets)
   const [showAddForm, setShowAddForm] = useState(false);
@@ -114,16 +121,11 @@ export const ScenePanel: React.FC = () => {
       const activeObjs = currentScene.objectives.filter(o => !o.completed).map(o => o.text).join(', ');
       const prompt = `Gere uma descrição narrativa literária e imersiva (MÁXIMO 2 PARÁGRAFOS curtos) para uma cena de RPG de mesa com as seguintes características: Título da Cena: ${currentScene.title}. Clima: ${weather}. Atmosfera: ${mood}. Horário: ${currentScene.timeOfDay}. ${activeObjs ? `Objetivos dos jogadores: ${activeObjs}.` : ''} Foque em criar tensão e ambientação sensorial (visões, sons, cheiros). Aja como um Mestre de Jogo experiente. Não inclua comentários fora do personagem, responda apenas com a narrativa em Português do Brasil.`;
 
-      const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
-      if (response.ok) {
-        const text = await response.text();
-        patchCurrentScene({ description: text.trim() });
-      } else {
-        throw new Error('Falha na resposta do Pollinations API');
-      }
+      const text = await askAI(prompt);
+      patchCurrentScene({ description: text });
     } catch (e) {
       console.error(e);
-      alert('Erro ao gerar descrição pela IA Mágica (Pollinations). Verifique sua conexão.');
+      alert('Erro ao gerar descrição com IA. Verifique sua conexão.');
     } finally {
       setIsGeneratingDesc(false);
     }
@@ -137,10 +139,11 @@ export const ScenePanel: React.FC = () => {
     const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=400&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
     
     // Simulate loading to allow user to see it happening
-    setTimeout(() => {
+    const t = setTimeout(() => {
       patchCurrentScene({ imageUrl: url });
       setIsGeneratingImage(false);
     }, 1500);
+    timersRef.current.push(t);
   };
 
   const handleGenerateAssetImage = (e: React.MouseEvent) => {
@@ -164,10 +167,11 @@ export const ScenePanel: React.FC = () => {
     const encodedPrompt = encodeURIComponent(promptText);
     const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
     
-    setTimeout(() => {
+    const t = setTimeout(() => {
       setAssetUrl(url);
       setIsGeneratingAssetImage(false);
     }, 1500);
+    timersRef.current.push(t);
   };
 
   const startEditAsset = (asset: SceneAsset, e: React.MouseEvent) => {
@@ -232,6 +236,20 @@ export const ScenePanel: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0', overflowY: 'auto' }}>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'min-content', flexShrink: 0 }}>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'min-content', flexShrink: 0 }}>
+      {/* Top toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+        <button
+          onClick={() => exportSceneAsMarkdown(currentScene)}
+          style={{
+            background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)',
+            color: '#93c5fd', borderRadius: '6px', padding: '4px 8px', fontSize: '0.7rem',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
+          }}
+          title="Salvar arquivo da cena"
+        >
+          <span>↓ Exportar Cena</span>
+        </button>
+      </div>
       {/* Scene image */}
       <div
         style={{
@@ -251,8 +269,8 @@ export const ScenePanel: React.FC = () => {
       >
         {!currentScene.imageUrl && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#374151', gap: '8px' }}>
-            <Image size={32} />
-            <span style={{ fontSize: '0.8rem' }}>Clique para adicionar imagem</span>
+            <ImageIcon size={24} />
+            <span style={{ fontSize: '0.7rem' }}>Clique p/ img</span>
           </div>
         )}
         {/* Gradient overlay */}
@@ -336,7 +354,7 @@ export const ScenePanel: React.FC = () => {
         <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
       </div>
 
-      {/* Mood & Weather controls */}
+      {/* Mood & Weather & Audio & Transition controls */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '120px' }}>
           <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '6px' }}>Atmosfera</label>
@@ -357,6 +375,29 @@ export const ScenePanel: React.FC = () => {
               </button>
             ))}
           </div>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Transição de Cena</label>
+          <select
+            value={currentScene.transitionType || 'fade'}
+            onChange={e => patchCurrentScene({ transitionType: e.target.value as any })}
+            style={{ width: '100%', padding: '6px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0', fontSize: '0.8rem', cursor: 'pointer' }}
+          >
+            <option value="none">Corte Seco (Nenhuma)</option>
+            <option value="fade">Fade to Black</option>
+            <option value="wipe">Cortina Wipe</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Áudio Vinculado</label>
+          <button
+            onClick={linkAudioToScene}
+            style={{ padding: '6px 12px', background: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)', border: `1px solid ${(currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '8px', color: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? '#6ee7b7' : '#cbd5e1', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Music size={14} /> {(currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'Áudio Salvo' : 'Vincular Som Atual'}
+          </button>
         </div>
       </div>
       {/* Description */}
@@ -669,7 +710,7 @@ export const ScenePanel: React.FC = () => {
                       gap: '6px'
                     }}
                   >
-                    <Image size={13} />
+                    <ImageIcon size={13} />
                     Carregar Local
                   </button>
 
