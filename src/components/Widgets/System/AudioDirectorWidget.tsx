@@ -661,6 +661,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   </div>
                 )}
               </div>
+            )}
             {activeTab === 'web' && (
               <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
