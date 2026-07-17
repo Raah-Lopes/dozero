@@ -34,11 +34,11 @@ nivel: 5
 XP: 0
 tags:
   - personagem
-ativo: false
+ativo: true
 origem: Cidade Subterrânea
 Localizacao: Barrio de Hidromel
-HP: 0
-HP_max: 65
+HP: 20
+HP_max: 20
 PM: 100
 PM_max: 100
 Energia: 100
@@ -84,8 +84,8 @@ imageUrl: data:image/webp;base64,UklGRmAaAABXRUJQVlA4WAoAAAAgAAAAugAAxwAASUNDUMg
 tokenShape: circle
 titulo: Jubbaer
 title: Jubbaer
-pv: 0
-pv_max: 65
+pv: 20
+pv_max: 20
 usos_cura_atual: 3
 saqueado: false
 energia: 100
@@ -158,6 +158,11 @@ inteligencia: 10
 sabedoria: 10
 carisma: 10
 ---
+
+
+
+
+
 
 
 
