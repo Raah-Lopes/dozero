@@ -166,6 +166,9 @@ export const GameCanvas: React.FC = () => {
       let pinchStartScale = 1;
       let isTouchPanning = false;
       let touchPanStart = { x: 0, y: 0 };
+      
+      let longPressTimer: any = null;
+      let longPressStart = { x: 0, y: 0 };
 
       const getWorldPos = (clientX: number, clientY: number) => ({
         x: (clientX - viewport.x) / viewport.scale.x,
@@ -206,6 +209,7 @@ export const GameCanvas: React.FC = () => {
         if (e.pointerType === 'touch') {
           activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
           if (activePointers.size === 2) {
+            clearTimeout(longPressTimer);
             isPinching = true;
             isTouchPanning = false;
             const pts = Array.from(activePointers.values());
@@ -214,6 +218,20 @@ export const GameCanvas: React.FC = () => {
           } else if (activePointers.size === 1) {
             isTouchPanning = true;
             touchPanStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
+            longPressStart = { x: e.clientX, y: e.clientY };
+            
+            longPressTimer = setTimeout(() => {
+               if (activePointers.size === 1 && isTouchPanning) {
+                 isTouchPanning = false;
+                 isSelecting = true;
+                 const rect = canvasEl.getBoundingClientRect();
+                 selectionStart = { x: longPressStart.x - rect.left, y: longPressStart.y - rect.top };
+                 selectionBox.clear();
+                 selectionBox.visible = true;
+                 clearTokenSelection();
+                 try { if (navigator.vibrate) navigator.vibrate(50); } catch(err){}
+               }
+            }, 500);
           }
         }
       });
@@ -239,6 +257,13 @@ export const GameCanvas: React.FC = () => {
               viewport.y = centerY - worldY * newScale;
             }
           } else if (activePointers.size === 1 && isTouchPanning && !draggingTokenId && !draggingBgId && !draggingTextId) {
+            if (longPressTimer) {
+              const dist = Math.hypot(e.clientX - longPressStart.x, e.clientY - longPressStart.y);
+              if (dist > 10) {
+                 clearTimeout(longPressTimer);
+                 longPressTimer = null;
+              }
+            }
             viewport.x = e.clientX - touchPanStart.x;
             viewport.y = e.clientY - touchPanStart.y;
           }
@@ -277,6 +302,9 @@ export const GameCanvas: React.FC = () => {
 
       window.addEventListener('pointermove', handleMainPointerMove);
       const handlePointerUp = (e: PointerEvent) => {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        
         if (e.pointerType === 'touch') {
           activePointers.delete(e.pointerId);
           if (activePointers.size < 2) isPinching = false;
