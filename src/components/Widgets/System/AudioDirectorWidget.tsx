@@ -160,6 +160,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
   const [activeTab, setActiveTab] = useState<'library' | 'presets' | 'soundboard' | 'web'>('library');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [webMusicUrl, setWebMusicUrl] = useState('');
 
   // Preset creation
   const [newPresetName, setNewPresetName] = useState('');
@@ -673,26 +674,24 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <input 
-                      id="web-music-url"
+                      value={webMusicUrl}
+                      onChange={e => setWebMusicUrl(e.target.value)}
                       placeholder="https://www.youtube.com/watch?v=..."
                       style={{ flex: 1, background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '4px', padding: '0.4rem 0.6rem', fontSize: '0.8rem', outline: 'none' }}
                       onKeyDown={e => {
                         if (e.key === 'Enter') {
-                           const val = (e.target as HTMLInputElement).value;
-                           if (val.trim()) {
-                              // We use dynamic import for state to avoid circular dependency in UI component if any, or just import it at top
+                           if (webMusicUrl.trim()) {
                               import('../../../services/yjs').then(({ state }) => {
-                                 state.audio.set('music', { url: val.trim(), isPlaying: true, ts: Date.now() });
+                                 state.audio.set('music', { url: webMusicUrl.trim(), isPlaying: true, ts: Date.now() });
                               });
                            }
                         }
                       }}
                     />
                     <button onClick={() => {
-                      const val = (document.getElementById('web-music-url') as HTMLInputElement).value;
-                      if (val.trim()) {
+                      if (webMusicUrl.trim()) {
                          import('../../../services/yjs').then(({ state }) => {
-                            state.audio.set('music', { url: val.trim(), isPlaying: true, ts: Date.now() });
+                            state.audio.set('music', { url: webMusicUrl.trim(), isPlaying: true, ts: Date.now() });
                          });
                       }
                     }} style={{ background: '#a855f7', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.4rem 0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -702,7 +701,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   <button onClick={() => {
                      import('../../../services/yjs').then(({ state }) => {
                         state.audio.set('music', { url: '', isPlaying: false, ts: Date.now() });
-                        (document.getElementById('web-music-url') as HTMLInputElement).value = '';
+                        setWebMusicUrl('');
                      });
                   }} style={{ background: '#3f1d1d', color: '#fca5a5', border: '1px solid #7f1d1d', borderRadius: '4px', padding: '0.4rem 0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600, marginTop: '0.5rem' }}>
                     <Square size={13} /> Parar Transmissão Global
