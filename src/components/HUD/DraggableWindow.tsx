@@ -215,12 +215,57 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       localStorage.setItem(storageKey, JSON.stringify({
         x: pos.x,
         y: finalY,
-        w: rect.width,
-        h: rect.height,
+        w: size.w, // use state size instead of rect which might be glitching during native drag
+        h: size.h,
         pinned: isPinned
       }));
     }
   };
+
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStart = useRef({ w: 0, h: 0, x: 0, y: 0 });
+
+  const handleResizeDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isMinimized || isPinned || isPopout) return;
+    e.stopPropagation();
+    e.preventDefault();
+    setIsResizing(true);
+    bringToFront();
+    resizeStart.current = {
+      w: windowRef.current?.offsetWidth || 320,
+      h: windowRef.current?.offsetHeight || 200,
+      x: e.clientX,
+      y: e.clientY
+    };
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMove = (e: PointerEvent) => {
+      const dx = e.clientX - resizeStart.current.x;
+      const dy = e.clientY - resizeStart.current.y;
+      setSize({
+        w: Math.max(250, resizeStart.current.w + dx),
+        h: Math.max(100, resizeStart.current.h + dy)
+      });
+    };
+    const handleUp = () => {
+      setIsResizing(false);
+      localStorage.setItem(storageKey, JSON.stringify({
+        x: pos.x,
+        y: pos.y,
+        w: windowRef.current?.offsetWidth || 320,
+        h: windowRef.current?.offsetHeight || 200,
+        pinned: isPinned
+      }));
+    };
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
+  }, [isResizing, pos.x, pos.y, isPinned, storageKey]);
 
   return (
     <div
@@ -239,8 +284,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         flexDirection: 'column',
         zIndex: isDragging ? globalZIndexCounter + 100 : zIndex,
         boxShadow: (variant === 'default' || variant === 'glass') ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : (isPinned ? '0 0 10px rgba(168, 85, 247, 0.1)' : '')) : 'none',
-        transition: isDragging ? 'none' : 'box-shadow 0.2s',
-        resize: ((variant === 'default' || variant === 'glass') && !isMinimized && !isPinned) ? 'both' : 'none',
+        transition: (isDragging || isResizing) ? 'none' : 'box-shadow 0.2s',
+        resize: 'none', // Disabled native resize to fix jitter bug
         overflow: 'hidden',
         minWidth: (variant === 'default' || variant === 'glass') ? '250px' : 'auto',
         minHeight: ((variant === 'default' || variant === 'glass') && !isMinimized) ? '100px' : 'auto',
@@ -402,6 +447,28 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
           <ErrorBoundary fallbackMessage={`Erro no módulo: ${title}`}>
             {children}
           </ErrorBoundary>
+        </div>
+      )}
+
+      {/* Custom Resize Handle to prevent jitter */}
+      {((variant === 'default' || variant === 'glass') && !isMinimized && !isPinned && !isPopout) && (
+        <div
+          onPointerDown={handleResizeDown}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: '24px',
+            height: '24px',
+            cursor: 'nwse-resize',
+            zIndex: 10,
+            background: 'transparent',
+            // optional: you can add a tiny SVG or CSS triangle here to show it's resizable
+          }}
+        >
+           <svg width="12" height="12" viewBox="0 0 12 12" style={{ position: 'absolute', bottom: '4px', right: '4px', opacity: 0.5 }}>
+             <path d="M12 0 L12 12 L0 12 Z" fill="var(--glass-border)" />
+           </svg>
         </div>
       )}
     </div>
