@@ -28,15 +28,15 @@ export const GlobalAudioSync: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ display: 'none' }} id="global-audio-sync">
+    <div style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', zIndex: -9999 }} id="global-audio-sync">
       {musicState && musicState.url && (
         <ReactPlayer
           url={musicState.url}
           playing={musicState.isPlaying}
           volume={musicVolume}
           loop={loopMode !== 'none'}
-          width="0"
-          height="0"
+          width="1px"
+          height="1px"
           playsinline
           config={{
              youtube: {
@@ -51,8 +51,8 @@ export const GlobalAudioSync: React.FC = () => {
           playing={ambienceState.isPlaying}
           volume={ambienceVolume}
           loop={true} // Ambience usually loops
-          width="0"
-          height="0"
+          width="1px"
+          height="1px"
           playsinline
           config={{
              youtube: {
