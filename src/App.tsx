@@ -34,6 +34,7 @@ import { state, addTensionClock, updateTensionClockProps } from './store';
 import type { TensionClock } from './store';
 import { loadMarkdownFile } from './utils/githubApi';
 import * as yaml from 'js-yaml';
+import { PopoutViewer } from './components/Popout/PopoutViewer';
 
 // Trigger HMR
 type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets';
@@ -229,35 +230,7 @@ function App() {
 
   // ===== STANDALONE WIDGET MODE (MULTI-MONITOR POP-OUT) ===== //
   if (standaloneWidget) {
-    let ComponentToRender = null;
-    let title = "DOZERO";
-    
-    // Check which widget is requested
-    if (standaloneWidget === 'chatWindow') { ComponentToRender = <ChatWindow />; title = "Chat P2P"; }
-    else if (standaloneWidget === 'combatTracker') { ComponentToRender = <CombatTracker />; title = "Iniciativa"; }
-    else if (standaloneWidget === 'combatLog') { ComponentToRender = <CombatLog />; title = "Registro"; }
-    else if (standaloneWidget.startsWith('sheet-')) {
-      const sheetKey = standaloneWidget.replace('sheet-', '');
-      const isWiki = sheetKey.startsWith('wiki:');
-      const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
-      const tokenId = isWiki ? undefined : sheetKey;
-      ComponentToRender = <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />;
-      title = "Ficha";
-    }
-
-    if (ComponentToRender) {
-      return (
-        <div className="standalone-widget-container">
-          <div className="standalone-header">
-            <h3>{title}</h3>
-            <span className="sync-badge">Sincronizado</span>
-          </div>
-          <div className="standalone-content">
-            {ComponentToRender}
-          </div>
-        </div>
-      );
-    }
+    return <PopoutViewer widgetId={standaloneWidget} />;
   }
 
   return (

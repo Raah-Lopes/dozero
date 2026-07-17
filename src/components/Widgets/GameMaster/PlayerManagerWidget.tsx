@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DraggableWindow } from '../../UI/DraggableWindow';
+import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { state } from '../../../services/yjs';
 import { User, Shield, Activity, Edit2, Palette } from 'lucide-react';
 
@@ -31,7 +31,7 @@ export const PlayerManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose
   };
 
   return (
-    <DraggableWindow id="player_manager" title="👑 Controle de Jogadores (Mestre)" onClose={onClose} defaultWidth={400} defaultHeight={350} allowMinimize={true}>
+    <DraggableWindow id="player_manager" widgetKey="playerManager" title="👑 Controle de Jogadores (Mestre)" onClose={onClose} defaultWidth={400} defaultHeight={350} allowMinimize={true}>
       <div style={{ padding: '15px', color: 'var(--text-primary)' }}>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
           Gerencie as identidades de todos os jogadores conectados. As alterações aqui refletem instantaneamente no chat e nos navegadores deles.

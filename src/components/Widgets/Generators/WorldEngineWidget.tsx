@@ -18,7 +18,7 @@ export const WorldEngineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
   }, []);
 
   return (
-    <DraggableWindow id="world-engine" title="Motor de Mundo Vivo" initialX={window.innerWidth / 2 - 400} initialY={100} width={450} height={400} onClose={onClose}>
+    <DraggableWindow id="world-engine" widgetKey="worldEngine" title="Motor de Mundo Vivo" initialX={window.innerWidth / 2 - 400} initialY={100} width={450} height={400} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.2rem', color: 'var(--text-primary)', height: '100%', overflowY: 'auto' }}>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>

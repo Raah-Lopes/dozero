@@ -43,7 +43,7 @@ export const StrongholdWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   };
 
   return (
-    <DraggableWindow id="stronghold" title="Fortaleza da Party" initialX={window.innerWidth / 2 - 200} initialY={100} width={400} height={480} onClose={onClose}>
+    <DraggableWindow id="stronghold" widgetKey="stronghold" title="Fortaleza da Party" initialX={window.innerWidth / 2 - 200} initialY={100} width={400} height={480} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.2rem', color: 'var(--text-primary)', height: '100%', overflowY: 'auto' }}>
         
         {/* Cabeçalho */}

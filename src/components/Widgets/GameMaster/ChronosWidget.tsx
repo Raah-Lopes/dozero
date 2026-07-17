@@ -49,7 +49,7 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   };
 
   return (
-    <DraggableWindow id="chronos-widget" title="Motor Chronos" initialX={window.innerWidth / 2 - 160} initialY={100} onClose={onClose} width={320} height={250}>
+    <DraggableWindow id="chronos-widget" widgetKey="chronos" title="Motor Chronos" initialX={window.innerWidth / 2 - 160} initialY={100} onClose={onClose} width={320} height={250}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', color: 'var(--text-primary)' }}>
         
         {/* Mostrador Principal */}

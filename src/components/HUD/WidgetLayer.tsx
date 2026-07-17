@@ -35,11 +35,16 @@ const FallbackLoader = () => (
   </div>
 );
 
-export const WidgetLayer: React.FC = React.memo(() => {
-  const openWindows = useWindowManager((state) => state.openWindows);
+export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo(({ standaloneWidget }) => {
+  const storeOpenWindows = useWindowManager((state) => state.openWindows);
   const closeWindow = useWindowManager((state) => state.closeWindow);
   const openWindow = useWindowManager((state) => state.openWindow);
   const registerCommand = useCommandRegistry((state) => state.registerCommand);
+
+  // If in standalone popout mode, force ONLY the requested widget to be open
+  const openWindows = standaloneWidget 
+    ? { [standaloneWidget]: true } as any 
+    : storeOpenWindows;
 
   React.useEffect(() => {
     registerCommand({

@@ -123,14 +123,14 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
 
   if (isLoading) {
     return (
-      <DraggableWindow id="lore-machine" title="A Máquina de Lores" initialX={window.innerWidth / 2 - 200} initialY={100} width={400} height={200} onClose={onClose}>
+      <DraggableWindow id="lore-machine" widgetKey="loreMachine" title="A Máquina de Lores" initialX={window.innerWidth / 2 - 200} initialY={100} width={400} height={200} onClose={onClose}>
         <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Sincronizando os arquivos akáshicos...</div>
       </DraggableWindow>
     );
   }
 
   return (
-    <DraggableWindow id="lore-machine" title="A Máquina de Lores" initialX={window.innerWidth / 2 - 225} initialY={100} width={450} height={320} onClose={onClose}>
+    <DraggableWindow id="lore-machine" widgetKey="loreMachine" title="A Máquina de Lores" initialX={window.innerWidth / 2 - 225} initialY={100} width={450} height={320} onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.2rem', color: 'var(--text-primary)', height: '100%' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>

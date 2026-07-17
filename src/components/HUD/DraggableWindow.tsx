@@ -4,6 +4,7 @@ import { ErrorBoundary } from '../ErrorBoundary';
 
 interface DraggableWindowProps {
   id: string;
+  widgetKey?: string; // Used for popout URL matching if different from id
   title: string;
   initialX: number;
   initialY: number;
@@ -20,7 +21,7 @@ interface DraggableWindowProps {
 // Starts at 9999999 to ensure windows stay on top of ANY hardcoded zIndex (like 99999 in WikiViewer)
 let globalZIndexCounter = 9999999;
 
-export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', dragAnywhere = true, onClose }) => {
+export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id, widgetKey, title, initialX, initialY, children, width = 320, height = 'auto', windowStyle, variant = 'default', dragAnywhere = true, onClose }) => {
   const storageKey = `window_prefs_${id}`;
   
   const getInitialPrefs = () => {
@@ -49,6 +50,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     return { x: safeInitialX, y: safeInitialY, w: width, h: height, pinned: false };
   };
 
+  const isPopout = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('widget') === (widgetKey || id);
+
   const initialPrefs = getInitialPrefs();
   const [pos, setPos] = useState({ x: initialPrefs.x, y: initialPrefs.y });
   const [size, setSize] = useState({ w: initialPrefs.w, h: initialPrefs.h });
@@ -67,6 +70,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   const snapThreshold = 20;
 
   const bringToFront = () => {
+    if (isPopout) return;
     globalZIndexCounter += 1;
     setZIndex(globalZIndexCounter);
   };
@@ -81,10 +85,10 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     };
     window.addEventListener('bring-window-to-front', handleBringToFront);
     return () => window.removeEventListener('bring-window-to-front', handleBringToFront);
-  }, [id]);
+  }, [id, isPopout]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isPinned) return;
+    if (isPinned || isPopout) return;
     const target = e.target as HTMLElement;
     
     // Do not initiate drag on interactive elements
@@ -98,57 +102,27 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       target.tagName === 'SUMMARY' ||
       target.closest('button') || 
       target.closest('select') ||
-      target.closest('input') ||
-      target.closest('textarea') ||
+      target.closest('input') || 
+      target.closest('textarea') || 
       target.closest('a') ||
-      target.closest('label') ||
-      target.closest('summary') ||
-      target.closest('.interactive') ||
-      target.getAttribute('role') === 'button'
+      target.closest('.interactive-area')
     ) {
-      bringToFront();
       return;
     }
-
-    // Do not drag if we are inside a scrollable container
-    let current: HTMLElement | null = target;
-    while (current && windowRef.current && current !== windowRef.current) {
-      const style = window.getComputedStyle(current);
-      const isScrollableY = (style.overflowY === 'auto' || style.overflowY === 'scroll') && current.scrollHeight > current.clientHeight;
-      const isScrollableX = (style.overflowX === 'auto' || style.overflowX === 'scroll') && current.scrollWidth > current.clientWidth;
-      if (isScrollableY || isScrollableX) {
-        bringToFront();
-        return;
-      }
-      current = current.parentElement;
-    }
-
-    if (windowRef.current && (variant === 'default' || variant === 'glass') && !isMinimized) {
-      const rect = windowRef.current.getBoundingClientRect();
-      // Check if clicking in the bottom-right corner (CSS resize handle)
-      const isResizeHandle = (e.clientX > rect.right - 20) && (e.clientY > rect.bottom - 20);
-      if (isResizeHandle) {
-        bringToFront();
-        return;
-      }
-    }
-
-    e.currentTarget.setPointerCapture(e.pointerId);
+    
     setIsDragging(true);
     bringToFront();
+    const rect = e.currentTarget.getBoundingClientRect();
+    dragOffset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
     
-    // Calculate offset from the top-left corner of the window
-    if (windowRef.current) {
-      const rect = windowRef.current.getBoundingClientRect();
-      dragOffset.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      };
-    }
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
+    if (!isDragging || isPopout) return;
 
     let newX = e.clientX - dragOffset.current.x;
     let newY = e.clientY - dragOffset.current.y;
@@ -226,7 +200,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     e.currentTarget.releasePointerCapture(e.pointerId);
     
     // Save pos when drag ends
-    if (windowRef.current) {
+    if (windowRef.current && !isPopout) {
       const rect = windowRef.current.getBoundingClientRect();
       const finalY = Math.max(0, pos.y);
       localStorage.setItem(storageKey, JSON.stringify({
@@ -246,10 +220,10 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       className={`draggable-window-container ${isMinimized ? 'minimized' : ''} ${variant === 'glass' ? 'glass-panel' : ''}`}
       data-pinned={isPinned}
       style={{
-        position: 'absolute',
-        left: pos.x,
-        top: pos.y,
-        width: size.w,
+        position: isPopout ? 'relative' : 'absolute',
+        left: isPopout ? 0 : pos.x,
+        top: isPopout ? 0 : pos.y,
+        width: isPopout ? '100%' : size.w,
         height: isMinimized ? 'auto' : size.h,
         pointerEvents: 'auto',
         display: 'flex',
@@ -310,31 +284,34 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
             <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</span>
           </div>
         
-        <div style={{ position: 'absolute', right: '0.25rem', top: '0.25rem', display: 'flex', gap: '0.25rem' }}>
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              setIsPinned(!isPinned);
-              localStorage.setItem(storageKey, JSON.stringify({
-                x: pos.x, y: pos.y, w: size.w, h: size.h, pinned: !isPinned
-              }));
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            title={isPinned ? "Desafixar Janela" : "Fixar Janela (Bloquear sobreposição)"}
-            style={{ 
-              background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'transparent', border: 'none', color: isPinned ? 'white' : 'var(--text-secondary)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', borderRadius: '4px'
-            }}
-          >
-            <Pin size={14} />
-          </button>
-          
-          {/* PopOut Button for multi-monitor */}
-          {['chatWindow', 'combatTracker', 'combatLog'].includes(id) || id.startsWith('sheet-') ? (
+          <div style={{ position: 'absolute', right: '0.25rem', top: '0.25rem', display: 'flex', gap: '0.25rem' }}>
+          {!isPopout && (
             <button 
               onClick={(e) => { 
                 e.stopPropagation(); 
-                window.open(`${window.location.pathname}?widget=${id}`, '_blank', 'width=400,height=800');
+                setIsPinned(!isPinned);
+                localStorage.setItem(storageKey, JSON.stringify({
+                  x: pos.x, y: pos.y, w: size.w, h: size.h, pinned: !isPinned
+                }));
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title={isPinned ? "Desafixar Janela" : "Fixar Janela (Bloquear sobreposição)"}
+              style={{ 
+                background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'transparent', border: 'none', color: isPinned ? 'white' : 'var(--text-secondary)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', borderRadius: '4px'
+              }}
+            >
+              <Pin size={14} />
+            </button>
+          )}
+          
+          {/* PopOut Button for multi-monitor - Available for ALL widgets now! */}
+          {!isPopout && (
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                const popoutId = widgetKey || id;
+                window.open(`${window.location.pathname}?widget=${popoutId}`, '_blank', 'width=450,height=700');
                 if (onClose) onClose();
               }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -346,11 +323,13 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
             >
               <ExternalLink size={14} />
             </button>
-          ) : null}
+          )}
           
+          {!isPopout && (
           <button 
             onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
             onPointerDown={(e) => e.stopPropagation()}
+            title={isMinimized ? "Restaurar Janela" : "Minimizar Janela"}
             style={{ 
               background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
@@ -358,15 +337,19 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
           >
             <Minus size={14} />
           </button>
+          )}
           
-          {onClose && (
+          {!isPopout && onClose && (
             <button 
               onClick={(e) => { e.stopPropagation(); onClose(); }}
               onPointerDown={(e) => e.stopPropagation()}
+              title="Fechar Janela"
               style={{ 
                 background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
               }}
+              onMouseOver={e => e.currentTarget.style.color = '#ef4444'}
+              onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}
             >
               <X size={14} />
             </button>

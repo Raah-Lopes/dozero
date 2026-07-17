@@ -77,7 +77,7 @@ export const ConspiracyBoardWidget: React.FC<{ onClose: () => void }> = ({ onClo
   };
 
   return (
-    <DraggableWindow id="conspiracyBoard" title="Mural de Investigação" initialX={100} initialY={100} width={800} height={600} onClose={onClose}>
+    <DraggableWindow id="conspiracyBoard" widgetKey="mindMap" title="Mural de Investigação" initialX={100} initialY={100} width={800} height={600} onClose={onClose}>
       <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#111', borderRadius: '0 0 8px 8px' }}>
         
         {/* Toolbar */}
