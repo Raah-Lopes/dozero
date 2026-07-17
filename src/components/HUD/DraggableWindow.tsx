@@ -110,9 +110,18 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       return;
     }
     
+    const rect = e.currentTarget.getBoundingClientRect();
+    
+    const canResize = ((variant === 'default' || variant === 'glass') && !isMinimized && !isPinned);
+    if (canResize) {
+      // Native resize handle is at the bottom right, roughly 24x24 pixels
+      if (e.clientX > rect.right - 24 && e.clientY > rect.bottom - 24) {
+        return;
+      }
+    }
+
     setIsDragging(true);
     bringToFront();
-    const rect = e.currentTarget.getBoundingClientRect();
     dragOffset.current = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
