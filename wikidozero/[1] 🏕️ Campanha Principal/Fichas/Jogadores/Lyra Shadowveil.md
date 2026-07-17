@@ -88,7 +88,9 @@ magias_preparadas:
     current: 0
     max: 0
 macros: []
+showName: true
 ---
+
 # Lyra Shadowveil 🌙
 
 > *"Se você me viu, foi porque eu quis."*

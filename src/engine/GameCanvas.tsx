@@ -1548,6 +1548,13 @@ export const GameCanvas: React.FC = () => {
              import('../store').then(s => s.setEditingTextId(null));
           }
 
+          if (e.pointerType === 'touch') {
+             // On mobile, touching the background is reserved for panning.
+             // We allow text tool above, but skip selection box to prevent conflicts.
+             if (!e.shiftKey) clearTokenSelection();
+             return;
+          }
+
           if ((window as any).__IS_MAP_MENU_OPEN__) {
              isMarquee = true;
              const localPos = viewport.toLocal(e.global);
