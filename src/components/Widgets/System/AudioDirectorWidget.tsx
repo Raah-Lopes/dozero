@@ -157,7 +157,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
   // Library UI
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState<AudioTrack['category'] | 'all'>('all');
-  const [activeTab, setActiveTab] = useState<'library' | 'presets' | 'soundboard'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'presets' | 'soundboard' | 'web'>('library');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
@@ -397,16 +397,17 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
 
             {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid #1a1a1a' }}>
-              {(['library', 'presets', 'soundboard'] as const).map(tab => (
+              {(['library', 'presets', 'soundboard', 'web'] as const).map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)} style={{
                   flex: 1, padding: '0.5rem', background: activeTab === tab ? '#111' : 'transparent',
                   border: 'none', borderBottom: activeTab === tab ? '2px solid #a855f7' : '2px solid transparent',
-                  color: activeTab === tab ? '#e5e5e5' : '#555', cursor: 'pointer', fontSize: '0.75rem',
+                  color: activeTab === tab ? '#e5e5e5' : '#555', cursor: 'pointer', fontSize: '0.70rem',
                   fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.15s'
                 }}>
                   {tab === 'library' && `📁 Biblioteca (${audioState.localTracks.length})`}
-                  {tab === 'presets' && '🎬 Presets de Cena'}
+                  {tab === 'presets' && '🎬 Presets'}
                   {tab === 'soundboard' && '🎛️ Soundboard'}
+                  {tab === 'web' && '🌐 Web (Todos)'}
                 </button>
               ))}
             </div>
@@ -659,6 +660,53 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     ))}
                   </div>
                 )}
+              </div>
+            {activeTab === 'web' && (
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                    <Sparkles size={12} color="#a855f7" /> Transmitir Música para Todos (YouTube/Web)
+                  </span>
+                  <div style={{ fontSize: '0.72rem', color: '#555', lineHeight: 1.5 }}>
+                    Cole um link do YouTube ou de um MP3 direto. Ele tocará instantaneamente no navegador de todos os jogadores conectados.
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input 
+                      id="web-music-url"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      style={{ flex: 1, background: '#000', border: '1px solid #333', color: '#fff', borderRadius: '4px', padding: '0.4rem 0.6rem', fontSize: '0.8rem', outline: 'none' }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                           const val = (e.target as HTMLInputElement).value;
+                           if (val.trim()) {
+                              // We use dynamic import for state to avoid circular dependency in UI component if any, or just import it at top
+                              import('../../../services/yjs').then(({ state }) => {
+                                 state.audio.set('music', { url: val.trim(), isPlaying: true, ts: Date.now() });
+                              });
+                           }
+                        }
+                      }}
+                    />
+                    <button onClick={() => {
+                      const val = (document.getElementById('web-music-url') as HTMLInputElement).value;
+                      if (val.trim()) {
+                         import('../../../services/yjs').then(({ state }) => {
+                            state.audio.set('music', { url: val.trim(), isPlaying: true, ts: Date.now() });
+                         });
+                      }
+                    }} style={{ background: '#a855f7', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.4rem 0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                      <Play size={13} /> Transmitir
+                    </button>
+                  </div>
+                  <button onClick={() => {
+                     import('../../../services/yjs').then(({ state }) => {
+                        state.audio.set('music', { url: '', isPlaying: false, ts: Date.now() });
+                        (document.getElementById('web-music-url') as HTMLInputElement).value = '';
+                     });
+                  }} style={{ background: '#3f1d1d', color: '#fca5a5', border: '1px solid #7f1d1d', borderRadius: '4px', padding: '0.4rem 0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600, marginTop: '0.5rem' }}>
+                    <Square size={13} /> Parar Transmissão Global
+                  </button>
+                </div>
               </div>
             )}
           </div>

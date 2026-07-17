@@ -35,6 +35,7 @@ import type { TensionClock } from './store';
 import { loadMarkdownFile } from './utils/githubApi';
 import * as yaml from 'js-yaml';
 import { PopoutViewer } from './components/Popout/PopoutViewer';
+import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 
 // Trigger HMR
 type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets';
@@ -434,6 +435,7 @@ function App() {
           <SoftTimer />
           <DiceOverlay />
           <PPROverlay />
+          <GlobalAudioSync />
 
           <WidgetLayer />
 
