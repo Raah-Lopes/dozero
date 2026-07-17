@@ -58,6 +58,7 @@ export const state = {
   theater: doc.getMap('theater'),
   chronos: doc.getMap('chronos'),
   dlcs: doc.getMap('dlcs'),
+  audio: doc.getMap('audio'),
   world: doc.getMap('world'),
   stronghold: doc.getMap('stronghold'),
   mapTexts: doc.getMap('mapTexts'),
