@@ -159,6 +159,14 @@ export const GameCanvas: React.FC = () => {
       let isMeasuring = false;
       let measureStart = { x: 0, y: 0 };
 
+      // Touch / Pinch-to-zoom
+      const activePointers = new Map<number, {x: number, y: number}>();
+      let isPinching = false;
+      let pinchStartDist = 0;
+      let pinchStartScale = 1;
+      let isTouchPanning = false;
+      let touchPanStart = { x: 0, y: 0 };
+
       const getWorldPos = (clientX: number, clientY: number) => ({
         x: (clientX - viewport.x) / viewport.scale.x,
         y: (clientY - viewport.y) / viewport.scale.y
@@ -194,8 +202,48 @@ export const GameCanvas: React.FC = () => {
           panStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
           canvasEl.style.cursor = 'grabbing';
         }
+        
+        if (e.pointerType === 'touch') {
+          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (activePointers.size === 2) {
+            isPinching = true;
+            isTouchPanning = false;
+            const pts = Array.from(activePointers.values());
+            pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            pinchStartScale = viewport.scale.x;
+          } else if (activePointers.size === 1) {
+            isTouchPanning = true;
+            touchPanStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
+          }
+        }
       });
-      window.addEventListener('pointermove', (e) => {
+
+      const handleMainPointerMove = (e: PointerEvent) => {
+        if (e.pointerType === 'touch' && activePointers.has(e.pointerId)) {
+          activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          
+          if (activePointers.size === 2 && isPinching) {
+            const pts = Array.from(activePointers.values());
+            const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+            const zoomDelta = dist / pinchStartDist;
+            let newScale = pinchStartScale * zoomDelta;
+            
+            if (newScale > 0.1 && newScale < 5) {
+              const centerX = (pts[0].x + pts[1].x) / 2;
+              const centerY = (pts[0].y + pts[1].y) / 2;
+              const worldX = (centerX - viewport.x) / viewport.scale.x;
+              const worldY = (centerY - viewport.y) / viewport.scale.y;
+
+              viewport.scale.set(newScale);
+              viewport.x = centerX - worldX * newScale;
+              viewport.y = centerY - worldY * newScale;
+            }
+          } else if (activePointers.size === 1 && isTouchPanning && !draggingTokenId && !draggingBgId && !draggingTextId) {
+            viewport.x = e.clientX - touchPanStart.x;
+            viewport.y = e.clientY - touchPanStart.y;
+          }
+        }
+
         if (isPanning) {
           viewport.x = e.clientX - panStart.x;
           viewport.y = e.clientY - panStart.y;
@@ -225,8 +273,20 @@ export const GameCanvas: React.FC = () => {
           rulerText.scale.set(1 / viewport.scale.x);
           rulerText.visible = true;
         }
-      });
-      window.addEventListener('pointerup', (e) => {
+      };
+
+      window.addEventListener('pointermove', handleMainPointerMove);
+      const handlePointerUp = (e: PointerEvent) => {
+        if (e.pointerType === 'touch') {
+          activePointers.delete(e.pointerId);
+          if (activePointers.size < 2) isPinching = false;
+          if (activePointers.size === 0) isTouchPanning = false;
+          if (activePointers.size === 1) {
+            const remaining = Array.from(activePointers.values())[0];
+            touchPanStart = { x: remaining.x - viewport.x, y: remaining.y - viewport.y };
+          }
+        }
+
         if (e.button === 1 || e.button === 2) {
           isPanning = false;
           canvasEl.style.cursor = 'default';
@@ -279,7 +339,18 @@ export const GameCanvas: React.FC = () => {
             clearPropSelection();
           }
         }
-      });
+      };
+
+      window.addEventListener('pointerup', handlePointerUp);
+      window.addEventListener('pointercancel', handlePointerUp);
+
+      const baseCleanup = (app as any)._cleanupNativeEvents;
+      (app as any)._cleanupNativeEvents = () => {
+        if (baseCleanup) baseCleanup();
+        window.removeEventListener('pointermove', handleMainPointerMove);
+        window.removeEventListener('pointerup', handlePointerUp);
+        window.removeEventListener('pointercancel', handlePointerUp);
+      };
 
       // HTML5 Drag and Drop to spawn/move tokens
       canvasEl.addEventListener('dragover', (e) => {
