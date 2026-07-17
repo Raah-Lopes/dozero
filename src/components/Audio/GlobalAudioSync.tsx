@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ReactPlayer from 'react-player';
+import ReactPlayer from 'react-player/lazy';
 import { state } from '../../services/yjs';
 import { useAudioStore } from '../../store/audioStore';
 
