@@ -26,6 +26,7 @@ const WebFrameWidget = React.lazy(() => import('./WebFrameWidget').then(m => ({ 
 const DiceRollerWidget = React.lazy(() => import('../Widgets/PlayerTools/DiceRollerWidget').then(m => ({ default: m.DiceRollerWidget })));
 const AIStudioWidget = React.lazy(() => import('../Widgets/GameMaster/AIStudioWidget').then(m => ({ default: m.AIStudioWidget })));
 const TradeShopWidget = React.lazy(() => import('../Widgets/PlayerTools/TradeShopWidget').then(m => ({ default: m.TradeShopWidget })));
+const PlayerManagerWidget = React.lazy(() => import('../Widgets/GameMaster/PlayerManagerWidget').then(m => ({ default: m.PlayerManagerWidget })));
 const AuditorWidget = React.lazy(() => import('../Widgets/System/AuditorWidget').then(m => ({ default: m.AuditorWidget })));
 
 const FallbackLoader = () => (
@@ -75,6 +76,7 @@ export const WidgetLayer: React.FC = React.memo(() => {
           {openWindows.diceRoller && <DiceRollerWidget onClose={() => closeWindow('diceRoller')} />}
           {openWindows.aiStudio && <AIStudioWidget onClose={() => closeWindow('aiStudio')} />}
           {openWindows.tradeShop && <TradeShopWidget onClose={() => closeWindow('tradeShop')} />}
+          {openWindows.playerManager && <PlayerManagerWidget onClose={() => closeWindow('playerManager')} />}
           {openWindows.systemAuditor && <AuditorWidget onClose={() => closeWindow('systemAuditor')} />}
         </ErrorBoundary>
       </Suspense>

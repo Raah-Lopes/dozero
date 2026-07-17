@@ -16,6 +16,7 @@ export interface ChatMessageOptions {
   tipo?: 'geral' | 'in-game' | 'sistema' | 'whisper' | 'me' | 'as';
   autor?: string;
   autor_alias?: string;
+  autor_color?: string;
   alvo?: string;
   idioma?: string;
   isCritical?: boolean;
@@ -48,6 +49,7 @@ export function pushAdvancedChatMessage(message: string, options: ChatMessageOpt
     tipo: options.tipo || 'geral',
     autor: options.autor || 'Sistema',
     autor_alias: options.autor_alias,
+    autor_color: options.autor_color,
     alvo: options.alvo,
     idioma: options.idioma,
     isCritical: options.isCritical || false,

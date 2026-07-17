@@ -497,6 +497,7 @@ function App() {
                 onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
                 onOpenMapSettings={() => { setShowMapSettings(true); setActiveModal('none'); }}
                 onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
+                onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
                 onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
               />

@@ -28,6 +28,7 @@ interface Props {
   onOpenSystemAuditor: () => void;
   onOpenMapSettings: () => void;
   onOpenActorLibrary: () => void;
+  onOpenPlayerManager: () => void;
   onToggleAIBot: () => void;
 }
 
@@ -39,6 +40,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'ai', cat: 'Game Master', title: 'Estúdio IA do Mestre', icon: Bot, action: props.onOpenAIStudio, theme: 'theme-purple', shadow: '0 0 10px rgba(168,85,247,0.4)' },
     { id: 'arsenal', cat: 'Game Master', title: 'Arsenal do Mestre', icon: Shield, action: props.onOpenArsenalMestre, theme: 'theme-amber' },
     { id: 'campaign', cat: 'Game Master', title: 'Gestor de Campanhas', icon: BookOpen, action: props.onOpenCampaignManager, theme: 'theme-indigo' },
+    { id: 'players', cat: 'Game Master', title: 'Identidades (Jogadores)', icon: Users, action: props.onOpenPlayerManager, theme: 'theme-pink' },
     { id: 'encounter', cat: 'Game Master', title: 'Forja de Encontros', icon: Skull, action: props.onOpenEncounterGenerator, theme: 'theme-orange' },
     { id: 'tracker', cat: 'Game Master', title: 'Iniciativa (Combate)', icon: Swords, action: props.onOpenTracker, theme: 'theme-red' },
     { id: 'clock', cat: 'Game Master', title: 'Relógio de Tensão', icon: Timer, action: props.onOpenClockConfig, theme: 'theme-amber' },

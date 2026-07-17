@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type ViewMode = 'canvas' | 'wiki' | 'theater';
-export type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets';
+export type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
 
 interface WindowManagerState {
   // Generic openWindows (e.g. combatLog, etc)

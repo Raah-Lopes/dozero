@@ -4,14 +4,24 @@ import { state } from '../../store';
 import { pushAdvancedChatMessage, ChatMessageOptions, createPoll } from '../../store/chat';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { useCastData } from '../Theater/hooks/useCastData';
-import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plus, Mail } from 'lucide-react';
+import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plus, Mail, Bell, BellOff } from 'lucide-react';
 import { PollWidget } from './PollWidget';
 
 export const ChatWindow: React.FC = () => {
   const { members } = useCastData();
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
-  const [playerName, setPlayerName] = useState('Jogador');
+  const [playerName, setPlayerName] = useState(() => localStorage.getItem('playerName') || 'Jogador');
+  const [playerColor, setPlayerColor] = useState(() => localStorage.getItem('playerColor') || '#a855f7');
+  const [chatSound, setChatSound] = useState(() => localStorage.getItem('chatSound') !== 'false');
+  const [clientId] = useState(() => {
+    let id = localStorage.getItem('deviceId');
+    if (!id) {
+      id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem('deviceId', id);
+    }
+    return id;
+  });
   const [tab, setTab] = useState<'geral' | 'in-game' | 'sistema'>('geral');
   const [pinned, setPinned] = useState<any | null>(null);
   const [clearedAt, setClearedAt] = useState<number>(0);
@@ -30,11 +40,58 @@ export const ChatWindow: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const observer = () => setMessages(state.chat.toArray());
+    const observer = (event: any) => {
+      setMessages(state.chat.toArray());
+      if (chatSound && event && event.changes && event.changes.added && event.changes.added.size > 0) {
+        const arr = state.chat.toArray();
+        const lastMsg = arr[arr.length - 1] as any;
+        if (lastMsg && lastMsg.autor !== playerName && lastMsg.tipo !== 'sistema') {
+          try {
+            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.05, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+          } catch(e) {}
+        }
+      }
+    };
     state.chat.observe(observer);
     setMessages(state.chat.toArray());
     return () => state.chat.unobserve(observer);
-  }, []);
+  }, [chatSound, playerName]);
+
+  // Push local changes to state.players
+  useEffect(() => {
+    const current = state.players.get(clientId) as any;
+    if (!current || current.name !== playerName || current.color !== playerColor) {
+      state.players.set(clientId, { name: playerName, color: playerColor, isOnline: true });
+    }
+    localStorage.setItem('playerName', playerName);
+    localStorage.setItem('playerColor', playerColor);
+  }, [playerName, playerColor, clientId]);
+
+  // Listen for GM changes
+  useEffect(() => {
+    const observer = () => {
+      const myIdentity = state.players.get(clientId) as any;
+      if (myIdentity) {
+        setPlayerName(prev => (prev !== myIdentity.name ? myIdentity.name : prev));
+        setPlayerColor(prev => (prev !== myIdentity.color ? myIdentity.color : prev));
+      }
+    };
+    state.players.observe(observer);
+    return () => {
+      state.players.unobserve(observer);
+      state.players.set(clientId, { name: playerName, color: playerColor, isOnline: false });
+    };
+  }, [clientId]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -44,7 +101,7 @@ export const ChatWindow: React.FC = () => {
     if (!input.trim()) return;
     
     let text = input;
-    let options: ChatMessageOptions = { tipo: tab, autor: playerName };
+    let options: ChatMessageOptions = { tipo: tab, autor: playerName, autor_color: playerColor };
 
     // Parse commands
     if (text.startsWith('/w ')) {
@@ -197,7 +254,7 @@ export const ChatWindow: React.FC = () => {
             <span className="chat-author">
             {msg.tipo === 'whisper' ? <><EyeOff size={10} style={{display:'inline'}}/> Whisper to {msg.alvo}:</> : 
              msg.tipo === 'me' ? '' : 
-             <strong>{autorName}</strong>}
+             <strong style={{ color: msg.autor_color || 'inherit' }}>{autorName}</strong>}
           </span>
           <span style={{color: 'gray', display: 'flex', alignItems: 'center'}}>
             {new Date(msg.timestamp).toLocaleTimeString()}
@@ -312,6 +369,13 @@ export const ChatWindow: React.FC = () => {
           </button>
         )}
 
+        <button onClick={() => {
+          const newState = !chatSound;
+          setChatSound(newState);
+          localStorage.setItem('chatSound', String(newState));
+        }} title="Notificações Sonoras" style={{ padding: '8px', background: 'transparent', color: chatSound ? 'var(--accent-primary)' : 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
+          {chatSound ? <Bell size={16} /> : <BellOff size={16} />}
+        </button>
         <button onClick={() => { if(confirm('Limpar seu chat local?')) setClearedAt(Date.now()); }} title="Limpar Chat Local" style={{ padding: '8px', background: 'transparent', color: 'var(--warning)', border: 'none', cursor: 'pointer' }}>
           <Trash2 size={16} />
         </button>
@@ -397,13 +461,20 @@ export const ChatWindow: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <input
+              type="color"
+              value={playerColor}
+              onChange={(e) => setPlayerColor(e.target.value)}
+              title="Cor do seu nome"
+              style={{ width: '28px', height: '28px', padding: '0', border: 'none', background: 'none', cursor: 'pointer', borderRadius: '4px' }}
+            />
             <input 
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               placeholder="Nome"
               title="Seu nome no chat"
-              style={{ width: '80px', padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--accent-primary)', borderRadius: '4px', fontWeight: 'bold' }}
+              style={{ width: '80px', padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: playerColor, borderRadius: '4px', fontWeight: 'bold' }}
             />
             <input 
               value={input}
