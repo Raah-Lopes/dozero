@@ -4,9 +4,9 @@ import { connectProvider } from '../../services/yjs';
 
 // Import specific standalones that aren't in WidgetLayer
 import { ChatWindow } from '../Chat/ChatWindow';
-import { CombatTracker } from '../Combat/CombatTracker';
-import { CombatLog } from '../Combat/CombatLog';
-import { TargetTerminal } from '../TargetTerminal';
+import { CombatTracker } from '../HUD/CombatTracker';
+import { CombatLog } from '../Chat/CombatLog';
+import { TargetTerminal } from '../Widgets/PlayerTools/TargetTerminal';
 
 interface PopoutViewerProps {
   widgetId: string;
