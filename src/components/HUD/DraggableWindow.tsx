@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GripHorizontal, X, Minus, Pin } from 'lucide-react';
+import { GripHorizontal, X, Minus, Pin, ExternalLink } from 'lucide-react';
 import { ErrorBoundary } from '../ErrorBoundary';
 
 interface DraggableWindowProps {
@@ -243,7 +243,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     <div
       id={`window-${id}`}
       ref={windowRef}
-      className={(variant === 'default' || variant === 'glass') ? "draggable-window glass-panel" : "draggable-window"}
+      className={`draggable-window-container ${isMinimized ? 'minimized' : ''} ${variant === 'glass' ? 'glass-panel' : ''}`}
       data-pinned={isPinned}
       style={{
         position: 'absolute',
@@ -261,6 +261,9 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         overflow: 'hidden',
         minWidth: (variant === 'default' || variant === 'glass') ? '250px' : 'auto',
         minHeight: ((variant === 'default' || variant === 'glass') && !isMinimized) ? '100px' : 'auto',
+        backgroundColor: variant === 'default' ? 'var(--bg-secondary)' : 'transparent',
+        border: variant === 'default' ? '1px solid var(--glass-border)' : 'none',
+        borderRadius: variant === 'default' ? '12px' : '0',
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front
@@ -325,6 +328,25 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
           >
             <Pin size={14} />
           </button>
+          
+          {/* PopOut Button for multi-monitor */}
+          {['chatWindow', 'combatTracker', 'combatLog'].includes(id) || id.startsWith('sheet-') ? (
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                window.open(`${window.location.pathname}?widget=${id}`, '_blank', 'width=400,height=800');
+                if (onClose) onClose();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title="Destacar para outra tela (Pop-out)"
+              style={{ 
+                background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
+              }}
+            >
+              <ExternalLink size={14} />
+            </button>
+          ) : null}
           
           <button 
             onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}

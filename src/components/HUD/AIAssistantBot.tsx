@@ -113,6 +113,7 @@ export const AIAssistantBot: React.FC = () => {
           position: 'fixed',
           left: `${pos.x}px`,
           top: `${pos.y}px`,
+          touchAction: 'none', // Prevents browser panning when dragging on mobile
           width: '50px',
           height: '50px',
           borderRadius: '50%',

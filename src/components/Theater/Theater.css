@@ -87,7 +87,7 @@
 
 @media (max-width: 900px) {
   .theater-topbar {
-    padding: 8px 120px; /* reduce padding on smaller screens */
+    padding: 8px 60px; /* reduce padding on smaller screens */
   }
   .theater-topbar-title {
     display: none; /* hide title to make space for buttons */
@@ -96,7 +96,10 @@
 
 @media (max-width: 600px) {
   .theater-topbar {
-    padding: 8px 60px;
+    padding: 8px 10px; /* Reduced to fit mobile screens and not overlap hamburger */
+    padding-left: 60px; /* Leave space for hamburger menu */
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
 
@@ -700,6 +703,32 @@
 .floating-window.minimized {
   /* Height is auto, content is hidden */
   background: rgba(15, 23, 42, 0.9);
+}
+
+.theater-cockpit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: linear-gradient(to top, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.7) 100%);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  z-index: 20;
+}
+
+@media (max-width: 768px) {
+  .theater-cockpit {
+    justify-content: flex-start;
+    padding: 8px 12px;
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .theater-cockpit-group {
+    flex-shrink: 0;
+  }
 }
 
 .floating-window-header {

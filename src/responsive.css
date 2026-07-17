@@ -1,0 +1,74 @@
+/* ============================================================== */
+/*                 RESPONSIVE DESIGN & WIDGET MODE                */
+/* ============================================================== */
+
+/* Standalone Widget Container (Desktop & Mobile) */
+.standalone-widget-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.standalone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.standalone-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-family: var(--font-display);
+}
+
+.sync-badge {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+  border: 1px solid var(--success);
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.standalone-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+/* Mobile & Tablet Constraints */
+@media (max-width: 768px) {
+  /* Draggable Windows become clamped Modals on Mobile */
+  .draggable-window-container:not(.minimized) {
+    left: 2.5vw !important;
+    top: 5vh !important;
+    width: 95vw !important;
+    max-height: 80vh !important;
+    position: fixed !important;
+    z-index: 999999 !important; /* Always on top when open on mobile */
+  }
+
+  /* Center hud-modal-layer on mobile */
+  .hud-modal-layer {
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  /* Make sure modals fit on screen */
+  .hud-modal-layer .glass-panel {
+    max-width: 95vw !important;
+    max-height: 85vh !important;
+    overflow-y: auto;
+  }
+}

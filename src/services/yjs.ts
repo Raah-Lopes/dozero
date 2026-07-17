@@ -33,24 +33,15 @@ channel.onmessage = (event) => {
 // IndexeddbPersistence saves the document locally so it survives F5
 export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 
-// Conecta ao servidor WebSocket. 
-// Se for localhost (GM jogando sozinho ou em rede local), usa o servidor embutido do Vite.
-// Se for um túnel na internet (ngrok, localtunnel), usa o servidor público do Yjs para desviar de bloqueios de túnel!
-const isInternet = !window.location.hostname.includes('localhost') && !window.location.hostname.match(/^\d{1,3}\./);
-const wsUrl = isInternet 
-  ? 'wss://demos.yjs.dev/ws' 
-  : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/yjs`;
-
-// Nome da sala único para evitar colisões no servidor público
-const uniqueRoomName = `dozero-vtt-${window.location.host.replace(/[^a-zA-Z0-9]/g, '')}`;
+// Conecta ao servidor WebSocket local que criamos no Vite.
+// Ngrok fará o túnel automático do wss:// para nós!
+const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/yjs`;
 
 export const provider = new WebsocketProvider(
   wsUrl, 
-  isInternet ? uniqueRoomName : roomName, 
+  roomName, 
   doc,
-  // Não conectar automaticamente em localhost — sem servidor WS local.
-  // BroadcastChannel (acima) já sincroniza entre abas; IndexedDB persiste o estado.
-  { connect: isInternet }
+  { connect: true }
 );
 
 export const state = {

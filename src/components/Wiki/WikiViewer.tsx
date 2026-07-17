@@ -196,6 +196,14 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   const [showCheatSheet, setShowCheatSheet] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const editorRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -512,18 +520,64 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   }, [frontmatter]);
 
   return (
-    <div className="wiki-container animate-fade-in">
+    <div className="wiki-container animate-fade-in" style={{ position: 'relative' }}>
+      {/* Mobile Sidebar Toggle Button */}
+      {isMobile && !isSidebarOpen && (
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          style={{
+            position: 'absolute', top: '10px', left: '10px', zIndex: 10,
+            background: 'rgba(15, 23, 42, 0.9)', border: '1px solid var(--glass-border)',
+            color: 'white', padding: '8px 12px', borderRadius: '8px',
+            display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.5)'
+          }}
+        >
+          <Folder size={18} /> <span>Índice</span>
+        </button>
+      )}
+
+      {/* Sidebar Overlay on Mobile */}
+      {isMobile && isSidebarOpen && (
+        <div 
+          style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100 }}
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="wiki-sidebar">
+      <div 
+        className="wiki-sidebar" 
+        style={isMobile ? { 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          height: '100%', 
+          width: '85%', 
+          maxWidth: '350px', 
+          zIndex: 101, 
+          background: 'var(--bg-secondary)', 
+          transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s ease',
+          boxShadow: isSidebarOpen ? '5px 0 20px rgba(0,0,0,0.5)' : 'none'
+        } : {}}
+      >
         <div className="wiki-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
               <BookOpen size={18} color="var(--accent-primary)" />
               Sua Wiki Local
             </div>
-            <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar Arquivos" style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px' }}>
-              <RefreshCw size={14} className={syncing ? 'spin' : ''} />
-            </button>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar Arquivos" style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px' }}>
+                <RefreshCw size={14} className={syncing ? 'spin' : ''} />
+              </button>
+              {isMobile && (
+                <button className="btn-icon" onClick={() => setIsSidebarOpen(false)} style={{ padding: '0.3rem', color: 'var(--text-secondary)' }}>
+                  <EyeOff size={16} />
+                </button>
+              )}
+            </div>
           </div>
           
           <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--glass-border)', justifyContent: 'space-between' }}>
@@ -632,7 +686,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       </div>
 
       {/* Main Content Viewer */}
-      <div className="wiki-content-area" style={{ position: 'relative' }}>
+      <div className="wiki-content-area" style={{ position: 'relative', width: '100%', paddingTop: isMobile ? '50px' : '0' }}>
         {activeFile ? (
           activeFile.match(/\.(png|jpe?g|gif|webp|svg)$/i) ? (
             <div className="wiki-empty-state">

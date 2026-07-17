@@ -12,7 +12,14 @@ interface NPCGeneratorWidgetProps {
   onClose?: () => void;
 }
 
-const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
+const RACAS_DISPONIVEIS = [
+  'Humano', 'Elfo', 'Meio-Elfo', 'Drow (Elfo Negro)', 
+  'Anão', 'Duergar', 'Gnomo', 'Fada (Dríade/Ninfa)', 'Firbolg',
+  'Aarakocra (Povo-pássaro)', 'Centauro', 'Sátiro',
+  'Gith', 'Gnoll', 'Dragonborn', 'Dragão',
+  'Demônio/Diabo', 'Anjo/Celestial', 'Elemental', 'Djinni',
+  'Gigante', 'Aberrações (Illithid/Aboleth)', 'Sintético', 'Vampiro'
+];
 
 export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose }) => {
   const [categories, setCategories] = useState<NPCCategory[]>([]);

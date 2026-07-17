@@ -75,7 +75,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
   const filteredWidgets = widgets.filter(w => w.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '550px' }}>
+    <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '100%', maxWidth: '550px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
         <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           Hub de Widgets
@@ -117,7 +117,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
           }
           .widget-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
             gap: 1rem;
             justify-items: center;
           }
@@ -176,7 +176,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
         `}
       </style>
 
-      <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '500px', overflowY: 'auto', paddingRight: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
         {categories.map(cat => {
           const catWidgets = filteredWidgets.filter(w => w.cat === cat);
           if (catWidgets.length === 0) return null;

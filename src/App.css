@@ -12,6 +12,7 @@
   width: 100%;
   height: 100%;
   z-index: 0;
+  touch-action: none; /* Allows PixiJS to capture raw touches for pan/zoom without browser scrolling */
 }
 
 .hud-layer {
