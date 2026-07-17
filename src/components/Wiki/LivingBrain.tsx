@@ -187,7 +187,8 @@ export const LivingBrain: React.FC = () => {
       .force("link", d3.forceLink<NodeData, LinkData>(links).id(d => d.id).distance(150))
       .force("charge", d3.forceManyBody().strength(-800))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collide", d3.forceCollide().radius(40));
+      .force("collide", d3.forceCollide().radius(40))
+      .alphaDecay(0.05); // Optimize: stabilize more than 2x faster than default 0.0228
 
     if (layoutMode === 'tree') {
       simulation.force("y", d3.forceY<NodeData>(d => (d.depth || 1) * 150).strength(0.8));
@@ -291,8 +292,23 @@ export const LivingBrain: React.FC = () => {
           context.globalAlpha = 0.2;
         }
 
-        context.shadowBlur = 15;
-        context.shadowColor = node.id === vs.linkingSourceNode?.id ? '#facc15' : 'rgba(168, 85, 247, 0.4)';
+        // Optimization: Native shadowBlur is extremely slow in canvas (causes requestAnimationFrame violations).
+        // Instead, we draw a fake glow using a simple larger circle with low alpha.
+        const isHovered = node.id === vs.hoveredNode?.id;
+        const isLinking = node.id === vs.linkingSourceNode?.id;
+        const glowColor = isLinking ? 'rgba(250, 204, 21, 0.3)' : 'rgba(168, 85, 247, 0.2)';
+        
+        if (isHovered || isLinking || node.isFolder) {
+           context.beginPath();
+           if (node.isFolder) {
+              const fsize = size * 1.3;
+              context.roundRect(node.x! - fsize - 4, node.y! - fsize/1.5 - 4, (fsize*2) + 8, (fsize*1.5) + 8, 8);
+           } else {
+              context.arc(node.x!, node.y!, size + 5, 0, 2 * Math.PI, false);
+           }
+           context.fillStyle = glowColor;
+           context.fill();
+        }
         
         context.beginPath();
         if (node.isFolder) {
@@ -465,11 +481,17 @@ export const LivingBrain: React.FC = () => {
         if (visualStateRef.current.linkingSourceNode && isLinkModeRef.current) {
           render();
         }
-      })
-      .on("mouseup", (event: MouseEvent) => {
+      });
+
+    const handleGlobalMouseUp = () => {
         if (draggingNode) {
            const node = draggingNode;
+           
+           // Ponytail: unpin the node so it doesn't freeze or stay stuck forever
+           node.fx = null;
+           node.fy = null;
            draggingNode = null;
+           
            simulation.alphaTarget(0);
            
            // Se não arrastou (foi só um click rápido)
@@ -479,7 +501,11 @@ export const LivingBrain: React.FC = () => {
              }
            }
         }
-      })
+    };
+    
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+
+    d3.select(canvas)
       .on("contextmenu", (event: MouseEvent) => {
         event.preventDefault();
         const [x, y] = d3.pointer(event);
@@ -501,6 +527,7 @@ export const LivingBrain: React.FC = () => {
     d3.select(canvas).call(zoom);
 
     return () => {
+      window.removeEventListener("mouseup", handleGlobalMouseUp);
       simulation.stop();
       d3.select(canvas).on(".zoom", null);
       d3.select(canvas).on("mousedown", null);

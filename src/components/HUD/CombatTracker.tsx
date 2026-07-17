@@ -54,13 +54,25 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
       setTurnIndex(state.combat.get('turnIndex') as number || 0);
       setIsActive(state.combat.get('isActive') as boolean || false);
     };
-    const tokenObserver = () => setTokensMap(new Map(state.tokens));
+    
+    // Ponytail: debounce para não re-renderizar o painel de combate a 60fps enquanto o token é arrastado.
+    let timeout: any;
+    const tokenObserver = () => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+         setTokensMap(new Map(state.tokens));
+      }, 300);
+    };
 
     state.combat.observe(observer);
     state.tokens.observe(tokenObserver);
     observer();
-    tokenObserver();
-    return () => { state.combat.unobserve(observer); state.tokens.unobserve(tokenObserver); };
+    setTokensMap(new Map(state.tokens)); // Initial load
+    return () => { 
+       state.combat.unobserve(observer); 
+       state.tokens.unobserve(tokenObserver); 
+       if (timeout) clearTimeout(timeout);
+    };
   }, []);
 
   const adjustHP = async (tokenId: string, amount: number) => {

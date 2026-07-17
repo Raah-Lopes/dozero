@@ -31,3 +31,4 @@ export default defineConfig({
     'import.meta.env.VITE_LOCAL_IP': JSON.stringify(getLocalIP())
   }
 })
+// Ponytail: Forçando restart do servidor Vite para limpar o cache de import-analysis de qrcode.react

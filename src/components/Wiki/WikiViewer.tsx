@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
 import { FrontmatterPanel } from './FrontmatterPanel';
+import { FrontmatterSheetViewer } from './FrontmatterSheetViewer';
 import { getWikiConfig } from '../../store';
 import './wiki.css';
 
@@ -193,7 +194,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
-  
+  const [searchQuery, setSearchQuery] = useState('');
   
   const editorRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -464,7 +465,51 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
     loadContent();
   }, [activeFile]);
 
-  const tree = useMemo(() => buildTree(treeItems), [treeItems]);
+  const filteredTreeItems = useMemo(() => {
+    if (!searchQuery.trim()) return treeItems;
+    const lowerQuery = searchQuery.toLowerCase();
+    
+    const matchedBlobs = treeItems.filter(item => item.type === 'blob' && item.path.toLowerCase().includes(lowerQuery));
+    
+    const matchedPaths = new Set<string>();
+    matchedBlobs.forEach(blob => {
+       const parts = blob.path.split('/');
+       let current = '';
+       parts.forEach(part => {
+         current += (current ? '/' : '') + part;
+         matchedPaths.add(current);
+       });
+    });
+    
+    const matchedFolders = treeItems.filter(item => item.type === 'tree' && item.path.toLowerCase().includes(lowerQuery));
+    matchedFolders.forEach(folder => {
+       matchedPaths.add(folder.path);
+       treeItems.forEach(item => {
+          if (item.path.startsWith(folder.path + '/')) matchedPaths.add(item.path);
+       });
+    });
+
+    return treeItems.filter(item => matchedPaths.has(item.path));
+  }, [treeItems, searchQuery]);
+
+  const tree = useMemo(() => buildTree(filteredTreeItems), [filteredTreeItems]);
+
+  const parsedMeta = useMemo(() => {
+    if (!frontmatter) return null;
+    try {
+      const lines = frontmatter.split('\n').filter(l => l.trim().length > 0);
+      const meta: any = {};
+      lines.forEach(line => {
+        const idx = line.indexOf(':');
+        if (idx !== -1) {
+          meta[line.slice(0, idx).trim().toLowerCase()] = line.slice(idx + 1).trim();
+        }
+      });
+      return Object.keys(meta).length > 0 ? meta : null;
+    } catch (e) {
+      return null;
+    }
+  }, [frontmatter]);
 
   return (
     <div className="wiki-container animate-fade-in">
@@ -498,6 +543,24 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
               <FolderOpen size={16} />
             </button>
           </div>
+          
+          <input 
+            type="text" 
+            placeholder="Pesquisar fichas..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.5rem',
+              borderRadius: '6px',
+              border: '1px solid var(--glass-border)',
+              background: 'rgba(0,0,0,0.3)',
+              color: 'var(--text-primary)',
+              outline: 'none',
+              fontSize: '0.9rem'
+            }}
+          />
+
           <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -633,24 +696,15 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
               {/* Injetor Automático de Cabeçalho (Profile Header) */}
               {(() => {
                  try {
-                   let parsedMeta = null;
-                   if (frontmatter) {
-                      const lines = frontmatter.split('\n').filter(l => l.trim().length > 0);
-                      parsedMeta = {} as any;
-                      lines.forEach(line => {
-                        const idx = line.indexOf(':');
-                        if (idx !== -1) {
-                          parsedMeta[line.slice(0, idx).trim().toLowerCase()] = line.slice(idx + 1).trim();
-                        }
-                      });
-                   }
-                   if (parsedMeta && parsedMeta.nome && (parsedMeta.imagem || parsedMeta.avatar)) {
+                   if (!parsedMeta) return null;
+
+                   if (parsedMeta.nome && (parsedMeta.imagem || parsedMeta.avatar)) {
                      let imgUrlRaw = parsedMeta.imagem || parsedMeta.avatar;
                      let imgUrl = imgUrlRaw.replace(/[\[\]!]/g, "").split("|")[0].trim();
                      if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:') && !imgUrl.startsWith('/')) {
-                       const configStr = localStorage.getItem('dozero_wiki_config');
-                       const repoPath = configStr ? JSON.parse(configStr).repoPath : '';
-                       imgUrl = `/api/wiki/raw?path=${encodeURIComponent(imgUrl)}&repoPath=${encodeURIComponent(repoPath)}&t=${Date.now()}`;
+                       // Force HMR reload
+                       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+                       imgUrl = `/api/wiki/media?path=${encodeURIComponent(imgUrl)}&repoPath=${encodeURIComponent(repoPath)}&t=${Date.now()}`;
                      }
                      return (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '20px', paddingTop: '10px' }}>
@@ -666,8 +720,10 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                         </div>
                      );
                    }
-                 } catch(e) {}
-                 return null;
+                   return null;
+                 } catch(e) {
+                   return null;
+                 }
               })()}
 
               <WikiEditor 
@@ -678,6 +734,13 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                 onSave={() => handleSave()} 
                 activeFile={activeFile}
               />
+
+              {/* Injetor da Ficha de Propriedades na Base */}
+              {parsedMeta && (
+                <div style={{ marginTop: '20px' }}>
+                  <FrontmatterSheetViewer parsedMeta={parsedMeta} />
+                </div>
+              )}
               
               {/* Dicas de Formatação Markdown (Cheat Sheet) */}
               <div style={{ marginTop: '1rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>

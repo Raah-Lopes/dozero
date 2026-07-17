@@ -136,9 +136,6 @@ magias_preparadas:
     max: 0
 registro_aventura: ''
 ---
-
-
-
 :::info
 Interpretação e Lore
 

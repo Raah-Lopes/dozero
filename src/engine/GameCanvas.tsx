@@ -1980,16 +1980,10 @@ export const GameCanvas: React.FC = () => {
 
           // Pulse glow effect
           if (isCurrentTurn) {
-            // Strong yellow/gold glow for current turn
-            tokenData.glow.clear();
-            tokenData.glow.circle(0, 0, 40);
-            tokenData.glow.fill({ color: 0xeab308, alpha: 0.6 + Math.abs(Math.sin(Date.now() / 200)) * 0.4 });
-            tokenData.glow.alpha = 1;
+            tokenData.glow.tint = 0xeab308;
+            tokenData.glow.alpha = 0.6 + Math.abs(Math.sin(Date.now() / 200)) * 0.4;
           } else {
-            // Default cyan subtle glow
-            tokenData.glow.clear();
-            tokenData.glow.circle(0, 0, 40);
-            tokenData.glow.fill({ color: 0x06b6d4, alpha: 0.4 });
+            tokenData.glow.tint = 0xffffff; // Reset tint
             tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
           }
             
@@ -2034,16 +2028,20 @@ export const GameCanvas: React.FC = () => {
              tokenData.targetRing.rotation += 0.05;
           }
 
-          // Update Mini HP Bar live
+          // Update Mini HP Bar live (Optimize: only redraw if changed)
           const curHp = Number(tState.hp);
           const maxHp = Number(tState.maxHp || 1);
           const validHp = isNaN(curHp) ? 100 : curHp;
           const validMax = isNaN(maxHp) || maxHp === 0 ? Math.max(100, validHp) : maxHp;
           const hpPercent = Math.max(0, Math.min(1, validHp / validMax));
           const hpY = tokenData.hpBarY !== undefined ? tokenData.hpBarY + 1 : 36;
-          tokenData.hpFill.clear();
-          tokenData.hpFill.rect(-19, hpY, 38 * hpPercent, 4);
-          tokenData.hpFill.fill(0xef4444);
+          
+          if (tokenData.lastHpPercent !== hpPercent) {
+             tokenData.lastHpPercent = hpPercent;
+             tokenData.hpFill.clear();
+             tokenData.hpFill.rect(-19, hpY, 38 * hpPercent, 4);
+             tokenData.hpFill.fill(0xef4444);
+          }
           
           // LERP position if someone else moved it
           let isBeingDragged = false;

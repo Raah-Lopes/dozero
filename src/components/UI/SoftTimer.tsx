@@ -40,13 +40,19 @@ export const SoftTimer: React.FC = () => {
       const { timerStart, timerDuration, timerPaused, isActive } = getTimerValues();
 
       if (!isActive || !timerDuration || timerDuration <= 0) {
-        setTimer(prev => ({ ...prev, active: false, duration: 0 }));
+        setTimer(prev => {
+           if (!prev.active && prev.duration === 0) return prev;
+           return { ...prev, active: false, duration: 0 };
+        });
         rafRef.current = requestAnimationFrame(tick);
         return;
       }
 
       if (timerPaused) {
-        setTimer(prev => ({ ...prev, paused: true, active: true, duration: timerDuration }));
+        setTimer(prev => {
+           if (prev.paused && prev.active && prev.duration === timerDuration) return prev;
+           return { ...prev, paused: true, active: true, duration: timerDuration };
+        });
         rafRef.current = requestAnimationFrame(tick);
         return;
       }
@@ -54,7 +60,8 @@ export const SoftTimer: React.FC = () => {
       const now = Date.now();
       const elapsed = now - timerStart;
       const remaining = Math.max(0, timerDuration - elapsed);
-      const progress = remaining / timerDuration;
+      // Ponytail: truncate progress to 2 decimal places to avoid React re-rendering every single millisecond (60fps) if visually identical
+      const progress = Math.round((remaining / timerDuration) * 1000) / 1000;
       const expired = remaining <= 0;
 
       if (expired && flashCountRef.current < 6) {
@@ -67,12 +74,15 @@ export const SoftTimer: React.FC = () => {
         flashPhaseRef.current = false;
       }
 
-      setTimer({
-        progress,
-        expired,
-        paused: false,
-        active: true,
-        duration: timerDuration,
+      setTimer(prev => {
+        if (prev.progress === progress && prev.expired === expired && !prev.paused && prev.active && prev.duration === timerDuration) return prev;
+        return {
+          progress,
+          expired,
+          paused: false,
+          active: true,
+          duration: timerDuration,
+        };
       });
 
       rafRef.current = requestAnimationFrame(tick);

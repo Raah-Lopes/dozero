@@ -68,13 +68,27 @@ function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[
       const name = file.replace('.md', '');
       const content = fs.readFileSync(fullPath, 'utf-8');
       
-      // Buscar avatar (primeira imagem)
+      // Buscar avatar (primeira imagem no frontmatter ou no corpo)
       let avatar: string | null = null;
-      const imgRegex = /!\[.*?\]\((.*?)\)|!\[\[(.*?)\]\]/;
-      const imgMatch = imgRegex.exec(content);
-      if (imgMatch) {
-        let extracted = imgMatch[1] || imgMatch[2];
-        if (extracted) {
+      let extracted = '';
+
+      const yamlMatch = /^---\n([\s\S]*?)\n---/.exec(content);
+      if (yamlMatch) {
+         const avatarMatch = yamlMatch[1].match(/(?:imagem|avatar|imageUrl):\s*(.+)/);
+         if (avatarMatch) {
+            extracted = avatarMatch[1].trim().replace(/['"]/g, '');
+         }
+      }
+
+      if (!extracted) {
+        const imgRegex = /!\[.*?\]\((.*?)\)|!\[\[(.*?)\]\]/;
+        const imgMatch = imgRegex.exec(content);
+        if (imgMatch) {
+          extracted = (imgMatch[1] || imgMatch[2]).trim();
+        }
+      }
+
+      if (extracted) {
           extracted = extracted.replace(/\\/g, '').split('|')[0].trim();
           // Extrair apenas o nome do arquivo, independentemente se é URL completa ou caminho relativo
           // ponytail: lida com URLs absolutas legadas (http://localhost:5174/api/wiki/media?...path=ANEXOS/foo.webp)
@@ -109,7 +123,6 @@ function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[
             avatar = resolvedPath; // caminho relativo limpo, ex: "[3] 📎 Anexos/zerim_.webp"
           }
         }
-      }
 
       nodes.push({ id, name, path: relativePath, group: path.dirname(relativePath), avatar, isFolder: false });
       

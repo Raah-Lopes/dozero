@@ -326,16 +326,18 @@ export const ChatWindow: React.FC = () => {
 
       {/* MESSAGES */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        {messages.filter(m => {
-          if (m.timestamp < clearedAt) return false;
-          if (tab !== 'geral' && m.tipo !== tab) return false;
-          if (m.tipo === 'whisper') {
-            const isTarget = m.alvo === playerName || m.alvo?.toLowerCase() === playerName.toLowerCase();
-            const isSender = m.autor === playerName || m.autor_alias === playerName;
-            if (!isTarget && !isSender) return false;
-          }
-          return true;
-        }).map((msg, i) => renderMessage(msg, i))}
+        {React.useMemo(() => {
+          return messages.filter(m => {
+            if (m.timestamp < clearedAt) return false;
+            if (tab !== 'geral' && m.tipo !== tab) return false;
+            if (m.tipo === 'whisper') {
+              const isTarget = m.alvo === playerName || m.alvo?.toLowerCase() === playerName.toLowerCase();
+              const isSender = m.autor === playerName || m.autor_alias === playerName;
+              if (!isTarget && !isSender) return false;
+            }
+            return true;
+          }).map((msg, i) => renderMessage(msg, i));
+        }, [messages, tab, clearedAt, playerName, isSelectMode, selectedIds, openedWhispers])}
       </div>
 
       {/* INPUT */}
