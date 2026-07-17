@@ -77,7 +77,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
   const filteredWidgets = widgets.filter(w => w.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '100%', maxWidth: '550px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '100%', maxWidth: '800px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
         <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           Hub de Widgets
@@ -119,26 +119,48 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
           }
           .widget-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 1.5rem 1rem;
             justify-items: center;
+            align-items: start;
+          }
+          .widget-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.5rem;
+            width: 100%;
           }
           .widget-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
             color: white;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
           }
           .widget-btn:hover {
-            transform: scale(1.1);
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.08);
+          }
+          .widget-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
+            word-break: break-word;
+            transition: color 0.2s;
+            font-weight: 500;
+          }
+          .widget-item:hover .widget-label {
+            color: var(--text-primary);
           }
           .widget-btn.disabled {
             opacity: 0.3;
@@ -190,15 +212,17 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                 {catWidgets.map(w => {
                   const Icon = w.icon;
                   return (
-                    <button 
-                      key={w.id} 
-                      onClick={w.action} 
-                      title={w.title} 
-                      className={`widget-btn ${w.theme}`} 
-                      style={w.shadow ? { boxShadow: w.shadow } : {}}
-                    >
-                      <Icon size={28} />
-                    </button>
+                    <div className="widget-item" key={w.id}>
+                      <button 
+                        onClick={w.action} 
+                        title={w.title} 
+                        className={`widget-btn ${w.theme}`} 
+                        style={w.shadow ? { boxShadow: w.shadow } : {}}
+                      >
+                        <Icon size={30} />
+                      </button>
+                      <span className="widget-label">{w.title}</span>
+                    </div>
                   );
                 })}
               </div>

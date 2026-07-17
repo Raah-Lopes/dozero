@@ -470,7 +470,8 @@ function App() {
 
           {/* WidgetHubModal fora da hud-layer para evitar interferencia do canvas PixiJS */}
           {activeModal === 'widgets' && (
-            <div style={{ position: 'fixed', top: '90px', left: 'var(--hud-padding)', zIndex: 9999, pointerEvents: 'auto' }}>
+            <div className="modal-overlay" onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, pointerEvents: 'auto', padding: '20px' }}>
+              <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
               <WidgetHubModal
                 onClose={() => setActiveModal('none')}
                 onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
@@ -501,6 +502,7 @@ function App() {
                 onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
               />
+              </div>
             </div>
           )}
         </>
