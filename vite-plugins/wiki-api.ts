@@ -179,9 +179,9 @@ export function wikiLocalApi(): Plugin {
         }
 
 
-        // Require repoPath for all /api/wiki routes
+        // Require repoPath for all /api/wiki routes except sync-cloud
         const repoPath = url.searchParams.get('repoPath') || body.repoPath;
-        if (pathname.startsWith('/api/wiki') && (!repoPath || !fs.existsSync(repoPath))) {
+        if (pathname.startsWith('/api/wiki') && pathname !== '/api/wiki/sync-cloud' && (!repoPath || !fs.existsSync(repoPath))) {
           return sendResponse(404, { error: `Pasta não encontrada: ${repoPath}` });
         }
 
