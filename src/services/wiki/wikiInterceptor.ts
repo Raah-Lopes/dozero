@@ -10,6 +10,34 @@ export function setupWikiInterceptor() {
       const requestUrl = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url;
       const options = args[1];
       
+      if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/tree')) {
+        const tree: any[] = [];
+        const addedFolders = new Set<string>();
+
+        Object.keys(mdFiles).forEach(p => {
+          let cleanPath = p.replace('../../../wikidozero/', '');
+          if (cleanPath.startsWith('./')) cleanPath = cleanPath.substring(2);
+          
+          // Adiciona as pastas pais
+          const parts = cleanPath.split('/');
+          let currentFolder = '';
+          for (let i = 0; i < parts.length - 1; i++) {
+            currentFolder += (currentFolder ? '/' : '') + parts[i];
+            if (!addedFolders.has(currentFolder)) {
+              addedFolders.add(currentFolder);
+              tree.push({ path: currentFolder, type: 'tree', mode: '040000' });
+            }
+          }
+          
+          // Adiciona o arquivo
+          tree.push({ path: cleanPath, type: 'blob', mode: '100644', size: 1024 });
+        });
+        
+        return new Response(JSON.stringify({ tree }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
       if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/search')) {
         const paths = Object.keys(mdFiles).map(p => {
           let cleanPath = p.replace('../../../wikidozero/', '');
