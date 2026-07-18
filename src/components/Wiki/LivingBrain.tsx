@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { getWikiConfig } from '../../store';
+import { useGameStore, getWikiConfig } from '../../store';
+import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { Settings, Search, X, Map as MapIcon, Share2, GitMerge, Trash2, Edit2 } from 'lucide-react';
 
 interface NodeData extends d3.SimulationNodeDatum {
@@ -173,8 +174,8 @@ export const LivingBrain: React.FC = () => {
         const img = new Image();
         const config = getWikiConfig();
         let url = n.avatar;
-        if (!url.startsWith('http') && !url.startsWith('/')) {
-           url = `/api/wiki/media?path=${encodeURIComponent(n.avatar)}&repoPath=${encodeURIComponent(config.repoUrl || '')}`;
+        if (n.avatar) {
+          url = resolveMediaUrl(n.avatar, config.repoUrl || '');
         }
         img.src = url;
         const entry = { img, loaded: false };

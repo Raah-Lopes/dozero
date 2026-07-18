@@ -10,6 +10,7 @@ import { WikiEditor } from './WikiEditor';
 import { FrontmatterPanel } from './FrontmatterPanel';
 import { FrontmatterSheetViewer } from './FrontmatterSheetViewer';
 import { getWikiConfig } from '../../store';
+import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import './wiki.css';
 
 interface TreeNode {
@@ -758,7 +759,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                      if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:') && !imgUrl.startsWith('/')) {
                        // Force HMR reload
                        const repoPath = (window as any).config?.repoUrl || 'D:/DOZERO/wikidozero';
-                       imgUrl = `/api/wiki/media?path=${encodeURIComponent(imgUrl)}&repoPath=${encodeURIComponent(repoPath)}&t=${Date.now()}`;
+                       imgUrl = resolveMediaUrl(imgUrl, repoPath);
                      }
                      return (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '20px', paddingTop: '10px' }}>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets } from '../store';
+import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 
 function hexRound(q: number, r: number) {
   let s = -q - r;
@@ -1075,7 +1076,8 @@ export const GameCanvas: React.FC = () => {
             // Resolve path for local wiki images
             if (imgPath && !imgPath.startsWith('http') && !imgPath.startsWith('data:') && !imgPath.startsWith('/')) {
               const repoPath = 'D:/DOZERO/wikidozero';
-              imgPath = `/api/wiki/media?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(imgPath)}`;
+              // ponytail: resolve via bundle in PROD, ou fallback
+              imgPath = resolveMediaUrl(imgPath, repoPath);
             }
             
             const img = new Image();

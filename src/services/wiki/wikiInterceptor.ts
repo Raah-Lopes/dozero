@@ -47,6 +47,12 @@ export function setupWikiInterceptor() {
         return new Response(JSON.stringify({ results: paths }));
       }
       
+      if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/ignored')) {
+        return new Response(JSON.stringify({ ignored: [] }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
       if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/file')) {
         const method = (options && options.method) ? options.method.toUpperCase() : 'GET';
         if (method === 'GET') {
