@@ -180,8 +180,10 @@ export function wikiLocalApi(): Plugin {
 
 
         // Require repoPath for all /api/wiki routes except sync-cloud
-        const repoPath = url.searchParams.get('repoPath') || body.repoPath;
-        if (pathname.startsWith('/api/wiki') && pathname !== '/api/wiki/sync-cloud' && (!repoPath || !fs.existsSync(repoPath))) {
+        let repoPath = url.searchParams.get('repoPath') || body.repoPath;
+        if (!repoPath) repoPath = path.join(process.cwd(), 'wikidozero');
+        
+        if (pathname.startsWith('/api/wiki') && pathname !== '/api/wiki/sync-cloud' && !fs.existsSync(repoPath)) {
           return sendResponse(404, { error: `Pasta não encontrada: ${repoPath}` });
         }
 

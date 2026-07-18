@@ -53,7 +53,8 @@ export function MainToolbar() {
     }
   };
 
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.');
 
   // The list of tools to be filtered
   const tools = [
