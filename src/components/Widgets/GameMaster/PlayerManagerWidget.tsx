@@ -13,7 +13,7 @@ export const PlayerManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose
     const updatePlayers = () => {
       const pList: any[] = [];
       state.players.forEach((val, key) => {
-        pList.push({ id: key, ...val });
+        pList.push({ id: key, ...(val as any) });
       });
       setPlayers(pList);
     };
@@ -31,7 +31,7 @@ export const PlayerManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose
   };
 
   return (
-    <DraggableWindow id="player_manager" widgetKey="playerManager" title="👑 Controle de Jogadores (Mestre)" onClose={onClose} defaultWidth={400} defaultHeight={350} allowMinimize={true}>
+    <DraggableWindow id="player_manager" widgetKey="playerManager" title="👑 Controle de Jogadores (Mestre)" onClose={onClose} initialX={100} initialY={100} width={400} height={350}>
       <div style={{ padding: '15px', color: 'var(--text-primary)' }}>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
           Gerencie as identidades de todos os jogadores conectados. As alterações aqui refletem instantaneamente no chat e nos navegadores deles.

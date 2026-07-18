@@ -1,10 +1,16 @@
 import * as Y from 'yjs';
-import { WebsocketProvider } from 'y-websocket';
+import { WebrtcProvider } from 'y-webrtc';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 // The Yjs document that holds the entire shared state
 export const doc = new Y.Doc();
-const roomName = 'vtt-dozero-dev-room';
+
+// =========================================================================
+// ROOM & SECURITY (URL Config)
+// =========================================================================
+const urlParams = new URLSearchParams(window.location.search);
+const roomName = urlParams.get('room') || 'vtt-dozero-dev-room';
+const roomPassword = urlParams.get('pass') || ''; // Se estiver vazio, não criptografa
 
 // =========================================================================
 // REAL-TIME LOCAL MULTIPLAYER (CROSS-TAB SYNC)
@@ -33,15 +39,21 @@ channel.onmessage = (event) => {
 // IndexeddbPersistence saves the document locally so it survives F5
 export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 
-// Conecta ao servidor WebSocket local que criamos no Vite.
-// Ngrok fará o túnel automático do wss:// para nós!
-const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/yjs`;
-
-export const provider = new WebsocketProvider(
-  wsUrl, 
+// =========================================================================
+// WEBRTC PEER-TO-PEER MULTIPLAYER
+// =========================================================================
+// Conecta os navegadores diretamente sem necessidade de servidor central.
+// Ideal para hospedar 100% de graça (ex: Vercel).
+export const provider = new WebrtcProvider(
   roomName, 
   doc,
-  { connect: true }
+  { 
+    password: roomPassword || undefined,
+    signaling: [
+      "wss://signaling.yjs.dev",
+      "wss://y-webrtc-signaling-eu.herokuapp.com"
+    ]
+  }
 );
 
 export const state = {

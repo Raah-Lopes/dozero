@@ -31,7 +31,7 @@ export function MainToolbar() {
     setIsMenuOpen(false);
   };
 
-  const handleSetViewMode = (mode: string) => {
+  const handleSetViewMode = (mode: any) => {
     setViewMode(mode);
     setIsMenuOpen(false);
   };

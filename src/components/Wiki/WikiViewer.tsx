@@ -757,7 +757,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                      let imgUrl = imgUrlRaw.replace(/[\[\]!]/g, "").split("|")[0].trim();
                      if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:') && !imgUrl.startsWith('/')) {
                        // Force HMR reload
-                       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+                       const repoPath = (window as any).config?.repoUrl || 'D:/DOZERO/wikidozero';
                        imgUrl = `/api/wiki/media?path=${encodeURIComponent(imgUrl)}&repoPath=${encodeURIComponent(repoPath)}&t=${Date.now()}`;
                      }
                      return (

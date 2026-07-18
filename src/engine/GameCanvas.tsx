@@ -2142,8 +2142,8 @@ export const GameCanvas: React.FC = () => {
           const hpPercent = Math.max(0, Math.min(1, validHp / validMax));
           const hpY = tokenData.hpBarY !== undefined ? tokenData.hpBarY + 1 : 36;
           
-          if (tokenData.lastHpPercent !== hpPercent) {
-             tokenData.lastHpPercent = hpPercent;
+          if ((tokenData as any).lastHpPercent !== hpPercent) {
+             (tokenData as any).lastHpPercent = hpPercent;
              tokenData.hpFill.clear();
              tokenData.hpFill.rect(-19, hpY, 38 * hpPercent, 4);
              tokenData.hpFill.fill(0xef4444);

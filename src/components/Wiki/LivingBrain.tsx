@@ -294,8 +294,8 @@ export const LivingBrain: React.FC = () => {
 
         // Optimization: Native shadowBlur is extremely slow in canvas (causes requestAnimationFrame violations).
         // Instead, we draw a fake glow using a simple larger circle with low alpha.
-        const isHovered = node.id === vs.hoveredNode?.id;
-        const isLinking = node.id === vs.linkingSourceNode?.id;
+        const isHovered = node.id === (vs as any).hoveredNode?.id;
+        const isLinking = node.id === (vs as any).linkingSourceNode?.id;
         const glowColor = isLinking ? 'rgba(250, 204, 21, 0.3)' : 'rgba(168, 85, 247, 0.2)';
         
         if (isHovered || isLinking || node.isFolder) {

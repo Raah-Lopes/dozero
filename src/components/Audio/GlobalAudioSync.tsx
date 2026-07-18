@@ -14,8 +14,8 @@ export function GlobalAudioSync() {
     const handleAudioUpdate = () => {
       const music = state.audio.get('music');
       const ambience = state.audio.get('ambience');
-      setMusicState(music || null);
-      setAmbienceState(ambience || null);
+      setMusicState((music as any) || null);
+      setAmbienceState((ambience as any) || null);
     };
 
     state.audio.observe(handleAudioUpdate);
