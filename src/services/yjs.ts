@@ -16,18 +16,8 @@ const roomPassword = urlParams.get('pass') || ''; // Se estiver vazio, não crip
 // =========================================================================
 // REAL-TIME LOCAL MULTIPLAYER (CROSS-TAB SYNC)
 // =========================================================================
-// This creates a direct peer-to-peer tunnel between your browser tabs
-const channel = new BroadcastChannel(roomName);
+// y-webrtc already handles local cross-tab synchronization automatically via its own BroadcastChannel.
 
-// Listen to local changes and broadcast them
-doc.on('update', (update: Uint8Array) => {
-  channel.postMessage(update);
-});
-
-// Listen to incoming broadcasts and apply them
-channel.onmessage = (event) => {
-  Y.applyUpdate(doc, event.data, 'broadcast-channel');
-};
 
 // =========================================================================
 // OFFLINE STORAGE (INDEXEDDB)
