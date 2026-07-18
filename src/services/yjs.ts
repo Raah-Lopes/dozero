@@ -32,9 +32,7 @@ try {
   webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
     signaling: [
-      'wss://signaling.yjs.dev',
-      'wss://y-webrtc-signaling-eu.herokuapp.com',
-      'wss://y-webrtc-ckyn.onrender.com'
+      'wss://dozero.onrender.com' // Seu servidor privado!
     ]
   });
 } catch (error) {
