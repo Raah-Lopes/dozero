@@ -162,7 +162,12 @@ export function MainToolbar() {
           </button>
         </div>
         
-        <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem' }}>
+        <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
+          {isLocalhost && (
+            <button className="btn-icon theme-green" onClick={handleSyncCloud} title={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem (Vercel)"}>
+              <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />
+            </button>
+          )}
           <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações do Sistema">
             <Settings size={20} />
           </button>
