@@ -9,7 +9,8 @@ export const doc = new Y.Doc();
 // ROOM & SECURITY (URL Config)
 // =========================================================================
 const urlParams = new URLSearchParams(window.location.search);
-const roomName = urlParams.get('room') || 'vtt-dozero-dev-room';
+// Default unique room to prevent global collisions on public signaling servers
+const roomName = urlParams.get('room') || 'dozero-mesa-principal-v2';
 const roomPassword = urlParams.get('pass') || ''; // Se estiver vazio, não criptografa
 
 // =========================================================================
@@ -18,43 +19,38 @@ const roomPassword = urlParams.get('pass') || ''; // Se estiver vazio, não crip
 // This creates a direct peer-to-peer tunnel between your browser tabs
 const channel = new BroadcastChannel(roomName);
 
-// When this tab makes a change, broadcast the raw Yjs binary delta to other tabs
-doc.on('update', (update, origin) => {
-  if (origin !== channel) {
-    // ArrayBuffer is strictly supported by all structured clone algorithms
-    channel.postMessage(update.buffer);
-  }
+// Listen to local changes and broadcast them
+doc.on('update', (update: Uint8Array) => {
+  channel.postMessage(update);
 });
 
-// When other tabs broadcast a change, apply it to this tab's document
+// Listen to incoming broadcasts and apply them
 channel.onmessage = (event) => {
-  try {
-    const update = new Uint8Array(event.data);
-    Y.applyUpdate(doc, update, channel);
-  } catch (e) {
-    console.error("Yjs Sync Error:", e);
-  }
+  Y.applyUpdate(doc, event.data, 'broadcast-channel');
 };
 
-// IndexeddbPersistence saves the document locally so it survives F5
+// =========================================================================
+// OFFLINE STORAGE (INDEXEDDB)
+// =========================================================================
 export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 
 // =========================================================================
-// WEBRTC PEER-TO-PEER MULTIPLAYER
+// REAL-TIME REMOTE MULTIPLAYER (WebRTC P2P)
 // =========================================================================
-// Conecta os navegadores diretamente sem necessidade de servidor central.
-// Ideal para hospedar 100% de graça (ex: Vercel).
-export const provider = new WebrtcProvider(
-  roomName, 
-  doc,
-  { 
+let webrtcProvider: WebrtcProvider | any = null;
+try {
+  webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
     signaling: [
-      "wss://signaling.yjs.dev",
-      "wss://y-webrtc-signaling-eu.herokuapp.com"
+      'wss://signaling.yjs.dev',
+      'wss://y-webrtc-signaling-eu.herokuapp.com',
+      'wss://y-webrtc-ckyn.onrender.com'
     ]
-  }
-);
+  });
+} catch (error) {
+  console.warn("WebRTC Provider falhou em iniciar", error);
+}
+export const provider = webrtcProvider;
 
 export const state = {
   tokens: doc.getMap('tokens'),
