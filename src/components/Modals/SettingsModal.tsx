@@ -332,6 +332,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         animation: 'fadeIn 0.2s ease-out',
+        pointerEvents: 'auto',
       }}
     >
       {/* ── Panel ── */}
