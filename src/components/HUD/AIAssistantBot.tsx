@@ -42,7 +42,11 @@ export const AIAssistantBot: React.FC = () => {
 
   // Define position on mount
   useEffect(() => {
-    setPos({ x: window.innerWidth - 420, y: window.innerHeight - 80 });
+    const isMobile = window.innerWidth <= 768;
+    setPos({ 
+      x: isMobile ? 20 : window.innerWidth - 420, 
+      y: window.innerHeight - 80 
+    });
   }, []);
 
   const onPointerDown = (e: React.PointerEvent) => {

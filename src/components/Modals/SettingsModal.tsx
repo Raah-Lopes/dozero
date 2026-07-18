@@ -336,7 +336,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
     >
       {/* ── Panel ── */}
       <div style={{
-        width: 'min(560px, 96vw)',
+        width: '100%',
+        maxWidth: '560px',
+        margin: '0 16px',
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
