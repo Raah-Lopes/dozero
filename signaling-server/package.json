@@ -1,0 +1,10 @@
+{
+  "name": "signaling-server",
+  "scripts": {
+    "start": "node node_modules/y-webrtc/bin/server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0",
+    "y-webrtc": "^13.2.2"
+  }
+}
