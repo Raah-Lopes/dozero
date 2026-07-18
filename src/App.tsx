@@ -307,19 +307,21 @@ function App() {
 
           {/* Modal Layer (players, settings, chat) */}
           {(activeModal === 'players' || activeModal === 'settings' || activeModal === 'chat') && (
-            <div className="hud-modal-layer">
+            <>
               {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
               {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
               {activeModal === 'chat' && (
-                <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Mensagens Diretas</h3>
-                    <button onClick={() => setActiveModal('none')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'white'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}><X size={18} /></button>
+                <div className="hud-modal-layer">
+                  <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                      <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Mensagens Diretas</h3>
+                      <button onClick={() => setActiveModal('none')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'white'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}><X size={18} /></button>
+                    </div>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
                   </div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {/* Clock Config Modal (Must be outside the right-aligned container because it is a DraggableWindow) */}
