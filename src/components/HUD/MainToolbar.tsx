@@ -53,6 +53,8 @@ export function MainToolbar() {
     }
   };
 
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
   // The list of tools to be filtered
   const tools = [
     { id: 'hub', label: 'Menu Geral (Hub de Ferramentas)', icon: <LayoutGrid size={20} />, action: () => toggleModal('widgets'), isActive: activeModal === 'widgets', colorClass: 'theme-purple' },
@@ -61,7 +63,7 @@ export function MainToolbar() {
     { id: 'players', label: 'Convidar Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },
     { id: 'chat', label: 'Chat P2P (Mensagens)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('chatWindow'), isActive: openWindows.chatWindow, colorClass: 'theme-blue' },
     { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },
-    { id: 'sync', label: isSyncing ? 'Sincronizando...' : 'Sincronizar Nuvem (Vercel)', icon: <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />, action: handleSyncCloud, isActive: false, colorClass: 'theme-green' },
+    ...(isLocalhost ? [{ id: 'sync', label: isSyncing ? 'Sincronizando...' : 'Sincronizar Nuvem (Vercel)', icon: <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />, action: handleSyncCloud, isActive: false, colorClass: 'theme-green' }] : []),
     { id: 'settings', label: 'Configurações do Sistema', icon: <Settings size={20} />, action: () => toggleModal('settings'), isActive: activeModal === 'settings', colorClass: 'theme-slate' }
   ];
 
