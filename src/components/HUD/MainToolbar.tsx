@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search
+  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
@@ -14,6 +14,7 @@ export function MainToolbar() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -36,6 +37,22 @@ export function MainToolbar() {
     setIsMenuOpen(false);
   };
 
+  const handleSyncCloud = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/wiki/sync-cloud', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      alert(data.message || 'Sincronizado com sucesso!');
+    } catch (e: any) {
+      alert("Erro ao sincronizar: " + e.message);
+    } finally {
+      setIsSyncing(false);
+      setIsMenuOpen(false);
+    }
+  };
+
   // The list of tools to be filtered
   const tools = [
     { id: 'hub', label: 'Menu Geral (Hub de Ferramentas)', icon: <LayoutGrid size={20} />, action: () => toggleModal('widgets'), isActive: activeModal === 'widgets', colorClass: 'theme-purple' },
@@ -44,6 +61,7 @@ export function MainToolbar() {
     { id: 'players', label: 'Convidar Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },
     { id: 'chat', label: 'Chat P2P (Mensagens)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('chatWindow'), isActive: openWindows.chatWindow, colorClass: 'theme-blue' },
     { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },
+    { id: 'sync', label: isSyncing ? 'Sincronizando...' : 'Sincronizar Nuvem (Vercel)', icon: <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />, action: handleSyncCloud, isActive: false, colorClass: 'theme-green' },
     { id: 'settings', label: 'Configurações do Sistema', icon: <Settings size={20} />, action: () => toggleModal('settings'), isActive: activeModal === 'settings', colorClass: 'theme-slate' }
   ];
 

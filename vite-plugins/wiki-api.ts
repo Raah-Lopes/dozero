@@ -625,6 +625,26 @@ export function wikiLocalApi(): Plugin {
             return;
           }
 
+          if (req.method === 'POST' && pathname === '/api/wiki/sync-cloud') {
+            const { exec } = await import('child_process');
+            const projectRoot = path.resolve(process.cwd());
+            
+            return new Promise((resolve) => {
+              exec('git add . && git commit -m "Auto-sync from VTT" && git push', { cwd: projectRoot }, (error, stdout, stderr) => {
+                if (error) {
+                  if (stdout.includes('nothing to commit') || stderr.includes('nothing to commit')) {
+                    resolve(sendResponse(200, { success: true, message: 'Nenhuma alteração nova para sincronizar.' }));
+                  } else {
+                    console.error("Sync Error:", error);
+                    resolve(sendResponse(500, { error: error.message, stdout, stderr }));
+                  }
+                } else {
+                  resolve(sendResponse(200, { success: true, message: 'Sincronizado com a nuvem com sucesso!' }));
+                }
+              });
+            });
+          }
+
           sendResponse(404, { error: 'Route not found' });
         } catch (e: any) {
           sendResponse(500, { error: e.message });
