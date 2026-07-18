@@ -1,10 +1,11 @@
 {
   "name": "signaling-server",
   "scripts": {
-    "start": "node node_modules/y-webrtc/bin/server.js"
+    "start": "node node_modules/y-webrtc/bin/server.js",
+    "build": "echo 'No build required for signaling server'"
   },
   "dependencies": {
     "ws": "^8.16.0",
-    "y-webrtc": "^13.2.2"
+    "y-webrtc": "^10.3.0"
   }
 }
