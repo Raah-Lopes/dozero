@@ -326,3 +326,27 @@
     flex-direction: column !important;
   }
 }
+
+
+/* AI Studio Responsive Sidebar */
+.ai-responsive-sidebar {
+  width: 300px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+@container windowcontainer (max-width: 600px) {
+  .ai-responsive-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    max-height: 50vh;
+  }
+}
+@media (max-width: 768px) {
+  .ai-responsive-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    max-height: 50vh;
+  }
+}

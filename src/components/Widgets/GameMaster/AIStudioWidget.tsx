@@ -476,11 +476,11 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
         </div>
 
         {/* ── CORPO PRINCIPAL ──────────────────────────────────────────── */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div className="flex-responsive-row" style={{ flex: 1, overflow: 'hidden' }}>
 
           {/* Formulário */}
           {!isChat && (
-            <div style={{ width: '300px', flexShrink: 0, padding: '14px', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
+            <div className="ai-responsive-sidebar" style={{ flexShrink: 0, padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
 
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: currentColor, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
                 {currentTab.icon} {currentTab.label.toUpperCase()}
