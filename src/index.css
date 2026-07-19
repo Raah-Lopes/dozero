@@ -606,18 +606,28 @@ html[data-theme^="chronicles"] .glass-panel {
   background: var(--bg-secondary) !important;
   border: 2px solid var(--glass-border) !important;
   box-shadow: 2px 4px 12px rgba(0,0,0,0.4), inset 0 0 40px rgba(0,0,0,0.05) !important;
+  
+  /* Redefine text variables locally so inline styles inside panels use dark ink instead of light wood text */
+  --text-primary: #3e2723;
+  --text-secondary: #5d4037;
+  color: var(--text-primary) !important;
 }
 
 html[data-theme^="chronicles"] .btn-icon {
   border-radius: 8px; /* Blocky buttons */
-  background: var(--bg-tertiary);
-  border: 2px solid var(--glass-border);
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-  color: var(--text-primary);
+  background: var(--bg-tertiary) !important;
+  border: 2px solid var(--glass-border) !important;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.3) !important;
+  
+  /* Ensure icon text contrasts with light backgrounds */
+  --text-primary: #3e2723;
+  --text-secondary: #5d4037;
+  color: var(--text-primary) !important;
 }
 
 html[data-theme^="chronicles"] .btn-icon:hover {
-  background: var(--bg-secondary);
+  background: var(--bg-secondary) !important;
+
   border-color: var(--accent-primary);
   transform: translateY(-2px);
 }
@@ -742,6 +752,9 @@ html[data-theme^="chronicles"] .theater-cockpit {
 html[data-theme^="chronicles"] .theater-drawer {
   background: var(--bg-secondary) !important;
   border-left: 2px solid var(--glass-border) !important;
+  --text-primary: #3e2723;
+  --text-secondary: #5d4037;
+  color: var(--text-primary) !important;
 }
 html[data-theme^="chronicles"] .theater-drawer-header {
   border-bottom: 2px solid var(--glass-border) !important;
@@ -749,9 +762,15 @@ html[data-theme^="chronicles"] .theater-drawer-header {
 html[data-theme^="chronicles"] .floating-window-header {
   background: var(--bg-tertiary) !important;
   border-bottom: 1px solid var(--glass-border) !important;
+  --text-primary: #3e2723;
+  --text-secondary: #5d4037;
+  color: var(--text-primary) !important;
 }
 html[data-theme^="chronicles"] .floating-window-content {
   background: var(--bg-secondary) !important;
+  --text-primary: #3e2723;
+  --text-secondary: #5d4037;
+  color: var(--text-primary) !important;
 }
 
 html[data-theme^="chronicles"] .stage-prop-token {
