@@ -13,8 +13,8 @@ export const chroniclesWoodTheme: ThemeDefinition = {
   bgTertiary: '#f4e4c1',     // Fundo de Títulos/Elementos Internos: Pergaminho envelhecido
 
   // Textos
-  textPrimary: '#3e2723',    // Tinta Nanquim/Marrom muito escuro
-  textSecondary: '#5d4037',  // Tinta marrom desbotada
+  textPrimary: '#f4e4c1',    // Pergaminho claro (Alto contraste com madeira escura)
+  textSecondary: '#d1bfae',  // Madeira/Pergaminho médio
 
   // Destaques e Cores Semânticas (Aquarelados)
   accentPrimary: '#4a5d23',  // Verde Musgo
