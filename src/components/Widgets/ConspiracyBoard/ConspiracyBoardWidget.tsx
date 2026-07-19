@@ -85,20 +85,6 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
     });
   }, []);
 
-  // Observador do Yjs
-  useEffect(() => {
-    const observer = () => {
-      const remoteData = state.conspiracy.get('mindmap_board_state') as MindMapData | undefined;
-      if (remoteData && remoteData.id) {
-        if (!isPanning && !draggingNode && !resizingNode) {
-          _setBoard(remoteData);
-        }
-      }
-    };
-    state.conspiracy.observe(observer);
-    observer();
-    return () => state.conspiracy.unobserve(observer);
-  }, [isPanning, draggingNode, resizingNode]);
 
   const { index: wikiIndex } = useWiki();
   const availableMaps = wikiIndex.filter(i => i.path.startsWith('MapasMentais/'));
@@ -123,6 +109,21 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
 
   // Alignment lines state
   const [alignmentLines, setAlignmentLines] = useState<{ x?: number, y?: number }[]>([]);
+
+  // Observador do Yjs
+  useEffect(() => {
+    const observer = () => {
+      const remoteData = state.conspiracy.get('mindmap_board_state') as MindMapData | undefined;
+      if (remoteData && remoteData.id) {
+        if (!isPanning && !draggingNode && !resizingNode) {
+          _setBoard(remoteData);
+        }
+      }
+    };
+    state.conspiracy.observe(observer);
+    observer();
+    return () => state.conspiracy.unobserve(observer);
+  }, [isPanning, draggingNode, resizingNode]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
