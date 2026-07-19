@@ -76,6 +76,30 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
     nodes: [],
   });
 
+  // Helper para atualizar local e Yjs
+  const updateBoard = useCallback((updater: React.SetStateAction<MindMapData>) => {
+    _setBoard(prev => {
+      const next = typeof updater === 'function' ? (updater as any)(prev) : updater;
+      state.conspiracy.set('mindmap_board_state', next);
+      return next;
+    });
+  }, []);
+
+  // Observador do Yjs
+  useEffect(() => {
+    const observer = () => {
+      const remoteData = state.conspiracy.get('mindmap_board_state') as MindMapData | undefined;
+      if (remoteData && remoteData.id) {
+        if (!isPanning && !draggingNode && !resizingNode) {
+          _setBoard(remoteData);
+        }
+      }
+    };
+    state.conspiracy.observe(observer);
+    observer();
+    return () => state.conspiracy.unobserve(observer);
+  }, [isPanning, draggingNode, resizingNode]);
+
   const { index: wikiIndex } = useWiki();
   const availableMaps = wikiIndex.filter(i => i.path.startsWith('MapasMentais/'));
 
