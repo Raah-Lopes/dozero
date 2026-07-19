@@ -13,6 +13,7 @@ import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal'
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
 import { ThemePickerModal } from './components/Modals/ThemePickerModal';
 import { useTheme } from './hooks/useTheme';
+import { QuestTrackerHUD } from './components/Widgets/GameMaster/QuestTrackerHUD';
 import { TextContextBar } from './components/UI/TextContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
