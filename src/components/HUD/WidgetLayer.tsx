@@ -11,7 +11,6 @@ const NPCGeneratorWidget = React.lazy(() => import('../Widgets/Generators/NPCGen
 const LocationGeneratorWidget = React.lazy(() => import('../Widgets/Generators/LocationGeneratorWidget').then(m => ({ default: m.LocationGeneratorWidget })));
 const EncounterWidget = React.lazy(() => import('../Widgets/GameMaster/EncounterWidget').then(m => ({ default: m.EncounterWidget })));
 const CampaignManagerWidget = React.lazy(() => import('../Widgets/GameMaster/CampaignManagerWidget').then(m => ({ default: m.CampaignManagerWidget })));
-const MapasMentaisWidget = React.lazy(() => import('../Widgets/PlayerTools/MindMapWidget').then(m => ({ default: m.MapasMentaisWidget })));
 const AutomatedDiceWidget = React.lazy(() => import('../Widgets/PlayerTools/AutomatedDiceWidget').then(m => ({ default: m.AutomatedDiceWidget })));
 const CharacterRosterWidget = React.lazy(() => import('../Widgets/PlayerTools/CharacterRosterWidget').then(m => ({ default: m.CharacterRosterWidget })));
 const ChronosWidget = React.lazy(() => import('../Widgets/GameMaster/ChronosWidget').then(m => ({ default: m.ChronosWidget })));
@@ -66,8 +65,7 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.locationGenerator && <LocationGeneratorWidget onClose={() => closeWindow('locationGenerator')} />}
           {openWindows.encounterGenerator && <EncounterWidget onClose={() => closeWindow('encounterGenerator')} />}
           {openWindows.campaignManager && <CampaignManagerWidget onClose={() => closeWindow('campaignManager')} />}
-          {openWindows.mindMap && <MapasMentaisWidget onClose={() => closeWindow('mindMap')} />}
-          {openWindows.automatedDice && <AutomatedDiceWidget onClose={() => closeWindow('automatedDice')} />}
+                    {openWindows.automatedDice && <AutomatedDiceWidget onClose={() => closeWindow('automatedDice')} />}
           {openWindows.characterRoster && <CharacterRosterWidget onClose={() => closeWindow('characterRoster')} />}
           {openWindows.chronos && <ChronosWidget onClose={() => closeWindow('chronos')} />}
           {openWindows.loreMachine && <LoreMachineWidget onClose={() => closeWindow('loreMachine')} />}
