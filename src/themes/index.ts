@@ -53,9 +53,11 @@ export interface ThemeDefinition {
 import { defaultTheme } from './default';
 import { eldritchTheme } from './eldritch';
 import { codexTheme } from './codex';
+import { nextGenTheme } from './nextgen';
 
 export const THEMES: ThemeDefinition[] = [
   defaultTheme,
+  nextGenTheme,
   eldritchTheme,
   codexTheme,
 ];
