@@ -56,6 +56,13 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   const [pos, setPos] = useState({ x: initialPrefs.x, y: initialPrefs.y });
   const [size, setSize] = useState({ w: initialPrefs.w, h: initialPrefs.h });
   const [isPinned, setIsPinned] = useState(initialPrefs.pinned || false);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   useEffect(() => {
     setSize(prev => ({ w: width !== undefined ? width : prev.w, h: height !== undefined ? height : prev.h }));
@@ -65,6 +72,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   const [isMinimized, setIsMinimized] = useState(false);
   const [zIndex, setZIndex] = useState(() => ++globalZIndexCounter);
   const dragOffset = useRef({ x: 0, y: 0 });
+  const dragStartPos = useRef({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
   const snapThreshold = 20;
@@ -88,7 +96,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   }, [id, isPopout]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isPinned || isPopout) return;
+    const isFullscreen = isMobile && !isMinimized && !isPopout;
+    if (isPinned || isPopout || isFullscreen) return;
     const target = e.target as HTMLElement;
     
     // Do not initiate drag on interactive elements
@@ -126,6 +135,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       x: e.clientX - rect.left,
       y: e.clientY - rect.top
     };
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
     
     e.currentTarget.setPointerCapture(e.pointerId);
   };
@@ -208,6 +218,12 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     setIsDragging(false);
     e.currentTarget.releasePointerCapture(e.pointerId);
     
+    const dx = e.clientX - dragStartPos.current.x;
+    const dy = e.clientY - dragStartPos.current.y;
+    if (isMinimized && Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+       setIsMinimized(false);
+    }
+
     // Save pos when drag ends
     if (windowRef.current && !isPopout) {
       const rect = windowRef.current.getBoundingClientRect();
@@ -267,6 +283,9 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     };
   }, [isResizing, pos.x, pos.y, isPinned, storageKey]);
 
+  const isFullscreen = isMobile && !isMinimized && !isPopout && variant !== 'bare';
+  const isBubble = isMinimized;
+
   return (
     <div
       id={`window-${id}`}
@@ -274,24 +293,24 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       className={`draggable-window-container ${isMinimized ? 'minimized' : ''} ${variant === 'glass' ? 'glass-panel' : ''}`}
       data-pinned={isPinned}
       style={{
-        position: isPopout ? 'relative' : 'absolute',
-        left: isPopout ? 0 : pos.x,
-        top: isPopout ? 0 : pos.y,
-        width: isPopout ? '100%' : size.w,
-        height: isMinimized ? 'auto' : size.h,
+        position: isPopout ? 'relative' : (isFullscreen ? 'fixed' : 'absolute'),
+        left: (isFullscreen && !isPopout) ? 0 : (isPopout ? 0 : pos.x),
+        top: (isFullscreen && !isPopout) ? 0 : (isPopout ? 0 : pos.y),
+        width: isPopout ? '100%' : (isFullscreen ? '100vw' : (isBubble ? '48px' : size.w)),
+        height: isPopout ? '100vh' : (isFullscreen ? '100vh' : (isBubble ? '48px' : size.h)),
         pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        zIndex: isDragging ? globalZIndexCounter + 100 : zIndex,
+        zIndex: isFullscreen ? 99999 : (isDragging ? globalZIndexCounter + 100 : zIndex),
         boxShadow: (variant === 'default' || variant === 'glass') ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : (isPinned ? '0 0 10px rgba(168, 85, 247, 0.1)' : '')) : 'none',
         transition: (isDragging || isResizing) ? 'none' : 'box-shadow 0.2s',
         resize: 'none', // Disabled native resize to fix jitter bug
         overflow: 'hidden',
-        minWidth: (variant === 'default' || variant === 'glass') ? '250px' : 'auto',
-        minHeight: ((variant === 'default' || variant === 'glass') && !isMinimized) ? '100px' : 'auto',
+        minWidth: (variant === 'default' || variant === 'glass') ? (isBubble ? '48px' : '250px') : 'auto',
+        minHeight: ((variant === 'default' || variant === 'glass') && !isBubble) ? '100px' : (isBubble ? '48px' : 'auto'),
         backgroundColor: variant === 'default' ? 'var(--bg-secondary)' : 'transparent',
-        border: variant === 'default' ? '1px solid var(--glass-border)' : 'none',
-        borderRadius: variant === 'default' ? '12px' : '0',
+        border: (variant === 'default' && !isFullscreen) ? '1px solid var(--glass-border)' : 'none',
+        borderRadius: isBubble ? '24px' : (isFullscreen ? '0px' : (variant === 'default' ? '12px' : '0')),
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front
@@ -314,8 +333,31 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         }
       }}
     >
-      {/* Drag Handle */}
-      {(variant === 'default' || variant === 'glass') ? (
+      {isBubble ? (
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          style={{
+            width: '100%', height: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
+            borderRadius: '24px', cursor: isDragging ? 'grabbing' : 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            touchAction: 'none',
+            userSelect: 'none'
+          }}
+          title={title}
+        >
+          <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+             {title.charAt(0).toUpperCase()}
+          </span>
+        </div>
+      ) : (
+        <>
+          {/* Drag Handle */}
+          {(variant === 'default' || variant === 'glass') ? (
         <div
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -451,7 +493,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       )}
 
       {/* Custom Resize Handle to prevent jitter */}
-      {((variant === 'default' || variant === 'glass') && !isMinimized && !isPinned && !isPopout) && (
+      {((variant === 'default' || variant === 'glass') && !isMinimized && !isPinned && !isPopout && !isFullscreen) && (
         <div
           onPointerDown={handleResizeDown}
           style={{
@@ -470,6 +512,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
              <path d="M12 0 L12 12 L0 12 Z" fill="var(--glass-border)" />
            </svg>
         </div>
+      )}
+      </>
       )}
     </div>
   );
