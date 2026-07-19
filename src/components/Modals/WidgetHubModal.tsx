@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins, FileText } from 'lucide-react';
+import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins, FileText, Palette } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -31,6 +31,7 @@ interface Props {
   onOpenActorLibrary: () => void;
   onOpenPlayerManager: () => void;
   onToggleAIBot: () => void;
+  onOpenThemes: () => void;
 }
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
@@ -68,6 +69,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'stronghold', cat: 'Generators & AI', title: 'Fortaleza da Party', icon: Castle, action: props.onOpenStronghold, theme: 'theme-green' },
 
     // System
+    { id: 'themes', cat: 'System', title: 'Temas Visuais (Aparência)', icon: Palette, action: props.onOpenThemes, theme: 'theme-pink', shadow: '0 0 10px rgba(236,72,153,0.4)' },
     { id: 'audiodir', cat: 'System', title: 'Audio Director', icon: Sparkles, action: props.onOpenAudioDirector, theme: 'theme-blue' },
     { id: 'dlc', cat: 'System', title: 'Gerenciador de Complementos', icon: ToyBrick, action: props.onOpenDLCManager, theme: 'theme-orange' },
     { id: 'auditor', cat: 'System', title: 'Auditor de Sistema (Linter)', icon: Shield, action: props.onOpenSystemAuditor, theme: 'theme-red' },

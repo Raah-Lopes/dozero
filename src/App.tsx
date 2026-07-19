@@ -11,6 +11,8 @@ import { AIAssistantBot } from './components/HUD/AIAssistantBot';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
+import { ThemePickerModal } from './components/Modals/ThemePickerModal';
+import { useTheme } from './hooks/useTheme';
 import { TextContextBar } from './components/UI/TextContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
@@ -37,10 +39,11 @@ import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 
 // Trigger HMR
-type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets';
+type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets' | 'themes';
 
 function App() {
   const [isReady, _setIsReady] = useState(true);
+  const { currentThemeId, setTheme } = useTheme();
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
 
@@ -304,23 +307,28 @@ function App() {
             setActiveModal('clockConfig');
           }} />
 
-          {/* Modal Layer (players, settings, chat) */}
-          {(activeModal === 'players' || activeModal === 'settings' || activeModal === 'chat') && (
-            <>
+          {/* Modal Layer (players, settings, chat, themes) */}
+          {(activeModal === 'players' || activeModal === 'settings' || activeModal === 'chat' || activeModal === 'themes') && (
+            <div className="hud-modal-layer">
               {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
               {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
               {activeModal === 'chat' && (
-                <div className="hud-modal-layer">
-                  <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                      <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Mensagens Diretas</h3>
-                      <button onClick={() => setActiveModal('none')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'white'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}><X size={18} /></button>
-                    </div>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
+                <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Mensagens Diretas</h3>
+                    <button onClick={() => setActiveModal('none')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'white'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}><X size={18} /></button>
                   </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
                 </div>
               )}
-            </>
+              {activeModal === 'themes' && (
+                <ThemePickerModal 
+                  currentThemeId={currentThemeId} 
+                  onSelect={setTheme} 
+                  onClose={() => setActiveModal('none')} 
+                />
+              )}
+            </div>
           )}
 
           {/* Clock Config Modal (Must be outside the right-aligned container because it is a DraggableWindow) */}
@@ -474,6 +482,7 @@ function App() {
                 onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
                 onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
+                onOpenThemes={() => { setActiveModal('themes'); }}
               />
               </div>
             </div>
