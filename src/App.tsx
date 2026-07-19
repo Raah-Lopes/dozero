@@ -453,6 +453,7 @@ function App() {
                 onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
                 onOpenClockConfig={() => setActiveModal('clockConfig')}
                 onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
+                onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
                 onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
                 onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
                 onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
