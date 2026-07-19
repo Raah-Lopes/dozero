@@ -7,26 +7,26 @@ export const daylightTheme: ThemeDefinition = {
   author: 'DOZERO Team',
   preview: '#f8fafc', // Light gray/white preview
 
-  bgPrimary: '#f1f5f9', // slate-100
+  bgPrimary: '#e2e8f0', // slate-200 (fundo mais distinto das janelas)
   bgSecondary: '#ffffff', // white
-  bgTertiary: '#e2e8f0', // slate-200
+  bgTertiary: '#cbd5e1', // slate-300
 
-  textPrimary: '#0f172a', // slate-900
-  textSecondary: '#475569', // slate-600
+  textPrimary: '#000000', // pure black
+  textSecondary: '#334155', // slate-700
 
-  accentPrimary: '#4f46e5', // indigo-600
-  accentHover: '#4338ca', // indigo-700
-  accentGlow: 'rgba(79, 70, 229, 0.3)',
+  accentPrimary: '#1d4ed8', // blue-700
+  accentHover: '#1e3a8a', // blue-900
+  accentGlow: 'rgba(29, 78, 216, 0.3)',
 
-  danger: '#dc2626', // red-600
-  success: '#059669', // emerald-600
-  warning: '#d97706', // amber-600
-  mana: '#2563eb', // blue-600
+  danger: '#b91c1c', // red-700
+  success: '#047857', // emerald-700
+  warning: '#b45309', // amber-700
+  mana: '#1d4ed8', // blue-700
 
-  glassBg: 'rgba(255, 255, 255, 0.85)',
-  glassBorder: 'rgba(0, 0, 0, 0.08)',
-  glassBorderHighlight: 'rgba(79, 70, 229, 0.3)',
-  glassShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.06)',
+  glassBg: 'rgba(255, 255, 255, 0.95)', // quase sólido para destacar do fundo
+  glassBorder: 'rgba(0, 0, 0, 0.2)', // bordas mais visíveis
+  glassBorderHighlight: 'rgba(29, 78, 216, 0.5)',
+  glassShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12)', // sombra ligeiramente mais forte
 
   fontBody: "'Inter', sans-serif",
   fontDisplay: "'Outfit', sans-serif",
