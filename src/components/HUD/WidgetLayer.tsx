@@ -27,6 +27,7 @@ const AIStudioWidget = React.lazy(() => import('../Widgets/GameMaster/AIStudioWi
 const TradeShopWidget = React.lazy(() => import('../Widgets/PlayerTools/TradeShopWidget').then(m => ({ default: m.TradeShopWidget })));
 const PlayerManagerWidget = React.lazy(() => import('../Widgets/GameMaster/PlayerManagerWidget').then(m => ({ default: m.PlayerManagerWidget })));
 const AuditorWidget = React.lazy(() => import('../Widgets/System/AuditorWidget').then(m => ({ default: m.AuditorWidget })));
+const ConspiracyBoardWidget = React.lazy(() => import('../Widgets/ConspiracyBoard/ConspiracyBoardWidget').then(m => ({ default: m.ConspiracyBoardWidget })));
 
 const FallbackLoader = () => (
   <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15,23,42,0.9)', padding: '20px', borderRadius: '12px', color: '#fff', zIndex: 9999 }}>
@@ -81,6 +82,7 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.tradeShop && <TradeShopWidget onClose={() => closeWindow('tradeShop')} />}
           {openWindows.playerManager && <PlayerManagerWidget onClose={() => closeWindow('playerManager')} />}
           {openWindows.systemAuditor && <AuditorWidget onClose={() => closeWindow('systemAuditor')} />}
+          {openWindows.mindMap && <ConspiracyBoardWidget onClose={() => closeWindow('mindMap')} />}
         </ErrorBoundary>
       </Suspense>
     </>

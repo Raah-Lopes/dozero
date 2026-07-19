@@ -20,7 +20,6 @@ import { SoftTimer } from './components/UI/SoftTimer';
 import { DiceOverlay } from './components/UI/DiceOverlay';
 import { PPROverlay } from './components/UI/PPROverlay';
 import { CombatTracker } from './components/HUD/CombatTracker';
-import { ConspiracyBoardWidget } from './components/Widgets/ConspiracyBoard/ConspiracyBoardWidget';
 import { MapContextMenu } from './components/UI/MapContextMenu';
 import { ClockConfigModal } from './components/Modals/ClockConfigModal';
 import { WidgetHubModal } from './components/Modals/WidgetHubModal';
@@ -440,10 +439,6 @@ function App() {
           <GlobalAudioSync />
 
           <WidgetLayer />
-
-          {openWindows.mindMap && (
-            <ConspiracyBoardWidget onClose={() => toggleWindow('mindMap')} />
-          )}
 
           {/* WidgetHubModal fora da hud-layer para evitar interferencia do canvas PixiJS */}
           {activeModal === 'widgets' && (
