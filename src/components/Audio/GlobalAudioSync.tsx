@@ -41,13 +41,31 @@ export function GlobalAudioSync() {
     const ytMatch = mediaState.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     if (ytMatch && ytMatch[1]) {
       const videoId = ytMatch[1];
+      const iframeId = `yt-iframe-${type}`;
+      
+      // Quando o isPlaying mudar, enviamos um postMessage para pausar/despausar nativamente sem recarregar o iframe
+      const isPlaying = mediaState.isPlaying;
+      setTimeout(() => {
+        const iframe = document.getElementById(iframeId) as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: isPlaying ? 'playVideo' : 'pauseVideo',
+            args: []
+          }), '*');
+        }
+      }, 100);
+
       // Note: YouTube iframe API requires an origin for some strict protections, but standard embed works mostly.
       // Autoplay requires muted=0 and user interaction, which we have.
       return (
         <iframe
+          id={iframeId}
           width="100"
           height="100"
-          src={`https://www.youtube.com/embed/${videoId}?autoplay=${mediaState.isPlaying ? 1 : 0}&loop=${loop ? 1 : 0}&playlist=${videoId}&controls=0`}
+          // O src NUNCA pode ter mediaState.isPlaying dinamicamente senao ele recarrega o Iframe inteiro.
+          // Usamos o postMessage para controlar o pause! Mas forçamos autoplay=1 na montagem inicial.
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&loop=${loop ? 1 : 0}&playlist=${videoId}&controls=0&enablejsapi=1`}
           title={`YouTube ${type}`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           style={{ opacity: 0, pointerEvents: 'none', position: 'absolute' }}

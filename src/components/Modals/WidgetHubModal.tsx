@@ -47,7 +47,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'tracker', cat: 'Game Master', title: 'Iniciativa (Combate)', icon: Swords, action: props.onOpenTracker, theme: 'theme-red' },
     { id: 'clock', cat: 'Game Master', title: 'Relógio de Tensão', icon: Timer, action: props.onOpenClockConfig, theme: 'theme-amber' },
     { id: 'chronos', cat: 'Game Master', title: 'Motor Chronos', icon: Sun, action: props.onOpenChronos, theme: 'theme-yellow' },
-    { id: 'mapsettings', cat: 'Game Master', title: 'Configurar Cenário', icon: Map, action: props.onOpenMapSettings, theme: 'theme-blue' },
+    { id: 'mapsettings', cat: 'Game Master', title: 'Visual da Mesa (Cenário)', icon: Map, action: props.onOpenMapSettings, theme: 'theme-blue' },
     { id: 'actors', cat: 'Game Master', title: 'Biblioteca de Atores', icon: Users, action: props.onOpenActorLibrary, theme: 'theme-amber' },
 
     // Player Tools

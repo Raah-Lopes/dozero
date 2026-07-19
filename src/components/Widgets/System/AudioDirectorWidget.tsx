@@ -698,14 +698,28 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                       <Play size={13} /> Transmitir
                     </button>
                   </div>
-                  <button onClick={() => {
-                     import('../../../services/yjs').then(({ state }) => {
-                        state.audio.set('music', { url: '', isPlaying: false, ts: Date.now() });
-                        setWebMusicUrl('');
-                     });
-                  }} style={{ background: '#3f1d1d', color: '#fca5a5', border: '1px solid #7f1d1d', borderRadius: '4px', padding: '0.4rem 0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600, marginTop: '0.5rem' }}>
-                    <Square size={13} /> Parar Transmissão Global
-                  </button>
+                  
+                  {/* Controles de Play/Pause/Stop da música global ativa */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <button onClick={() => {
+                       import('../../../services/yjs').then(({ state }) => {
+                          const currentMusic = state.audio.get('music') as any;
+                          if (currentMusic && currentMusic.url) {
+                             state.audio.set('music', { ...currentMusic, isPlaying: !currentMusic.isPlaying, ts: Date.now() });
+                          }
+                       });
+                    }} style={{ flex: 1, background: '#222', color: '#e5e5e5', border: '1px solid #444', borderRadius: '4px', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                      <Pause size={13} /> Pausar / Retomar
+                    </button>
+                    <button onClick={() => {
+                       import('../../../services/yjs').then(({ state }) => {
+                          state.audio.set('music', { url: '', isPlaying: false, ts: Date.now() });
+                          setWebMusicUrl('');
+                       });
+                    }} style={{ flex: 1, background: '#3f1d1d', color: '#fca5a5', border: '1px solid #7f1d1d', borderRadius: '4px', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                      <Square size={13} /> Parar (Remover)
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
