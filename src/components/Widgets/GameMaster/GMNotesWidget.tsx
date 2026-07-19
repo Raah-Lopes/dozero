@@ -106,10 +106,10 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
       height={550} 
       onClose={onClose}
     >
-      <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-xl text-slate-200 font-sans">
+      <div className="flex flex-col h-full bg-[#0B0F19] text-slate-200 font-sans border-t border-slate-800 shadow-2xl">
         
         {/* Toolbar de Abas (Estilo Pills Modernos) */}
-        <div className="flex bg-slate-900/40 border-b border-white/5 overflow-x-auto select-none no-scrollbar p-2 gap-2 items-center">
+        <div className="flex bg-[#0B0F19] border-b border-white/5 overflow-x-auto select-none no-scrollbar p-2 gap-2 items-center">
           {tabs.map(tab => (
             <div 
               key={tab.id}

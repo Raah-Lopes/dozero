@@ -54,7 +54,9 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
 
   const initialPrefs = getInitialPrefs();
   const [pos, setPos] = useState({ x: initialPrefs.x, y: initialPrefs.y });
+  const dragCurrentPos = useRef({ x: initialPrefs.x, y: initialPrefs.y });
   const [size, setSize] = useState({ w: initialPrefs.w, h: initialPrefs.h });
+  const resizeCurrentSize = useRef({ w: initialPrefs.w, h: initialPrefs.h });
   const [isPinned, setIsPinned] = useState(initialPrefs.pinned || false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
 
@@ -66,6 +68,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   
   useEffect(() => {
     setSize(prev => ({ w: width !== undefined ? width : prev.w, h: height !== undefined ? height : prev.h }));
+    resizeCurrentSize.current = { w: width !== undefined ? (width as number) : resizeCurrentSize.current.w, h: height !== undefined ? (height as number) : resizeCurrentSize.current.h };
   }, [width, height]);
   
   const [isDragging, setIsDragging] = useState(false);
@@ -136,6 +139,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       y: e.clientY - rect.top
     };
     dragStartPos.current = { x: e.clientX, y: e.clientY };
+    dragCurrentPos.current = { ...pos }; // Sync ref before drag
     
     e.currentTarget.setPointerCapture(e.pointerId);
   };
@@ -197,21 +201,26 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       const pRect = pinned.getBoundingClientRect();
       
       const xOverlap = (nextX < pRect.right && nextX + rect.width > pRect.left &&
-                        pos.y < pRect.bottom && pos.y + rect.height > pRect.top);
+                        dragCurrentPos.current.y < pRect.bottom && dragCurrentPos.current.y + rect.height > pRect.top);
       if (xOverlap) {
-         if (nextX > pos.x) nextX = pRect.left - rect.width;
-         else if (nextX < pos.x) nextX = pRect.right;
+         if (nextX > dragCurrentPos.current.x) nextX = pRect.left - rect.width;
+         else if (nextX < dragCurrentPos.current.x) nextX = pRect.right;
       }
       
       const yOverlap = (nextX < pRect.right && nextX + rect.width > pRect.left &&
                         nextY < pRect.bottom && nextY + rect.height > pRect.top);
       if (yOverlap) {
-         if (nextY > pos.y) nextY = pRect.top - rect.height;
-         else if (nextY < pos.y) nextY = pRect.bottom;
+         if (nextY > dragCurrentPos.current.y) nextY = pRect.top - rect.height;
+         else if (nextY < dragCurrentPos.current.y) nextY = pRect.bottom;
       }
     });
 
-    setPos({ x: nextX, y: nextY });
+    dragCurrentPos.current = { x: nextX, y: nextY };
+    
+    if (windowRef.current) {
+      windowRef.current.style.left = `${nextX}px`;
+      windowRef.current.style.top = `${nextY}px`;
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -226,10 +235,11 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
 
     // Save pos when drag ends
     if (windowRef.current && !isPopout) {
-      const rect = windowRef.current.getBoundingClientRect();
-      const finalY = Math.max(0, pos.y);
+      const finalY = Math.max(0, dragCurrentPos.current.y);
+      setPos({ x: dragCurrentPos.current.x, y: finalY }); // Sync state for persistence
+      
       localStorage.setItem(storageKey, JSON.stringify({
-        x: pos.x,
+        x: dragCurrentPos.current.x,
         y: finalY,
         w: size.w, // use state size instead of rect which might be glitching during native drag
         h: size.h,
@@ -260,18 +270,26 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     const handleMove = (e: PointerEvent) => {
       const dx = e.clientX - resizeStart.current.x;
       const dy = e.clientY - resizeStart.current.y;
-      setSize({
-        w: Math.max(250, resizeStart.current.w + dx),
-        h: Math.max(100, resizeStart.current.h + dy)
-      });
+      
+      const nextW = Math.max(250, resizeStart.current.w + dx);
+      const nextH = Math.max(100, resizeStart.current.h + dy);
+      
+      resizeCurrentSize.current = { w: nextW, h: nextH };
+      
+      if (windowRef.current) {
+        windowRef.current.style.width = `${nextW}px`;
+        windowRef.current.style.height = `${nextH}px`;
+      }
     };
     const handleUp = () => {
       setIsResizing(false);
+      setSize({ w: resizeCurrentSize.current.w, h: resizeCurrentSize.current.h });
+      
       localStorage.setItem(storageKey, JSON.stringify({
         x: pos.x,
         y: pos.y,
-        w: windowRef.current?.offsetWidth || 320,
-        h: windowRef.current?.offsetHeight || 200,
+        w: resizeCurrentSize.current.w,
+        h: resizeCurrentSize.current.h,
         pinned: isPinned
       }));
     };
