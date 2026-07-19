@@ -287,3 +287,42 @@
   box-shadow: 0 0 15px var(--accent-glow);
   background: rgba(30,30,30,0.95);
 }
+
+
+/* RESPONSIVE WIDGET UTILITIES (Container Queries) */
+.grid-responsive-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+.grid-responsive-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.grid-responsive-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.flex-responsive-row {
+  display: flex;
+  flex-direction: row;
+}
+
+/* Fallback for standard screen media queries */
+@media (max-width: 768px) {
+  .grid-responsive-2, .grid-responsive-3, .grid-responsive-4 {
+    grid-template-columns: 1fr !important;
+  }
+  .flex-responsive-row {
+    flex-direction: column !important;
+  }
+}
+
+/* Modern Container Queries for Draggable Windows */
+@container windowcontainer (max-width: 500px) {
+  .grid-responsive-2, .grid-responsive-3, .grid-responsive-4 {
+    grid-template-columns: 1fr !important;
+  }
+  .flex-responsive-row {
+    flex-direction: column !important;
+  }
+}

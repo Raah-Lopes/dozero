@@ -56,7 +56,7 @@ export const WorldEngineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
           </h4>
           
           {settlements.map(s => (
-            <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.75rem' }}>
+            <div key={s.id} className="grid-responsive-2" style={{ gap: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.75rem' }}>
               <div style={{ gridColumn: '1 / -1', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '0.25rem' }}>{s.name}</div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

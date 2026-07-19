@@ -462,7 +462,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
         </div>
 
         {/* CONTROLLER: Seleção dos Envolvidos */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--glass-border)' }}>
+        <div className="grid-responsive-2" style={{ gap: '1rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--glass-border)' }}>
           <div>
             <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Seu Personagem (Doador / Comprador):</label>
             <select 
@@ -518,7 +518,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
           {/* TAB 1: DOAR */}
           {activeTab === 'doar' && sender && receiver && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.3rem' }}>Doar Moedas (PO):</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px' }}>
@@ -621,7 +621,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
               )}
 
               {/* Formular nova proposta */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 {/* O que eu ofereço */}
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>O que você OFERECE:</span>
@@ -727,7 +727,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                   {showShopConfig && (
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>Novo Item na Vitrine:</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.5rem' }}>
+                      <div className="grid-responsive-3" style={{ gap: '0.5rem' }}>
                         <input 
                           type="text" placeholder="Nome do Item" 
                           value={newShopItem.nome} onChange={e => setNewShopItem({...newShopItem, nome: e.target.value})}

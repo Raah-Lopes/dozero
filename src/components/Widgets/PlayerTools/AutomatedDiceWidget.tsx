@@ -1357,7 +1357,7 @@ ${vencedor}`, true);
                   </select>
                   
                   {atacante && (
-                    <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#cbd5e1', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    <div className="grid-responsive-3" style={{ marginTop: '8px', fontSize: '0.75rem', color: '#cbd5e1', gap: '6px' }}>
                       <span title="Health Points (Pontos de Vida). Representa a saúde física do personagem." style={{ color: '#ef4444', cursor: 'help' }}>❤️ HP: {atacante.pv}/{atacante.pv_max}</span>
                       <span title="Pontos de Magia/Mana. Usados para conjurar poderes mágicos." style={{ color: '#a855f7', cursor: 'help' }}>⚡ Mana: {atacante.mana}/{atacante.mana_max}</span>
                       <span title="Energia. Gasta para ações físicas extras ou reações como Esquiva." style={{ color: '#38bdf8', cursor: 'help' }}>🏃‍♂️ Ener: {atacante.energia}/{atacante.energia_max}</span>
@@ -1429,7 +1429,7 @@ ${vencedor}`, true);
                   </select>
  
                   {defensor && (
-                    <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#cbd5e1', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    <div className="grid-responsive-3" style={{ marginTop: '8px', fontSize: '0.75rem', color: '#cbd5e1', gap: '6px' }}>
                       <span title="Health Points (Pontos de Vida). Representa a saúde física do personagem." style={{ color: '#ef4444', cursor: 'help' }}>❤️ HP: {defensor.pv}/{defensor.pv_max}</span>
                       <span title="Pontos de Magia/Mana. Usados para conjurar poderes mágicos." style={{ color: '#a855f7', cursor: 'help' }}>⚡ Mana: {defensor.mana}/{defensor.mana_max}</span>
                       <span title="Energia. Gasta para ações físicas extras ou reações como Esquiva." style={{ color: '#38bdf8', cursor: 'help' }}>🏃‍♂️ Ener: {defensor.energia}/{defensor.energia_max}</span>
@@ -1477,7 +1477,7 @@ ${vencedor}`, true);
                   <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
                     <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Atributos (Pathfinder 2e)</h5>
                     {atacante ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                      <div className="grid-responsive-3" style={{ gap: '6px' }}>
                         {[
                           { label: 'FOR', title: 'Força: Determina dano corpo-a-corpo, capacidade de carga e proezas atléticas.', val: atacante.forca },
                           { label: 'CON', title: 'Constituição: Determina a vida máxima (HP), vigor e resistência a venenos.', val: atacante.constituicao },
@@ -1512,7 +1512,7 @@ ${vencedor}`, true);
                   <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
                     <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Perícias</h5>
                     {atacante ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                      <div className="grid-responsive-2" style={{ gap: '6px' }}>
                         {[
                           { name: 'Acrobacia', val: atacante.destreza },
                           { name: 'Furtividade', val: atacante.destreza },
@@ -1548,7 +1548,7 @@ ${vencedor}`, true);
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         
                         {/* Basic Attacks */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                        <div className="grid-responsive-2" style={{ gap: '6px' }}>
                           <button
                             onClick={rolarAtaqueDesarmado}
                             style={{
@@ -1569,7 +1569,7 @@ ${vencedor}`, true);
                           </button>
                         </div>
                         
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                        <div className="grid-responsive-2" style={{ gap: '6px' }}>
                           <button
                             onClick={rolarMagiaBasica}
                             disabled={atacante.mana < 1}
@@ -1921,7 +1921,7 @@ ${vencedor}`, true);
                   <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px' }}>
                     <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Condições do Defensor</h5>
                     {defensor ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div className="grid-responsive-2" style={{ gap: '6px' }}>
                         {[
                           { label: '🔥 Fogo', key: 'Fogo' },
                           { label: '❄️ Gelo', key: 'Gelo' },
@@ -1993,7 +1993,7 @@ ${vencedor}`, true);
                     <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>A Disputa (ATK vs DEF)</h5>
                     {atacante && defensor ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div className="grid-responsive-2" style={{ gap: '8px' }}>
                           <div>
                             <label style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Atacante usa:</label>
                             <select
@@ -2068,7 +2068,7 @@ ${vencedor}`, true);
               </div>
 
               {/* Rolar Dano Avulso & Testes Rápidos */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)' }}>
+              <div className="grid-responsive-4" style={{ gap: '10px', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.04)' }}>
                 
                 {/* Dano Avulso */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

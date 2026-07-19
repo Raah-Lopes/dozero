@@ -646,7 +646,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 </div>
 
                 {/* Ações Rápidas */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                <div className="grid-responsive-3" style={{ gap: '6px' }}>
                   <button onClick={handleRestaurarHP} style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Restaurar HP</button>
                   <button onClick={handleZerarHP} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Matar (0 HP)</button>
                   <button onClick={handleLimparCondicoes} style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Limpar Conds</button>
@@ -699,7 +699,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     </div>
 
                     {/* Fome, Sede, Cansaço, Defesa */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px' }}>
+                    <div className="grid-responsive-2" style={{ gap: '10px', marginTop: '5px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <span title="Necessidade de alimentação." style={{ fontSize: '0.65rem', color: '#eab308', cursor: 'help' }}>🍖 Fome (0-100)</span>
                         <input type="number" value={selectedChar.fome} onChange={e => handlePropChange('fome', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
@@ -719,7 +719,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     </div>
 
                     {/* Finanças */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '5px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+                    <div className="grid-responsive-2" style={{ gap: '10px', marginTop: '5px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         <span title="Moedas de Ouro." style={{ fontSize: '0.65rem', color: '#fbbf24', cursor: 'help' }}>🪙 Ouro</span>
                         <input type="number" value={selectedChar.ouro} onChange={e => handlePropChange('ouro', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
@@ -782,7 +782,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Atributos Pathfinder */}
                     <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '10px' }}>
                       <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#c084fc', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Sistema Pathfinder 2e</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div className="grid-responsive-2" style={{ gap: '8px' }}>
                         {[
                           { label: 'FOR (Força)', title: 'Determina dano e capacidade atlética.', val: selectedChar.forca, key: 'forca' },
                           { label: 'CON (Constituição)', title: 'Determina HP e vigor.', val: selectedChar.constituicao, key: 'constituicao' },
@@ -901,7 +901,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
             </div>
 
             {/* Lista Grid de Cards do Catálogo */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            <div className="grid-responsive-2" style={{ flex: 1, overflowY: 'auto', padding: '20px', gap: '12px' }}>
               {filteredCatalogo.map((item, idx) => {
                 // Determina visualização baseado no tipo
                 const borderColors = {

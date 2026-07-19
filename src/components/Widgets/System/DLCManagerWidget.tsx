@@ -208,7 +208,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         </div>
 
         {/* Addon Grid */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', alignContent: 'start' }}>
+        <div className="grid-responsive-2" style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', gap: '14px', alignContent: 'start' }}>
           {filtered.map(addon => {
             const isActive = activeDLCs.includes(addon.id);
             const IconComp = addon.icon;

@@ -645,7 +645,7 @@ const addQuest = async (type: 'main' | 'side') => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div className="grid-responsive-2" style={{ gap: '10px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'rgba(148,163,184,0.6)', textTransform: 'uppercase', marginBottom: '4px' }}>
                     Status da Missão

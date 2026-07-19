@@ -139,7 +139,7 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
           <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Mapeia dados do Obsidian para criar sementes narrativas.</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+        <div className="grid-responsive-2" style={{ gap: '0.5rem' }}>
           <button 
             onClick={generateRumor}
             style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.2)', border: '1px solid rgba(139, 92, 246, 0.4)', color: '#c4b5fd', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}

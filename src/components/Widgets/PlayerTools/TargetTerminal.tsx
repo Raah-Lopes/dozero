@@ -1161,7 +1161,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           return (
             <div style={{ marginBottom: '4px' }}>
               <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: '#f472b6', textTransform: 'uppercase' }}>Espaços de Magia / Preparadas</h5>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+              <div className="grid-responsive-2" style={{ gap: '4px' }}>
                 {levels.map(lvl => {
                    const slots = tokenData?.magias_preparadas?.[lvl.id] || { current: 0, max: 0 };
                    
@@ -1599,7 +1599,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         {/* Condições / Status Efeitos */}
         <div>
           <h5 style={{ margin: '0 0 0.4rem 0', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Condições do Alvo</h5>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+          <div className="grid-responsive-3" style={{ gap: '4px' }}>
             {conditionsList.map(cond => {
               const active = activeConditions.includes(cond.id);
               return (
@@ -1720,7 +1720,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         
         {/* Bloco A: Ancestralidade */}
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', border: '1px solid rgba(192, 132, 252, 0.3)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+          <div className="grid-responsive-2" style={{ gap: '4px' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Ancestralidade</span>
               {isGM ? (
@@ -1742,7 +1742,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
         {/* Bloco B: Biografia */}
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', border: '1px solid rgba(192, 132, 252, 0.3)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+          <div className="grid-responsive-2" style={{ gap: '4px' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Biografia</span>
               {isGM ? (
@@ -1780,7 +1780,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
         {/* Bloco C: Classe */}
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', border: '1px solid rgba(192, 132, 252, 0.3)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+          <div className="grid-responsive-2" style={{ gap: '4px' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Classe</span>
               {isGM ? (
@@ -1962,7 +1962,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
           </div>
           
           {/* Subheader parameters */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px', fontSize: '0.7rem' }}>
+          <div className="grid-responsive-4" style={{ gap: '4px', fontSize: '0.7rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
               <span style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Ficha</span>
               {isGM ? (
