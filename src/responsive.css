@@ -57,12 +57,18 @@
     z-index: 999999 !important; /* Always on top when open on mobile */
   }
 
-  /* Center hud-modal-layer on mobile */
+  /* Center hud-modal-layer on mobile without breaking fixed backdrops */
   .hud-modal-layer {
-    top: 50% !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translate(-50%, -50%) !important;
+    position: fixed !important;
+    inset: 0 !important;
+    transform: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: none !important; /* Let clicks pass to background if no modal is covering */
+  }
+  .hud-modal-layer > * {
+    pointer-events: auto !important;
   }
 
   /* Make sure modals fit on screen */
