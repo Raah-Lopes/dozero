@@ -286,6 +286,7 @@ function App() {
       {/* Layer 10: React HUD (moved out of canvas-layer so it works in Theater view too) */}
       <div className="hud-layer hud-grid">
         <MainToolbar />
+        <QuestTrackerHUD />
 
         {/* Combat Tracker Widget */}
         {openWindows.combatTracker && (
