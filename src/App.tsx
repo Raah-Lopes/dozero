@@ -17,6 +17,7 @@ import { QuestTrackerHUD } from './components/Widgets/GameMaster/QuestTrackerHUD
 import { TextContextBar } from './components/UI/TextContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
+import { CutsceneOverlay, type CutsceneConfig } from './components/Theater/CutsceneOverlay';
 import { InviteModal } from './components/Modals/InviteModal';
 import { ClimaxOverlay } from './components/UI/ClimaxOverlay';
 import { SoftTimer } from './components/UI/SoftTimer';
@@ -38,6 +39,7 @@ import { loadMarkdownFile } from './utils/githubApi';
 import * as yaml from 'js-yaml';
 import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
+import { CutsceneManager } from './components/Theater/CutsceneManager';
 
 // Trigger HMR
 type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets' | 'themes';
@@ -95,6 +97,18 @@ function App() {
   useEffect(() => {
     localStorage.setItem('dozero_viewMode', viewMode);
   }, [viewMode]);
+
+  const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
+
+  // Cutscene event listener
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const config = (e as CustomEvent<CutsceneConfig>).detail;
+      if (config) setActiveCutscene(config);
+    };
+    window.addEventListener('theater-cutscene', handler);
+    return () => window.removeEventListener('theater-cutscene', handler);
+  }, []);
 
   // 3. Handle double-click token actions
   useEffect(() => {
@@ -239,6 +253,11 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* ── Cutscene overlay (Global) ── */}
+      {activeCutscene && (
+        <CutsceneOverlay config={activeCutscene} onEnd={() => setActiveCutscene(null)} />
+      )}
+
       {/* PÁGINA DO CÉREBRO GRÁFICO */}
       <div className={`view-layer brain-layer ${viewMode === 'brain' ? 'active' : ''}`}>
         {viewMode === 'brain' && <LivingBrain />}
@@ -301,6 +320,24 @@ function App() {
             onClose={() => toggleWindow('combatTracker')}
           >
             <CombatTracker />
+          </DraggableWindow>
+        )}
+
+        {/* Cutscene Director Widget */}
+        {openWindows.cutsceneDirector && (
+          <DraggableWindow
+            id="cutscenes"
+            title="Diretor de Cenas (Títulos)"
+            initialX={window.innerWidth / 2 - 200}
+            initialY={100}
+            width={400}
+            height={500}
+            variant="default"
+            onClose={() => toggleWindow('cutsceneDirector')}
+          >
+            <div style={{ padding: '1rem', height: '100%', overflowY: 'auto' }}>
+              <CutsceneManager />
+            </div>
           </DraggableWindow>
         )}
 
@@ -485,6 +522,7 @@ function App() {
                 onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
                 onOpenThemes={() => { setActiveModal('themes'); }}
+                onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
               />
               </div>
             </div>

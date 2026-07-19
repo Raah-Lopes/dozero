@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins, FileText, Palette } from 'lucide-react';
+import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins, FileText, Palette, Video } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -32,6 +32,7 @@ interface Props {
   onOpenPlayerManager: () => void;
   onToggleAIBot: () => void;
   onOpenThemes: () => void;
+  onOpenCutsceneDirector: () => void;
 }
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
@@ -50,6 +51,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'chronos', cat: 'Game Master', title: 'Motor Chronos', icon: Sun, action: props.onOpenChronos, theme: 'theme-yellow' },
     { id: 'mapsettings', cat: 'Game Master', title: 'Visual da Mesa (Cenário)', icon: Map, action: props.onOpenMapSettings, theme: 'theme-blue' },
     { id: 'actors', cat: 'Game Master', title: 'Biblioteca de Atores', icon: Users, action: props.onOpenActorLibrary, theme: 'theme-amber' },
+    { id: 'cutscene', cat: 'Game Master', title: 'Diretor de Cenas (Títulos)', icon: Video, action: props.onOpenCutsceneDirector, theme: 'theme-pink' },
 
     // Player Tools
     { id: 'diceroller', cat: 'Player Tools', title: 'Rolador de Dados', icon: Dices, action: props.onOpenDiceRoller, theme: 'theme-yellow' },

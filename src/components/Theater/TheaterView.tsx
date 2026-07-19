@@ -7,7 +7,6 @@ import { StagePropsLayer } from './StagePropsLayer';
 import { DirectorBar } from './DirectorBar';
 import { NpcPortrait } from './NpcPortrait';
 import { HeroBadge } from './HeroBadge';
-import { CutsceneOverlay, type CutsceneConfig } from './CutsceneOverlay';
 import { DiceResultToast } from './DiceResultToast';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
@@ -41,7 +40,6 @@ export const TheaterView: React.FC = () => {
   useEffect(() => { isCinematicRef.current = isCinematic; }, [isCinematic]);
   
   const [activeNpc, setActiveNpc] = useState<{ name: string; imageUrl?: string } | null>(null);
-  const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
   // Active bg index within the current scene's asset gallery
   const [activeBgIndex, setActiveBgIndex] = useState(0);
   // Scene transition overlay
@@ -68,16 +66,6 @@ export const TheaterView: React.FC = () => {
 
   // Reset bg index when scene changes
   useEffect(() => { setActiveBgIndex(0); }, [currentScene?.id]);
-
-  // Cutscene event listener
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const config = (e as CustomEvent<CutsceneConfig>).detail;
-      if (config) setActiveCutscene(config);
-    };
-    window.addEventListener('theater-cutscene', handler);
-    return () => window.removeEventListener('theater-cutscene', handler);
-  }, []);
 
   // Scene transition listener
   useEffect(() => {
@@ -164,11 +152,6 @@ export const TheaterView: React.FC = () => {
         @keyframes sceneFade { 0% { opacity: 0; } 30% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
         @keyframes sceneWipe { 0% { transform: translateX(-100%); } 30% { transform: translateX(0); } 70% { transform: translateX(0); } 100% { transform: translateX(100%); } }
       `}</style>
-
-      {/* ── Cutscene overlay ── */}
-      {activeCutscene && (
-        <CutsceneOverlay config={activeCutscene} onEnd={() => setActiveCutscene(null)} />
-      )}
 
       {/* ── Dice result toast ── */}
       <DiceResultToast />
