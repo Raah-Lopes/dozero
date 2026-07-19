@@ -46,7 +46,7 @@ type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'wid
 
 function App() {
   const [isReady, _setIsReady] = useState(true);
-  const { currentThemeId, setTheme } = useTheme();
+  const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
 
@@ -363,6 +363,9 @@ function App() {
               {activeModal === 'themes' && (
                 <ThemePickerModal 
                   currentThemeId={currentThemeId} 
+                  themeOverrides={themeOverrides}
+                  updateOverrides={updateOverrides}
+                  clearOverrides={clearOverrides}
                   onSelect={setTheme} 
                   onClose={() => setActiveModal('none')} 
                 />

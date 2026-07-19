@@ -73,7 +73,7 @@ defesa: 13
 pv: 42
 sizeScale: 1.4
 showName: true
-tokenShape: hexagon
+tokenShape: circle
 pv_max: 42
 mana_max: 15
 energia_max: 100
@@ -139,7 +139,14 @@ genero: ''
 nome_jogador: ''
 xp: 0
 classe: ''
+borderColor: '#858200'
 ---
+
+
+
+
+
+
 ```dataviewjs
 const file = app.workspace.getActiveFile();
 const meta = app.metadataCache.getFileCache(file)?.frontmatter || {};

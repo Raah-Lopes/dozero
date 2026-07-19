@@ -9,7 +9,8 @@ const STORAGE_KEY = 'dozero_theme';
  * document.documentElement so they override the `:root` values in index.css.
  * Also sets `data-theme` for any data-attribute-based CSS overrides.
  */
-function applyTheme(theme: ThemeDefinition) {
+function applyTheme(baseTheme: ThemeDefinition, overrides: Partial<ThemeDefinition> = {}) {
+  const theme = { ...baseTheme, ...overrides };
   const el = document.documentElement;
 
   el.setAttribute('data-theme', theme.id);
@@ -66,21 +67,43 @@ export function useTheme() {
     return localStorage.getItem(STORAGE_KEY) || DEFAULT_THEME_ID;
   });
 
-  // Apply the theme on mount and whenever the ID changes
+  const [themeOverrides, setThemeOverrides] = useState<Partial<ThemeDefinition>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('dozero_theme_overrides') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  const updateOverrides = useCallback((newOverrides: Partial<ThemeDefinition>) => {
+    setThemeOverrides(prev => {
+      const updated = { ...prev, ...newOverrides };
+      localStorage.setItem('dozero_theme_overrides', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const clearOverrides = useCallback(() => {
+    setThemeOverrides({});
+    localStorage.removeItem('dozero_theme_overrides');
+  }, []);
+
+  // Apply the theme on mount and whenever the ID or overrides change
   useEffect(() => {
     const theme = THEMES.find(t => t.id === currentThemeId) ?? THEMES[0];
-    applyTheme(theme);
-  }, [currentThemeId]);
+    applyTheme(theme, themeOverrides);
+  }, [currentThemeId, themeOverrides]);
 
   const setTheme = useCallback((id: string) => {
     const theme = THEMES.find(t => t.id === id);
     if (!theme) return;
     localStorage.setItem(STORAGE_KEY, id);
     setCurrentThemeId(id);
-    applyTheme(theme);
-  }, []);
+    applyTheme(theme, themeOverrides);
+  }, [themeOverrides]);
 
   const currentTheme = THEMES.find(t => t.id === currentThemeId) ?? THEMES[0];
+  const finalTheme = { ...currentTheme, ...themeOverrides } as ThemeDefinition;
 
-  return { currentTheme, currentThemeId, setTheme, themes: THEMES };
+  return { currentTheme, finalTheme, currentThemeId, setTheme, themes: THEMES, themeOverrides, updateOverrides, clearOverrides };
 }

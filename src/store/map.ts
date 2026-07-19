@@ -9,6 +9,8 @@ export interface MapConfig {
   fowRadius: number;
   fowShape: 'circle' | 'square' | 'hexagon';
   fowHideTokens: boolean;
+  fowColor?: string;
+  mapBackgroundColor?: string;
 }
 
 export function getMapConfig(): MapConfig {
@@ -24,7 +26,9 @@ export function getMapConfig(): MapConfig {
     fogOfWar: false,
     fowRadius: 6,
     fowShape: 'circle',
-    fowHideTokens: false
+    fowHideTokens: false,
+    fowColor: '#000000',
+    mapBackgroundColor: 'transparent'
   };
 }
 

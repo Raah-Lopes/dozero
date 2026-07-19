@@ -279,12 +279,20 @@ export const MapSettingsPanel: React.FC = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Opacidade ({Math.round(mapConfig.gridAlpha * 100)}%)</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor de Fundo da Mesa</span>
                   <input 
-                    type="range" min="0" max="1" step="0.1" value={mapConfig.gridAlpha} 
-                    onChange={e => updateMapConfig({ gridAlpha: parseFloat(e.target.value) })} style={{ width: '100%' }}
+                    type="color" value={mapConfig.mapBackgroundColor || '#000000'} 
+                    onChange={e => updateMapConfig({ mapBackgroundColor: e.target.value })}
+                    style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
                   />
                 </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Opacidade do Grid ({Math.round(mapConfig.gridAlpha * 100)}%)</span>
+                <input 
+                  type="range" min="0" max="1" step="0.1" value={mapConfig.gridAlpha} 
+                  onChange={e => updateMapConfig({ gridAlpha: parseFloat(e.target.value) })} style={{ width: '100%' }}
+                />
               </div>
             </div>
           </details>
@@ -302,17 +310,27 @@ export const MapSettingsPanel: React.FC = () => {
               
               {mapConfig.fogOfWar && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '4px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Formato da Visão</span>
-                    <select 
-                      value={mapConfig.fowShape || 'circle'} 
-                      onChange={e => updateMapConfig({ fowShape: e.target.value as any })}
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
-                    >
-                      <option value="circle">Círculo</option>
-                      <option value="square">Quadrado</option>
-                      <option value="hexagon">Hexágono</option>
-                    </select>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Formato da Visão</span>
+                      <select 
+                        value={mapConfig.fowShape || 'circle'} 
+                        onChange={e => updateMapConfig({ fowShape: e.target.value as any })}
+                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
+                      >
+                        <option value="circle">Círculo</option>
+                        <option value="square">Quadrado</option>
+                        <option value="hexagon">Hexágono</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor da Névoa</span>
+                      <input 
+                        type="color" value={mapConfig.fowColor || '#000000'} 
+                        onChange={e => updateMapConfig({ fowColor: e.target.value })}
+                        style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
+                      />
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Raio de Visão (Quadrados: {mapConfig.fowRadius || 6})</span>

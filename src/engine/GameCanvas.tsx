@@ -483,8 +483,17 @@ export const GameCanvas: React.FC = () => {
       const drawGrid = () => {
         grid.clear();
         const config = getMapConfig();
-        const isChronicles = document.documentElement.getAttribute('data-theme')?.startsWith('chronicles');
-        if (config.gridAlpha <= 0 || isChronicles) return;
+        
+        if (config.mapBackgroundColor && config.mapBackgroundColor !== 'transparent') {
+          app.renderer.background.alpha = 1;
+          app.renderer.background.color = config.mapBackgroundColor.startsWith('#') 
+            ? parseInt(config.mapBackgroundColor.replace('#', '0x'), 16) 
+            : 0x000000;
+        } else {
+          app.renderer.background.alpha = 0;
+        }
+
+        if (config.gridAlpha <= 0) return;
         
         let colorNum = 0x1e293b;
         if (config.gridColor.startsWith('#')) {
@@ -593,7 +602,11 @@ export const GameCanvas: React.FC = () => {
           const wh = window.innerHeight / viewport.scale.y + 2000;
 
           fogOverlay.rect(wl, wt, ww, wh);
-          fogOverlay.fill({ color: 0x000000, alpha: 0.95 });
+          let fowColor = 0x000000;
+          if (config.fowColor && config.fowColor.startsWith('#')) {
+             fowColor = parseInt(config.fowColor.replace('#', '0x'), 16);
+          }
+          fogOverlay.fill({ color: fowColor, alpha: 0.95 });
           
           // Draw holes
           visionSources.forEach(t => {

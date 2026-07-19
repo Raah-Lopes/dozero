@@ -5,6 +5,9 @@ import type { ThemeDefinition } from '../../themes';
 
 interface ThemePickerModalProps {
   currentThemeId: string;
+  themeOverrides: Partial<ThemeDefinition>;
+  updateOverrides: (overrides: Partial<ThemeDefinition>) => void;
+  clearOverrides: () => void;
   onSelect: (id: string) => void;
   onClose: () => void;
 }
@@ -120,7 +123,7 @@ const ThemeCard: React.FC<{
 };
 
 export const ThemePickerModal: React.FC<ThemePickerModalProps> = ({
-  currentThemeId, onSelect, onClose,
+  currentThemeId, themeOverrides, updateOverrides, clearOverrides, onSelect, onClose,
 }) => {
   return (
     <div
@@ -192,20 +195,58 @@ export const ThemePickerModal: React.FC<ThemePickerModalProps> = ({
             ))}
           </div>
 
-          {/* Community hint */}
+          {/* Theme Customizer / Ajuste Fino */}
           <div style={{
-            marginTop: '20px', padding: '14px 16px', borderRadius: '10px',
-            background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--glass-border)',
-            display: 'flex', alignItems: 'flex-start', gap: '10px',
+            marginTop: '20px', padding: '16px', borderRadius: '10px',
+            background: 'var(--bg-primary)', border: '1px solid var(--glass-border)',
+            display: 'flex', flexDirection: 'column', gap: '12px'
           }}>
-            <Palette size={14} color="var(--accent-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
-                Crie o seu tema
-              </p>
-              <p style={{ margin: '3px 0 0', fontSize: '0.67rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                Adicione um arquivo <code style={{ background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '3px', color: 'var(--accent-primary)' }}>src/themes/seu-tema.ts</code> implementando <code style={{ background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '3px', color: 'var(--accent-primary)' }}>ThemeDefinition</code> e registre em <code style={{ background: 'rgba(255,255,255,0.07)', padding: '1px 5px', borderRadius: '3px', color: 'var(--accent-primary)' }}>themes/index.ts</code>.
-              </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Palette size={16} color="var(--accent-primary)" />
+                <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Personalizar Cores (Ajuste Fino)</h3>
+              </div>
+              <button 
+                className="btn-icon"
+                onClick={clearOverrides}
+                title="Restaurar Padrões do Tema"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            
+            <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+              Substitua as cores principais do tema atual para o seu próprio gosto.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginTop: '8px' }}>
+              {[
+                { key: 'textPrimary', label: 'Texto Principal' },
+                { key: 'textSecondary', label: 'Texto Secundário' },
+                { key: 'bgPrimary', label: 'Fundo Principal' },
+                { key: 'bgSecondary', label: 'Fundo Secundário' },
+                { key: 'accentPrimary', label: 'Cor de Destaque' },
+                { key: 'glassBg', label: 'Fundo Translúcido' },
+              ].map(f => (
+                <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{f.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <input 
+                      type="color" 
+                      value={(themeOverrides as any)[f.key] || THEMES.find(t => t.id === currentThemeId)?.[f.key as keyof ThemeDefinition] || '#000000'} 
+                      onChange={e => updateOverrides({ [f.key]: e.target.value })}
+                      style={{ width: '28px', height: '28px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
+                    />
+                    <input 
+                      type="text" 
+                      value={(themeOverrides as any)[f.key] || ''} 
+                      placeholder="Padrão"
+                      onChange={e => updateOverrides({ [f.key]: e.target.value })}
+                      style={{ flex: 1, background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.7rem', borderRadius: '4px' }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
