@@ -56,8 +56,8 @@ const TYPE_CONFIG: Record<MindMapNode['type'], { icon: React.ElementType; color:
   character: { icon: User,      color: '#3b82f6', border: '#93c5fd' },
   location:  { icon: MapPin,    color: '#10b981', border: '#6ee7b7' },
   event:     { icon: Calendar,  color: '#ef4444', border: '#fca5a5' },
-  image:     { icon: ImageIcon, color: '#94a3b8', border: '#475569' },
-  link:      { icon: LinkIcon,  color: '#64748b', border: '#cbd5e1' },
+  image:     { icon: ImageIcon, color: 'var(--text-secondary)', border: '#475569' },
+  link:      { icon: LinkIcon,  color: 'var(--text-secondary)', border: '#cbd5e1' },
   wiki:      { icon: Book,      color: '#a855f7', border: '#d8b4fe' },
   md:        { icon: FilePlus,  color: '#06b6d4', border: '#67e8f9' },
   zone:      { icon: Box,       color: '#6366f1', border: '#818cf8' },
@@ -363,7 +363,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
       initialY={Math.max(0, window.innerHeight / 2 - 375)}
       dragAnywhere={false}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: board.bgColor, fontFamily: 'var(--font-body)', color: '#f1f5f9', position: 'relative' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: board.bgColor, fontFamily: 'var(--font-body)', color: 'var(--text-primary)', position: 'relative' }}>
         
         {isLoading && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
@@ -385,7 +385,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
               <h3 style={{ margin: 0, color: '#06b6d4', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FilePlus size={20} /> Importar Arquivo Wiki
               </h3>
-              <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
                 Caminho na Wiki (ex: <code style={{ color: '#67e8f9', background: 'rgba(6,182,212,0.1)', padding: '2px 4px', borderRadius: '4px' }}>wiki/npcs/Valdur.md</code>)
               </p>
               <input
@@ -395,7 +395,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                 onKeyDown={e => { if (e.key === 'Enter') { addNode('md', { filePath: mdPathInput, title: mdPathInput.split('/').pop()?.replace('.md', '') || 'Arquivo' }); setShowMdModal(false); } if (e.key === 'Escape') setShowMdModal(false); }}
                 style={{
                   background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: '8px',
-                  padding: '12px 14px', color: '#f1f5f9', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-mono)'
+                  padding: '12px 14px', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', fontFamily: 'var(--font-mono)'
                 }}
               />
             </div>
@@ -579,7 +579,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                           }}
                         />
                       ) : (
-                        <span style={{ fontSize: '11px', color: '#94a3b8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {node.title}
                         </span>
                       )}
@@ -671,7 +671,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
             borderRadius: '16px', zIndex: 100, overflow: 'hidden',
             boxShadow: '0 8px 32px rgba(0,0,0,0.5)', pointerEvents: 'none'
           }}>
-            <div style={{ position: 'absolute', top: '6px', left: '10px', fontSize: '9px', color: '#64748b', fontWeight: 700, letterSpacing: '0.05em' }}>MINIMAPA</div>
+            <div style={{ position: 'absolute', top: '6px', left: '10px', fontSize: '9px', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.05em' }}>MINIMAPA</div>
             <div style={{ position: 'relative', width: '100%', height: '100%', transform: 'scale(0.04) translate(800px, 800px)' }}>
               {board.nodes.map(n => (
                 <div key={`mini-${n.id}`} style={{
@@ -697,13 +697,13 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
               onMouseDown={e => e.stopPropagation()}
               onClick={e => e.stopPropagation()}
             >
-              <div style={{ fontSize: '10px', color: '#64748b', padding: '4px 8px', fontWeight: 600 }}>AÇÕES DO NÓ</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', padding: '4px 8px', fontWeight: 600 }}>AÇÕES DO NÓ</div>
               <button className="cw-ctx-btn" onClick={() => { deleteNode(contextMenu.nodeId); }}>
-                <Trash2 size={14} color="#ef4444" /> Excluir Nó
+                <Trash2 size={14} color="var(--danger)" /> Excluir Nó
               </button>
               
               <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
-              <div style={{ fontSize: '10px', color: '#64748b', padding: '4px 8px', fontWeight: 600 }}>MUDAR COR</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', padding: '4px 8px', fontWeight: 600 }}>MUDAR COR</div>
               <div style={{ display: 'flex', gap: '6px', padding: '4px 8px', flexWrap: 'wrap' }}>
                 {['#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#cbd5e1'].map(c => (
                   <button key={c} onClick={() => { updateNode(contextMenu.nodeId, { color: c }); setContextMenu(null); }}
@@ -743,7 +743,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
           
           <div style={{ position: 'relative' }}>
             <button className="cw-fab-btn" title="Cor de Fundo" onClick={() => setShowBgPicker(v => !v)}>
-              <Palette size={16} color="#cbd5e1" />
+              <Palette size={16} color="var(--text-secondary)" />
             </button>
             {showBgPicker && (
               <div style={{
@@ -752,7 +752,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                 borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.6)'
               }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>COR DE FUNDO</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>COR DE FUNDO</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {BG_PRESETS.map(p => (
                     <button key={p.value} title={p.label} onClick={() => updateBoard(b => ({ ...b, bgColor: p.value }))}
@@ -760,7 +760,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Fundo livre:</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Fundo livre:</span>
                   <input
                     ref={customColorRef}
                     type="color"
@@ -772,7 +772,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
 
                 <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
 
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>COR DO GRID</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>COR DO GRID</span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {['rgba(255,255,255,0.04)', 'rgba(6,182,212,0.15)', 'rgba(16,185,129,0.15)', 'rgba(239,68,68,0.15)'].map(c => (
                     <button key={c} title="Grid" onClick={() => updateBoard(b => ({ ...b, gridColor: c }))}
@@ -780,7 +780,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Grid livre:</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Grid livre:</span>
                   <input
                     type="color"
                     defaultValue="#06b6d4"
@@ -804,7 +804,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
           <button className={`cw-fab-btn ${snapEnabled ? 'active' : ''}`} title="Snap to Grid" onClick={() => setSnapEnabled(v => !v)}>
             <Grid size={16} color={snapEnabled ? '#06b6d4' : '#64748b'} />
           </button>
-          <button className="cw-fab-btn" title="Centralizar Visão" onClick={centerCanvas}><Maximize size={16} color="#64748b" /></button>
+          <button className="cw-fab-btn" title="Centralizar Visão" onClick={centerCanvas}><Maximize size={16} color="var(--text-secondary)" /></button>
           
           <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
 
@@ -827,7 +827,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
             title="Novo Quadro em Branco" 
             onClick={() => updateBoard({ id: `board-${Date.now()}`, name: 'Novo_Quadro', zoom: 1, offsetX: 0, offsetY: 0, bgColor: BG_PRESETS[0].value, nodes: [] })}
           >
-            <FilePlus size={16} color="#10b981" />
+            <FilePlus size={16} color="var(--success)" />
           </button>
 
           <div style={{ position: 'relative' }}>
@@ -841,8 +841,8 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                 borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '220px',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.6)', maxHeight: '300px', overflowY: 'auto'
               }}>
-                <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, paddingBottom: '8px', marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>MEUS QUADROS MENTAIS</span>
-                {availableMaps.length === 0 && <span style={{ fontSize: '12px', color: '#94a3b8', padding: '8px 0' }}>Nenhum mapa encontrado.</span>}
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, paddingBottom: '8px', marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>MEUS QUADROS MENTAIS</span>
+                {availableMaps.length === 0 && <span style={{ fontSize: '12px', color: 'var(--text-secondary)', padding: '8px 0' }}>Nenhum mapa encontrado.</span>}
                 {availableMaps.map(m => (
                   <button 
                     key={m.path}
@@ -855,7 +855,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <FolderOpen size={14} color="#3b82f6" />
+                    <FolderOpen size={14} color="var(--mana)" />
                     {m.path.replace('MapasMentais/', '').replace('.md', '')}
                   </button>
                 ))}

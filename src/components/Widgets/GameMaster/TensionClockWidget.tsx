@@ -75,7 +75,7 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
           </h1>
           <p style={{
             fontSize: '2rem',
-            color: 'white',
+            color: 'var(--text-primary)',
             textShadow: '0 0 20px white',
             marginTop: '1rem',
             fontFamily: 'sans-serif'
@@ -184,12 +184,12 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <Clock size={24} color="#ef4444" style={{ marginBottom: '4px' }} />
+            <Clock size={24} color="var(--danger)" style={{ marginBottom: '4px' }} />
             <span style={{
               fontSize: '1.5rem',
               fontFamily: 'monospace',
               fontWeight: 'bold',
-              color: 'white',
+              color: 'var(--text-primary)',
               letterSpacing: '2px',
               filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.5))'
             }}>
@@ -238,7 +238,7 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
               style={{
                 padding: '0.5rem 1rem',
                 background: 'rgba(153, 27, 27, 0.5)',
-                color: '#fca5a5',
+                color: 'var(--danger)',
                 borderRadius: '4px',
                 display: 'flex',
                 alignItems: 'center',

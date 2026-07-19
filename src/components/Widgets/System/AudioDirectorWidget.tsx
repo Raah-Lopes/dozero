@@ -124,7 +124,7 @@ const Channel: React.FC<ChannelProps> = ({
       <button onClick={onPlayPause} style={{ ...btnBase, flex: 1, background: isPlaying ? '#222' : color, borderColor: color }}>
         {isPlaying ? <Pause size={13} /> : <Play size={13} />}
       </button>
-      <button onClick={onStop} style={{ ...btnBase, background: '#3f1d1d', borderColor: '#7f1d1d', color: '#fca5a5' }}>
+      <button onClick={onStop} style={{ ...btnBase, background: '#3f1d1d', borderColor: '#7f1d1d', color: 'var(--danger)' }}>
         <Square size={13} />
       </button>
     </div>
@@ -324,7 +324,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
         {/* ── Header ── */}
         <div style={{ padding: '0.625rem 0.875rem', background: 'linear-gradient(180deg,#18181b,#0a0a0a)', borderBottom: '1px solid #2a2a2a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Sliders size={16} color="#a855f7" />
+            <Sliders size={16} color="var(--accent-primary)" />
             <span style={{ fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px' }}>Audio Mixer</span>
           </div>
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
@@ -362,7 +362,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
         {!isMicroplayer && (
           <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'radial-gradient(ellipse at 50% 0%,#1a1a1a,#0a0a0a)', borderBottom: '1px solid #1a1a1a' }}>
             <Channel
-              label="CH 1 / MÚSICA" color="#a855f7" icon={<Music size={13} />}
+              label="CH 1 / MÚSICA" color="var(--accent-primary)" icon={<Music size={13} />}
               title={currentMusicTitle} isPlaying={audioState.isPlayingMusic}
               volume={audioState.musicVolume} progress={musicProgress} duration={musicDuration}
               loopMode={audioState.loopMode} isShuffle={audioState.isShuffle}
@@ -379,7 +379,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
               onShuffleToggle={() => audioState.setIsShuffle(!audioState.isShuffle)}
             />
             <Channel
-              label="CH 2 / AMBIENTE" color="#3b82f6" icon={<Zap size={13} />}
+              label="CH 2 / AMBIENTE" color="var(--mana)" icon={<Zap size={13} />}
               title={currentAmbienceTitle} isPlaying={audioState.isPlayingAmbience}
               volume={audioState.ambienceVolume} progress={ambienceProgress} duration={ambienceDuration}
               onVolumeChange={v => audioEngine.setAmbienceVolume(v)}
@@ -535,7 +535,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                           <button onClick={() => audioEngine.playMusic(track, audioState.musicVolume)} style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.25)', color: '#c084fc', borderRadius: '4px', padding: '0.25rem', cursor: 'pointer' }} title="Tocar como Música (CH1)">
                             <Music size={11} />
                           </button>
-                          <button onClick={() => audioEngine.playAmbience(track, audioState.ambienceVolume)} style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', color: '#93c5fd', borderRadius: '4px', padding: '0.25rem', cursor: 'pointer' }} title="Tocar como Ambiente (CH2)">
+                          <button onClick={() => audioEngine.playAmbience(track, audioState.ambienceVolume)} style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', color: 'var(--mana)', borderRadius: '4px', padding: '0.25rem', cursor: 'pointer' }} title="Tocar como Ambiente (CH2)">
                             <Volume2 size={11} />
                           </button>
                           <button onClick={() => audioEngine.playSFX({ ...track, icon: undefined } as unknown as SoundboardItem)} style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)', color: '#fde047', borderRadius: '4px', padding: '0.25rem', cursor: 'pointer' }} title="Efeito Rápido (SFX)">
@@ -596,8 +596,8 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e5e5e5', marginBottom: '0.25rem' }}>{preset.name}</div>
                         <div style={{ fontSize: '0.68rem', color: '#555', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                          <span><Music size={9} style={{ display: 'inline', marginRight: 3 }} color="#a855f7" />{musicTrack?.name || musicTrack?.title || 'Sem música'}</span>
-                          <span><Zap size={9} style={{ display: 'inline', marginRight: 3 }} color="#3b82f6" />{ambienceTrack?.name || ambienceTrack?.title || 'Sem ambiente'}</span>
+                          <span><Music size={9} style={{ display: 'inline', marginRight: 3 }} color="var(--accent-primary)" />{musicTrack?.name || musicTrack?.title || 'Sem música'}</span>
+                          <span><Zap size={9} style={{ display: 'inline', marginRight: 3 }} color="var(--mana)" />{ambienceTrack?.name || ambienceTrack?.title || 'Sem ambiente'}</span>
                         </div>
                       </div>
                       <button onClick={() => audioState.triggerMacro(preset.id)} style={{ background: '#a855f7', border: 'none', color: '#fff', borderRadius: '6px', padding: '0.4rem 0.75rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -652,7 +652,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                         </button>
                         <button
                           onClick={() => audioState.removeSoundboardItem(item.id)}
-                          style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+                          style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', color: 'var(--text-primary)', border: 'none', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
                           title="Remover"
                         >
                           <X size={10} />
@@ -667,7 +667,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
               <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <span style={{ fontSize: '0.72rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-                    <Sparkles size={12} color="#a855f7" /> Transmitir Música para Todos (YouTube/Web)
+                    <Sparkles size={12} color="var(--accent-primary)" /> Transmitir Música para Todos (YouTube/Web)
                   </span>
                   <div style={{ fontSize: '0.72rem', color: '#555', lineHeight: 1.5 }}>
                     Cole um link do YouTube ou de um MP3 direto. Ele tocará instantaneamente no navegador de todos os jogadores conectados.
@@ -716,7 +716,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                           state.audio.set('music', { url: '', isPlaying: false, ts: Date.now() });
                           setWebMusicUrl('');
                        });
-                    }} style={{ flex: 1, background: '#3f1d1d', color: '#fca5a5', border: '1px solid #7f1d1d', borderRadius: '4px', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600 }}>
+                    }} style={{ flex: 1, background: '#3f1d1d', color: 'var(--danger)', border: '1px solid #7f1d1d', borderRadius: '4px', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600 }}>
                       <Square size={13} /> Parar (Remover)
                     </button>
                   </div>

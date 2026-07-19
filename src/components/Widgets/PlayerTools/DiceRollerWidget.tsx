@@ -257,11 +257,11 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         .roll-btn:active { transform: translateY(0); }
       `}</style>
 
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#07060f', color: '#e2e8f0', overflow: 'hidden' }}>
+      <div className="panel-neon-red" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         
         {/* HEADER: Tema */}
         <div style={{ padding: '0.6rem 1rem', background: 'linear-gradient(135deg, #13101f, #0a0a14)', borderBottom: `1px solid ${colors.primary}30`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: colors.text, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>🎲 Rolador DOZERO</span>
+          <span className="text-gold" style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>🎲 Rolador DOZERO</span>
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
             <span style={{ fontSize: '0.65rem', color: '#666' }}>Tema:</span>
             {(['purple', 'crimson', 'gold'] as DiceTheme[]).map(t => (
@@ -366,13 +366,19 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
               ))}
             </div>
             {!rolling && (
-              <div style={{ textAlign: 'center' }}>
+              <div 
+                className={`holo-box ${(selectedDie === 20 && currentRolls[0] === 20) ? 'holo-critical' : ''}`}
+                style={{ textAlign: 'center', padding: '15px', marginTop: '10px' }}
+              >
+                {(selectedDie === 20 && currentRolls[0] === 20) && (
+                   <div className="text-gold" style={{ fontSize: '1.2rem', marginBottom: '5px' }}>CRÍTICO! Z.E.R.O.</div>
+                )}
                 {modifier !== 0 && (
                   <div style={{ fontSize: '0.7rem', color: '#666', marginBottom: '0.2rem' }}>
                     {currentRolls.join(' + ')}{modifier !== 0 ? ` ${modifier > 0 ? '+' : ''}${modifier}` : ''}
                   </div>
                 )}
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#fff', textShadow: `0 0 20px ${colors.primary}, 0 0 40px ${colors.glow}`, lineHeight: 1 }}>
+                <div style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', textShadow: `0 0 20px ${colors.primary}, 0 0 40px ${colors.glow}`, lineHeight: 1 }}>
                   {totalResult}
                 </div>
                 {quantity > 1 && (
@@ -386,7 +392,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   {[
                     { label: '🗡️ Dano', color: '#f87171', event: 'dice-apply-damage' },
                     { label: '💗 Cura', color: '#34d399', event: 'dice-apply-heal' },
-                    { label: '🎲 Teste', color: '#60a5fa', event: 'dice-apply-test' },
+                    { label: '🎲 Teste', color: 'var(--mana)', event: 'dice-apply-test' },
                   ].map(({ label, color, event }) => (
                     <button
                       key={event}
@@ -420,9 +426,9 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 value={newMacroLabel}
                 onChange={e => setNewMacroLabel(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addMacro()}
-                style={{ flex: 1, background: '#111', border: '1px solid #2a2a3e', borderRadius: '4px', color: 'white', padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}
+                style={{ flex: 1, background: '#111', border: '1px solid #2a2a3e', borderRadius: '4px', color: 'var(--text-primary)', padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}
               />
-              <button onClick={addMacro} style={{ background: colors.primary, border: 'none', borderRadius: '4px', color: 'white', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.75rem' }}>Salvar</button>
+              <button onClick={addMacro} style={{ background: colors.primary, border: 'none', borderRadius: '4px', color: 'var(--text-primary)', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.75rem' }}>Salvar</button>
             </div>
           )}
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>

@@ -26,7 +26,7 @@ const EmptyState = ({ icon, message, sub }: any) => (
     borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.06)'
   }}>
     <div style={{ color: 'rgba(148,163,184,0.3)', marginBottom: '12px' }}>{icon}</div>
-    <p style={{ margin: 0, fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem' }}>{message}</p>
+    <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{message}</p>
     {sub && <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'rgba(148,163,184,0.5)' }}>{sub}</p>}
   </div>
 );

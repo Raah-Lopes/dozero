@@ -74,7 +74,7 @@ export const WebFrameWidget: React.FC<WebFrameWidgetProps> = ({ onClose, }) => {
             type="text" 
             value={url} 
             onChange={e => setUrl(e.target.value)}
-            style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '0.4rem 0.6rem', color: 'white', fontSize: '0.8rem', outline: 'none' }}
+            style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '0.4rem 0.6rem', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
             placeholder="Digite uma URL (ex: https://tabletopaudio.com)"
           />
           

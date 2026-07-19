@@ -150,7 +150,7 @@ export const FloatingDocument: React.FC<FloatingDocumentProps> = React.memo(({ i
                 style={{
                   display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px',
                   background: 'rgba(168, 85, 247, 0.2)', border: '1px solid rgba(168, 85, 247, 0.4)',
-                  borderRadius: '4px', color: '#d8b4fe', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold'
+                  borderRadius: '4px', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold'
                 }}
                 title="Expandir na Wiki Principal"
               >

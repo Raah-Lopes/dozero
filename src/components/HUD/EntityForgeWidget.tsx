@@ -98,7 +98,7 @@ export const EntityForgeWidget: React.FC<{ onClose: () => void }> = ({ onClose }
             placeholder="Pesquisar por nome ou pasta..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem 2.5rem 0.75rem 1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '0.9rem' }}
+            style={{ width: '100%', padding: '0.75rem 2.5rem 0.75rem 1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.9rem' }}
           />
           <Search size={18} color="var(--text-secondary)" style={{ position: 'absolute', right: '12px', top: '12px' }} />
         </div>
@@ -120,7 +120,7 @@ export const EntityForgeWidget: React.FC<{ onClose: () => void }> = ({ onClose }
                 onClick={() => handleSpawn(entity.path)}
                 style={{
                   padding: '0.4rem 0.8rem', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px',
-                  color: 'white', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'
+                  color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'
                 }}
               >
                 EVOCAR

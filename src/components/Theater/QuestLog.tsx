@@ -53,7 +53,7 @@ export const QuestLog: React.FC = () => {
   };
 
   return (
-    <GlassAccordion title={<><Target size={13} color="#fca5a5" /> Painel de Missões</>}>
+    <GlassAccordion title={<><Target size={13} color="var(--danger)" /> Painel de Missões</>}>
       {/* Header Actions */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -88,16 +88,16 @@ export const QuestLog: React.FC = () => {
             onChange={e => setNewObjText(e.target.value)}
             placeholder="Descreva a missão..."
             onKeyDown={e => { if (e.key === 'Enter') handleAddSubmit(); }}
-            style={{ padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'white', fontSize: '0.75rem', width: '100%' }}
+            style={{ padding: '6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', color: 'var(--text-primary)', fontSize: '0.75rem', width: '100%' }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', color: '#94a3b8', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
               <input type="checkbox" checked={newObjSecret} onChange={e => setNewObjSecret(e.target.checked)} />
               Missão Secreta (Visível só para o Mestre)
             </label>
             <div style={{ display: 'flex', gap: '4px' }}>
-              <button onClick={() => setAddingObj(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.75rem', padding: '2px 6px' }}>Cancelar</button>
-              <button onClick={handleAddSubmit} style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.3)', color: '#6ee7b7', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', cursor: 'pointer' }}>Adicionar</button>
+              <button onClick={() => setAddingObj(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.75rem', padding: '2px 6px' }}>Cancelar</button>
+              <button onClick={handleAddSubmit} style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.3)', color: 'var(--success)', borderRadius: '4px', padding: '2px 8px', fontSize: '0.75rem', cursor: 'pointer' }}>Adicionar</button>
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@ export const QuestLog: React.FC = () => {
               {/* Quest Item Header */}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px' }}>
                 <div style={{ paddingTop: '2px' }}>
-                  {isSuccess ? <CheckCircle2 size={14} color="#10b981" /> : isFailed ? <XCircle size={14} color="#ef4444" /> : <Target size={14} color="#94a3b8" />}
+                  {isSuccess ? <CheckCircle2 size={14} color="var(--success)" /> : isFailed ? <XCircle size={14} color="var(--danger)" /> : <Target size={14} color="var(--text-secondary)" />}
                 </div>
                 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -139,7 +139,7 @@ export const QuestLog: React.FC = () => {
                       value={editText}
                       onChange={e => setEditText(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') saveEdit(obj.id); if (e.key === 'Escape') setEditingId(null); }}
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', fontSize: '0.8rem', padding: '2px 4px', borderRadius: '4px' }}
+                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-primary)', fontSize: '0.8rem', padding: '2px 4px', borderRadius: '4px' }}
                     />
                   ) : (
                     <span style={{ fontSize: '0.8rem', color: isSuccess ? '#6ee7b7' : isFailed ? '#fca5a5' : '#e2e8f0', textDecoration: isFailed || isSuccess ? 'line-through' : 'none' }}>
@@ -153,7 +153,7 @@ export const QuestLog: React.FC = () => {
                   {isEditing ? (
                     <button onClick={() => saveEdit(obj.id)} style={{ background: 'transparent', border: 'none', color: '#10b981', cursor: 'pointer' }}><Check size={13} /></button>
                   ) : (
-                    <button onClick={() => { setEditingId(obj.id); setEditText(obj.text); }} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><Edit2 size={13} /></button>
+                    <button onClick={() => { setEditingId(obj.id); setEditText(obj.text); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><Edit2 size={13} /></button>
                   )}
                   <button
                     onClick={() => {

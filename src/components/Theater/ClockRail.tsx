@@ -65,7 +65,7 @@ export const ClockRail: React.FC = () => {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#cbd5e1', fontFamily: 'var(--font-display)', fontWeight: 600 }}>
-                {isCritical ? <AlertTriangle size={13} color="#ef4444" /> : <Clock size={13} color={barColor} />}
+                {isCritical ? <AlertTriangle size={13} color="var(--danger)" /> : <Clock size={13} color={barColor} />}
                 <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {clock.label}
                 </span>

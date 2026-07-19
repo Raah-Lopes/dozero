@@ -76,7 +76,7 @@ export function MainToolbar() {
         <div style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 1000000, pointerEvents: 'auto' }}>
           <button 
             className="glass-panel"
-            style={{ width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '8px', cursor: 'pointer' }}
+            style={{ width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '8px', cursor: 'pointer' }}
             onClick={() => setIsMenuOpen(true)}
           >
             <Menu size={24} />
@@ -86,8 +86,8 @@ export function MainToolbar() {
         {isMenuOpen && (
           <div style={{ position: 'fixed', inset: 0, background: 'var(--bg-primary)', zIndex: 1000001, display: 'flex', flexDirection: 'column', padding: '20px', pointerEvents: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0 }}>Menu DOZERO</h2>
-              <button onClick={() => setIsMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white' }}><X size={28} /></button>
+              <h2 className="text-gold" style={{ margin: 0 }}>Menu DOZERO</h2>
+              <button onClick={() => setIsMenuOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)' }}><X size={28} /></button>
             </div>
 
             <div style={{ position: 'relative', marginBottom: '20px' }}>
@@ -97,7 +97,7 @@ export function MainToolbar() {
                 placeholder="Pesquisar ferramentas..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '12px 12px 12px 35px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white', fontSize: '1rem' }}
+                style={{ width: '100%', padding: '12px 12px 12px 35px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '1rem' }}
               />
             </div>
 
@@ -107,7 +107,7 @@ export function MainToolbar() {
                   key={tool.id}
                   onClick={tool.action}
                   className={`glass-panel ${tool.isActive ? 'active' : ''}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: tool.isActive ? 'rgba(255,255,255,0.1)' : 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '8px', textAlign: 'left', width: '100%' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: tool.isActive ? 'rgba(255,255,255,0.1)' : 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '8px', textAlign: 'left', width: '100%' }}
                 >
                   <div className={`btn-icon ${tool.colorClass} ${tool.isActive ? 'active' : ''}`} style={{ background: 'transparent', pointerEvents: 'none' }}>
                     {tool.icon}

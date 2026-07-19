@@ -146,7 +146,7 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
         <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8' }}>
           <TrendingUp size={16} /> Auditoria de Nível {localData.nivel}
         </h3>
-        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
           <X size={16} />
         </button>
       </div>
@@ -155,7 +155,7 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
         
         {/* DIAGNÓSTICO */}
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase' }}>Diagnóstico Atual</h4>
+          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Diagnóstico Atual</h4>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.8rem' }}>
             <span>Pontos de Atributo Pendentes:</span>
@@ -190,7 +190,7 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
         {(availableAttrPoints > 0 || hpMissing > 0) && (
           <div>
             <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#c084fc', textTransform: 'uppercase' }}>Distribuição Inteligente (Arquétipos)</h4>
-            <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: '0 0 0.75rem 0' }}>Escolha um caminho para distribuir os pontos e Vida que faltam de forma otimizada para a classe:</p>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0' }}>Escolha um caminho para distribuir os pontos e Vida que faltam de forma otimizada para a classe:</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
               <button onClick={() => applyArchetype('Guerreiro')} style={archetypeBtnStyle}><Swords size={14}/> Guerreiro (FOR)</button>
@@ -257,5 +257,5 @@ const statBoxStyle: React.CSSProperties = {
 };
 
 const statLabelStyle: React.CSSProperties = {
-  display: 'block', fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase'
+  display: 'block', fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase'
 };

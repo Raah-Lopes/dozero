@@ -236,7 +236,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
             <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Users size={12} /> Tipo de Inimigo / Facção
             </label>
-            <select value={faccao} onChange={e => setFaccao(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
+            <select value={faccao} onChange={e => setFaccao(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
               {faccoes.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
           </div>
@@ -246,7 +246,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
             <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Skull size={12} /> Dificuldade
             </label>
-            <select value={dificuldade} onChange={e => setDificuldade(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
+            <select value={dificuldade} onChange={e => setDificuldade(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
               <option value="Fácil">Fácil (Só Capangas)</option>
               <option value="Médio">Médio (Grupo Padrão)</option>
               <option value="Difícil">Difícil (Bando de Elite)</option>
@@ -259,7 +259,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
             <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Flame size={12} /> Modificador de Cenário
             </label>
-            <select value={modificador} onChange={e => setModificador(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
+            <select value={modificador} onChange={e => setModificador(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
               <option value="Aleatório">🎲 Sortear Aleatório</option>
               {modificadores.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
@@ -272,7 +272,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
           disabled={isGenerating}
           style={{ 
             marginTop: 'auto', padding: '16px', background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', 
-            color: 'white', border: '1px solid #fb923c', borderRadius: '8px', cursor: 'pointer',
+            color: 'var(--text-primary)', border: '1px solid #fb923c', borderRadius: '8px', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold',
             boxShadow: '0 4px 15px rgba(249, 115, 22, 0.4)', transition: 'all 0.2s',
             opacity: isGenerating ? 0.7 : 1

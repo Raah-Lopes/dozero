@@ -64,7 +64,7 @@ const ToastItem: React.FC<{ result: DiceResult; onDone: () => void }> = ({ resul
         fontSize: 'clamp(2.5rem, 5vw, 4rem)',
         fontWeight: 800,
         lineHeight: 1,
-        color: 'white',
+        color: 'var(--text-primary)',
         textShadow: `0 0 30px ${glowColor}`,
       }}>
         {result.total}

@@ -46,7 +46,7 @@ export const FrontmatterSheetViewer: React.FC<Props> = ({ parsedMeta }) => {
     const k = key.toLowerCase();
     if (k.includes('hp') || k.includes('vida')) return { icon: <Heart size={16} />, color: '#ef4444' }; // Red
     if (k.includes('mana') || k.includes('mp')) return { icon: <Zap size={16} />, color: '#3b82f6' }; // Blue
-    if (k.includes('ca') || k.includes('ac') || k.includes('defesa')) return { icon: <Shield size={16} />, color: '#94a3b8' }; // Silver
+    if (k.includes('ca') || k.includes('ac') || k.includes('defesa')) return { icon: <Shield size={16} />, color: 'var(--text-secondary)' }; // Silver
     if (k.includes('sanidade')) return { icon: <Brain size={16} />, color: '#a855f7' }; // Purple
     if (k.includes('vigor') || k.includes('stamina')) return { icon: <Activity size={16} />, color: '#22c55e' }; // Green
     if (k.includes('deslocamento') || k.includes('speed')) return { icon: <Feather size={16} />, color: '#eab308' }; // Yellow

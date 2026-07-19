@@ -472,7 +472,7 @@ export const WikiGraph: React.FC<WikiGraphProps> = ({ onNodeClick }) => {
             placeholder="Pesquisar arquivos e conexões..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.9rem' }}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', fontSize: '0.9rem' }}
           />
         </form>
         {isSearching && (

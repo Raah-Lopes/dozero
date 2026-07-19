@@ -55,7 +55,7 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
         {/* Mostrador Principal */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.4)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'white' }}>
+            <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)' }}>
               Dia {timeState.day} <span style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Mês {timeState.month}</span>
             </span>
             <span style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -78,14 +78,14 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
                 onClick={advanceTimeOfDay}
-                style={{ flex: 1, padding: '0.5rem', background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: '#93c5fd', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 'bold', fontSize: '0.8rem' }}
+                style={{ flex: 1, padding: '0.5rem', background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: 'var(--mana)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 'bold', fontSize: '0.8rem' }}
               >
                 <Clock size={14} /> +1 Período
               </button>
               
               <button 
                 onClick={advanceDay}
-                style={{ flex: 1, padding: '0.5rem', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 'bold', fontSize: '0.8rem' }}
+                style={{ flex: 1, padding: '0.5rem', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: 'var(--danger)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 'bold', fontSize: '0.8rem' }}
                 title="Avança um dia inteiro e aplica Dano de Fome passivo"
               >
                 <Sun size={14} /> Avançar Dia

@@ -79,7 +79,7 @@ export const GameCanvas: React.FC = () => {
       try {
         await app.init({
           resizeTo: window,
-          backgroundColor: 0x18181b, // --bg-secondary
+          backgroundAlpha: 0,
           antialias: true,
         });
       } catch (_e) {
@@ -483,7 +483,8 @@ export const GameCanvas: React.FC = () => {
       const drawGrid = () => {
         grid.clear();
         const config = getMapConfig();
-        if (config.gridAlpha <= 0) return;
+        const isChronicles = document.documentElement.getAttribute('data-theme')?.startsWith('chronicles');
+        if (config.gridAlpha <= 0 || isChronicles) return;
         
         let colorNum = 0x1e293b;
         if (config.gridColor.startsWith('#')) {
@@ -2087,12 +2088,18 @@ export const GameCanvas: React.FC = () => {
           }
 
           // Pulse glow effect
-          if (isCurrentTurn) {
-            tokenData.glow.tint = 0xeab308;
-            tokenData.glow.alpha = 0.6 + Math.abs(Math.sin(Date.now() / 200)) * 0.4;
+          const isChronicles = document.documentElement.getAttribute('data-theme')?.startsWith('chronicles');
+          if (isChronicles) {
+            tokenData.glow.visible = false;
           } else {
-            tokenData.glow.tint = 0xffffff; // Reset tint
-            tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
+            tokenData.glow.visible = true;
+            if (isCurrentTurn) {
+              tokenData.glow.tint = 0xeab308;
+              tokenData.glow.alpha = 0.6 + Math.abs(Math.sin(Date.now() / 200)) * 0.4;
+            } else {
+              tokenData.glow.tint = 0xffffff; // Reset tint
+              tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
+            }
           }
             
             // HP Change Detection (Floating Text)

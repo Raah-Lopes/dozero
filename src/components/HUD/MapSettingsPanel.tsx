@@ -253,7 +253,7 @@ export const MapSettingsPanel: React.FC = () => {
                 <select 
                   value={mapConfig.gridType} 
                   onChange={e => updateMapConfig({ gridType: e.target.value as MapConfig['gridType'] })}
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
                 >
                   <option value="square">Quadrados</option>
                   <option value="hex_v">Hexágonos (Verticais)</option>
@@ -292,7 +292,7 @@ export const MapSettingsPanel: React.FC = () => {
           <details className="glass-accordion">
             <summary><div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><EyeOff size={16} /> Névoa de Guerra (FOW)</div></summary>
             <div className="accordion-content">
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'white' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
                 <input 
                   type="checkbox" checked={mapConfig.fogOfWar || false}
                   onChange={e => updateMapConfig({ fogOfWar: e.target.checked })}
@@ -307,7 +307,7 @@ export const MapSettingsPanel: React.FC = () => {
                     <select 
                       value={mapConfig.fowShape || 'circle'} 
                       onChange={e => updateMapConfig({ fowShape: e.target.value as any })}
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
+                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
                     >
                       <option value="circle">Círculo</option>
                       <option value="square">Quadrado</option>
@@ -415,7 +415,7 @@ export const MapSettingsPanel: React.FC = () => {
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleReplaceImage(bg.id); }}
                         className="btn-icon" title="Trocar Imagem"
-                        style={{ padding: '0.3rem', border: '1px solid transparent', background: 'rgba(59,130,246,0.1)', color: '#93c5fd' }}
+                        style={{ padding: '0.3rem', border: '1px solid transparent', background: 'rgba(59,130,246,0.1)', color: 'var(--mana)' }}
                       >
                         <RefreshCw size={14} />
                       </button>

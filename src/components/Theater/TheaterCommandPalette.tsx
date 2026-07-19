@@ -152,7 +152,7 @@ export const TheaterCommandPalette: React.FC = () => {
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <Search size={18} color="#94a3b8" />
+          <Search size={18} color="var(--text-secondary)" />
           <input
             ref={inputRef}
             value={search}
@@ -161,15 +161,15 @@ export const TheaterCommandPalette: React.FC = () => {
             placeholder="Digite um comando... (ex: rolar)"
             style={{
               flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              color: 'white', fontSize: '1rem', marginLeft: '12px'
+              color: 'var(--text-primary)', fontSize: '1rem', marginLeft: '12px'
             }}
           />
-          <div style={{ fontSize: '0.6rem', color: '#64748b', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>ESC para fechar</div>
+          <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>ESC para fechar</div>
         </div>
 
         <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '8px 0' }}>
           {filtered.length === 0 ? (
-            <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
               Nenhum comando encontrado.
             </div>
           ) : (

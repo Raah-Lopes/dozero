@@ -98,7 +98,7 @@ export const PropInteractionPanel: React.FC = () => {
             type="text" 
             value={prop.name} 
             onChange={e => updateMapProp(propId, { name: e.target.value })}
-            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem', borderRadius: '4px' }}
+            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '4px' }}
           />
         </label>
 
@@ -109,7 +109,7 @@ export const PropInteractionPanel: React.FC = () => {
             onChange={e => updateMapProp(propId, { description: e.target.value })}
             rows={4}
             placeholder="Ex: Dentro do baú há 50 moedas de ouro..."
-            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem', borderRadius: '4px', resize: 'vertical' }}
+            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '4px', resize: 'vertical' }}
           />
         </label>
 

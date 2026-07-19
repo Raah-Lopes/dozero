@@ -183,7 +183,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
             <Swords size={48} opacity={0.2} />
             <p>Ninguém na Iniciativa.</p>
             {isGM && (
-              <button onClick={handleRollAll} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(255,122,0, 0.3)' }}>
+              <button onClick={handleRollAll} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(255,122,0, 0.3)' }}>
                 <Dices size={18} /> Auto-Rolar do Mapa
               </button>
             )}
@@ -219,28 +219,28 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span style={{ fontWeight: 'bold', color: isCurrentTurn ? '#fbbf24' : isNextTurn ? '#60a5fa' : 'white', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {p.name}
-                      {isNextTurn && <span style={{ fontSize: '0.65rem', marginLeft: '6px', color: '#60a5fa', fontWeight: 600 }}>EM ESPERA</span>}
+                      {isNextTurn && <span style={{ fontSize: '0.65rem', marginLeft: '6px', color: 'var(--mana)', fontWeight: 600 }}>EM ESPERA</span>}
                     </span>
                     <span style={{ fontWeight: '900', fontSize: '1.2rem', color: isCurrentTurn ? '#fbbf24' : 'var(--text-primary)', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{p.initiative}</span>
                   </div>
 
                   {isMinion ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                      <span style={{ fontSize: '0.7rem', color: '#fbbf24', fontWeight: 'bold' }}>LACAIO</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>LACAIO</span>
                       <div style={{ display: 'flex', gap: '3px' }}>
                         {Array.from({ length: p.minionMaxHits! }).map((_, i) => (
                           <div key={i} style={{ width: '14px', height: '14px', borderRadius: '50%', background: i < (p.minionHits ?? 0) ? '#ef4444' : 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: i < (p.minionHits ?? 0) ? '0 0 6px rgba(239,68,68,0.5)' : 'none', transition: 'all 0.3s' }} />
                         ))}
                       </div>
                       {isGM && (p.minionHits ?? 0) > 0 && (
-                        <button onClick={() => hitMinion(p.tokenId)} style={{ background: 'rgba(239,68,68,0.3)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', padding: '1px 6px', fontSize: '9px', cursor: 'pointer', fontWeight: 'bold' }}>HIT!</button>
+                        <button onClick={() => hitMinion(p.tokenId)} style={{ background: 'rgba(239,68,68,0.3)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', padding: '1px 6px', fontSize: '9px', cursor: 'pointer', fontWeight: 'bold' }}>HIT!</button>
                       )}
                     </div>
                   ) : tokensMap.has(p.tokenId) && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#fca5a5', fontWeight: 'bold' }}>HP: {tokensMap.get(p.tokenId).hp ?? 0}/{tokensMap.get(p.tokenId).maxHp ?? 1}</span>
-                      <span style={{ fontSize: '0.75rem', color: '#93c5fd', fontWeight: 'bold' }}>PM: {tokensMap.get(p.tokenId).mana ?? 0}/{tokensMap.get(p.tokenId).maxMana ?? 0}</span>
-                      <span style={{ fontSize: '0.75rem', color: '#d1d5db', fontWeight: 'bold' }}>🛡️ {tokensMap.get(p.tokenId).defesa ?? 0}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 'bold' }}>HP: {tokensMap.get(p.tokenId).hp ?? 0}/{tokensMap.get(p.tokenId).maxHp ?? 1}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--mana)', fontWeight: 'bold' }}>PM: {tokensMap.get(p.tokenId).mana ?? 0}/{tokensMap.get(p.tokenId).maxMana ?? 0}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>🛡️ {tokensMap.get(p.tokenId).defesa ?? 0}</span>
                       <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }} onClick={(e) => { e.stopPropagation(); toggleAction(p.tokenId, p.actionsRemaining ?? 3); }} title="Economia de 3 Ações">
                         {Array.from({ length: 3 }).map((_, i) => (
                           <div key={i} style={{
@@ -257,10 +257,10 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
 
                   {isGM && !isMinion && tokensMap.has(p.tokenId) && (
                     <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                      <button onClick={() => adjustHP(p.tokenId, -5)} style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-5 HP</button>
-                      <button onClick={() => adjustHP(p.tokenId, -1)} style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-1 HP</button>
-                      <button onClick={() => adjustHP(p.tokenId, 1)} style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+1 HP</button>
-                      <button onClick={() => adjustHP(p.tokenId, 5)} style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+5 HP</button>
+                      <button onClick={() => adjustHP(p.tokenId, -5)} style={{ background: 'rgba(239,68,68,0.2)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-5 HP</button>
+                      <button onClick={() => adjustHP(p.tokenId, -1)} style={{ background: 'rgba(239,68,68,0.2)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-1 HP</button>
+                      <button onClick={() => adjustHP(p.tokenId, 1)} style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+1 HP</button>
+                      <button onClick={() => adjustHP(p.tokenId, 5)} style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+5 HP</button>
                     </div>
                   )}
                   
@@ -277,20 +277,20 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
 
                   {isGM && !massAttackMode && (
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      <button onClick={() => removeCombatParticipant(p.tokenId)} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Skull size={10} /> Matar</button>
-                      <button onClick={() => { if ((window as any).rollLootForNPC) (window as any).rollLootForNPC(p.name, 'Nv 3'); else alert('Abra o Gerador de NPCs!'); }} style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: '#fcd34d', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>💰 Loot</button>
-                      <button onClick={() => setAddingConditionTo(addingConditionTo === p.tokenId ? null : p.tokenId)} style={{ background: addingConditionTo === p.tokenId ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.3)', color: '#d8b4fe', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><PlusCircle size={10} /> Status</button>
+                      <button onClick={() => removeCombatParticipant(p.tokenId)} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Skull size={10} /> Matar</button>
+                      <button onClick={() => { if ((window as any).rollLootForNPC) (window as any).rollLootForNPC(p.name, 'Nv 3'); else alert('Abra o Gerador de NPCs!'); }} style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--warning)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>💰 Loot</button>
+                      <button onClick={() => setAddingConditionTo(addingConditionTo === p.tokenId ? null : p.tokenId)} style={{ background: addingConditionTo === p.tokenId ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.3)', color: 'var(--accent-primary)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><PlusCircle size={10} /> Status</button>
                       <button onClick={() => toggleMinion(p.tokenId)} style={{ background: isMinion ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.05)', border: `1px solid ${isMinion ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.1)'}`, color: isMinion ? '#fcd34d' : '#94a3b8', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Target size={10} /> {isMinion ? 'Normal' : 'Lacaio'}</button>
                     </div>
                   )}
 
                   {addingConditionTo === p.tokenId && (
                     <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
-                      <div style={{ fontSize: '0.7rem', color: '#d8b4fe', marginBottom: '4px', fontWeight: 'bold' }}>Novo Status</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', marginBottom: '4px', fontWeight: 'bold' }}>Novo Status</div>
                       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Sangramento', durationTurns: 3, type: 'damage', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.3)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>🩸 Sangramento (3t/5d)</button>
-                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Veneno', durationTurns: 5, type: 'damage', value: 2 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(16,185,129,0.3)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>☠️ Veneno (5t/2d)</button>
-                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Regeneração', durationTurns: 3, type: 'heal', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(59,130,246,0.3)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>💚 Regeneração (3t/5c)</button>
+                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Sangramento', durationTurns: 3, type: 'damage', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>🩸 Sangramento (3t/5d)</button>
+                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Veneno', durationTurns: 5, type: 'damage', value: 2 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(16,185,129,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>☠️ Veneno (5t/2d)</button>
+                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Regeneração', durationTurns: 3, type: 'heal', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(59,130,246,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>💚 Regeneração (3t/5c)</button>
                       </div>
                     </div>
                   )}
@@ -304,15 +304,15 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
       {/* PPR: Painel de Urgência */}
       {isGM && isActive && showUrgency && (
         <div style={{ padding: '8px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: '#fca5a5', display: 'flex', alignItems: 'center', gap: '4px' }}><Zap size={12} /> GATILHOS DE URGÊNCIA</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '4px' }}><Zap size={12} /> GATILHOS DE URGÊNCIA</div>
           <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
             {URGENCY_TRIGGERS.map((t, i) => (
-              <button key={i} onClick={() => sendUrgency(t.msg)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600 }}>{t.icon} {t.label}</button>
+              <button key={i} onClick={() => sendUrgency(t.msg)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600 }}>{t.icon} {t.label}</button>
             ))}
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
-            <input value={customUrgency} onChange={e => setCustomUrgency(e.target.value)} placeholder="Urgência customizada..." style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px', padding: '4px 8px', color: '#f1f5f9', fontSize: '11px', outline: 'none' }} />
-            <button onClick={() => { if (customUrgency.trim()) { sendUrgency(`⚠️ <b>PERIGO!</b> ${customUrgency}`); setCustomUrgency(''); } }} style={{ background: 'rgba(239,68,68,0.3)', border: 'none', color: '#fca5a5', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontWeight: 700 }}><Send size={12} /></button>
+            <input value={customUrgency} onChange={e => setCustomUrgency(e.target.value)} placeholder="Urgência customizada..." style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px', padding: '4px 8px', color: 'var(--text-primary)', fontSize: '11px', outline: 'none' }} />
+            <button onClick={() => { if (customUrgency.trim()) { sendUrgency(`⚠️ <b>PERIGO!</b> ${customUrgency}`); setCustomUrgency(''); } }} style={{ background: 'rgba(239,68,68,0.3)', border: 'none', color: 'var(--danger)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontWeight: 700 }}><Send size={12} /></button>
           </div>
         </div>
       )}
@@ -320,15 +320,15 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
       {/* PPR: Prompts de Transição */}
       {isGM && isActive && showPrompts && (
         <div style={{ padding: '8px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '4px' }}><MessageSquare size={12} /> TRANSIÇÃO NARRATIVA</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--mana)', display: 'flex', alignItems: 'center', gap: '4px' }}><MessageSquare size={12} /> TRANSIÇÃO NARRATIVA</div>
           <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
             {PROMPT_MACROS.map((m, i) => (
-              <button key={i} onClick={() => setPromptText(m.template.replace('{next}', nextTurnName))} style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#93c5fd', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer' }}>{m.label}</button>
+              <button key={i} onClick={() => setPromptText(m.template.replace('{next}', nextTurnName))} style={{ background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: 'var(--mana)', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer' }}>{m.label}</button>
             ))}
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
-            <input value={promptText} onChange={e => setPromptText(e.target.value)} placeholder="Narração do mestre..." style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '6px', padding: '4px 8px', color: '#f1f5f9', fontSize: '11px', outline: 'none' }} onKeyDown={e => e.key === 'Enter' && sendPrompt()} />
-            <button onClick={sendPrompt} style={{ background: 'rgba(59,130,246,0.3)', border: 'none', color: '#93c5fd', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontWeight: 700 }}><Send size={12} /></button>
+            <input value={promptText} onChange={e => setPromptText(e.target.value)} placeholder="Narração do mestre..." style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '6px', padding: '4px 8px', color: 'var(--text-primary)', fontSize: '11px', outline: 'none' }} onKeyDown={e => e.key === 'Enter' && sendPrompt()} />
+            <button onClick={sendPrompt} style={{ background: 'rgba(59,130,246,0.3)', border: 'none', color: 'var(--mana)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontWeight: 700 }}><Send size={12} /></button>
           </div>
         </div>
       )}
@@ -336,18 +336,18 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
       {/* PPR: Stakes / Climax */}
       {isGM && showStakes && (
         <div style={{ padding: '10px', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#d8b4fe' }}>🎲 Rolagem Climática — Defina as Consequências</div>
+          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-primary)' }}>🎲 Rolagem Climática — Defina as Consequências</div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, color: '#6ee7b7', marginBottom: '3px' }}>✅ SUCESSO</div>
-              <input value={stakesSuccess} onChange={e => setStakesSuccess(e.target.value)} placeholder="O que acontece?" style={{ width: '100%', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '6px', padding: '6px 8px', color: '#f1f5f9', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--success)', marginBottom: '3px' }}>✅ SUCESSO</div>
+              <input value={stakesSuccess} onChange={e => setStakesSuccess(e.target.value)} placeholder="O que acontece?" style={{ width: '100%', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '6px', padding: '6px 8px', color: 'var(--text-primary)', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5', marginBottom: '3px' }}>❌ FALHA</div>
-              <input value={stakesFailure} onChange={e => setStakesFailure(e.target.value)} placeholder="O que acontece?" style={{ width: '100%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '6px 8px', color: '#f1f5f9', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }} />
+              <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--danger)', marginBottom: '3px' }}>❌ FALHA</div>
+              <input value={stakesFailure} onChange={e => setStakesFailure(e.target.value)} placeholder="O que acontece?" style={{ width: '100%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '6px 8px', color: 'var(--text-primary)', fontSize: '11px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
           </div>
-          <button onClick={launchClimaxRoll} style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.4), rgba(236,72,153,0.4))', border: '1px solid rgba(168,85,247,0.5)', color: 'white', borderRadius: '8px', padding: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}>🎲 ROLAR COM CONSEQUÊNCIAS!</button>
+          <button onClick={launchClimaxRoll} style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.4), rgba(236,72,153,0.4))', border: '1px solid rgba(168,85,247,0.5)', color: 'var(--text-primary)', borderRadius: '8px', padding: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}>🎲 ROLAR COM CONSEQUÊNCIAS!</button>
         </div>
       )}
 
@@ -356,21 +356,21 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: 'auto' }}>
           {isActive && (
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              <button onClick={() => { setShowUrgency(!showUrgency); setShowPrompts(false); setShowStakes(false); }} style={{ flex: 1, background: showUrgency ? 'rgba(239,68,68,0.25)' : 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Zap size={12} /> Urgência</button>
-              <button onClick={() => { setShowPrompts(!showPrompts); setShowUrgency(false); setShowStakes(false); }} style={{ flex: 1, background: showPrompts ? 'rgba(59,130,246,0.25)' : 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', color: '#93c5fd', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><MessageSquare size={12} /> Narrar</button>
-              <button onClick={() => { setShowStakes(!showStakes); setShowUrgency(false); setShowPrompts(false); }} style={{ flex: 1, background: showStakes ? 'rgba(168,85,247,0.25)' : 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#d8b4fe', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Flame size={12} /> Clímax</button>
-              <button onClick={() => { setMassAttackMode(!massAttackMode); setMassAttackSelected([]); }} style={{ flex: 1, background: massAttackMode ? 'rgba(251,191,36,0.25)' : 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: '#fcd34d', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Swords size={12} /> Massa</button>
+              <button onClick={() => { setShowUrgency(!showUrgency); setShowPrompts(false); setShowStakes(false); }} style={{ flex: 1, background: showUrgency ? 'rgba(239,68,68,0.25)' : 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Zap size={12} /> Urgência</button>
+              <button onClick={() => { setShowPrompts(!showPrompts); setShowUrgency(false); setShowStakes(false); }} style={{ flex: 1, background: showPrompts ? 'rgba(59,130,246,0.25)' : 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', color: 'var(--mana)', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><MessageSquare size={12} /> Narrar</button>
+              <button onClick={() => { setShowStakes(!showStakes); setShowUrgency(false); setShowPrompts(false); }} style={{ flex: 1, background: showStakes ? 'rgba(168,85,247,0.25)' : 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: 'var(--accent-primary)', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Flame size={12} /> Clímax</button>
+              <button onClick={() => { setMassAttackMode(!massAttackMode); setMassAttackSelected([]); }} style={{ flex: 1, background: massAttackMode ? 'rgba(251,191,36,0.25)' : 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--warning)', padding: '5px 8px', borderRadius: '6px', fontSize: '10px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Swords size={12} /> Massa</button>
             </div>
           )}
 
           {massAttackMode && massAttackSelected.length > 0 && (
-            <button onClick={executeMassAttack} style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.4), rgba(251,191,36,0.4))', border: '1px solid rgba(251,191,36,0.5)', color: 'white', borderRadius: '8px', padding: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}>⚔️ ATACAR {massAttackSelected.length} ALVOS!</button>
+            <button onClick={executeMassAttack} style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.4), rgba(251,191,36,0.4))', border: '1px solid rgba(251,191,36,0.5)', color: 'var(--text-primary)', borderRadius: '8px', padding: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}>⚔️ ATACAR {massAttackSelected.length} ALVOS!</button>
           )}
 
           {isActive && (
             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-              <Clock size={12} color="#64748b" />
-              <span style={{ fontSize: '10px', color: '#64748b' }}>Timer:</span>
+              <Clock size={12} color="var(--text-secondary)" />
+              <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Timer:</span>
               {[0, 30, 60, 90].map(s => (
                 <button key={s} onClick={() => { setTimerDuration(s * 1000); if (s > 0) { state.combat.set('timerStart', Date.now()); state.combat.set('timerDuration', s * 1000); state.combat.set('timerPaused', false); } else { state.combat.set('timerDuration', 0); } }} style={{ background: timerDuration === s * 1000 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: timerDuration === s * 1000 ? '#f1f5f9' : '#64748b', borderRadius: '4px', padding: '2px 6px', fontSize: '9px', cursor: 'pointer', fontWeight: 600 }}>{s === 0 ? 'Off' : `${s}s`}</button>
               ))}
@@ -383,7 +383,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
               {isActive ? <><Square size={16} /> Parar</> : <><Play size={16} /> Iniciar</>}
             </button>
             {isActive && (
-              <button onClick={handleNextTurn} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', flex: 1, justifyContent: 'center', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', boxShadow: '0 0 10px rgba(255,122,0, 0.4)' }}>
+              <button onClick={handleNextTurn} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', flex: 1, justifyContent: 'center', background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', boxShadow: '0 0 10px rgba(255,122,0, 0.4)' }}>
                 Passar <ChevronRight size={18} />
               </button>
             )}

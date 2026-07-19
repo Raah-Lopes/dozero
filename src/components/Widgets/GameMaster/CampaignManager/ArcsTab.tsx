@@ -7,7 +7,7 @@ import { WikiLinkedTextarea } from './Shared';
 // Minimal mock for STATUS_CONFIG used here. Ideally imported from a shared constants file.
 const STATUS_CONFIG = {
   arc: {
-    planned: { label: 'Planejado', color: '#94a3b8', border: 'rgba(148,163,184,0.3)', bg: 'rgba(15,23,42,0.6)' },
+    planned: { label: 'Planejado', color: 'var(--text-secondary)', border: 'rgba(148,163,184,0.3)', bg: 'rgba(15,23,42,0.6)' },
     active: { label: 'Ativo', color: '#38bdf8', border: 'rgba(56,189,248,0.3)', bg: 'rgba(12,74,110,0.4)' },
     completed: { label: 'Concluído', color: '#22c55e', border: 'rgba(34,197,94,0.3)', bg: 'rgba(20,83,45,0.4)' },
   }
@@ -27,7 +27,7 @@ const EmptyState = ({ icon, message, sub }: any) => (
     borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.06)'
   }}>
     <div style={{ color: 'rgba(148,163,184,0.3)', marginBottom: '12px' }}>{icon}</div>
-    <p style={{ margin: 0, fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem' }}>{message}</p>
+    <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{message}</p>
     {sub && <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'rgba(148,163,184,0.5)' }}>{sub}</p>}
   </div>
 );

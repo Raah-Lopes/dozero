@@ -126,7 +126,7 @@ const STATUS_CONFIG = {
     completed: { label: 'Concluída', color: '#a855f7', bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.3)', icon: CheckCircle },
   },
   arc: {
-    planned:   { label: 'Planejado', color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', border: 'rgba(148,163,184,0.25)' },
+    planned:   { label: 'Planejado', color: 'var(--text-secondary)', bg: 'rgba(148,163,184,0.10)', border: 'rgba(148,163,184,0.25)' },
     active:    { label: 'Ativo',     color: '#38bdf8', bg: 'rgba(56,189,248,0.12)',  border: 'rgba(56,189,248,0.3)'  },
     completed: { label: 'Concluído', color: '#a855f7', bg: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.3)' },
   },
@@ -138,7 +138,7 @@ const STATUS_CONFIG = {
     active:    { label: 'Ativa',     color: '#38bdf8', bg: 'rgba(56,189,248,0.12)', border: 'rgba(56,189,248,0.3)', icon: Play },
     completed: { label: 'Concluída', color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  border: 'rgba(34,197,94,0.3)',  icon: CheckCircle },
     failed:    { label: 'Fracassada', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.3)',  icon: AlertTriangle },
-    abandoned: { label: 'Abandonada', color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.3)', icon: PauseCircle },
+    abandoned: { label: 'Abandonada', color: 'var(--text-secondary)', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.3)', icon: PauseCircle },
   },
 };
 
@@ -543,7 +543,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
         }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 2px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '4px' }}>
-            <BookOpen size={14} color="#a855f7" />
+            <BookOpen size={14} color="var(--accent-primary)" />
             <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(148,163,184,0.8)' }}>
               Campanhas
             </span>
@@ -635,7 +635,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                     background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.35)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
-                    <Sparkles size={18} color="#a855f7" />
+                    <Sparkles size={18} color="var(--accent-primary)" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <input

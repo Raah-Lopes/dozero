@@ -127,7 +127,7 @@ export function OracleWidgetV2({ onClose }: { onClose: () => void }) {
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: '8px',
-                color: 'white',
+                color: 'var(--text-primary)',
                 outline: 'none',
                 boxSizing: 'border-box'
               }}
@@ -148,7 +148,7 @@ export function OracleWidgetV2({ onClose }: { onClose: () => void }) {
             <div style={{ fontSize: '11px', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: 'bold', marginBottom: '4px' }}>
               Último: {lastResult.table}
             </div>
-            <div style={{ fontSize: '14px', color: 'white', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '14px', color: 'var(--text-primary)', lineHeight: '1.4' }}>
               {lastResult.result}
             </div>
           </div>
@@ -200,7 +200,7 @@ export function OracleWidgetV2({ onClose }: { onClose: () => void }) {
             <div style={{ marginBottom: '16px' }}>
               <div 
                 onClick={() => toggleCategory('favs')}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '8px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '6px', border: '1px solid rgba(251, 191, 36, 0.2)', color: '#fbbf24', fontWeight: 'bold' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '8px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '6px', border: '1px solid rgba(251, 191, 36, 0.2)', color: 'var(--warning)', fontWeight: 'bold' }}
               >
                 {openCategories['favs'] !== false ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                 <Star size={16} fill="#fbbf24" />
@@ -211,7 +211,7 @@ export function OracleWidgetV2({ onClose }: { onClose: () => void }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px', paddingLeft: '8px', borderLeft: '2px solid rgba(251, 191, 36, 0.2)' }}>
                   {favoriteTables.map(t => (
                     <div key={`fav-${t.id}`} className="table-row" onClick={() => rollTable(t)}>
-                      <span style={{ fontSize: '13px', color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}><Dices size={14} color="var(--accent-primary)"/> {t.name}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}><Dices size={14} color="var(--accent-primary)"/> {t.name}</span>
                       <div className="fav-btn active" onClick={(e) => toggleFavorite(e, t.id)}>
                         <Star size={16} />
                       </div>

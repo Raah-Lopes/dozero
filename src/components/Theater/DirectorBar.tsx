@@ -13,7 +13,7 @@ const MOODS: { value: MoodType; label: string; emoji: string; color: string }[] 
   { value: 'horror',    label: 'Horror',   emoji: '☠',  color: '#dc2626' },
   { value: 'adventure', label: 'Aventura', emoji: '★',  color: '#f59e0b' },
   { value: 'victory',   label: 'Vitória',  emoji: '✦',  color: '#10b981' },
-  { value: 'sadness',   label: 'Tristeza', emoji: '◆',  color: '#64748b' },
+  { value: 'sadness',   label: 'Tristeza', emoji: '◆',  color: 'var(--text-secondary)' },
   { value: 'mystery',   label: 'Mistério', emoji: '⬟',  color: '#8b5cf6' },
 ];
 

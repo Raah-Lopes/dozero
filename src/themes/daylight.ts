@@ -24,9 +24,9 @@ export const daylightTheme: ThemeDefinition = {
   mana: '#1d4ed8', // blue-700
 
   glassBg: 'rgba(255, 255, 255, 0.95)', // quase sólido para destacar do fundo
-  glassBorder: 'rgba(0, 0, 0, 0.2)', // bordas mais visíveis
-  glassBorderHighlight: 'rgba(29, 78, 216, 0.5)',
-  glassShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.12)', // sombra ligeiramente mais forte
+  glassBorder: 'rgba(0, 0, 0, 0.4)', // bordas mais visíveis e escuras
+  glassBorderHighlight: 'rgba(0, 0, 0, 0.8)',
+  glassShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.15)', // sombra ligeiramente mais forte
 
   fontBody: "'Inter', sans-serif",
   fontDisplay: "'Outfit', sans-serif",

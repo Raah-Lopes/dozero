@@ -529,7 +529,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
           style={{
             position: 'absolute', top: '10px', left: '10px', zIndex: 10,
             background: 'rgba(15, 23, 42, 0.9)', border: '1px solid var(--glass-border)',
-            color: 'white', padding: '8px 12px', borderRadius: '8px',
+            color: 'var(--text-primary)', padding: '8px 12px', borderRadius: '8px',
             display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
             boxShadow: '0 4px 10px rgba(0,0,0,0.5)'
           }}
@@ -570,7 +570,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
               Sua Wiki Local
             </div>
             <div style={{ display: 'flex', gap: '5px' }}>
-              <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar Arquivos" style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px' }}>
+              <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar Arquivos" style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--mana)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px' }}>
                 <RefreshCw size={14} className={syncing ? 'spin' : ''} />
               </button>
               {isMobile && (
@@ -731,7 +731,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                   <button 
                     onClick={handleSave} 
                     disabled={saving}
-                    style={{ background: 'var(--accent-secondary)', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    style={{ background: 'var(--accent-secondary)', color: 'var(--text-primary)', border: 'none', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
                     <Save size={14} />
                     {saving ? 'Salvando...' : (justSaved ? '✅ Salvo!' : 'Salvar Local')}
                   </button>

@@ -72,7 +72,7 @@ export const TextContextBar: React.FC = () => {
           type="number"
           value={textData.fontSize}
           onChange={e => updateMapTextProps(editingId, { fontSize: Number(e.target.value) })}
-          style={{ width: '40px', background: 'transparent', border: 'none', color: 'white', fontSize: '0.85rem', textAlign: 'center' }}
+          style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.85rem', textAlign: 'center' }}
           min="12"
           max="200"
         />
@@ -87,7 +87,7 @@ export const TextContextBar: React.FC = () => {
           type="number"
           value={textData.wordWrapWidth || 300}
           onChange={e => updateMapTextProps(editingId, { wordWrapWidth: Number(e.target.value) })}
-          style={{ width: '45px', background: 'transparent', border: 'none', color: 'white', fontSize: '0.85rem', textAlign: 'center' }}
+          style={{ width: '45px', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.85rem', textAlign: 'center' }}
           min="50"
           max="2000"
         />

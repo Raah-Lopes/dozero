@@ -117,7 +117,7 @@ function EnemyCompactCard({ enemy }: { enemy: TheaterEnemy }) {
               onClick={e => e.stopPropagation()}
               style={{
                 flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(239,68,68,0.4)',
-                borderRadius: '4px', color: 'white', padding: '2px 6px', fontSize: '0.8rem'
+                borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 6px', fontSize: '0.8rem'
               }}
             />
           ) : (
@@ -135,7 +135,7 @@ function EnemyCompactCard({ enemy }: { enemy: TheaterEnemy }) {
 
         {/* Action icons right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: expanded ? 1 : 0.4 }}>
-          {expanded ? <ChevronUp size={14} color="#94a3b8" /> : <ChevronDown size={14} color="#94a3b8" />}
+          {expanded ? <ChevronUp size={14} color="var(--text-secondary)" /> : <ChevronDown size={14} color="var(--text-secondary)" />}
         </div>
       </div>
 
@@ -191,7 +191,7 @@ function EnemyCompactCard({ enemy }: { enemy: TheaterEnemy }) {
             </div>
             
             <div style={{ display: 'flex', gap: '4px' }}>
-              <button onClick={handleClone} title="Clonar Ameaça" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}>
+              <button onClick={handleClone} title="Clonar Ameaça" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}>
                 <Copy size={13} />
               </button>
               <button onClick={(e) => { e.stopPropagation(); removeTheaterEnemy(enemy.id); }} title="Remover" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', cursor: 'pointer', padding: '4px', borderRadius: '4px' }}>
@@ -230,7 +230,7 @@ export const EnemyArsenal: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Skull size={15} color="#fca5a5" /> Arsenal de Ameaças
+          <Skull size={15} color="var(--danger)" /> Arsenal de Ameaças
         </span>
         <button onClick={() => setAddingMode(!addingMode)} style={{ background: 'transparent', border: 'none', color: addingMode ? '#ef4444' : '#475569', cursor: 'pointer' }}>
           {addingMode ? <X size={15} /> : <Plus size={15} />}
@@ -247,17 +247,17 @@ export const EnemyArsenal: React.FC = () => {
               onChange={e => setAddingName(e.target.value)}
               placeholder="Nome (ex: Goblin 1)"
               onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setAddingMode(false); }}
-              style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(239,68,68,0.2)', color: 'white', fontSize: '0.82rem', width: '100%' }}
+              style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--text-primary)', fontSize: '0.82rem', width: '100%' }}
             />
-            <button onClick={handleAdd} style={{ padding: '0 10px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: '#fca5a5', cursor: 'pointer' }}>
+            <button onClick={handleAdd} style={{ padding: '0 10px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer' }}>
               <Plus size={14} />
             </button>
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingLeft: '2px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#94a3b8', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
               <input type="checkbox" checked={isElite} onChange={e => setIsElite(e.target.checked)} style={{ cursor: 'pointer' }} /> Elite
             </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#94a3b8', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
               <input type="checkbox" checked={isBoss} onChange={e => setIsBoss(e.target.checked)} style={{ cursor: 'pointer' }} /> Boss
             </label>
           </div>
@@ -274,7 +274,7 @@ export const EnemyArsenal: React.FC = () => {
         )}
 
         {bosses.length > 0 && (
-          <GlassAccordion title={<><span style={{ color: '#fca5a5' }}>👑</span> Chefes ({bosses.length})</>} defaultOpen>
+          <GlassAccordion title={<><span style={{ color: 'var(--danger)' }}>👑</span> Chefes ({bosses.length})</>} defaultOpen>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {bosses.map(e => <EnemyCompactCard key={e.id} enemy={e} />)}
             </div>
@@ -290,7 +290,7 @@ export const EnemyArsenal: React.FC = () => {
         )}
 
         {minions.length > 0 && (
-          <GlassAccordion title={<><span style={{ color: '#94a3b8' }}>🗡️</span> Lacaios ({minions.length})</>} defaultOpen>
+          <GlassAccordion title={<><span style={{ color: 'var(--text-secondary)' }}>🗡️</span> Lacaios ({minions.length})</>} defaultOpen>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {minions.map(e => <EnemyCompactCard key={e.id} enemy={e} />)}
             </div>

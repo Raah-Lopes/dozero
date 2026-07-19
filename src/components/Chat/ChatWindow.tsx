@@ -208,8 +208,8 @@ export const ChatWindow: React.FC = () => {
             style={{ background: 'linear-gradient(135deg, #4c1d95, #7c3aed)', padding: '16px', borderRadius: '12px', cursor: 'pointer', textAlign: 'center', marginBottom: '8px', border: '2px solid #a78bfa', boxShadow: '0 4px 16px rgba(124,58,237,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
             onClick={() => msg.id && setOpenedWhispers(new Set([...openedWhispers, msg.id]))}
           >
-            <Mail size={24} color="#f3f4f6" />
-            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.05em' }}>CARTA SECRETA</div>
+            <Mail size={24} color="var(--text-primary)" />
+            <div style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.05em' }}>CARTA SECRETA</div>
             <div style={{ color: '#e5e7eb', fontSize: '0.75rem' }}>Para: <span style={{color: '#facc15'}}>{msg.alvo}</span></div>
             <div style={{ color: '#9ca3af', fontSize: '0.65rem' }}>De: {autorName}</div>
           </div>
@@ -335,7 +335,7 @@ export const ChatWindow: React.FC = () => {
       onDragOver={handleDragOver} 
       onDragLeave={handleDragLeave} 
       onDrop={handleDrop}
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', color: 'white', position: 'relative' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', color: 'var(--text-primary)', position: 'relative' }}
     >
       {isDragging && (
         <div className="chat-drop-overlay">
@@ -346,11 +346,11 @@ export const ChatWindow: React.FC = () => {
       
       {/* TABS */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', alignItems: 'center' }}>
-        <button onClick={() => setTab('geral')} style={{ flex: 1, padding: '8px', background: tab === 'geral' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'white', border: 'none' }}>Geral</button>
-        <button onClick={() => setTab('in-game')} style={{ flex: 1, padding: '8px', background: tab === 'in-game' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'white', border: 'none' }}>In-Game</button>
-        <button onClick={() => setTab('sistema')} style={{ flex: 1, padding: '8px', background: tab === 'sistema' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'white', border: 'none' }}>Sistema</button>
+        <button onClick={() => setTab('geral')} style={{ flex: 1, padding: '8px', background: tab === 'geral' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Geral</button>
+        <button onClick={() => setTab('in-game')} style={{ flex: 1, padding: '8px', background: tab === 'in-game' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>In-Game</button>
+        <button onClick={() => setTab('sistema')} style={{ flex: 1, padding: '8px', background: tab === 'sistema' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Sistema</button>
         
-        <button onClick={() => { setIsSelectMode(!isSelectMode); setSelectedIds(new Set()); }} title="Modo Seleção" style={{ padding: '8px', background: isSelectMode ? 'rgba(255,255,255,0.2)' : 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>
+        <button onClick={() => { setIsSelectMode(!isSelectMode); setSelectedIds(new Set()); }} title="Modo Seleção" style={{ padding: '8px', background: isSelectMode ? 'rgba(255,255,255,0.2)' : 'transparent', color: 'var(--text-primary)', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>
           {isSelectMode ? 'Cancelar' : 'Selecionar'}
         </button>
         {isSelectMode && selectedIds.size > 0 && (
@@ -416,7 +416,7 @@ export const ChatWindow: React.FC = () => {
             <input 
               value={pollQuestion} onChange={e => setPollQuestion(e.target.value)}
               placeholder="Sua pergunta..."
-              style={{ padding: '6px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px', fontSize: '0.85rem' }}
+              style={{ padding: '6px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }}
             />
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -425,7 +425,7 @@ export const ChatWindow: React.FC = () => {
                   <input 
                     value={opt} onChange={e => { const newOpts = [...pollOptions]; newOpts[idx] = e.target.value; setPollOptions(newOpts); }}
                     placeholder={`Opção ${idx + 1}`}
-                    style={{ flex: 1, padding: '4px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px', fontSize: '0.8rem' }}
+                    style={{ flex: 1, padding: '4px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.8rem' }}
                   />
                   {pollOptions.length > 2 && (
                     <button onClick={() => { const newOpts = [...pollOptions]; newOpts.splice(idx, 1); setPollOptions(newOpts); }} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}><X size={14} /></button>
@@ -454,7 +454,7 @@ export const ChatWindow: React.FC = () => {
                     alert('Preencha a pergunta e no mínimo 2 opções.');
                   }
                 }} 
-                style={{ padding: '6px 12px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer', fontSize: '0.85rem' }}
+                style={{ padding: '6px 12px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}
               >
                 Enviar Enquete
               </button>
@@ -481,12 +481,12 @@ export const ChatWindow: React.FC = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Mensagem ou /comando..."
-              style={{ flex: 1, padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+              style={{ flex: 1, padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px' }}
             />
-            <button onClick={() => setIsComposingPoll(true)} title="Criar Enquete" style={{ padding: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'white', cursor: 'pointer' }}>
+            <button onClick={() => setIsComposingPoll(true)} title="Criar Enquete" style={{ padding: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer' }}>
               <BarChart2 size={16} />
             </button>
-            <button onClick={handleSend} style={{ padding: '8px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer' }}>
+            <button onClick={handleSend} style={{ padding: '8px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer' }}>
               <Send size={16} />
             </button>
           </div>
@@ -500,7 +500,7 @@ export const ChatWindow: React.FC = () => {
             <button 
               onClick={(e) => { e.stopPropagation(); setLightboxImg(null); }}
               title="Fechar Imagem"
-              style={{ background: 'var(--danger)', border: 'none', color: 'white', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', zIndex: 100000 }}
+              style={{ background: 'var(--danger)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', zIndex: 100000 }}
             >
               <X size={24} />
             </button>

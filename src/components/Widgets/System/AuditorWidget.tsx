@@ -165,7 +165,7 @@ Seu objetivo é:
           <ShieldAlert size={20} />
           <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Auditor de Sistema (Linter)</h2>
         </div>
-        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
           <X size={20} />
         </button>
       </div>
@@ -175,7 +175,7 @@ Seu objetivo é:
         
         <div style={{ display: 'flex', gap: '1rem' }}>
           <div style={{ flex: 2 }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Chaves Obrigatórias (Padrão Ouro)</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Chaves Obrigatórias (Padrão Ouro)</label>
             <input 
               value={requiredKeys}
               onChange={e => setRequiredKeys(e.target.value)}
@@ -185,7 +185,7 @@ Seu objetivo é:
             />
           </div>
           <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Pasta Alvo (Opcional)</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Pasta Alvo (Opcional)</label>
             <input 
               value={folderFilter}
               onChange={e => setFolderFilter(e.target.value)}
@@ -199,7 +199,7 @@ Seu objetivo é:
         <button 
           onClick={handleScan}
           disabled={isScanning || isFixing}
-          style={{ width: '100%', padding: '1rem', background: '#9333ea', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}
+          style={{ width: '100%', padding: '1rem', background: '#9333ea', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}
         >
           {isScanning ? <RefreshCw size={18} className="spin" /> : <Search size={18} />}
           {isScanning ? 'Escaneando a Base...' : 'Escanear Inconsistências'}
@@ -208,13 +208,13 @@ Seu objetivo é:
         {problematicFiles.length > 0 && (
           <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ color: '#fca5a5', margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ color: 'var(--danger)', margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <AlertTriangle size={18} />
                 {problematicFiles.length} Documentos fora do Padrão
               </h3>
               <button 
                 onClick={() => setSelectedFiles(selectedFiles.length === problematicFiles.length ? [] : problematicFiles.map(f => f.path))}
-                style={{ background: 'transparent', border: '1px solid #fca5a5', color: '#fca5a5', padding: '0.3rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
+                style={{ background: 'transparent', border: '1px solid #fca5a5', color: 'var(--danger)', padding: '0.3rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}
               >
                 {selectedFiles.length === problematicFiles.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
               </button>
@@ -243,7 +243,7 @@ Seu objetivo é:
             <button 
               onClick={handleFixSelected}
               disabled={isFixing || selectedFiles.length === 0}
-              style={{ marginTop: '1rem', width: '100%', padding: '1rem', background: selectedFiles.length > 0 ? '#10b981' : '#475569', color: 'white', border: 'none', borderRadius: '8px', cursor: selectedFiles.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', transition: 'background 0.2s' }}
+              style={{ marginTop: '1rem', width: '100%', padding: '1rem', background: selectedFiles.length > 0 ? '#10b981' : '#475569', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: selectedFiles.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', transition: 'background 0.2s' }}
             >
               {isFixing ? <RefreshCw size={18} className="spin" /> : <Wand2 size={18} />}
               {isFixing ? `Corrigindo com IA (${progress.current}/${progress.total})...` : `Corrigir ${selectedFiles.length} selecionados (IA)`}
@@ -256,7 +256,7 @@ Seu objetivo é:
           <h3 style={{ color: '#67e8f9', margin: '0 0 1rem 0', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Upload size={18} /> Importar Ficha Externa (.MD)
           </h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1rem 0' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '0 0 1rem 0' }}>
             Faça upload de qualquer ficha .MD de outro sistema. A IA converte para o padrão DoZero.
           </p>
 
@@ -272,7 +272,7 @@ Seu objetivo é:
             <button
               onClick={handleImportAndFormat}
               disabled={!importedContent || isImporting}
-              style={{ padding: '0.6rem 1.2rem', background: importedContent && !isImporting ? '#0891b2' : '#475569', color: 'white', border: 'none', borderRadius: '6px', cursor: importedContent && !isImporting ? 'pointer' : 'not-allowed', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              style={{ padding: '0.6rem 1.2rem', background: importedContent && !isImporting ? '#0891b2' : '#475569', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: importedContent && !isImporting ? 'pointer' : 'not-allowed', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
               {isImporting ? <RefreshCw size={14} className="spin" /> : <Wand2 size={14} />}
               {isImporting ? 'Convertendo...' : 'Converter com IA'}

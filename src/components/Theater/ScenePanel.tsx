@@ -242,7 +242,7 @@ export const ScenePanel: React.FC = () => {
           onClick={() => exportSceneAsMarkdown(currentScene)}
           style={{
             background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)',
-            color: '#93c5fd', borderRadius: '6px', padding: '4px 8px', fontSize: '0.7rem',
+            color: 'var(--mana)', borderRadius: '6px', padding: '4px 8px', fontSize: '0.7rem',
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
           }}
           title="Salvar arquivo da cena"
@@ -284,7 +284,7 @@ export const ScenePanel: React.FC = () => {
             style={{ 
               background: 'rgba(168,85,247,0.7)', 
               border: '1px solid rgba(255,255,255,0.2)', 
-              color: 'white', 
+              color: 'var(--text-primary)', 
               borderRadius: '8px', 
               padding: '6px 10px', 
               fontSize: '0.75rem', 
@@ -311,14 +311,14 @@ export const ScenePanel: React.FC = () => {
                 onChange={e => setTitleDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { patchCurrentScene({ title: titleDraft }); setEditingTitle(false); } if (e.key === 'Escape') setEditingTitle(false); }}
                 onBlur={() => { if (titleDraft.trim()) { patchCurrentScene({ title: titleDraft.trim() }); } setEditingTitle(false); }}
-                style={{ flex: 1, background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(168,85,247,0.5)', borderRadius: '6px', color: 'white', padding: '6px 10px', fontSize: '1.1rem', fontFamily: 'var(--font-display)', fontWeight: 700 }}
+                style={{ flex: 1, background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(168,85,247,0.5)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', fontSize: '1.1rem', fontFamily: 'var(--font-display)', fontWeight: 700 }}
               />
-              <button onClick={() => { patchCurrentScene({ title: titleDraft }); setEditingTitle(false); }} style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '6px', color: '#6ee7b7', cursor: 'pointer', padding: '4px 8px' }}><Check size={14} /></button>
-              <button onClick={() => setEditingTitle(false)} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '6px', color: '#fca5a5', cursor: 'pointer', padding: '4px 8px' }}><X size={14} /></button>
+              <button onClick={() => { patchCurrentScene({ title: titleDraft }); setEditingTitle(false); }} style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '6px', color: 'var(--success)', cursor: 'pointer', padding: '4px 8px' }}><Check size={14} /></button>
+              <button onClick={() => setEditingTitle(false)} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer', padding: '4px 8px' }}><X size={14} /></button>
             </div>
           ) : (
             <h2
-              style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.3rem', color: 'white', textShadow: '0 2px 8px rgba(0,0,0,0.8)', cursor: 'text', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)', textShadow: '0 2px 8px rgba(0,0,0,0.8)', cursor: 'text', display: 'flex', alignItems: 'center', gap: '8px' }}
               onDoubleClick={e => { e.stopPropagation(); setTitleDraft(currentScene.title); setEditingTitle(true); }}
               title="Duplo clique para editar"
             >
@@ -357,7 +357,7 @@ export const ScenePanel: React.FC = () => {
       {/* Mood & Weather & Audio & Transition controls */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '120px' }}>
-          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '6px' }}>Atmosfera</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '6px' }}>Atmosfera</label>
           <select
             value={mood}
             onChange={e => setTheaterMood(e.target.value as MoodType)}
@@ -367,7 +367,7 @@ export const ScenePanel: React.FC = () => {
           </select>
         </div>
         <div>
-          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '6px' }}>Clima</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '6px' }}>Clima</label>
           <div style={{ display: 'flex', gap: '4px' }}>
             {WEATHERS.map(w => (
               <button key={w.value} onClick={() => setTheaterWeather(w.value)} title={w.value} style={{ padding: '6px 8px', borderRadius: '6px', background: weather === w.value ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${weather === w.value ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.06)'}`, cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s' }}>
@@ -378,7 +378,7 @@ export const ScenePanel: React.FC = () => {
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Transição de Cena</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Transição de Cena</label>
           <select
             value={currentScene.transitionType || 'fade'}
             onChange={e => patchCurrentScene({ transitionType: e.target.value as any })}
@@ -391,7 +391,7 @@ export const ScenePanel: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Áudio Vinculado</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Áudio Vinculado</label>
           <button
             onClick={linkAudioToScene}
             style={{ padding: '6px 12px', background: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)', border: `1px solid ${(currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '8px', color: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? '#6ee7b7' : '#cbd5e1', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -403,7 +403,7 @@ export const ScenePanel: React.FC = () => {
       {/* Description */}
       <div style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Descrição Narrativa</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Descrição Narrativa</label>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={handleGenerateDescription} disabled={isGeneratingDesc} style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '4px', padding: '2px 8px', fontSize: '0.65rem', cursor: isGeneratingDesc ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
               {isGeneratingDesc ? 'Gerando...' : 'Copiloto IA'}
@@ -423,10 +423,10 @@ export const ScenePanel: React.FC = () => {
               style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(168,85,247,0.3)', color: '#e2e8f0', fontSize: '0.82rem', fontFamily: 'var(--font-body)', resize: 'vertical', lineHeight: 1.5 }}
             />
             <div style={{ display: 'flex', gap: '6px' }}>
-              <button onClick={() => { patchCurrentScene({ description: descDraft }); setEditingDesc(false); }} style={{ flex: 1, padding: '6px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '6px', color: '#6ee7b7', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <button onClick={() => { patchCurrentScene({ description: descDraft }); setEditingDesc(false); }} style={{ flex: 1, padding: '6px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '6px', color: 'var(--success)', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                 <Check size={12} /> Salvar
               </button>
-              <button onClick={() => setEditingDesc(false)} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#64748b', cursor: 'pointer', fontSize: '0.75rem' }}>
+              <button onClick={() => setEditingDesc(false)} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.75rem' }}>
                 Cancelar
               </button>
             </div>
@@ -461,7 +461,7 @@ export const ScenePanel: React.FC = () => {
             {/* Elementos Visuais */}
       <div style={{ marginBottom: '20px', marginTop: '4px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <label style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Elementos Visuais</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Elementos Visuais</label>
           <button
             onClick={() => {
               setEditingAsset(null);
@@ -507,7 +507,7 @@ export const ScenePanel: React.FC = () => {
                   right: 0,
                   padding: '4px 6px',
                   background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   fontSize: '0.7rem',
                   fontWeight: 700,
                   textAlign: 'center',
@@ -557,7 +557,7 @@ export const ScenePanel: React.FC = () => {
                       border: 'none',
                       borderRadius: '50%',
                       padding: '5px',
-                      color: 'white',
+                      color: 'var(--text-primary)',
                       cursor: 'pointer'
                     }}
                     title="Editar"
@@ -571,7 +571,7 @@ export const ScenePanel: React.FC = () => {
                       border: 'none',
                       borderRadius: '50%',
                       padding: '5px',
-                      color: '#fca5a5',
+                      color: 'var(--danger)',
                       cursor: 'pointer'
                     }}
                     title="Excluir"
@@ -642,12 +642,12 @@ export const ScenePanel: React.FC = () => {
             gap: '14px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.05rem', color: 'white', fontWeight: 700 }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: 700 }}>
                 {editingAsset ? 'Editar Elemento Visual' : 'Novo Elemento Visual'}
               </h3>
               <button
                 onClick={() => setShowAddForm(false)}
-                style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
               >
                 <X size={18} />
               </button>
@@ -655,23 +655,23 @@ export const ScenePanel: React.FC = () => {
 
             {/* Título */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Título / Nome</label>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Título / Nome</label>
               <input
                 type="text"
                 value={assetTitle}
                 onChange={e => setAssetTitle(e.target.value)}
                 placeholder="Ex: Sentinela Orc, Poção de Vida..."
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.82rem' }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.82rem' }}
               />
             </div>
 
             {/* Tipo */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Tipo</label>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Tipo</label>
               <select
                 value={assetType}
                 onChange={e => setAssetType(e.target.value as any)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.82rem', cursor: 'pointer' }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.82rem', cursor: 'pointer' }}
               >
                 <option value="npc">👤 NPC</option>
                 <option value="monster">👾 Monstro</option>
@@ -683,7 +683,7 @@ export const ScenePanel: React.FC = () => {
 
             {/* Origem da Imagem */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Imagem</label>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Imagem</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <input
                   type="text"
@@ -743,7 +743,7 @@ export const ScenePanel: React.FC = () => {
                         background: 'transparent',
                         border: '1px solid rgba(239,68,68,0.2)',
                         borderRadius: '6px',
-                        color: '#fca5a5',
+                        color: 'var(--danger)',
                         fontSize: '0.75rem',
                         cursor: 'pointer'
                       }}
@@ -764,11 +764,11 @@ export const ScenePanel: React.FC = () => {
 
             {/* Vinculação de Ficha ou Link Customizado */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Vincular Ficha (Wiki)</label>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Vincular Ficha (Wiki)</label>
               <select
                 value={wikiIndex.some(e => e.path === assetLink) ? assetLink : ''}
                 onChange={e => setAssetLink(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.82rem', cursor: 'pointer', marginBottom: '8px' }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.82rem', cursor: 'pointer', marginBottom: '8px' }}
               >
                 <option value="">-- Selecione uma Ficha --</option>
                 {wikiIndex
@@ -787,25 +787,25 @@ export const ScenePanel: React.FC = () => {
                 }
               </select>
 
-              <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Ou Link Customizado (URL)</label>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Ou Link Customizado (URL)</label>
               <input
                 type="text"
                 value={assetLink && !wikiIndex.some(e => e.path === assetLink) ? assetLink : ''}
                 onChange={e => setAssetLink(e.target.value)}
                 placeholder="Ex: https://obsidian.md ou outro link..."
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.82rem' }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.82rem' }}
               />
             </div>
 
             {/* Descrição/Legenda */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Legenda / Descrição</label>
+              <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 600 }}>Legenda / Descrição</label>
               <textarea
                 value={assetDesc}
                 onChange={e => setAssetDesc(e.target.value)}
                 placeholder="Uma breve descrição sobre o personagem ou objeto..."
                 rows={3}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.82rem', fontFamily: 'var(--font-body)', resize: 'vertical' }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', resize: 'vertical' }}
               />
             </div>
 
@@ -840,7 +840,7 @@ export const ScenePanel: React.FC = () => {
                   background: 'transparent',
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '8px',
-                  color: '#64748b',
+                  color: 'var(--text-secondary)',
                   fontSize: '0.8rem',
                   cursor: 'pointer'
                 }}
@@ -908,7 +908,7 @@ export const ScenePanel: React.FC = () => {
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: '50%',
                 padding: '10px',
-                color: 'white',
+                color: 'var(--text-primary)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 zIndex: 1010
@@ -953,7 +953,7 @@ export const ScenePanel: React.FC = () => {
                       transform: 'translateY(-50%)',
                       background: 'rgba(0,0,0,0.6)',
                       border: '1px solid rgba(255,255,255,0.1)',
-                      color: 'white',
+                      color: 'var(--text-primary)',
                       borderRadius: '50%',
                       width: '40px',
                       height: '40px',
@@ -978,7 +978,7 @@ export const ScenePanel: React.FC = () => {
                       transform: 'translateY(-50%)',
                       background: 'rgba(0,0,0,0.6)',
                       border: '1px solid rgba(255,255,255,0.1)',
-                      color: 'white',
+                      color: 'var(--text-primary)',
                       borderRadius: '50%',
                       width: '40px',
                       height: '40px',
@@ -1024,7 +1024,7 @@ export const ScenePanel: React.FC = () => {
                 </div>
 
                 {/* Título */}
-                <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.6rem', color: 'white', lineHeight: 1.2 }}>
+                <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.6rem', color: 'var(--text-primary)', lineHeight: 1.2 }}>
                   {asset.title}
                 </h2>
 
@@ -1032,7 +1032,7 @@ export const ScenePanel: React.FC = () => {
                 <p style={{
                   margin: 0,
                   fontSize: '0.88rem',
-                  color: '#94a3b8',
+                  color: 'var(--text-secondary)',
                   lineHeight: 1.6,
                   whiteSpace: 'pre-wrap',
                   flex: 1
@@ -1084,7 +1084,7 @@ export const ScenePanel: React.FC = () => {
                       background: 'rgba(255,255,255,0.04)',
                       border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: '8px',
-                      color: '#94a3b8',
+                      color: 'var(--text-secondary)',
                       fontSize: '0.8rem',
                       cursor: 'pointer',
                       display: 'flex',

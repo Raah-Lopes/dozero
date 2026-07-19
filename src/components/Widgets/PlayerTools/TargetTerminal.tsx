@@ -659,8 +659,8 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'jogador': return <User size={16} color="#6ee7b7" />;
-      case 'npc': return <Cpu size={16} color="#93c5fd" />;
+      case 'jogador': return <User size={16} color="var(--success)" />;
+      case 'npc': return <Cpu size={16} color="var(--mana)" />;
       case 'inimigo': return <Skull size={16} color="#f43f5e" />;
       default: return null;
     }
@@ -726,10 +726,10 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
       return (
         <div key={field} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.4rem', borderRadius: '6px', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.65rem', color: '#93c5fd', textTransform: 'uppercase', fontWeight: 'bold' }}>{label.substring(0,3)}</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--mana)', textTransform: 'uppercase', fontWeight: 'bold' }}>{label.substring(0,3)}</span>
             <button 
                onClick={() => handleRollAttribute(label, totalVal)}
-               style={{ background: 'rgba(59, 130, 246, 0.2)', border: 'none', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+               style={{ background: 'rgba(59, 130, 246, 0.2)', border: 'none', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '2px' }}>
                {sign}{totalVal} <Dices size={10} />
             </button>
           </div>
@@ -770,7 +770,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
       return (
         <div key={field} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '0.4rem', borderRadius: '6px', gap: '4px' }}>
-          <span style={{ fontSize: '0.65rem', color: '#6ee7b7', textTransform: 'uppercase', fontWeight: 'bold', textAlign: 'center' }}>{label}</span>
+          <span style={{ fontSize: '0.65rem', color: 'var(--success)', textTransform: 'uppercase', fontWeight: 'bold', textAlign: 'center' }}>{label}</span>
           <div style={{ display: 'flex', gap: '2px', justifyContent: 'center' }}>
             <button onClick={() => setProf(0)} style={getStyle(0)} title="Destreinado">D</button>
             <button onClick={() => setProf(2)} style={getStyle(2)} title={`Treinado (+${charLevel + 2})`}>T</button>
@@ -843,7 +843,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px' }}>
               <button 
                  onClick={() => handleRollAttribute(`Ataque Mágico (${spellAttr})`, spellAtk)}
-                 style={{ flex: 1, background: 'rgba(236, 72, 153, 0.2)', border: 'none', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                 style={{ flex: 1, background: 'rgba(236, 72, 153, 0.2)', border: 'none', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                  Ataque {sign}{spellAtk} <Dices size={10} />
               </button>
               <div style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(236, 72, 153, 0.4)', color: '#f472b6', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -869,7 +869,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               return (
                 <div key={attr.name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', padding: '0.4rem', borderRadius: '6px' }}>
                   <span title={attr.title} style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', cursor: 'help' }}>{attr.name}</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'white' }}>{attr.val}</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{attr.val}</span>
                   <button 
                      onClick={() => handleRollAttribute(attr.name, mod)}
                      style={{ marginTop: '4px', background: 'rgba(168, 85, 247, 0.15)', border: '1px solid rgba(168, 85, 247, 0.3)', color: '#f0abfc', borderRadius: '4px', fontSize: '0.65rem', padding: '2px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -1099,10 +1099,10 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
       return (
         <div key={item.nome || Math.random()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', marginBottom: '4px' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.75rem', color: 'white', fontWeight: 'bold' }}>{item.nome || 'Arma'}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>{item.nome || 'Arma'}</span>
             <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Dano: {danoExpr} {item.tracos ? `(${item.tracos})` : ''}</span>
           </div>
-          <button onClick={handleRollWeapon} style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer' }}>GOLPE</button>
+          <button onClick={handleRollWeapon} style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer' }}>GOLPE</button>
         </div>
       );
     };
@@ -1111,7 +1111,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         
         <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.6rem' }}>
-          <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
             ⚙️ Modificadores Rápidos
           </h5>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -1127,7 +1127,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.6rem' }}>
-          <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <h5 style={{ margin: '0 0 0.5rem 0', fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
             ⚔️ Proficiência com Armas
           </h5>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1178,7 +1178,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                      <div key={lvl.id} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(236,72,153,0.1)', padding: '4px', borderRadius: '4px', border: '1px solid rgba(236,72,153,0.2)' }}>
                        <span style={{ fontSize: '0.55rem', color: '#fbcfe8', fontWeight: 'bold' }}>{lvl.label}</span>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '2px' }}>
-                         <input type="number" value={slots.current} onChange={e => setSlots('current', parseInt(e.target.value)||0)} style={{ width: '30px', background: 'rgba(0,0,0,0.4)', color: 'white', border: 'none', borderRadius: '2px', fontSize: '0.65rem', textAlign: 'center' }} title="Usos Restantes / Preparadas Restantes" />
+                         <input type="number" value={slots.current} onChange={e => setSlots('current', parseInt(e.target.value)||0)} style={{ width: '30px', background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: 'none', borderRadius: '2px', fontSize: '0.65rem', textAlign: 'center' }} title="Usos Restantes / Preparadas Restantes" />
                          <span style={{ color: '#f472b6', fontSize: '0.65rem' }}>/</span>
                          <input type="number" value={slots.max} onChange={e => setSlots('max', parseInt(e.target.value)||0)} style={{ width: '30px', background: 'transparent', color: '#f472b6', border: 'none', borderBottom: '1px dashed rgba(236,72,153,0.4)', fontSize: '0.65rem', textAlign: 'center' }} title="Máximo por Dia" />
                        </div>
@@ -1192,7 +1192,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 0.4rem 0' }}>
-            <h5 style={{ margin: 0, fontSize: '0.7rem', color: '#fbbf24', textTransform: 'uppercase' }}>Ações & Magias (Macros)</h5>
+            <h5 style={{ margin: 0, fontSize: '0.7rem', color: 'var(--warning)', textTransform: 'uppercase' }}>Ações & Magias (Macros)</h5>
             <div style={{ display: 'flex', gap: '4px' }}>
               <button onClick={() => {
                 const basicos = [
@@ -1208,8 +1208,8 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   import('../../../services/wiki/syncWiki').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));
                 }
                 updateTokenProps(tokenId, { macros: updatedMacros });
-              }} style={{ fontSize: '0.65rem', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontWeight: 'bold' }}>+ BÁSICOS</button>
-              <button onClick={() => setIsEditingMacro(!isEditingMacro)} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ASSISTENTE</button>
+              }} style={{ fontSize: '0.65rem', background: 'rgba(251, 191, 36, 0.2)', color: 'var(--warning)', border: '1px solid rgba(251,191,36,0.4)', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontWeight: 'bold' }}>+ BÁSICOS</button>
+              <button onClick={() => setIsEditingMacro(!isEditingMacro)} style={{ fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}>+ ASSISTENTE</button>
             </div>
           </div>
           
@@ -1222,7 +1222,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 if (v === 'magia_atk') setNewMacro({ nome: 'Raio Mágico', formula: '1d20 + @int', dano: '3d6', custo: '2 PM', tipo: 'ataque', descricao: 'Dano elemental mágico' });
                 if (v === 'cura') setNewMacro({ nome: 'Curar Ferimentos', formula: '1d20 + @sab', dano: '1d8', custo: '2 PM', tipo: 'cura', descricao: 'Cura aliada' });
                 if (v === 'teste_gen') setNewMacro({ nome: 'Teste de Atributo', formula: '1d20 + @for', dano: '', custo: '', tipo: 'teste', descricao: 'Teste sem alvo' });
-              }} style={{ background: '#334155', color: 'white', border: 'none', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }}>
+              }} style={{ background: '#334155', color: 'var(--text-primary)', border: 'none', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }}>
                 <option value="">-- Escolher Template Pronto --</option>
                 <option value="ataque_forca">Ataque Pesado (Usa Força)</option>
                 <option value="ataque_des">Ataque Ágil (Usa Destreza)</option>
@@ -1230,11 +1230,11 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 <option value="cura">Magia de Cura (Usa Sabedoria)</option>
                 <option value="teste_gen">Teste de Habilidade (S/ Dano)</option>
               </select>
-              <input value={newMacro.nome} onChange={e => setNewMacro({...newMacro, nome: e.target.value})} placeholder="Nome da Macro" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+              <input value={newMacro.nome} onChange={e => setNewMacro({...newMacro, nome: e.target.value})} placeholder="Nome da Macro" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-primary)', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
               <div style={{ display: 'flex', gap: '4px' }}>
-                <input value={newMacro.formula} onChange={e => setNewMacro({...newMacro, formula: e.target.value})} placeholder="Fórmula (Ex: 1d20+@for)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
-                <input value={newMacro.dano} onChange={e => setNewMacro({...newMacro, dano: e.target.value})} placeholder="Dano (Ex: 1d8)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
-                <input value={newMacro.custo || ''} onChange={e => setNewMacro({...newMacro, custo: e.target.value})} placeholder="Custo (Ex: 2 PM)" style={{ width: '80px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+                <input value={newMacro.formula} onChange={e => setNewMacro({...newMacro, formula: e.target.value})} placeholder="Fórmula (Ex: 1d20+@for)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-primary)', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+                <input value={newMacro.dano} onChange={e => setNewMacro({...newMacro, dano: e.target.value})} placeholder="Dano (Ex: 1d8)" style={{ flex: 1, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-primary)', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
+                <input value={newMacro.custo || ''} onChange={e => setNewMacro({...newMacro, custo: e.target.value})} placeholder="Custo (Ex: 2 PM)" style={{ width: '80px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-primary)', padding: '4px', borderRadius: '4px', fontSize: '0.7rem' }} />
               </div>
               <button onClick={() => {
                 if (!newMacro.nome || !newMacro.formula) return;
@@ -1245,13 +1245,13 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 }
                 updateTokenProps(tokenId, { macros: updatedMacros });
                 setIsEditingMacro(false);
-              }} style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>Salvar Macro</button>
+              }} style={{ background: '#10b981', color: 'var(--text-primary)', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>Salvar Macro</button>
             </div>
           )}
           {macrosToRender.map((macro: any, idx: number) => (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', border: `1px solid rgba(251, 191, 36, 0.3)`, borderRadius: '6px', padding: '0.4rem 0.6rem', marginBottom: '4px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fbbf24' }}>{macro.nome}</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--warning)' }}>{macro.nome}</span>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fórmula: {macro.formula} {macro.dano ? `| Dano: ${macro.dano}` : ''}</span>
               </div>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -1380,7 +1380,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                  }
 
                  pushChatMessage(msg, atkEval.total >= 14, false);
-              }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px', height: '24px' }}>ROLAR</button>
+              }} style={{ padding: '4px 10px', background: `rgba(251, 191, 36, 0.1)`, color: 'var(--warning)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px', height: '24px' }}>ROLAR</button>
               </div>
             </div>
           ))}
@@ -1413,7 +1413,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               {wikiEntry.metadata.pocoes.map((item: any, idx: number) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', borderLeft: '3px solid #10b981' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: '0.75rem', color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {item.nome} {item.quantidade > 1 ? `(x${item.quantidade})` : ''}
                     </span>
                     <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -1421,7 +1421,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                     </span>
                   </div>
                   <button 
-                    style={{ padding: '2px 6px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#6ee7b7', borderRadius: '4px', fontSize: '0.6rem', cursor: 'pointer', marginLeft: '4px' }}
+                    style={{ padding: '2px 6px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: 'var(--success)', borderRadius: '4px', fontSize: '0.6rem', cursor: 'pointer', marginLeft: '4px' }}
                     onClick={() => handleItemAction('pocoes', idx, 'usar')}
                   >
                     USAR
@@ -1438,7 +1438,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               {wikiEntry.metadata.objetos_campanha.map((item: any, idx: number) => (
                 <div key={idx} style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.3)', padding: '0.4rem', borderRadius: '6px', borderLeft: '3px solid #38bdf8' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'white', fontWeight: 'bold' }}>{item.nome}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>{item.nome}</span>
                   <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{item.descricao || 'Sem descrição'}</span>
                 </div>
               ))}
@@ -1453,7 +1453,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               {wikiEntry.metadata.inventario.map((item: any, idx: number) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.4rem', borderRadius: '6px', borderLeft: item.equipado ? '3px solid var(--accent-primary)' : '3px solid var(--text-secondary)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: '0.75rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {item.nome} {item.quantidade > 1 ? `(x${item.quantidade})` : ''}
                     </span>
                     <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
@@ -1485,7 +1485,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
       { id: 'gelo', label: '❄️ Gelo', color: '#38bdf8' },
       { id: 'queda', label: '🤕 Queda', color: '#f87171' },
       { id: 'envenenado', label: '🤢 Veneno', color: '#34d399' },
-      { id: 'cego', label: '👁️ Cego', color: '#94a3b8' },
+      { id: 'cego', label: '👁️ Cego', color: 'var(--text-secondary)' },
       { id: 'sono', label: '💤 Sono', color: '#c084fc' },
       { id: 'sangrando', label: '🩸 Sangrando', color: '#f43f5e' },
       { id: 'confuso', label: '😵 Confuso', color: '#eab308' },
@@ -1724,7 +1724,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Ancestralidade</span>
               {isGM ? (
-                <input type="text" value={tokenData.ancestralidade} onChange={e => handlePropChange('ancestralidade', e.target.value)} onBlur={e => handlePropChangeEnd('ancestralidade', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="text" value={tokenData.ancestralidade} onChange={e => handlePropChange('ancestralidade', e.target.value)} onBlur={e => handlePropChangeEnd('ancestralidade', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.ancestralidade || '—'}</span>
               )}
@@ -1732,7 +1732,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Herança</span>
               {isGM ? (
-                <input type="text" value={tokenData.heranca} onChange={e => handlePropChange('heranca', e.target.value)} onBlur={e => handlePropChangeEnd('heranca', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="text" value={tokenData.heranca} onChange={e => handlePropChange('heranca', e.target.value)} onBlur={e => handlePropChangeEnd('heranca', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.heranca || '—'}</span>
               )}
@@ -1746,7 +1746,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Biografia</span>
               {isGM ? (
-                <input type="text" value={tokenData.biografia} onChange={e => handlePropChange('biografia', e.target.value)} onBlur={e => handlePropChangeEnd('biografia', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="text" value={tokenData.biografia} onChange={e => handlePropChange('biografia', e.target.value)} onBlur={e => handlePropChangeEnd('biografia', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.biografia || '—'}</span>
               )}
@@ -1754,7 +1754,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Alinhamento</span>
               {isGM ? (
-                <input type="text" value={tokenData.alinhamento} onChange={e => handlePropChange('alinhamento', e.target.value)} onBlur={e => handlePropChangeEnd('alinhamento', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="text" value={tokenData.alinhamento} onChange={e => handlePropChange('alinhamento', e.target.value)} onBlur={e => handlePropChangeEnd('alinhamento', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.alinhamento || '—'}</span>
               )}
@@ -1762,7 +1762,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Gênero</span>
               {isGM ? (
-                <input type="text" value={tokenData.genero} onChange={e => handlePropChange('genero', e.target.value)} onBlur={e => handlePropChangeEnd('genero', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="text" value={tokenData.genero} onChange={e => handlePropChange('genero', e.target.value)} onBlur={e => handlePropChangeEnd('genero', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.genero || '—'}</span>
               )}
@@ -1770,7 +1770,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Nome do Jogador</span>
               {isGM ? (
-                <input type="text" value={tokenData.nome_jogador} onChange={e => handlePropChange('nome_jogador', e.target.value)} onBlur={e => handlePropChangeEnd('nome_jogador', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="text" value={tokenData.nome_jogador} onChange={e => handlePropChange('nome_jogador', e.target.value)} onBlur={e => handlePropChangeEnd('nome_jogador', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.nome_jogador || '—'}</span>
               )}
@@ -1784,7 +1784,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>Classe</span>
               {isGM ? (
-                <input type="text" value={tokenData.classe} onChange={e => handlePropChange('classe', e.target.value)} onBlur={e => handlePropChangeEnd('classe', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="text" value={tokenData.classe} onChange={e => handlePropChange('classe', e.target.value)} onBlur={e => handlePropChangeEnd('classe', e.target.value)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.classe || '—'}</span>
               )}
@@ -1792,7 +1792,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '0.55rem', color: '#a855f7', textTransform: 'uppercase' }}>XP</span>
               {isGM ? (
-                <input type="number" value={tokenData.xp} onChange={e => handlePropChange('xp', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('xp', parseInt(e.target.value) || 0)} style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
+                <input type="number" value={tokenData.xp} onChange={e => handlePropChange('xp', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('xp', parseInt(e.target.value) || 0)} style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '2px' }} />
               ) : (
                 <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{tokenData.xp || 0}</span>
               )}
@@ -1809,7 +1809,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   value={tokenData.registro_aventura} 
                   onChange={e => handlePropChange('registro_aventura', e.target.value)} 
                   onBlur={e => handlePropChangeEnd('registro_aventura', e.target.value)} 
-                  style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '4px', minHeight: '40px', resize: 'vertical' }} 
+                  style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '4px', minHeight: '40px', resize: 'vertical' }} 
                 />
               ) : (
                 <div style={{ fontSize: '0.7rem', whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>{tokenData.registro_aventura || 'Nenhum registro...'}</div>
@@ -1823,7 +1823,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   value={tokenData.anotacoes} 
                   onChange={e => handlePropChange('anotacoes', e.target.value)} 
                   onBlur={e => handlePropChangeEnd('anotacoes', e.target.value)} 
-                  style={{ background: 'rgba(0,0,0,0.4)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '4px', minHeight: '40px', resize: 'vertical' }} 
+                  style={{ background: 'rgba(0,0,0,0.4)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '0.7rem', padding: '4px', minHeight: '40px', resize: 'vertical' }} 
                 />
               ) : (
                 <div style={{ fontSize: '0.7rem', whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>{tokenData.anotacoes || 'Sem anotações...'}</div>
@@ -1849,7 +1849,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               
               return (
                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.3rem 0.5rem', background: 'rgba(0,0,0,0.25)', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.04)', marginBottom: '2px' }}>
-                  <span style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>{key}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>{key}</span>
                   <span style={{ fontSize: '0.75rem', color: isNanVal ? '#475569' : '#e2e8f0', fontFamily: 'var(--font-mono)', fontStyle: isNanVal ? 'italic' : 'normal' }}>
                     {isNanVal ? '—' : strVal}
                   </span>
@@ -1870,7 +1870,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
       position: 'relative',
       filter: isCriticalSurvival ? 'sepia(0.5) hue-rotate(-30deg) saturate(1.5)' : 'none',
       transition: 'filter 0.5s ease',
-      color: '#f1f5f9',
+      color: 'var(--text-primary)',
       fontFamily: 'var(--font-body)'
     }}>
       
@@ -1930,7 +1930,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 style={{
                   display: 'flex', alignItems: 'center', gap: '2px', padding: '2px 4px',
                   background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.3)',
-                  borderRadius: '4px', color: '#d8b4fe', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 'bold'
+                  borderRadius: '4px', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 'bold'
                 }}
                 title="Abrir Ficha MD"
               >
@@ -1951,13 +1951,13 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                 onChange={e => handlePropChange('name', e.target.value)}
                 onBlur={e => handlePropChangeEnd('name', e.target.value)}
                 style={{ 
-                  background: 'rgba(0,0,0,0.3)', border: '1px dashed var(--glass-border)', color: 'white', 
+                  background: 'rgba(0,0,0,0.3)', border: '1px dashed var(--glass-border)', color: 'var(--text-primary)', 
                   fontSize: '0.85rem', fontWeight: 'bold', width: '100%', padding: '2px 4px',
                   borderRadius: '4px'
                 }}
               />
             ) : (
-              <h3 style={{ margin: 0, fontSize: '0.85rem', color: 'white' }}>{tokenData.name}</h3>
+              <h3 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{tokenData.name}</h3>
             )}
           </div>
           
@@ -1984,7 +1984,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                       window.dispatchEvent(new Event('wiki-updated'));
                     }
                   }}
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px', padding: '1px 2px', fontSize: '0.65rem' }}
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', padding: '1px 2px', fontSize: '0.65rem' }}
                 >
                   <option value="jogador">Jogador</option>
                   <option value="npc">NPC</option>
@@ -2014,7 +2014,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                       window.dispatchEvent(new Event('wiki-updated'));
                     }
                   }}
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px', padding: '1px 2px', width: '100%', fontSize: '0.65rem', textAlign: 'center' }} 
+                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', padding: '1px 2px', width: '100%', fontSize: '0.65rem', textAlign: 'center' }} 
                 />
               ) : (
                 <span style={{ fontWeight: 'bold' }}>{tokenData.nivel ?? 1}</span>
@@ -2081,7 +2081,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                   const path = tokenId ? wikiEntry?.path : wikiPath;
                   if (path) { await syncTokenFieldToWiki(path, 'pp', val); }
                 }}
-                style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(255,255,255,0.2)', color: '#94a3b8', padding: 0, fontWeight: 'bold', fontSize: '0.7rem' }}
+                style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(255,255,255,0.2)', color: 'var(--text-secondary)', padding: 0, fontWeight: 'bold', fontSize: '0.7rem' }}
               />
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }} title="Peças de Ouro (1 PO = 10 PP)">
@@ -2129,9 +2129,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
               {isGM ? (
                 <>
-                  <input type="number" value={tokenData.hp ?? 0} onChange={e => handlePropChange('hp', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('hp', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'white', fontSize: '0.7rem', textAlign: 'right' }} />
+                  <input type="number" value={tokenData.hp ?? 0} onChange={e => handlePropChange('hp', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('hp', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontSize: '0.7rem', textAlign: 'right' }} />
                   <span style={{ color: 'var(--text-secondary)' }}>/</span>
-                  <input type="number" value={tokenData.maxHp ?? 100} onChange={e => handlePropChange('maxHp', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('maxHp', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'white', fontSize: '0.7rem' }} />
+                  <input type="number" value={tokenData.maxHp ?? 100} onChange={e => handlePropChange('maxHp', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('maxHp', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontSize: '0.7rem' }} />
                 </>
               ) : (
                 <span>{tokenData.hp ?? 0}/{tokenData.maxHp ?? 100}</span>
@@ -2148,9 +2148,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
               {isGM ? (
                 <>
-                  <input type="number" value={tokenData.mana ?? 0} onChange={e => handlePropChange('mana', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('mana', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'white', fontSize: '0.7rem', textAlign: 'right' }} />
+                  <input type="number" value={tokenData.mana ?? 0} onChange={e => handlePropChange('mana', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('mana', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontSize: '0.7rem', textAlign: 'right' }} />
                   <span style={{ color: 'var(--text-secondary)' }}>/</span>
-                  <input type="number" value={tokenData.maxMana ?? 100} onChange={e => handlePropChange('maxMana', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('maxMana', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'white', fontSize: '0.7rem' }} />
+                  <input type="number" value={tokenData.maxMana ?? 100} onChange={e => handlePropChange('maxMana', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('maxMana', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontSize: '0.7rem' }} />
                 </>
               ) : (
                 <span>{tokenData.mana ?? 0}/{tokenData.maxMana ?? 100}</span>
@@ -2167,9 +2167,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
               {isGM ? (
                 <>
-                  <input type="number" value={tokenData.energia ?? 100} onChange={e => handlePropChange('energia', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('energia', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'white', fontSize: '0.7rem', textAlign: 'right' }} />
+                  <input type="number" value={tokenData.energia ?? 100} onChange={e => handlePropChange('energia', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('energia', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontSize: '0.7rem', textAlign: 'right' }} />
                   <span style={{ color: 'var(--text-secondary)' }}>/</span>
-                  <input type="number" value={tokenData.energiaMax ?? 100} onChange={e => handlePropChange('energiaMax', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('energiaMax', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'white', fontSize: '0.7rem' }} />
+                  <input type="number" value={tokenData.energiaMax ?? 100} onChange={e => handlePropChange('energiaMax', parseInt(e.target.value) || 0)} onBlur={e => handlePropChangeEnd('energiaMax', parseInt(e.target.value) || 0)} style={{ width: '30px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontSize: '0.7rem' }} />
                 </>
               ) : (
                 <span>{tokenData.energia ?? 100}/{tokenData.energiaMax ?? 100}</span>

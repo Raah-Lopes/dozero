@@ -146,7 +146,7 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
           <select 
             value={filterType} 
             onChange={e => setFilterType(e.target.value)}
-            style={{ padding: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', outline: 'none' }}
+            style={{ padding: '8px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '4px', outline: 'none' }}
           >
             <option value="Aleatório">🎲 Aleatório</option>
             <option value="Fantasia">🏰 Fantasia Medieval</option>
@@ -161,7 +161,7 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
             marginTop: 'auto',
             padding: '16px', 
             background: categories.length === 0 ? 'rgba(255,255,255,0.1)' : 'var(--accent-primary)', 
-            color: 'white', 
+            color: 'var(--text-primary)', 
             border: 'none', 
             borderRadius: '8px', 
             cursor: categories.length === 0 || isGenerating ? 'not-allowed' : 'pointer',

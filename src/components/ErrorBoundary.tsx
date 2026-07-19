@@ -37,14 +37,14 @@ export class ErrorBoundary extends Component<Props, State> {
           background: 'rgba(239, 68, 68, 0.1)',
           border: '1px solid rgba(239, 68, 68, 0.3)',
           borderRadius: '8px',
-          color: '#fca5a5',
+          color: 'var(--danger)',
           fontFamily: 'var(--font-mono, monospace)',
           fontSize: '0.8rem',
           textAlign: 'center',
           height: '100%',
           width: '100%'
         }}>
-          <AlertTriangle size={24} style={{ marginBottom: '8px' }} color="#ef4444" />
+          <AlertTriangle size={24} style={{ marginBottom: '8px' }} color="var(--danger)" />
           <h4 style={{ margin: '0 0 4px 0', color: '#ef4444' }}>Widget Crashed</h4>
           <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>
             {this.props.fallbackMessage || this.state.error?.message || "Ocorreu um erro interno neste módulo."}

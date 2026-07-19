@@ -186,9 +186,9 @@ export const TheaterView: React.FC = () => {
         else if (tab === 'personagens') { 
           content = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div><div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase' }}>Heróis</div><CastPanel type="jogador" /></div>
-              <div><div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase' }}>Ameaças</div><EnemyArsenal /></div>
-              <div><div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase' }}>NPCs</div><CastPanel type="npc" /></div>
+              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Heróis</div><CastPanel type="jogador" /></div>
+              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Ameaças</div><EnemyArsenal /></div>
+              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>NPCs</div><CastPanel type="npc" /></div>
             </div>
           ); 
           title = 'Elenco & Ameaças'; 
@@ -196,8 +196,8 @@ export const TheaterView: React.FC = () => {
         else if (tab === 'mecanicas') { 
           content = (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div><div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase' }}>Relógios</div><ClockRail /></div>
-              <div><div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase' }}>Zonas</div><TacticalRadar /></div>
+              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Relógios</div><ClockRail /></div>
+              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Zonas</div><TacticalRadar /></div>
             </div>
           ); 
           title = 'Mecânicas'; 

@@ -522,7 +522,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.3rem' }}>Doar Moedas (PO):</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px' }}>
-                    <Coins size={14} color="#f59e0b" />
+                    <Coins size={14} color="var(--warning)" />
                     <input 
                       type="number" 
                       value={donateGold}
@@ -532,7 +532,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.3rem', color: '#d8b4fe' }}>💎 Doar Gemas Astrais:</label>
+                  <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.3rem', color: 'var(--accent-primary)' }}>💎 Doar Gemas Astrais:</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(192,132,252,0.3)', borderRadius: '6px', padding: '2px 8px', boxShadow: 'inset 0 0 5px rgba(192,132,252,0.1)' }}>
                     <span style={{ fontSize: '12px' }}>💎</span>
                     <input 
@@ -626,7 +626,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>O que você OFERECE:</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px', margin: '0.5rem 0' }}>
-                    <Coins size={12} color="#f59e0b" />
+                    <Coins size={12} color="var(--warning)" />
                     <input 
                       type="number" 
                       placeholder="Moedas de ouro..."
@@ -659,7 +659,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>O que você PEDE:</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px', margin: '0.5rem 0' }}>
-                    <Coins size={12} color="#f59e0b" />
+                    <Coins size={12} color="var(--warning)" />
                     <input 
                       type="number" 
                       placeholder="Moedas de ouro..."

@@ -309,7 +309,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose 
           <select 
             value={filterRaca} 
             onChange={e => setFilterRaca(e.target.value)}
-            style={{ padding: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', outline: 'none' }}
+            style={{ padding: '8px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '4px', outline: 'none' }}
           >
             <option value="Aleatório">🎲 Qualquer (Aleatório)</option>
             {RACAS_DISPONIVEIS.map(r => (
@@ -326,7 +326,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose 
           <select 
             value={filterAmeaca} 
             onChange={e => setFilterAmeaca(e.target.value)}
-            style={{ padding: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', outline: 'none' }}
+            style={{ padding: '8px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '4px', outline: 'none' }}
           >
             <option value="Aleatório">🎲 Aleatório pelas tabelas</option>
             <option value="Nv 1 (Minion/Aldeão)">Nv 1 (Minion/Aldeão)</option>
@@ -345,7 +345,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose 
             marginTop: 'auto',
             padding: '16px', 
             background: categories.length === 0 ? 'rgba(255,255,255,0.1)' : 'var(--accent-primary)', 
-            color: 'white', 
+            color: 'var(--text-primary)', 
             border: 'none', 
             borderRadius: '8px', 
             cursor: categories.length === 0 || isGenerating ? 'not-allowed' : 'pointer',

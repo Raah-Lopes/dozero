@@ -255,7 +255,7 @@ export const StagePropsLayer: React.FC<StagePropsLayerProps> = ({ propsList }) =
               <div style={{
                 position: 'absolute', bottom: '-24px', left: '50%', transform: 'translateX(-50%)',
                 background: 'rgba(0,0,0,0.7)', padding: '2px 6px', borderRadius: '4px',
-                color: 'white', fontSize: '10px', whiteSpace: 'nowrap', display: 'flex',
+                color: 'var(--text-primary)', fontSize: '10px', whiteSpace: 'nowrap', display: 'flex',
                 flexDirection: 'column', alignItems: 'center', gap: '2px',
                 border: '1px solid rgba(255,255,255,0.1)', pointerEvents: 'none'
               }}>
@@ -286,7 +286,7 @@ export const StagePropsLayer: React.FC<StagePropsLayerProps> = ({ propsList }) =
                   <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
                   <button onClick={() => handleEditProp(p)} style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '4px', borderRadius: '4px' }} title="Editar Nome/HP"><Edit2 size={14} /></button>
                   {p.hp !== undefined && p.hp > 0 && (
-                    <button onClick={() => updateProp(p.id, { hp: Math.max(0, p.hp! - 1) })} style={{ background: 'rgba(239,68,68,0.2)', border: 'none', color: '#fca5a5', cursor: 'pointer', padding: '4px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} title="Dano">-1 HP</button>
+                    <button onClick={() => updateProp(p.id, { hp: Math.max(0, p.hp! - 1) })} style={{ background: 'rgba(239,68,68,0.2)', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }} title="Dano">-1 HP</button>
                   )}
                   <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
                   <button onClick={() => removeProp(p.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', borderRadius: '4px' }} title="Excluir"><Trash2 size={14} /></button>

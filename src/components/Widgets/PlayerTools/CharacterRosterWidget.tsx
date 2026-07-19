@@ -32,18 +32,18 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'jogador': return <User size={16} color="#6ee7b7" />;
-      case 'npc': return <Cpu size={16} color="#93c5fd" />;
-      case 'inimigo': return <Skull size={16} color="#fda4af" />;
-      default: return <User size={16} />;
+      case 'jogador': return <User size={16} color="var(--success)" />;
+      case 'npc': return <Cpu size={16} color="var(--mana)" />;
+      case 'inimigo': return <Skull size={16} color="var(--danger)" />;
+      default: return <User size={16} color="var(--text-primary)" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'jogador': return 'rgba(16, 185, 129, 0.2)';
-      case 'npc': return 'rgba(59, 130, 246, 0.2)';
-      case 'inimigo': return 'rgba(225, 29, 72, 0.2)';
+      case 'jogador': return 'rgba(16, 185, 129, 0.15)';
+      case 'npc': return 'rgba(59, 130, 246, 0.15)';
+      case 'inimigo': return 'rgba(225, 29, 72, 0.15)';
       default: return 'transparent';
     }
   };
@@ -54,9 +54,9 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
   };
 
   const getPVColor = (percentual: number) => {
-    if (percentual > 60) return '#10b981';
-    if (percentual > 30) return '#f59e0b';
-    return '#ef4444';
+    if (percentual > 60) return 'var(--success)';
+    if (percentual > 30) return 'var(--warning)';
+    return 'var(--danger)';
   };
 
   const handleToggleActive = async (e: React.MouseEvent, caminhoArquivo: string, currentAtivo: boolean) => {
@@ -186,7 +186,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
       initialX={window.innerWidth / 2 - 400}
       initialY={window.innerHeight / 2 - 300}
     >
-      <div style={{ padding: '20px', color: '#f1f5f9', fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div className="panel-neon-red" style={{ padding: '20px', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         
         {/* Hidden File Input for Avatar Upload */}
         <input 
@@ -227,7 +227,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
             background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
             padding: '8px 12px', borderRadius: '8px', flexShrink: 0
           }}>
-            <span style={{ fontSize: '0.85rem', color: '#93c5fd', fontWeight: 'bold' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--mana)', fontWeight: 'bold' }}>
               {selecionados.size} selecionado(s)
             </span>
             <div style={{ flex: 1 }} />
@@ -236,7 +236,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
               disabled={processandoLote}
               style={{
                 padding: '4px 12px', borderRadius: '4px', border: '1px solid #10b981',
-                background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', cursor: processandoLote ? 'wait' : 'pointer',
+                background: 'rgba(16, 185, 129, 0.2)', color: 'var(--success)', cursor: processandoLote ? 'wait' : 'pointer',
                 fontSize: '0.75rem', fontWeight: 'bold'
               }}
             >Ativar Lote</button>
@@ -245,7 +245,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
               disabled={processandoLote}
               style={{
                 padding: '4px 12px', borderRadius: '4px', border: '1px solid #ef4444',
-                background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', cursor: processandoLote ? 'wait' : 'pointer',
+                background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', cursor: processandoLote ? 'wait' : 'pointer',
                 fontSize: '0.75rem', fontWeight: 'bold'
               }}
             >Desativar Lote</button>
@@ -271,11 +271,11 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
           paddingRight: '8px',
         }}>
           {carregando ? (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
               Carregando personagens...
             </div>
           ) : personagensFiltrados.length === 0 ? (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#94a3b8', fontStyle: 'italic' }}>
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
               Nenhum personagem encontrado.
             </div>
           ) : (
@@ -367,7 +367,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                   {/* Middle Section: Name, Type and Level, and HP */}
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {p.nome}
                       </div>
                       
@@ -409,7 +409,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                       }}>
                         {p.tipoFicha}
                       </span>
-                      <span style={{ color: '#94a3b8' }}>Nv. {p.nivel}</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Nv. {p.nivel}</span>
                     </div>
                     
                     {/* PV/HP bar */}
@@ -441,11 +441,11 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#fda4af' }}>
                       <Sword size={11} /> <span style={{ color: '#cbd5e1' }}>Atq:</span> <b>{p.ataque}</b>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#93c5fd' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--mana)' }}>
                       <Shield size={11} /> <span style={{ color: '#cbd5e1' }}>Def:</span> <b>{p.defesa}</b>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#fcd34d' }}>
-                      <span style={{ fontSize: '0.7rem', color: '#fcd34d', fontWeight: 'bold' }}>$</span> <span style={{ color: '#cbd5e1' }}>Ouro:</span> <b>{p.ouro}</b>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--warning)' }}>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>$</span> <span style={{ color: '#cbd5e1' }}>Ouro:</span> <b>{p.ouro}</b>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#f0abfc' }}>
                       <Star size={11} /> <span style={{ color: '#cbd5e1' }}>XP:</span> <b>{p.xp}</b>
@@ -471,7 +471,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: '0.85rem',
-          color: '#94a3b8',
+          color: 'var(--text-secondary)',
           flexShrink: 0
         }}>
           <span>Total: {personagensFiltrados.length} personagem(s)</span>

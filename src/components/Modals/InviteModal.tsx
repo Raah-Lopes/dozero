@@ -67,8 +67,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input readOnly value={inviteLink} style={{ flex: 1, padding: '0.5rem', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px', fontSize: '0.85rem' }} />
-              <button onClick={handleCopy} style={{ padding: '0.5rem 1rem', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input readOnly value={inviteLink} style={{ flex: 1, padding: '0.5rem', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }} />
+              <button onClick={handleCopy} style={{ padding: '0.5rem 1rem', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {copied ? <Check size={16} /> : <Copy size={16} />}
               </button>
             </div>

@@ -50,7 +50,7 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
             type="text" 
             value={label} 
             onChange={e => setLabel(e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px' }}
             required
           />
         </div>
@@ -63,7 +63,7 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
               min="0"
               value={minutes} 
               onChange={e => setMinutes(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+              style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px' }}
               required
             />
           </div>
@@ -75,7 +75,7 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
               max="59"
               value={seconds} 
               onChange={e => setSeconds(e.target.value)}
-              style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+              style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px' }}
               required
             />
           </div>
@@ -88,7 +88,7 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
             placeholder="Ex: -10, +50, -80%"
             value={hpMod} 
             onChange={e => setHpMod(e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px' }}
           />
           <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Use % para porcentagem do valor atual, ou valores fixos (+, -).</span>
         </div>
@@ -100,11 +100,11 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
             placeholder="Ex: -5, +20, 0"
             value={mpMod} 
             onChange={e => setMpMod(e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px' }}
           />
         </div>
 
-        <button type="submit" className="btn" style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'var(--accent-primary)', color: 'white', fontWeight: 'bold' }}>
+        <button type="submit" className="btn" style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'var(--accent-primary)', color: 'var(--text-primary)', fontWeight: 'bold' }}>
           {existingClock ? 'Salvar Alterações' : 'Manifestar Relógio'}
         </button>
 

@@ -73,7 +73,7 @@ export const PlayerManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     style={{ flex: 1, padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.5)', color: editColor || 'white', fontWeight: 'bold' }}
                     autoFocus
                   />
-                  <button onClick={() => handleSave(p.id)} style={{ padding: '4px 8px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer', fontSize: '0.75rem' }}>
+                  <button onClick={() => handleSave(p.id)} style={{ padding: '4px 8px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.75rem' }}>
                     Salvar
                   </button>
                   <button onClick={() => setEditingId(null)} style={{ padding: '4px 8px', background: 'transparent', border: '1px solid var(--danger)', borderRadius: '4px', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.75rem' }}>

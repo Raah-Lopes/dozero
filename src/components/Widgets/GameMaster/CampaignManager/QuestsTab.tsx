@@ -13,7 +13,7 @@ const STATUS_CONFIG = {
     active: { label: 'Ativa', color: '#38bdf8', border: 'rgba(56,189,248,0.3)', bg: 'rgba(12,74,110,0.4)' },
     completed: { label: 'Concluída', color: '#22c55e', border: 'rgba(34,197,94,0.3)', bg: 'rgba(20,83,45,0.4)' },
     failed: { label: 'Fracassada', color: '#ef4444', border: 'rgba(239,68,68,0.3)', bg: 'rgba(127,29,29,0.4)' },
-    abandoned: { label: 'Abandonada', color: '#94a3b8', border: 'rgba(148,163,184,0.3)', bg: 'rgba(15,23,42,0.6)' }
+    abandoned: { label: 'Abandonada', color: 'var(--text-secondary)', border: 'rgba(148,163,184,0.3)', bg: 'rgba(15,23,42,0.6)' }
   }
 };
 
@@ -25,7 +25,7 @@ const EmptyState = ({ icon, message, sub }: any) => (
     borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.06)'
   }}>
     <div style={{ color: 'rgba(148,163,184,0.3)', marginBottom: '12px' }}>{icon}</div>
-    <p style={{ margin: 0, fontWeight: 600, color: '#94a3b8', fontSize: '0.9rem' }}>{message}</p>
+    <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{message}</p>
     {sub && <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'rgba(148,163,184,0.5)' }}>{sub}</p>}
   </div>
 );
@@ -559,7 +559,7 @@ const addQuest = async (type: 'main' | 'side') => {
 
                       <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '4px' }}>
-                          <h4 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: '#f1f5f9', fontFamily: 'var(--font-display)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {q.name}
                           </h4>
                           <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
@@ -590,7 +590,7 @@ const addQuest = async (type: 'main' | 'side') => {
 
                         <div style={{ display: 'flex', gap: '10px', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '6px', fontSize: '0.65rem', color: 'rgba(148,163,184,0.5)' }}>
                           {q.loot && q.loot.length > 0 && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#fbbf24' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--warning)' }}>
                               <Award size={10} /> {q.loot.length} Loot
                             </span>
                           )}
@@ -985,11 +985,11 @@ const addQuest = async (type: 'main' | 'side') => {
 
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Award size={14} color="#fbbf24" />
-                  <h4 style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: '#f1f5f9', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                  <Award size={14} color="var(--warning)" />
+                  <h4 style={{ margin: 0, fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
                     Pool de Loot / Recompensas
                   </h4>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#fbbf24', background: 'rgba(251,191,36,0.15)', borderRadius: '999px', padding: '1px 6px' }}>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--warning)', background: 'rgba(251,191,36,0.15)', borderRadius: '999px', padding: '1px 6px' }}>
                     {activeQuest.loot?.length || 0}
                   </span>
                 </div>
@@ -1015,7 +1015,7 @@ const addQuest = async (type: 'main' | 'side') => {
                         >
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f1f5f9' }}>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                                 {item.name} {item.quantidade && item.quantidade > 1 ? `(x${item.quantidade})` : ''}
                               </span>
                               <span style={{
@@ -1133,8 +1133,8 @@ const addQuest = async (type: 'main' | 'side') => {
                     display: 'flex', flexDirection: 'column', gap: '8px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Users size={12} color="#a855f7" />
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#f1f5f9', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                      <Users size={12} color="var(--accent-primary)" />
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
                         Distribuir Loot entre Jogadores (PCs)
                       </span>
                     </div>

@@ -153,7 +153,7 @@ export const DataviewRenderer: React.FC<DataviewRendererProps> = ({ query, isJS,
 
   if (data.error) {
     return (
-      <div style={{ padding: '1rem', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', borderRadius: '6px', color: '#fca5a5', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+      <div style={{ padding: '1rem', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', borderRadius: '6px', color: 'var(--danger)', fontFamily: 'monospace', fontSize: '0.85rem' }}>
         <strong>Dataview{isJS ? 'JS' : ''} Error:</strong> {data.error}
       </div>
     );

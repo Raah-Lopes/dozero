@@ -39,11 +39,11 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
 
   if (error) {
     return (
-      <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#fca5a5' }}>
+      <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: 'var(--danger)' }}>
         <strong>Erro de Sintaxe (Mermaid)</strong> <br />
         <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', marginTop: '0.5rem' }}>{error}</pre>
         <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Código Original:</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Código Original:</span>
           <pre style={{ color: '#cbd5e1', fontSize: '0.8rem', marginTop: '0.5rem' }}>{code}</pre>
         </div>
       </div>

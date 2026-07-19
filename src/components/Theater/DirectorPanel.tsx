@@ -128,7 +128,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
       {/* Body */}
       <div className="theater-drawer-body">
         {floatingPanels.includes(tab) ? (
-          <div style={{ textAlign: 'center', color: '#64748b', marginTop: '20px', fontSize: '0.8rem' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '20px', fontSize: '0.8rem' }}>
             Este painel está flutuante.
           </div>
         ) : (
@@ -250,7 +250,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                                   if (activeBgIndex === idx) onBgChange(idx - 1);
                                   else if (activeBgIndex === idx - 1) onBgChange(idx);
                                 }}
-                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'white', cursor: 'pointer', padding: '4px' }}
+                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
                                 title="Mover para esquerda"
                               >
                                 ⬅️
@@ -266,7 +266,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                                   if (activeBgIndex === idx) onBgChange(idx + 1);
                                   else if (activeBgIndex === idx + 1) onBgChange(idx);
                                 }}
-                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'white', cursor: 'pointer', padding: '4px' }}
+                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
                                 title="Mover para direita"
                               >
                                 ➡️
@@ -281,7 +281,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                                 if (activeBgIndex === idx) onBgChange(Math.max(0, idx - 1));
                                 else if (activeBgIndex > idx) onBgChange(activeBgIndex - 1);
                               }}
-                              style={{ background: 'rgba(239,68,68,0.4)', border: 'none', borderRadius: 4, color: 'white', cursor: 'pointer', padding: '4px' }}
+                              style={{ background: 'rgba(239,68,68,0.4)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
                               title="Excluir"
                             >
                               🗑️

@@ -7,30 +7,30 @@ export const nextGenTheme: ThemeDefinition = {
   author: 'DOZERO Team',
   preview: '#dc2626',
 
-  bgPrimary: '#09090b',
-  bgSecondary: '#18181b',
-  bgTertiary: '#27272a',
+  bgPrimary: '#050505',
+  bgSecondary: '#0a0a0a',
+  bgTertiary: '#171717',
 
   textPrimary: '#ffffff',
   textSecondary: '#a1a1aa',
 
-  accentPrimary: '#dc2626',
+  accentPrimary: '#ef4444',
   accentHover: '#f59e0b',
-  accentGlow: 'rgba(239, 68, 68, 0.4)',
+  accentGlow: 'rgba(239, 68, 68, 0.6)',
 
   danger: '#ef4444',
   success: '#10b981',
-  warning: '#f59e0b',
+  warning: '#fbbf24',
   mana: '#3b82f6',
 
-  glassBg: 'rgba(9, 9, 11, 0.85)',
-  glassBorder: 'rgba(39, 39, 42, 0.5)',
-  glassBorderHighlight: 'rgba(239, 68, 68, 0.3)',
-  glassShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.4)',
+  glassBg: 'rgba(5, 5, 5, 0.85)',
+  glassBorder: 'rgba(239, 68, 68, 0.25)',
+  glassBorderHighlight: 'rgba(239, 68, 68, 0.8)',
+  glassShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.05)',
 
   fontBody: "'Outfit', sans-serif",
   fontDisplay: "'JetBrains Mono', monospace",
 
-  gradientText: 'linear-gradient(to right, #ef4444, #f59e0b)',
+  gradientText: 'linear-gradient(135deg, #fde047 0%, #f59e0b 50%, #d97706 100%)',
   scrollbarThumb: '#27272a',
 };

@@ -303,7 +303,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)',
         display: 'flex', alignItems: 'flex-start', gap: '10px',
       }}>
-        <Plug size={14} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <Plug size={14} color="var(--success)" style={{ flexShrink: 0, marginTop: '2px' }} />
         <p style={{ margin: 0, fontSize: '0.72rem', color: 'rgba(110,231,183,0.8)', lineHeight: 1.6 }}>
           Conecte o DOZERO a ferramentas de automação como <b>n8n</b>, Zapier ou Make via Webhooks. Eventos do chat e rolagens serão enviados automaticamente.
         </p>
@@ -441,7 +441,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               background: saved
                 ? 'linear-gradient(135deg, #16a34a, #15803d)'
                 : 'linear-gradient(135deg, var(--accent-primary), var(--accent-hover))',
-              color: 'white', fontWeight: 800, fontSize: '0.85rem',
+              color: 'var(--text-primary)', fontWeight: 800, fontSize: '0.85rem',
               fontFamily: 'var(--font-display)', letterSpacing: '0.04em',
               transition: 'all 0.3s', opacity: saving ? 0.8 : 1,
               boxShadow: saved ? '0 0 20px rgba(34,197,94,0.3)' : '0 0 20px var(--accent-glow)',

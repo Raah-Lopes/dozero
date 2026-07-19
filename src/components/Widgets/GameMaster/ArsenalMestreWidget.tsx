@@ -556,15 +556,15 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
       height={650} 
       onClose={onClose}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#f1f5f9', fontFamily: 'var(--font-body)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
         
         {/* CABEÇALHO DO ARSENAL */}
-        <div style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(30,41,59,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Sword size={22} style={{ color: '#fbbf24' }} />
+            <Sword size={22} style={{ color: 'var(--warning)' }} />
             <div>
               <h3 style={{ margin: 0, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Arsenal de Mesa do Narrador</h3>
-              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Edite status, distribua maldições, poderes e itens diretamente</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Edite status, distribua maldições, poderes e itens diretamente</span>
             </div>
           </div>
           
@@ -572,11 +572,11 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button 
               onClick={() => setShowCreateChar(!showCreateChar)}
-              style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid #10b981', color: '#34d399', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+              style={{ background: 'rgba(var(--success-rgb, 16,185,129), 0.2)', border: '1px solid #10b981', color: 'var(--success)', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
             >
               <Plus size={14} /> Novo NPC
             </button>
-            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fbbf24' }}>FICHA ATIVA:</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--warning)' }}>FICHA ATIVA:</span>
             <select
               value={selectedChar?.caminhoArquivo || ''}
               onChange={(e) => {
@@ -584,8 +584,8 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 setSelectedChar(found || null);
               }}
               style={{
-                background: 'rgba(15,23,42,0.9)',
-                color: '#fff',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
                 border: '1px solid rgba(251,191,36,0.4)',
                 borderRadius: '6px',
                 padding: '6px 12px',
@@ -608,28 +608,28 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           
           {/* PAINEL ESQUERDO: SELEÇÃO & CONTROLE RÁPIDO */}
-          <div style={{ width: '380px', borderRight: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '15px' }}>
+          <div style={{ width: '380px', borderRight: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '15px' }}>
             {selectedChar ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
                 {/* Nome & Ativação */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--glass-border)', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
                       <img src={selectedChar.avatar || '/vite.svg'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '0.85rem', color: '#fff' }}>{selectedChar.nome}</h4>
-                      <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: selectedChar.status === 'jogador' ? '#38bdf8' : '#f87171' }}>{selectedChar.status}</span>
+                      <h4 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{selectedChar.nome}</h4>
+                      <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: selectedChar.status === 'jogador' ? 'var(--mana)' : 'var(--danger)' }}>{selectedChar.status}</span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => handlePropChange('ativo', !selectedChar.ativo)}
                     style={{
-                      background: selectedChar.ativo ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                      color: selectedChar.ativo ? '#34d399' : '#f87171',
-                      border: `1px solid ${selectedChar.ativo ? '#10b981' : '#ef4444'}`,
+                      background: selectedChar.ativo ? 'rgba(var(--success-rgb, 16,185,129), 0.15)' : 'rgba(var(--danger-rgb, 239,68,68), 0.15)',
+                      color: selectedChar.ativo ? 'var(--success)' : 'var(--danger)',
+                      border: `1px solid ${selectedChar.ativo ? 'var(--success)' : 'var(--danger)'}`,
                       borderRadius: '6px',
                       padding: '4px 10px',
                       fontSize: '0.7rem',
@@ -647,15 +647,15 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
 
                 {/* Ações Rápidas */}
                 <div className="grid-responsive-3" style={{ gap: '6px' }}>
-                  <button onClick={handleRestaurarHP} style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Restaurar HP</button>
-                  <button onClick={handleZerarHP} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Matar (0 HP)</button>
-                  <button onClick={handleLimparCondicoes} style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Limpar Conds</button>
+                  <button onClick={handleRestaurarHP} style={{ background: 'rgba(var(--success-rgb, 16,185,129), 0.15)', border: '1px solid rgba(16,185,129,0.3)', color: 'var(--success)', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Restaurar HP</button>
+                  <button onClick={handleZerarHP} style={{ background: 'rgba(var(--danger-rgb, 239,68,68), 0.15)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Matar (0 HP)</button>
+                  <button onClick={handleLimparCondicoes} style={{ background: 'rgba(var(--accent-rgb, 168,85,247), 0.15)', border: '1px solid rgba(168,85,247,0.3)', color: 'var(--accent-primary)', borderRadius: '6px', padding: '6px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>Limpar Conds</button>
                 </div>
 
                 {/* Seletor de Abas Internas */}
-                <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <button onClick={() => setActiveTab('pools')} style={{ flex: 1, padding: '8px', border: 'none', borderBottom: activeTab === 'pools' ? '2px solid #fbbf24' : 'none', background: 'transparent', color: activeTab === 'pools' ? '#fbbf24' : '#94a3b8', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>Pools Vitais</button>
-                  <button onClick={() => setActiveTab('atributos')} style={{ flex: 1, padding: '8px', border: 'none', borderBottom: activeTab === 'atributos' ? '2px solid #fbbf24' : 'none', background: 'transparent', color: activeTab === 'atributos' ? '#fbbf24' : '#94a3b8', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>Atributos</button>
+                <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)' }}>
+                  <button onClick={() => setActiveTab('pools')} style={{ flex: 1, padding: '8px', border: 'none', borderBottom: activeTab === 'pools' ? '2px solid #fbbf24' : 'none', background: 'transparent', color: activeTab === 'pools' ? 'var(--warning)' : 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>Pools Vitais</button>
+                  <button onClick={() => setActiveTab('atributos')} style={{ flex: 1, padding: '8px', border: 'none', borderBottom: activeTab === 'atributos' ? '2px solid #fbbf24' : 'none', background: 'transparent', color: activeTab === 'atributos' ? 'var(--warning)' : 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>Atributos</button>
                 </div>
 
                 {/* Pools Vitais & Parâmetros */}
@@ -665,74 +665,74 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     {/* Vida (HP) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span title="Health Points (Pontos de Vida). Saúde e integridade física." style={{ color: '#f87171', fontWeight: 'bold', cursor: 'help' }}>❤️ HP / Integridade</span>
+                        <span title="Health Points (Pontos de Vida). Saúde e integridade física." style={{ color: 'var(--danger)', fontWeight: 'bold', cursor: 'help' }}>❤️ HP / Integridade</span>
                         <span>{selectedChar.pv} / {selectedChar.pv_max}</span>
                       </div>
-                      <input type="range" min={0} max={selectedChar.pv_max} value={selectedChar.pv} onChange={e => handlePropChange('pv', parseInt(e.target.value))} style={{ accentColor: '#ef4444', width: '100%' }} />
+                      <input type="range" min={0} max={selectedChar.pv_max} value={selectedChar.pv} onChange={e => handlePropChange('pv', parseInt(e.target.value))} style={{ accentColor: 'var(--danger)', width: '100%' }} />
                     </div>
 
                     {/* Mana (PM) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span title="Pontos de Magia (Mana). Usados para conjurar magias e poderes." style={{ color: '#60a5fa', fontWeight: 'bold', cursor: 'help' }}>⚡ Mana Core</span>
+                        <span title="Pontos de Magia (Mana). Usados para conjurar magias e poderes." style={{ color: 'var(--mana)', fontWeight: 'bold', cursor: 'help' }}>⚡ Mana Core</span>
                         <span>{selectedChar.mana} / {selectedChar.mana_max}</span>
                       </div>
-                      <input type="range" min={0} max={selectedChar.mana_max || 100} value={selectedChar.mana} onChange={e => handlePropChange('mana', parseInt(e.target.value))} style={{ accentColor: '#3b82f6', width: '100%' }} />
+                      <input type="range" min={0} max={selectedChar.mana_max || 100} value={selectedChar.mana} onChange={e => handlePropChange('mana', parseInt(e.target.value))} style={{ accentColor: 'var(--mana)', width: '100%' }} />
                     </div>
 
                     {/* Energia */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span title="Energia / Vigor. Recurso para reações ou ações extras." style={{ color: '#34d399', fontWeight: 'bold', cursor: 'help' }}>🏃‍♂️ Vigor / Energia</span>
+                        <span title="Energia / Vigor. Recurso para reações ou ações extras." style={{ color: 'var(--success)', fontWeight: 'bold', cursor: 'help' }}>🏃‍♂️ Vigor / Energia</span>
                         <span>{selectedChar.energia} / {selectedChar.energia_max}</span>
                       </div>
-                      <input type="range" min={0} max={selectedChar.energia_max} value={selectedChar.energia} onChange={e => handlePropChange('energia', parseInt(e.target.value))} style={{ accentColor: '#10b981', width: '100%' }} />
+                      <input type="range" min={0} max={selectedChar.energia_max} value={selectedChar.energia} onChange={e => handlePropChange('energia', parseInt(e.target.value))} style={{ accentColor: 'var(--success)', width: '100%' }} />
                     </div>
 
                     {/* Sanidade */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
-                        <span title="Sanidade Mental. Resistência a traumas psicológicos." style={{ color: '#c084fc', fontWeight: 'bold', cursor: 'help' }}>👁️ Sanidade Mental</span>
+                        <span title="Sanidade Mental. Resistência a traumas psicológicos." style={{ color: 'var(--accent-primary)', fontWeight: 'bold', cursor: 'help' }}>👁️ Sanidade Mental</span>
                         <span>{selectedChar.sanidade} / {selectedChar.sanidade_max}</span>
                       </div>
-                      <input type="range" min={0} max={selectedChar.sanidade_max} value={selectedChar.sanidade} onChange={e => handlePropChange('sanidade', parseInt(e.target.value))} style={{ accentColor: '#a855f7', width: '100%' }} />
+                      <input type="range" min={0} max={selectedChar.sanidade_max} value={selectedChar.sanidade} onChange={e => handlePropChange('sanidade', parseInt(e.target.value))} style={{ accentColor: 'var(--accent-primary)', width: '100%' }} />
                     </div>
 
                     {/* Fome, Sede, Cansaço, Defesa */}
                     <div className="grid-responsive-2" style={{ gap: '10px', marginTop: '5px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span title="Necessidade de alimentação." style={{ fontSize: '0.65rem', color: '#eab308', cursor: 'help' }}>🍖 Fome (0-100)</span>
-                        <input type="number" value={selectedChar.fome} onChange={e => handlePropChange('fome', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
+                        <span title="Necessidade de alimentação." style={{ fontSize: '0.65rem', color: 'var(--warning)', cursor: 'help' }}>🍖 Fome (0-100)</span>
+                        <input type="number" value={selectedChar.fome} onChange={e => handlePropChange('fome', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span title="Necessidade de hidratação." style={{ fontSize: '0.65rem', color: '#60a5fa', cursor: 'help' }}>💧 Sede (0-100)</span>
-                        <input type="number" value={selectedChar.sede} onChange={e => handlePropChange('sede', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
+                        <span title="Necessidade de hidratação." style={{ fontSize: '0.65rem', color: 'var(--mana)', cursor: 'help' }}>💧 Sede (0-100)</span>
+                        <input type="number" value={selectedChar.sede} onChange={e => handlePropChange('sede', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span title="Cansaço físico ou exaustão." style={{ fontSize: '0.65rem', color: '#f87171', cursor: 'help' }}>💤 Cansaço (0-100)</span>
-                        <input type="number" value={selectedChar.cansaco} onChange={e => handlePropChange('cansaco', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
+                        <span title="Cansaço físico ou exaustão." style={{ fontSize: '0.65rem', color: 'var(--danger)', cursor: 'help' }}>💤 Cansaço (0-100)</span>
+                        <input type="number" value={selectedChar.cansaco} onChange={e => handlePropChange('cansaco', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span title="Classe de Armadura (CA). Dificuldade para ser atingido." style={{ fontSize: '0.65rem', color: '#fbbf24', cursor: 'help' }}>🛡️ Classe Armadura</span>
-                        <input type="number" value={selectedChar.defesa} onChange={e => handlePropChange('defesa', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
+                        <span title="Classe de Armadura (CA). Dificuldade para ser atingido." style={{ fontSize: '0.65rem', color: 'var(--warning)', cursor: 'help' }}>🛡️ Classe Armadura</span>
+                        <input type="number" value={selectedChar.defesa} onChange={e => handlePropChange('defesa', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                     </div>
 
                     {/* Finanças */}
-                    <div className="grid-responsive-2" style={{ gap: '10px', marginTop: '5px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+                    <div className="grid-responsive-2" style={{ gap: '10px', marginTop: '5px', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span title="Moedas de Ouro." style={{ fontSize: '0.65rem', color: '#fbbf24', cursor: 'help' }}>🪙 Ouro</span>
-                        <input type="number" value={selectedChar.ouro} onChange={e => handlePropChange('ouro', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
+                        <span title="Moedas de Ouro." style={{ fontSize: '0.65rem', color: 'var(--warning)', cursor: 'help' }}>🪙 Ouro</span>
+                        <input type="number" value={selectedChar.ouro} onChange={e => handlePropChange('ouro', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span title="Joias ou objetos de alto valor." style={{ fontSize: '0.65rem', color: '#a855f7', cursor: 'help' }}>💎 Riquezas</span>
-                        <input type="number" value={selectedChar.riquezas} onChange={e => handlePropChange('riquezas', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }} />
+                        <span title="Joias ou objetos de alto valor." style={{ fontSize: '0.65rem', color: 'var(--accent-primary)', cursor: 'help' }}>💎 Riquezas</span>
+                        <input type="number" value={selectedChar.riquezas} onChange={e => handlePropChange('riquezas', Math.max(0, parseInt(e.target.value) || 0))} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.75rem' }} />
                       </div>
                     </div>
 
                     {/* Grade de Condições/Efeitos Negativos & Positivos */}
-                    <div style={{ marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', display: 'block', marginBottom: '8px' }}>Condições e Efeitos</span>
+                    <div style={{ marginTop: '10px', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>Condições e Efeitos</span>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {[
                           { name: '🔥 Fogo', key: 'Fogo' },
@@ -757,9 +757,9 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                               style={{
                                 padding: '4px 8px',
                                 borderRadius: '4px',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: active ? 'rgba(168,85,247,0.3)' : 'rgba(0,0,0,0.3)',
-                                color: active ? '#fff' : '#94a3b8',
+                                border: '1px solid var(--glass-border)',
+                                background: active ? 'rgba(var(--accent-rgb, 168,85,247), 0.3)' : 'var(--bg-tertiary)',
+                                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
                                 fontSize: '0.65rem',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s'
@@ -780,8 +780,8 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     
                     {/* Atributos Pathfinder */}
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '10px' }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#c084fc', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Sistema Pathfinder 2e</span>
+                    <div style={{ background: 'var(--glass-border)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '10px' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Sistema Pathfinder 2e</span>
                       <div className="grid-responsive-2" style={{ gap: '8px' }}>
                         {[
                           { label: 'FOR (Força)', title: 'Determina dano e capacidade atlética.', val: selectedChar.forca, key: 'forca' },
@@ -792,12 +792,12 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                           { label: 'CAR (Carisma)', title: 'Determina interações sociais.', val: selectedChar.carisma, key: 'carisma' },
                         ].map(a => (
                           <div key={a.key} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <span title={a.title} style={{ fontSize: '0.65rem', color: '#cbd5e1', cursor: 'help' }}>{a.label}</span>
+                            <span title={a.title} style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', cursor: 'help' }}>{a.label}</span>
                             <input
                               type="number"
                               value={a.val}
                               onChange={e => handlePropChange(a.key, Math.max(0, parseInt(e.target.value) || 0))}
-                              style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', padding: '4px 6px', fontSize: '0.75rem' }}
+                              style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.75rem' }}
                             />
                           </div>
                         ))}
@@ -811,42 +811,42 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
 
               </div>
             ) : showCreateChar ? (
-              <form onSubmit={handleCreateChar} style={{ display: 'flex', flexDirection: 'column', gap: '15px', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.3)' }}>
-                <h4 style={{ margin: 0, color: '#34d399', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Gerador Rápido</h4>
+              <form onSubmit={handleCreateChar} style={{ display: 'flex', flexDirection: 'column', gap: '15px', background: 'var(--bg-tertiary)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.3)' }}>
+                <h4 style={{ margin: 0, color: 'var(--success)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Gerador Rápido</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Nome do Personagem</label>
-                  <input type="text" value={newCharNome} onChange={e => setNewCharNome(e.target.value)} autoFocus required style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px', borderRadius: '4px' }} />
+                  <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Nome do Personagem</label>
+                  <input type="text" value={newCharNome} onChange={e => setNewCharNome(e.target.value)} autoFocus required style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px', borderRadius: '4px' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-                    <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Vida Máxima (HP)</label>
-                    <input type="number" min={1} value={newCharHP} onChange={e => setNewCharHP(parseInt(e.target.value) || 10)} required style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px', borderRadius: '4px' }} />
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Vida Máxima (HP)</label>
+                    <input type="number" min={1} value={newCharHP} onChange={e => setNewCharHP(parseInt(e.target.value) || 10)} required style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px', borderRadius: '4px' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-                    <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Tipo</label>
-                    <select value={newCharStatus} onChange={e => setNewCharStatus(e.target.value as any)} style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '6px', borderRadius: '4px' }}>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Tipo</label>
+                    <select value={newCharStatus} onChange={e => setNewCharStatus(e.target.value as any)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '6px', borderRadius: '4px' }}>
                       <option value="npc">NPC (Aliado/Neutro)</option>
                       <option value="inimigo">Inimigo (Monstro)</option>
                     </select>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                  <button type="button" onClick={() => setShowCreateChar(false)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#cbd5e1', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
-                  <button type="submit" style={{ flex: 2, background: 'rgba(16,185,129,0.2)', border: '1px solid #10b981', color: '#34d399', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Salvar Ficha</button>
+                  <button type="button" onClick={() => setShowCreateChar(false)} style={{ flex: 1, background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}>Cancelar</button>
+                  <button type="submit" style={{ flex: 2, background: 'rgba(var(--success-rgb, 16,185,129), 0.2)', border: '1px solid #10b981', color: 'var(--success)', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Salvar Ficha</button>
                 </div>
               </form>
             ) : (
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontSize: '0.8rem', fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>
                 Selecione uma ficha no topo para carregar os controles de status e atributos.
               </div>
             )}
           </div>
 
           {/* PAINEL DIREITO: CATÁLOGO VISUAL DE ITENS E DISTRIBUIDOR */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(15,23,42,0.15)', position: 'relative' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-tertiary)', position: 'relative' }}>
             
             {/* Navegação de Categorias do Catálogo */}
-            <div style={{ display: 'flex', padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.08)', gap: '6px', background: 'rgba(0,0,0,0.2)', alignItems: 'center' }}>
+            <div style={{ display: 'flex', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '6px', background: 'var(--bg-tertiary)', alignItems: 'center' }}>
               {[
                 { label: 'Todos', val: 'todos' },
                 { label: '⚔️ Armas', val: 'arma' },
@@ -864,7 +864,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     borderRadius: '6px',
                     border: 'none',
                     background: catalogoFilter === cat.val ? 'rgba(251,191,36,0.2)' : 'transparent',
-                    color: catalogoFilter === cat.val ? '#fbbf24' : '#cbd5e1',
+                    color: catalogoFilter === cat.val ? 'var(--warning)' : 'var(--text-secondary)',
                     fontSize: '0.75rem',
                     fontWeight: 'bold',
                     cursor: 'pointer',
@@ -883,8 +883,8 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   padding: '6px 12px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: 'rgba(16,185,129,0.2)',
-                  color: '#10b981',
+                  background: 'rgba(var(--success-rgb, 16,185,129), 0.2)',
+                  color: 'var(--success)',
                   fontSize: '0.75rem',
                   fontWeight: 'bold',
                   cursor: 'pointer',
@@ -893,8 +893,8 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   gap: '4px',
                   transition: 'all 0.2s',
                 }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(16,185,129,0.3)'}
-                onMouseOut={e => e.currentTarget.style.background = 'rgba(16,185,129,0.2)'}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(var(--success-rgb, 16,185,129), 0.3)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(var(--success-rgb, 16,185,129), 0.2)'}
               >
                 <Plus size={12} /> Criar Item
               </button>
@@ -905,9 +905,9 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
               {filteredCatalogo.map((item, idx) => {
                 // Determina visualização baseado no tipo
                 const borderColors = {
-                  arma: 'rgba(239,68,68,0.3)',
-                  poder: 'rgba(168,85,247,0.3)',
-                  pocao: 'rgba(16,185,129,0.3)',
+                  arma: 'rgba(var(--danger-rgb, 239,68,68), 0.3)',
+                  poder: 'rgba(var(--accent-rgb, 168,85,247), 0.3)',
+                  pocao: 'rgba(var(--success-rgb, 16,185,129), 0.3)',
                   maldicao: 'rgba(244,63,94,0.3)',
                   objeto_campanha: 'rgba(56,189,248,0.3)'
                 };
@@ -923,7 +923,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   <div
                     key={idx}
                     style={{
-                      background: 'rgba(255,255,255,0.02)',
+                      background: 'var(--glass-border)',
                       border: `1px solid ${borderColors[item.tipo]}`,
                       borderRadius: '10px',
                       padding: '12px',
@@ -937,12 +937,12 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   >
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#fff' }}>{item.nome}</span>
+                        <span style={{ fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--text-primary)' }}>{item.nome}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {item.isCustom && (
                             <button
                               onClick={() => handleDeleteCustomItem(item.nome, item.tipo)}
-                              style={{ background: 'transparent', border: 'none', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
                               title="Excluir Item Customizado"
                             >
                               <Trash2 size={13} />
@@ -954,14 +954,14 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                         </div>
                       </div>
                       
-                      <p style={{ margin: '6px 0', fontSize: '0.7rem', color: '#cbd5e1', lineHeight: '1.3' }}>
+                      <p style={{ margin: '6px 0', fontSize: '0.7rem', color: 'var(--text-secondary)', lineHeight: '1.3' }}>
                         {item.descricao}
                       </p>
 
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '0.65rem', color: '#94a3b8' }}>
-                        {item.custo && <span style={{ color: '#c084fc' }}>🔮 Custo: {item.custo}</span>}
-                        {item.dano && <span style={{ color: '#f87171' }}>⚔️ Dano: {item.dano}</span>}
-                        {item.efeito && <span style={{ color: '#fbbf24' }}>⚙️ Efeito: {item.efeito}</span>}
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
+                        {item.custo && <span style={{ color: 'var(--accent-primary)' }}>🔮 Custo: {item.custo}</span>}
+                        {item.dano && <span style={{ color: 'var(--danger)' }}>⚔️ Dano: {item.dano}</span>}
+                        {item.efeito && <span style={{ color: 'var(--warning)' }}>⚙️ Efeito: {item.efeito}</span>}
                       </div>
                     </div>
 
@@ -973,7 +973,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                         padding: '6px',
                         borderRadius: '6px',
                         border: 'none',
-                        background: selectedChar ? 'linear-gradient(135deg, #fbbf24, #d97706)' : 'rgba(255,255,255,0.03)',
+                        background: selectedChar ? 'linear-gradient(135deg, #fbbf24, #d97706)' : 'var(--glass-border)',
                         color: selectedChar ? '#000' : '#64748b',
                         fontWeight: 'bold',
                         fontSize: '0.7rem',
@@ -1002,7 +1002,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: 'rgba(15,23,42,0.95)',
+                background: 'var(--bg-secondary)',
                 zIndex: 10,
                 padding: '20px',
                 display: 'flex',
@@ -1012,32 +1012,32 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 backdropFilter: 'blur(8px)',
                 fontFamily: 'var(--font-body)'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                  <h4 style={{ margin: 0, color: '#fbbf24', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Criar Item Customizado</h4>
-                  <button onClick={() => setShowCreateItem(false)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
+                  <h4 style={{ margin: 0, color: 'var(--warning)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Criar Item Customizado</h4>
+                  <button onClick={() => setShowCreateItem(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                     <X size={18} />
                   </button>
                 </div>
 
                 <form onSubmit={handleCreateItemSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.75rem' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ color: '#cbd5e1', fontWeight: 'bold' }}>Nome do Item *</label>
+                    <label style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Nome do Item *</label>
                     <input
                       type="text"
                       required
                       placeholder="Ex: Espada Flamejante, Poção de Invisibilidade..."
                       value={newItemName}
                       onChange={e => setNewItemName(e.target.value)}
-                      style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none' }}
+                      style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', outline: 'none' }}
                     />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ color: '#cbd5e1', fontWeight: 'bold' }}>Tipo de Item</label>
+                    <label style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Tipo de Item</label>
                     <select
                       value={newItemType}
                       onChange={e => setNewItemType(e.target.value as any)}
-                      style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none' }}
+                      style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', outline: 'none' }}
                     >
                       <option value="arma">⚔️ Arma / Equipamento</option>
                       <option value="armadura">🛡️ Armadura</option>
@@ -1049,18 +1049,18 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ color: '#cbd5e1', fontWeight: 'bold' }}>Descrição</label>
+                    <label style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Descrição</label>
                     <textarea
                       placeholder="Ex: Uma lâmina antiga que emana calor..."
                       value={newItemDesc}
                       onChange={e => setNewItemDesc(e.target.value)}
                       rows={2}
-                      style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none', resize: 'vertical' }}
+                      style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', outline: 'none', resize: 'vertical' }}
                     />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ color: '#cbd5e1', fontWeight: 'bold' }}>
+                    <label style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>
                       Fórmula de Efeito / Ação
                     </label>
                     <input
@@ -1068,48 +1068,48 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                       placeholder="Ex: ataque_4, heal_20, mana_15, dano_2d6..."
                       value={newItemEffect}
                       onChange={e => setNewItemEffect(e.target.value)}
-                      style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none' }}
+                      style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', outline: 'none' }}
                     />
-                    <small style={{ color: '#64748b', fontSize: '0.65rem' }}>
+                    <small style={{ color: 'var(--text-secondary)', fontSize: '0.65rem' }}>
                       Formatos: <strong>ataque_X</strong> (bônus de ataque), <strong>defesa_X</strong> (bônus de defesa), <strong>heal_X</strong> (cura), <strong>mana_X</strong> (recupera mana), <strong>energia_X</strong> (recupera vigor), <strong>dano_X</strong> (expressão de dano).
                     </small>
                   </div>
 
                   {newItemType === 'arma' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ color: '#cbd5e1', fontWeight: 'bold' }}>Dano (Expressão de Dados)</label>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Dano (Expressão de Dados)</label>
                       <input
                         type="text"
                         placeholder="Ex: 1d8, 2d6+2..."
                         value={newItemDamage}
                         onChange={e => setNewItemDamage(e.target.value)}
-                        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none' }}
+                        style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', outline: 'none' }}
                       />
                     </div>
                   )}
 
                   {newItemType === 'poder' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ color: '#cbd5e1', fontWeight: 'bold' }}>Custo (Texto)</label>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Custo (Texto)</label>
                       <input
                         type="text"
                         placeholder="Ex: 2 PM, 5 Energia..."
                         value={newItemCost}
                         onChange={e => setNewItemCost(e.target.value)}
-                        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none' }}
+                        style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', outline: 'none' }}
                       />
                     </div>
                   )}
 
                   {newItemType === 'pocao' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ color: '#cbd5e1', fontWeight: 'bold' }}>Quantidade Inicial</label>
+                      <label style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Quantidade Inicial</label>
                       <input
                         type="number"
                         min={1}
                         value={newItemQty}
                         onChange={e => setNewItemQty(Math.max(1, parseInt(e.target.value) || 1))}
-                        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#fff', padding: '6px 10px', outline: 'none' }}
+                        style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '6px 10px', outline: 'none' }}
                       />
                     </div>
                   )}
@@ -1123,7 +1123,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                         borderRadius: '6px',
                         border: 'none',
                         background: 'linear-gradient(135deg, #10b981, #059669)',
-                        color: '#fff',
+                        color: 'var(--text-primary)',
                         fontWeight: 'bold',
                         cursor: 'pointer'
                       }}
@@ -1138,8 +1138,8 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                         padding: '8px',
                         borderRadius: '6px',
                         border: 'none',
-                        background: 'rgba(255,255,255,0.1)',
-                        color: '#fff',
+                        background: 'var(--glass-border)',
+                        color: 'var(--text-primary)',
                         fontWeight: 'bold',
                         cursor: 'pointer'
                       }}

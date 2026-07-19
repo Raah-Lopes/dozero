@@ -55,6 +55,8 @@ import { eldritchTheme } from './eldritch';
 import { codexTheme } from './codex';
 import { nextGenTheme } from './nextgen';
 import { daylightTheme } from './daylight';
+import { chroniclesWoodTheme } from './chronicles-wood';
+import { chroniclesParchmentTheme } from './chronicles-parchment';
 
 export const THEMES: ThemeDefinition[] = [
   defaultTheme,
@@ -62,6 +64,8 @@ export const THEMES: ThemeDefinition[] = [
   daylightTheme,
   eldritchTheme,
   codexTheme,
+  chroniclesWoodTheme,
+  chroniclesParchmentTheme,
 ];
 
 export const DEFAULT_THEME_ID = 'purple-void';

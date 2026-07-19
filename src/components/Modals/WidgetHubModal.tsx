@@ -105,7 +105,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar ferramentas..." 
-          style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px 10px 8px 34px', borderRadius: '6px', fontSize: '0.85rem' }}
+          style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '8px 10px 8px 34px', borderRadius: '6px', fontSize: '0.85rem' }}
         />
       </div>
 
@@ -146,9 +146,9 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
             width: 64px;
             height: 64px;
             border-radius: 16px;
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--bg-tertiary);
             border: 1px solid var(--glass-border);
-            color: white;
+            color: var(--text-primary);
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(5px);
@@ -176,33 +176,33 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
             transform: none;
           }
           
-          /* Temas Padronizados */
-          .theme-red { color: #fda4af; border-color: rgba(225, 29, 72, 0.5); }
-          .theme-red:hover { background: rgba(225, 29, 72, 0.2); border-color: #e11d48; box-shadow: 0 0 15px rgba(225, 29, 72, 0.5); }
+          /* Temas Padronizados usando Variáveis de CSS */
+          .theme-red { color: var(--danger); border-color: var(--danger); opacity: 0.8; }
+          .theme-red:hover { background: rgba(225, 29, 72, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(225, 29, 72, 0.3); }
 
-          .theme-amber { color: #fcd34d; border-color: rgba(245, 158, 11, 0.5); }
-          .theme-amber:hover { background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+          .theme-amber { color: var(--warning); border-color: var(--warning); opacity: 0.8; }
+          .theme-amber:hover { background: rgba(245, 158, 11, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
 
-          .theme-yellow { color: #fef08a; border-color: rgba(234, 179, 8, 0.5); }
-          .theme-yellow:hover { background: rgba(234, 179, 8, 0.2); border-color: #eab308; box-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+          .theme-yellow { color: var(--warning); border-color: var(--warning); opacity: 0.8; }
+          .theme-yellow:hover { background: rgba(234, 179, 8, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(234, 179, 8, 0.3); }
 
-          .theme-purple { color: #f0abfc; border-color: rgba(217, 70, 239, 0.5); }
-          .theme-purple:hover { background: rgba(217, 70, 239, 0.2); border-color: #d946ef; box-shadow: 0 0 15px rgba(217, 70, 239, 0.5); }
+          .theme-purple { color: var(--accent-primary); border-color: var(--accent-primary); opacity: 0.8; }
+          .theme-purple:hover { background: rgba(217, 70, 239, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(217, 70, 239, 0.3); }
 
-          .theme-green { color: #6ee7b7; border-color: rgba(16, 185, 129, 0.5); }
-          .theme-green:hover { background: rgba(16, 185, 129, 0.2); border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+          .theme-green { color: var(--success); border-color: var(--success); opacity: 0.8; }
+          .theme-green:hover { background: rgba(16, 185, 129, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
 
-          .theme-blue { color: #93c5fd; border-color: rgba(59, 130, 246, 0.5); }
-          .theme-blue:hover { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+          .theme-blue { color: var(--mana); border-color: var(--mana); opacity: 0.8; }
+          .theme-blue:hover { background: rgba(59, 130, 246, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
 
-          .theme-orange { color: #fdba74; border-color: rgba(249, 115, 22, 0.5); }
-          .theme-orange:hover { background: rgba(249, 115, 22, 0.2); border-color: #f97316; box-shadow: 0 0 15px rgba(249, 115, 22, 0.5); }
+          .theme-orange { color: var(--warning); border-color: var(--warning); opacity: 0.8; }
+          .theme-orange:hover { background: rgba(249, 115, 22, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(249, 115, 22, 0.3); }
 
-          .theme-indigo { color: #c4b5fd; border-color: rgba(139, 92, 246, 0.5); }
-          .theme-indigo:hover { background: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+          .theme-indigo { color: var(--accent-primary); border-color: var(--accent-primary); opacity: 0.8; }
+          .theme-indigo:hover { background: rgba(139, 92, 246, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
 
-          .theme-pink { color: #f9a8d4; border-color: rgba(236, 72, 153, 0.5); }
-          .theme-pink:hover { background: rgba(236, 72, 153, 0.2); border-color: #ec4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); }
+          .theme-pink { color: var(--accent-primary); border-color: var(--accent-primary); opacity: 0.8; }
+          .theme-pink:hover { background: rgba(236, 72, 153, 0.1); opacity: 1; box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); }
         `}
       </style>
 

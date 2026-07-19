@@ -477,7 +477,7 @@ export const NPCPanel: React.FC = () => {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%', color: '#f1f5f9', fontFamily: 'var(--font-body)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
       
       {/* Tab Switcher */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.15)', borderRadius: '6px 6px 0 0', padding: '2px 4px 0 4px', flexShrink: 0 }}>
@@ -513,7 +513,7 @@ export const NPCPanel: React.FC = () => {
           {activePanelTab === 'board' ? 'Gerenciador de Instâncias' : 'Fichas Disponíveis na Wiki'}
         </span>
         {activePanelTab === 'board' && (
-          <button onClick={createNewCharacter} className="btn-icon" title="Criar Token Rápido" style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', width: '22px', height: '22px', padding: 0 }}>
+          <button onClick={createNewCharacter} className="btn-icon" title="Criar Token Rápido" style={{ background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', width: '22px', height: '22px', padding: 0 }}>
             <UserPlus size={12} />
           </button>
         )}
@@ -530,7 +530,7 @@ export const NPCPanel: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
               width: '100%', padding: '4px 24px 4px 8px', background: 'rgba(0,0,0,0.3)',
-              border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'white', fontSize: '0.75rem'
+              border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem'
             }}
           />
           <Search size={12} color="var(--text-secondary)" style={{ position: 'absolute', right: '8px', top: '8px' }} />
@@ -635,12 +635,12 @@ export const NPCPanel: React.FC = () => {
                           />
                         ) : (
                           <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-                            {t.isPlayer ? <User size={12} color="#6ee7b7" /> : <Cpu size={12} color="#cbd5e1" />}
+                            {t.isPlayer ? <User size={12} color="var(--success)" /> : <Cpu size={12} color="var(--text-secondary)" />}
                           </div>
                         )}
                         
                         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                          <span style={{ fontSize: '0.8rem', color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {t.name}
                           </span>
                           <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
@@ -661,7 +661,7 @@ export const NPCPanel: React.FC = () => {
                         {isVisible && (
                           <button
                             onClick={(e) => handleFocusToken(t.id, e)}
-                            style={{ background: 'transparent', border: 'none', color: '#93c5fd', cursor: 'pointer', padding: '2px' }}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--mana)', cursor: 'pointer', padding: '2px' }}
                             title="Focar Câmera no Token"
                           >
                             <Target size={12} />
@@ -669,7 +669,7 @@ export const NPCPanel: React.FC = () => {
                         )}
                         <button
                           onClick={(e) => handleCloneToken(t, e)}
-                          style={{ background: 'transparent', border: 'none', color: '#fcd34d', cursor: 'pointer', padding: '2px' }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '2px' }}
                           title="Duplicar Token (Clonar)"
                         >
                           <Copy size={12} />
@@ -696,7 +696,7 @@ export const NPCPanel: React.FC = () => {
 
                         <button
                           onClick={(e) => handleOpenSheet(t.id, e)}
-                          style={{ background: 'transparent', border: 'none', color: '#d8b4fe', cursor: 'pointer', padding: '2px' }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }}
                           title="Abrir Ficha do Personagem"
                         >
                           <FileText size={12} />
@@ -752,7 +752,7 @@ export const NPCPanel: React.FC = () => {
                             )}
                             <div style={{
                               position: 'absolute', bottom: 0, left: 0, right: 0, 
-                              background: 'rgba(0,0,0,0.6)', color: 'white', fontSize: '0.5rem', 
+                              background: 'rgba(0,0,0,0.6)', color: 'var(--text-primary)', fontSize: '0.5rem', 
                               textAlign: 'center', padding: '1px 0'
                             }}>
                               EDIT
@@ -770,7 +770,7 @@ export const NPCPanel: React.FC = () => {
                               onBlur={(e) => handlePropChangeEnd(t, 'name', e.target.value)}
                               style={{
                                 background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                borderRadius: '4px', color: 'white', padding: '3px 6px', fontSize: '0.75rem',
+                                borderRadius: '4px', color: 'var(--text-primary)', padding: '3px 6px', fontSize: '0.75rem',
                                 width: '100%'
                               }}
                             />
@@ -786,7 +786,7 @@ export const NPCPanel: React.FC = () => {
                               onChange={(e) => handleUpdateTokenProp(t, 'tokenShape', e.target.value)}
                               style={{
                                 background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                borderRadius: '4px', color: 'white', padding: '2px 4px', fontSize: '0.7rem',
+                                borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
                             >
@@ -821,7 +821,7 @@ export const NPCPanel: React.FC = () => {
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
                                   background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                  borderRadius: '4px', color: 'white', padding: '2px 4px', fontSize: '0.65rem',
+                                  borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.65rem',
                                   width: '100%', fontFamily: 'monospace'
                                 }}
                               />
@@ -858,7 +858,7 @@ export const NPCPanel: React.FC = () => {
                               onChange={(e) => handleUpdateTokenProp(t, 'hpBarMode', e.target.value)}
                               style={{
                                 background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                borderRadius: '4px', color: 'white', padding: '2px 4px', fontSize: '0.7rem',
+                                borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
                             >
@@ -884,7 +884,7 @@ export const NPCPanel: React.FC = () => {
                             onClick={() => setExpandedTokenId(null)}
                             style={{
                               background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
-                              borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.65rem',
+                              borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 8px', fontSize: '0.65rem',
                               cursor: 'pointer'
                             }}
                           >
@@ -934,13 +934,13 @@ export const NPCPanel: React.FC = () => {
                           />
                         ) : (
                           <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {t.isPlayer ? <User size={16} color="#6ee7b7" /> : <Cpu size={16} color="#cbd5e1" />}
+                            {t.isPlayer ? <User size={16} color="var(--success)" /> : <Cpu size={16} color="var(--text-secondary)" />}
                           </div>
                         )}
                       </div>
 
                       {/* Info */}
-                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'white', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--text-primary)', textAlign: 'center', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {t.name}
                       </span>
                       <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
@@ -968,7 +968,7 @@ export const NPCPanel: React.FC = () => {
                         {isVisible && (
                           <button
                             onClick={(e) => handleFocusToken(t.id, e)}
-                            style={{ background: 'transparent', border: 'none', color: '#93c5fd', cursor: 'pointer', padding: '1px' }}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--mana)', cursor: 'pointer', padding: '1px' }}
                             title="Focar"
                           >
                             <Target size={10} />
@@ -976,7 +976,7 @@ export const NPCPanel: React.FC = () => {
                         )}
                         <button
                           onClick={(e) => handleCloneToken(t, e)}
-                          style={{ background: 'transparent', border: 'none', color: '#fcd34d', cursor: 'pointer', padding: '1px' }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '1px' }}
                           title="Clonar"
                         >
                           <Copy size={10} />
@@ -1002,7 +1002,7 @@ export const NPCPanel: React.FC = () => {
 
                         <button
                           onClick={(e) => handleOpenSheet(t.id, e)}
-                          style={{ background: 'transparent', border: 'none', color: '#d8b4fe', cursor: 'pointer', padding: '1px' }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '1px' }}
                           title="Ficha"
                         >
                           <FileText size={10} />
@@ -1058,7 +1058,7 @@ export const NPCPanel: React.FC = () => {
                             )}
                             <div style={{
                               position: 'absolute', bottom: 0, left: 0, right: 0, 
-                              background: 'rgba(0,0,0,0.6)', color: 'white', fontSize: '0.5rem', 
+                              background: 'rgba(0,0,0,0.6)', color: 'var(--text-primary)', fontSize: '0.5rem', 
                               textAlign: 'center', padding: '1px 0'
                             }}>
                               EDIT
@@ -1076,7 +1076,7 @@ export const NPCPanel: React.FC = () => {
                               onBlur={(e) => handlePropChangeEnd(t, 'name', e.target.value)}
                               style={{
                                 background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                borderRadius: '4px', color: 'white', padding: '3px 6px', fontSize: '0.75rem',
+                                borderRadius: '4px', color: 'var(--text-primary)', padding: '3px 6px', fontSize: '0.75rem',
                                 width: '100%'
                               }}
                             />
@@ -1092,7 +1092,7 @@ export const NPCPanel: React.FC = () => {
                               onChange={(e) => handleUpdateTokenProp(t, 'tokenShape', e.target.value)}
                               style={{
                                 background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                borderRadius: '4px', color: 'white', padding: '2px 4px', fontSize: '0.7rem',
+                                borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
                             >
@@ -1127,7 +1127,7 @@ export const NPCPanel: React.FC = () => {
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
                                   background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                  borderRadius: '4px', color: 'white', padding: '2px 4px', fontSize: '0.65rem',
+                                  borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.65rem',
                                   width: '100%', fontFamily: 'monospace'
                                 }}
                               />
@@ -1164,7 +1164,7 @@ export const NPCPanel: React.FC = () => {
                               onChange={(e) => handleUpdateTokenProp(t, 'hpBarMode', e.target.value)}
                               style={{
                                 background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                borderRadius: '4px', color: 'white', padding: '2px 4px', fontSize: '0.7rem',
+                                borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
                             >
@@ -1190,7 +1190,7 @@ export const NPCPanel: React.FC = () => {
                             onClick={() => setExpandedTokenId(null)}
                             style={{
                               background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
-                              borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.65rem',
+                              borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 8px', fontSize: '0.65rem',
                               cursor: 'pointer'
                             }}
                           >
@@ -1257,7 +1257,7 @@ export const NPCPanel: React.FC = () => {
                       )}
                       
                       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        <span style={{ fontSize: '0.8rem', color: 'white', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {title}
                         </span>
                         <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -1272,7 +1272,7 @@ export const NPCPanel: React.FC = () => {
                         onClick={() => handleSpawnFromWiki(entity.path)}
                         style={{
                           padding: '3px 8px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px',
-                          color: 'white', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold'
+                          color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold'
                         }}
                         title="Instanciar no centro do Tabuleiro"
                       >
@@ -1280,7 +1280,7 @@ export const NPCPanel: React.FC = () => {
                       </button>
                       <button
                         onClick={(e) => handleOpenWikiSheet(entity.path, e)}
-                        style={{ background: 'transparent', border: 'none', color: '#d8b4fe', cursor: 'pointer', padding: '2px' }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }}
                         title="Consultar Ficha (.md)"
                       >
                         <FileText size={12} />

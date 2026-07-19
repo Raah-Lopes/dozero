@@ -10,7 +10,7 @@ const TYPE_CONFIG: Record<DiaryEntryType, { icon: string; color: string; label: 
   clock:     { icon: '⏱',  color: '#f59e0b', label: 'Relógio' },
   objective: { icon: '☑️', color: '#10b981', label: 'Objetivo' },
   condition: { icon: '⚡', color: '#3b82f6', label: 'Condição' },
-  narrative: { icon: '📝', color: '#64748b', label: 'Narrativa' },
+  narrative: { icon: '📝', color: 'var(--text-secondary)', label: 'Narrativa' },
 };
 
 export const SessionDiary: React.FC = () => {
@@ -97,7 +97,7 @@ export const SessionDiary: React.FC = () => {
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.78rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <BookOpen size={13} /> Diário
         </span>
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -143,7 +143,7 @@ export const SessionDiary: React.FC = () => {
             >
               <span style={{ fontSize: '0.65rem', color: '#374151', flexShrink: 0, fontFamily: 'monospace', marginTop: '1px' }}>{time}</span>
               <span style={{ fontSize: '0.65rem', flexShrink: 0, marginTop: '1px' }}>{cfg.icon}</span>
-              <span style={{ fontSize: '0.72rem', color: '#64748b', lineHeight: 1.4, flex: 1 }}>{entry.text}</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.4, flex: 1 }}>{entry.text}</span>
             </div>
           );
         })}

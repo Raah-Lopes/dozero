@@ -81,7 +81,7 @@ export const CutsceneOverlay: React.FC<Props> = ({ config, onEnd }) => {
             fontSize: 'clamp(2rem, 5vw, 3.5rem)',
             fontWeight: 800,
             letterSpacing: '-0.02em',
-            color: 'white',
+            color: 'var(--text-primary)',
             textShadow: '0 0 40px rgba(168,85,247,0.6), 0 2px 20px rgba(0,0,0,0.8)',
             marginBottom: '1rem',
             lineHeight: 1.1,

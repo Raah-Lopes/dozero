@@ -298,7 +298,7 @@ export const CutsceneManager: React.FC = () => {
                   <Play size={11} />
                 </button>
                 <button title="Editar" onClick={() => setUi({ mode: 'edit', id: c.id })}
-                  style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Pencil size={11} />
                 </button>
                 <button title="Apagar" onClick={() => handleDelete(c.id)}

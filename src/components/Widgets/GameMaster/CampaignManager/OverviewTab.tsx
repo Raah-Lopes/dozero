@@ -127,7 +127,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           padding: '10px 14px', borderRadius: '10px',
           background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)',
         }}>
-          <AlertTriangle size={14} color="#f59e0b" />
+          <AlertTriangle size={14} color="var(--warning)" />
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'rgba(245,158,11,0.9)', flex: 1 }}>
             Esta campanha não tem arquivos na wiki ainda.
           </p>
@@ -217,9 +217,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)',
               borderRadius: '10px'
             }}>
-              <Clock size={18} color="#f59e0b" />
+              <Clock size={18} color="var(--warning)" />
               <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontWeight: 700, color: '#fcd34d', fontSize: '0.9rem' }}>
+                <p style={{ margin: 0, fontWeight: 700, color: 'var(--warning)', fontSize: '0.9rem' }}>
                   {new Date(next.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
                 </p>
                 {next.summary && <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: 'rgba(148,163,184,0.7)' }}>{next.summary.substring(0, 120)}{next.summary.length > 120 ? '…' : ''}</p>}

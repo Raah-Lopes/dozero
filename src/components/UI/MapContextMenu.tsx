@@ -188,7 +188,7 @@ export const MapContextMenu: React.FC = () => {
            <button onClick={autoGrid} className="btn-icon" title="Organizar em Grade Magica"><Grid3X3 size={16} color="var(--accent-primary)" /></button>
            <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
            <button onClick={toggleGroup} className="btn-icon" title={isGrouped ? "Desagrupar Imagens" : "Agrupar Imagens permanentemente"}>
-             {isGrouped ? <Unlink size={16} color="var(--danger)" /> : <Link size={16} color="#10b981" />}
+             {isGrouped ? <Unlink size={16} color="var(--danger)" /> : <Link size={16} color="var(--success)" />}
            </button>
          </>
        )}

@@ -1194,7 +1194,7 @@ ${vencedor}`, true);
     borderRadius: '8px',
     border: '1px solid rgba(255,255,255,0.08)',
     background: 'rgba(15,23,42,0.9)',
-    color: '#f1f5f9',
+    color: 'var(--text-primary)',
     fontFamily: 'var(--font-body)',
     marginBottom: '8px',
   };
@@ -1209,7 +1209,7 @@ ${vencedor}`, true);
       initialX={window.innerWidth / 2 - 450}
       initialY={window.innerHeight / 2 - 360}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#f1f5f9', fontFamily: 'var(--font-body)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
         
         {/* NAVEGAÇÃO DE ABAS E SELETOR DE MODO */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 20px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(30,41,59,0.2)' }}>
@@ -1453,19 +1453,19 @@ ${vencedor}`, true);
                   {/* MODIFICADORES TÁTICOS (DLC) */}
                   {activeDLCs.includes('dlc_advanced_combat') && (
                     <div style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', padding: '12px', borderRadius: '8px' }}>
-                      <h5 style={{ margin: '0 0 8px', color: '#fcd34d', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <h5 style={{ margin: '0 0 8px', color: 'var(--warning)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Swords size={12} /> Modificadores Táticos
                       </h5>
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <label style={{ fontSize: '0.7rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
+                        <label style={{ fontSize: '0.7rem', color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
                           <input type="checkbox" checked={flanqueando} onChange={e => setFlanqueando(e.target.checked)} style={{ accentColor: '#f59e0b' }} />
                           Flanqueando (+2 Dano/Acerto)
                         </label>
-                        <label style={{ fontSize: '0.7rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
+                        <label style={{ fontSize: '0.7rem', color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
                           <input type="checkbox" checked={cobertura} onChange={e => setCobertura(e.target.checked)} style={{ accentColor: '#f59e0b' }} />
                           Alvo com Cobertura Parcial (-2 Acerto)
                         </label>
-                        <label style={{ fontSize: '0.7rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
+                        <label style={{ fontSize: '0.7rem', color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px' }}>
                           <input type="checkbox" checked={terrenoDificil} onChange={e => setTerrenoDificil(e.target.checked)} style={{ accentColor: '#f59e0b' }} />
                           Terreno Difícil (Dano -2)
                         </label>
@@ -1502,7 +1502,7 @@ ${vencedor}`, true);
                         ))}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Atacante.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione um Atacante.</div>
                     )}
                   </div>
 
@@ -1537,7 +1537,7 @@ ${vencedor}`, true);
                         ))}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Atacante.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione um Atacante.</div>
                     )}
                   </div>
 
@@ -1553,7 +1553,7 @@ ${vencedor}`, true);
                             onClick={rolarAtaqueDesarmado}
                             style={{
                               background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
-                              borderRadius: '6px', color: '#fca5a5', padding: '6px', cursor: 'pointer', fontSize: '0.75rem'
+                              borderRadius: '6px', color: 'var(--danger)', padding: '6px', cursor: 'pointer', fontSize: '0.75rem'
                             }}
                           >
                             👊 Desarmado (1d3)
@@ -1562,7 +1562,7 @@ ${vencedor}`, true);
                             onClick={rolarPedraDistancia}
                             style={{
                               background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
-                              borderRadius: '6px', color: '#fca5a5', padding: '6px', cursor: 'pointer', fontSize: '0.75rem'
+                              borderRadius: '6px', color: 'var(--danger)', padding: '6px', cursor: 'pointer', fontSize: '0.75rem'
                             }}
                           >
                             🪨 Pedra (1d4)
@@ -1575,7 +1575,7 @@ ${vencedor}`, true);
                             disabled={atacante.mana < 1}
                             style={{
                               background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
-                              borderRadius: '6px', color: '#93c5fd', padding: '6px', cursor: 'pointer', fontSize: '0.75rem',
+                              borderRadius: '6px', color: 'var(--mana)', padding: '6px', cursor: 'pointer', fontSize: '0.75rem',
                               opacity: atacante.mana < 1 ? 0.5 : 1
                             }}
                           >
@@ -1624,12 +1624,12 @@ ${vencedor}`, true);
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                           }}>
                             <div>
-                              <span style={{ fontWeight: 'bold', color: '#6ee7b7' }}>⚔️ {item.nome}</span>
+                              <span style={{ fontWeight: 'bold', color: 'var(--success)' }}>⚔️ {item.nome}</span>
                               <span style={{ opacity: 0.7, fontSize: '0.7rem', marginLeft: '6px' }}>({item.efeito})</span>
                             </div>
                             <button
                               onClick={() => rolarArmaEquipada(item)}
-                              style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: '#6ee7b7', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: 'var(--success)', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                             >
                               Rolar
                             </button>
@@ -1644,12 +1644,12 @@ ${vencedor}`, true);
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                           }}>
                             <div>
-                              <span style={{ fontWeight: 'bold', color: '#fca5a5' }}>⚔️ {item.nome}</span>
+                              <span style={{ fontWeight: 'bold', color: 'var(--danger)' }}>⚔️ {item.nome}</span>
                               <span style={{ opacity: 0.7, fontSize: '0.7rem', marginLeft: '6px' }}>({item.dano || '1d6'} | {item.efeito})</span>
                             </div>
                             <button
                               onClick={() => rolarArmaEquipada(item)}
-                              style={{ background: 'rgba(239,68,68,0.2)', border: 'none', color: '#fca5a5', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              style={{ background: 'rgba(239,68,68,0.2)', border: 'none', color: 'var(--danger)', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                             >
                               Rolar
                             </button>
@@ -1664,12 +1664,12 @@ ${vencedor}`, true);
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                           }}>
                             <div>
-                              <span style={{ fontWeight: 'bold', color: '#d8b4fe' }}>✨ {item.nome}</span>
+                              <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>✨ {item.nome}</span>
                               <span style={{ opacity: 0.7, fontSize: '0.7rem', marginLeft: '6px' }}>({item.custo})</span>
                             </div>
                             <button
                               onClick={() => handleItemActionAttacker('poderes', idx, 'conjurar')}
-                              style={{ background: 'rgba(168,85,247,0.2)', border: 'none', color: '#d8b4fe', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              style={{ background: 'rgba(168,85,247,0.2)', border: 'none', color: 'var(--accent-primary)', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                             >
                               Conjurar
                             </button>
@@ -1678,7 +1678,7 @@ ${vencedor}`, true);
 
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Atacante.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione um Atacante.</div>
                     )}
                   </div>
 
@@ -1701,7 +1701,7 @@ ${vencedor}`, true);
                                   <span style={{ fontWeight: item.equipado ? 'bold' : 'normal', color: item.equipado ? '#ef4444' : 'white' }}>
                                     {item.nome}
                                   </span>
-                                  <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>Dano: {item.dano || '1d6'}</div>
+                                  <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Dano: {item.dano || '1d6'}</div>
                                 </div>
                                 <button
                                   onClick={() => handleItemActionAttacker('armas', idx, 'equipar')}
@@ -1727,12 +1727,12 @@ ${vencedor}`, true);
                                 padding: '4px 6px', borderRadius: '4px', background: 'rgba(0,0,0,0.2)', fontSize: '0.7rem', marginBottom: '4px'
                               }}>
                                 <div>
-                                  <span style={{ color: 'white' }}>{item.nome} {item.quantidade > 1 ? `(x${item.quantidade})` : ''}</span>
-                                  <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{item.descricao || item.efeito}</div>
+                                  <span style={{ color: 'var(--text-primary)' }}>{item.nome} {item.quantidade > 1 ? `(x${item.quantidade})` : ''}</span>
+                                  <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{item.descricao || item.efeito}</div>
                                 </div>
                                 <button
                                   onClick={() => handleItemActionAttacker('pocoes', idx, 'usar')}
-                                  style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: '#6ee7b7', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.65rem' }}
+                                  style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: 'var(--success)', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.65rem' }}
                                 >
                                   Usar
                                 </button>
@@ -1782,13 +1782,13 @@ ${vencedor}`, true);
                                   <span style={{ fontWeight: item.equipado ? 'bold' : 'normal', color: item.equipado ? '#c084fc' : 'white' }}>
                                     {item.nome} {item.quantidade > 1 ? `(x${item.quantidade})` : ''}
                                   </span>
-                                  <div style={{ fontSize: '0.6rem', color: '#94a3b8' }}>{item.tipo} | {item.efeito}</div>
+                                  <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>{item.tipo} | {item.efeito}</div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '4px' }}>
                                   {item.tipo === 'consumivel' && (
                                     <button
                                       onClick={() => usarConsumivelAttacker(idx)}
-                                      style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: '#6ee7b7', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.65rem' }}
+                                      style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: 'var(--success)', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.65rem' }}
                                     >
                                       Usar
                                     </button>
@@ -1815,7 +1815,7 @@ ${vencedor}`, true);
                          (!atacante.maldicoes || atacante.maldicoes.length === 0) &&
                          (!atacante.objetos_campanha || atacante.objetos_campanha.length === 0) &&
                          (!atacante.inventario || atacante.inventario.length === 0) && (
-                          <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Mochila vazia.</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Mochila vazia.</div>
                         )}
 
                         {/* DLC: CRAFTING E ALQUIMIA */}
@@ -1838,7 +1838,7 @@ ${vencedor}`, true);
                                     alert('Faltam recursos! Necessário: 20 Ouro e 2 PM.');
                                   }
                                 }}
-                                style={{ flex: 1, padding: '4px', background: 'rgba(239, 68, 68, 0.2)', border: 'none', borderRadius: '4px', color: '#fca5a5', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold' }}
+                                style={{ flex: 1, padding: '4px', background: 'rgba(239, 68, 68, 0.2)', border: 'none', borderRadius: '4px', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold' }}
                                 title="Custo: 20 Ouro, 2 PM"
                               >
                                 + Poção de Vida
@@ -1867,7 +1867,7 @@ ${vencedor}`, true);
 
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Atacante.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione um Atacante.</div>
                     )}
                   </div>
 
@@ -1878,7 +1878,7 @@ ${vencedor}`, true);
                   
                   {/* APLICAÇÃO DE DANO/CURA RÁPIDA */}
                   <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', padding: '12px', borderRadius: '8px' }}>
-                    <h5 style={{ margin: '0 0 8px', color: '#fca5a5', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aplicar HP no Alvo</h5>
+                    <h5 style={{ margin: '0 0 8px', color: 'var(--danger)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aplicar HP no Alvo</h5>
                     {defensor ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -1886,7 +1886,7 @@ ${vencedor}`, true);
                             type="number"
                             placeholder="Val"
                             id="fast-hp-input"
-                            style={{ width: '60px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '4px', borderRadius: '4px', textAlign: 'center' }}
+                            style={{ width: '60px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '4px', borderRadius: '4px', textAlign: 'center' }}
                           />
                           <button
                             onClick={async () => {
@@ -1897,7 +1897,7 @@ ${vencedor}`, true);
                               setDefensor(novaFicha);
                               adicionarLog(`💥 **${defensor.nome}** sofreu **${val}** de dano! (HP: ${novaFicha.pv}/${novaFicha.pv_max})`, true);
                             }}
-                            style={{ flex: 1, background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ flex: 1, background: 'rgba(239,68,68,0.2)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                           >Dano</button>
                           <button
                             onClick={async () => {
@@ -1908,12 +1908,12 @@ ${vencedor}`, true);
                               setDefensor(novaFicha);
                               adicionarLog(`⚕️ **${defensor.nome}** curou **${val}** de HP! (HP: ${novaFicha.pv}/${novaFicha.pv_max})`, true);
                             }}
-                            style={{ flex: 1, background: 'rgba(16,185,129,0.2)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ flex: 1, background: 'rgba(16,185,129,0.2)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                           >Cura</button>
                         </div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Defensor.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione um Defensor.</div>
                     )}
                   </div>
 
@@ -1950,7 +1950,7 @@ ${vencedor}`, true);
                         })}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione um Defensor.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione um Defensor.</div>
                     )}
                   </div>
 
@@ -1975,7 +1975,7 @@ ${vencedor}`, true);
                           disabled={mentalAtkPool <= 0 || mentalDefPool <= 0}
                           style={{
                             width: '100%', padding: '8px', background: 'linear-gradient(45deg, #4f46e5, #06b6d4)',
-                            color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                            color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer',
                             fontWeight: 'bold', fontSize: '0.75rem', marginTop: '4px',
                             opacity: (mentalAtkPool <= 0 || mentalDefPool <= 0) ? 0.5 : 1
                           }}
@@ -1984,7 +1984,7 @@ ${vencedor}`, true);
                         </button>
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione Atacante e Defensor.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione Atacante e Defensor.</div>
                     )}
                   </div>
 
@@ -1995,14 +1995,14 @@ ${vencedor}`, true);
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div className="grid-responsive-2" style={{ gap: '8px' }}>
                           <div>
-                            <label style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Atacante usa:</label>
+                            <label style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>Atacante usa:</label>
                             <select
                               value={disputeAttrAtk}
                               onChange={(e) => setDisputeAttrAtk(e.target.value)}
                               style={{
                                 width: '100%', padding: '6px 10px', borderRadius: '6px',
                                 background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)',
-                                color: 'white', fontSize: '0.75rem', cursor: 'pointer'
+                                color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer'
                               }}
                             >
                               <option value="forca">FOR (Força)</option>
@@ -2021,14 +2021,14 @@ ${vencedor}`, true);
                             </select>
                           </div>
                           <div>
-                            <label style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px' }}>Defensor usa:</label>
+                            <label style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>Defensor usa:</label>
                             <select
                               value={disputeAttrDef}
                               onChange={(e) => setDisputeAttrDef(e.target.value)}
                               style={{
                                 width: '100%', padding: '6px 10px', borderRadius: '6px',
                                 background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)',
-                                color: 'white', fontSize: '0.75rem', cursor: 'pointer'
+                                color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer'
                               }}
                             >
                               <option value="forca">FOR (Força)</option>
@@ -2051,7 +2051,7 @@ ${vencedor}`, true);
                           onClick={rolarDisputaAtributos}
                           style={{
                             width: '100%', padding: '8px', background: 'linear-gradient(45deg, #059669, #10b981)',
-                            color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                            color: 'var(--text-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer',
                             fontWeight: 'bold', fontSize: '0.75rem'
                           }}
                         >
@@ -2059,7 +2059,7 @@ ${vencedor}`, true);
                         </button>
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>Selecione Atacante e Defensor.</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Selecione Atacante e Defensor.</div>
                     )}
                   </div>
 
@@ -2072,14 +2072,14 @@ ${vencedor}`, true);
                 
                 {/* Dano Avulso */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>Rolar Dano Avulso</label>
+                  <label style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Rolar Dano Avulso</label>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <input
                       type="text"
                       value={danoAvulsoInput}
                       onChange={e => setDanoAvulsoInput(e.target.value)}
                       placeholder="1d6"
-                      style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.75rem', textAlign: 'center' }}
+                      style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.75rem', textAlign: 'center' }}
                     />
                     <button
                       onClick={rolarDanoAvulso}
@@ -2094,7 +2094,7 @@ ${vencedor}`, true);
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', justifyContent: 'flex-end' }}>
                   <button
                     onClick={rolarD20Generico}
-                    style={{ height: '31px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
+                    style={{ height: '31px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
                   >
                     {sistemaMode === 'd20' ? '🎲 Teste Genérico (d20)' : '📊 Teste Genérico (d100)'}
                   </button>
@@ -2102,7 +2102,7 @@ ${vencedor}`, true);
 
                 {/* Teste de Bônus */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase' }}>
+                  <label style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
                     {sistemaMode === 'd20' ? 'Teste de Bônus (1d20+B)' : 'Modificador d100 (1d100+M)'}
                   </label>
                   <div style={{ display: 'flex', gap: '4px' }}>
@@ -2111,7 +2111,7 @@ ${vencedor}`, true);
                       value={bonusTestInput}
                       onChange={e => setBonusTestInput(e.target.value)}
                       placeholder={sistemaMode === 'd20' ? '+5' : '-10'}
-                      style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.75rem', textAlign: 'center' }}
+                      style={{ width: '100%', padding: '6px', borderRadius: '6px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.75rem', textAlign: 'center' }}
                     />
                     <button
                       onClick={rolarTesteBonus}
@@ -2129,7 +2129,7 @@ ${vencedor}`, true);
                     disabled={!defensor}
                     style={{
                       height: '31px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
-                      borderRadius: '6px', color: '#fca5a5', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold',
+                      borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold',
                       opacity: !defensor ? 0.5 : 1
                     }}
                   >
@@ -2148,14 +2148,14 @@ ${vencedor}`, true);
               <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                 <button
                   onClick={rolarIniciativaGeral}
-                  style={{ flex: 2, background: 'var(--accent-secondary)', color: 'white', fontWeight: 'bold', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                  style={{ flex: 2, background: 'var(--accent-secondary)', color: 'var(--text-primary)', fontWeight: 'bold', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                 >
                   <Dices size={16} /> Rolar Iniciativa (Mesa Toda)
                 </button>
                 <button
                   onClick={proximoTurno}
                   disabled={fila.length === 0}
-                  style={{ flex: 1, background: '#10b981', color: 'white', fontWeight: 'bold', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', opacity: fila.length === 0 ? 0.5 : 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                  style={{ flex: 1, background: '#10b981', color: 'var(--text-primary)', fontWeight: 'bold', border: 'none', padding: '10px', borderRadius: '6px', cursor: 'pointer', opacity: fila.length === 0 ? 0.5 : 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                 >
                   Próximo Turno <ArrowRightCircle size={16} />
                 </button>
@@ -2163,7 +2163,7 @@ ${vencedor}`, true);
 
               <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 {fila.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', padding: '20px 0' }}>
+                  <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '20px 0' }}>
                     A fila de combate está vazia.
                   </div>
                 ) : (
@@ -2183,7 +2183,7 @@ ${vencedor}`, true);
                             <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: isAtual ? '#c084fc' : '#94a3b8', width: '30px' }}>{item.valor}</div>
                             <div style={{ fontWeight: 'bold', color: isAtual ? 'white' : '#cbd5e1' }}>{item.nome}</div>
                           </div>
-                          <div style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', gap: '10px' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '10px' }}>
                             <span>❤️ {f.pv}/{f.pv_max}</span>
                             {f.status_efeitos && f.status_efeitos.length > 0 && (
                               <span style={{ color: '#f87171' }}>{f.status_efeitos.join(', ')}</span>
@@ -2206,7 +2206,7 @@ ${vencedor}`, true);
                   <Target size={20} style={{ marginRight: '8px' }} />
                   Gerenciamento de Visibilidade
                 </h3>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '15px' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '15px' }}>
                   Desative os personagens para escondê-los dos dropdowns de combate sem excluir os arquivos.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto', paddingRight: '10px' }}>
@@ -2219,7 +2219,7 @@ ${vencedor}`, true);
                     }}>
                       <div>
                         <div style={{ fontWeight: 'bold', color: p.ativo ? 'white' : '#64748b' }}>{p.nome}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{p.status.toUpperCase()} | ❤️ {p.pv}/{p.pv_max}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{p.status.toUpperCase()} | ❤️ {p.pv}/{p.pv_max}</div>
                       </div>
                       <button
                         onClick={async () => {
@@ -2249,7 +2249,7 @@ ${vencedor}`, true);
           {/* ======================= LOG GLOBAL ======================= */}
           <h5 style={{ margin: '0 0 8px', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
             <span>📝 Log Tático</span>
-            <span style={{ fontSize: '0.75rem', color: '#64748b', cursor: 'pointer' }} onClick={() => setResultados([])}>Limpar</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => setResultados([])}>Limpar</span>
           </h5>
           <div style={{
             background: 'rgba(2,6,23,0.8)', borderRadius: '10px', padding: '12px',

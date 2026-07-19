@@ -368,7 +368,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
           }}
           title={title}
         >
-          <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--text-primary)' }}>
+          <span className="text-gold" style={{ fontSize: '1.2rem' }}>
              {title.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -395,7 +395,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         >
           <div style={{ display: 'flex', gap: '0.5rem', color: 'var(--text-secondary)', alignItems: 'center' }}>
             <GripHorizontal size={14} style={{ opacity: isPinned ? 0.2 : 1 }} />
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</span>
+            <span className="text-gold" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>{title}</span>
           </div>
         
           <div style={{ position: 'absolute', right: '0.25rem', top: '0.25rem', display: 'flex', gap: '0.25rem' }}>

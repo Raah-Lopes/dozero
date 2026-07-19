@@ -11,7 +11,7 @@ export const GlassAccordion: React.FC<GlassAccordionProps> = ({ title, defaultOp
   return (
     <details className="glass-accordion" open={defaultOpen} style={{ ...style, marginBottom: '16px' }}>
       <summary style={{ outline: 'none' }}>
-        <div style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '6px' }}>
           {title}
         </div>
       </summary>

@@ -112,7 +112,7 @@ export const PropsPanel: React.FC = () => {
 
       <GlassAccordion title={`Itens na Cena (${props.length})`}>
         {props.length === 0 ? (
-          <div style={{ color: '#64748b', fontSize: '0.7rem', fontStyle: 'italic', padding: '8px 0' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', fontStyle: 'italic', padding: '8px 0' }}>
             Nenhum item adicionado à cena atual.
           </div>
         ) : (
@@ -131,7 +131,7 @@ export const PropsPanel: React.FC = () => {
                 }}
               >
                 {p.type === 'token' ? (
-                  <div style={{ width: 24, height: 24, background: p.color, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '10px', fontWeight: 'bold' }}>
+                  <div style={{ width: 24, height: 24, background: p.color, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: '10px', fontWeight: 'bold' }}>
                     {p.label?.charAt(0)}
                   </div>
                 ) : (
@@ -142,16 +142,16 @@ export const PropsPanel: React.FC = () => {
                   <div style={{ fontSize: '0.7rem', color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {p.label || (p.type === 'token' ? 'Ficha' : 'Imagem')}
                   </div>
-                  <div style={{ fontSize: '0.6rem', color: '#64748b' }}>
+                  <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
                     Z-Index: {p.zIndex}
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '4px' }}>
-                  <button onClick={() => moveProp(p.id, 1)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }} title="Mover para frente">
+                  <button onClick={() => moveProp(p.id, 1)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }} title="Mover para frente">
                     <ArrowUp size={14} />
                   </button>
-                  <button onClick={() => moveProp(p.id, -1)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }} title="Mover para trás">
+                  <button onClick={() => moveProp(p.id, -1)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }} title="Mover para trás">
                     <ArrowDown size={14} />
                   </button>
                   <button onClick={() => removeProp(p.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }} title="Excluir">

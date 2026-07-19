@@ -13,8 +13,8 @@ const CONDITIONS = [
   { id: 'stunned',   label: '😵', title: 'Atordoado',    color: '#a855f7' },
   { id: 'frightened',label: '👁', title: 'Assustado',    color: '#eab308' },
   { id: 'bleeding',  label: '🩸', title: 'Sangrando',    color: '#ef4444' },
-  { id: 'inspired',  label: '⭐', title: 'Inspirado',    color: '#fbbf24' },
-  { id: 'invisible', label: '👻', title: 'Invisível',    color: '#94a3b8' },
+  { id: 'inspired',  label: '⭐', title: 'Inspirado',    color: 'var(--warning)' },
+  { id: 'invisible', label: '👻', title: 'Invisível',    color: 'var(--text-secondary)' },
   { id: 'shielded',  label: '🛡', title: 'Protegido',    color: '#3b82f6' },
   { id: 'weakened',  label: '💀', title: 'Enfraquecido', color: '#6b7280' },
 ];
@@ -62,9 +62,9 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
   const members = type ? allMembers.filter(m => m.status === type) : allMembers;
 
   const statusIcon = (s: string) => {
-    if (s === 'npc') return <Cpu size={13} color="#93c5fd" />;
-    if (s === 'inimigo') return <Skull size={13} color="#fca5a5" />;
-    return <User size={13} color="#6ee7b7" />;
+    if (s === 'npc') return <Cpu size={13} color="var(--mana)" />;
+    if (s === 'inimigo') return <Skull size={13} color="var(--danger)" />;
+    return <User size={13} color="var(--success)" />;
   };
 
   const renderMember = (m: typeof members[0]) => {
@@ -131,7 +131,7 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
                   background: 'rgba(0,0,0,0.5)',
                   border: '1px solid #3b82f6',
                   borderRadius: '4px',
-                  color: 'white',
+                  color: 'var(--text-primary)',
                   padding: '2px 6px',
                   fontSize: '0.85rem',
                   fontWeight: 600,
@@ -145,7 +145,7 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
                   setEditingPath(m.caminhoArquivo);
                   setEditNameValue(m.nome);
                 }}
-                style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                 title="Duplo clique para renomear"
               >
                 {m.nome}
@@ -178,7 +178,7 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
 
         {/* PV bar */}
         <div style={{ marginBottom: '4px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#64748b', marginBottom: '3px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '3px' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><Heart size={10} color={pvPct < 30 ? '#ef4444' : '#10b981'} /> PV</span>
             <span>{m.pv}/{m.pv_max}</span>
           </div>
@@ -188,8 +188,8 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
         {/* Mana bar */}
         {m.mana_max > 0 && (
           <div style={{ marginBottom: '6px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#64748b', marginBottom: '3px' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><Droplets size={10} color="#3b82f6" /> Mana</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '3px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><Droplets size={10} color="var(--mana)" /> Mana</span>
               <span>{m.mana}/{m.mana_max}</span>
             </div>
             <ManaBar current={m.mana} max={m.mana_max} />
@@ -216,7 +216,7 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
         {activeCondMenu === m.caminhoArquivo && (
           <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'rgba(15,23,42,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px', boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
             <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'var(--font-display)' }}>CONDIÇÕES</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-display)' }}>CONDIÇÕES</span>
               <button onClick={() => setActiveCondMenu(null)} style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer' }}><X size={12} /></button>
             </div>
             {CONDITIONS.map(c => {
@@ -238,7 +238,7 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <User size={15} color="#6ee7b7" /> Elenco
+          <User size={15} color="var(--success)" /> Elenco
         </span>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button onClick={() => setShowNPCs(!showNPCs)} style={{ padding: '3px 8px', borderRadius: '6px', background: showNPCs ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${showNPCs ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)'}`, color: showNPCs ? '#93c5fd' : '#475569', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}>

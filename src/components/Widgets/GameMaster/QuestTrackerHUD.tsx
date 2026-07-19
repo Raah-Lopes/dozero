@@ -130,7 +130,7 @@ export const QuestTrackerHUD: React.FC = () => {
             }}
           >
             <GripVertical size={12} color="rgba(168,85,247,0.5)" style={{ flexShrink: 0 }} />
-            <Scroll size={13} color="#a855f7" style={{ flexShrink: 0 }} />
+            <Scroll size={13} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
             <span style={{
               flex: 1, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.08em',
               textTransform: 'uppercase', color: '#c084fc', fontFamily: 'var(--font-display)',

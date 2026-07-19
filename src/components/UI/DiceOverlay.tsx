@@ -61,7 +61,7 @@ export const DiceOverlay: React.FC = () => {
               <Icon size={20} />
               {roll.title}
             </div>
-            <div style={{ fontSize: '5rem', lineHeight: 1, fontWeight: 900, color: 'white', textShadow: `0 0 30px ${color}, 0 0 10px white` }}>
+            <div style={{ fontSize: '5rem', lineHeight: 1, fontWeight: 900, color: 'var(--text-primary)', textShadow: `0 0 30px ${color}, 0 0 10px white` }}>
               {roll.result}
             </div>
           </div>

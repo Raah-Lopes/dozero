@@ -174,14 +174,14 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
 
           {/* Search */}
           <div style={{ position: 'relative', marginBottom: '8px' }}>
-            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             <input
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Buscar complementos..."
               style={{
                 width: '100%', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '8px', padding: '7px 10px 7px 30px', color: '#f1f5f9', fontSize: '12px',
+                borderRadius: '8px', padding: '7px 10px 7px 30px', color: 'var(--text-primary)', fontSize: '12px',
                 outline: 'none', boxSizing: 'border-box',
               }}
             />
@@ -235,7 +235,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   <div style={{
                     position: 'absolute', top: '8px', right: '8px',
                     background: 'rgba(234,179,8,0.2)', border: '1px solid rgba(234,179,8,0.4)',
-                    borderRadius: '10px', padding: '1px 7px', fontSize: '9px', fontWeight: 700, color: '#fcd34d',
+                    borderRadius: '10px', padding: '1px 7px', fontSize: '9px', fontWeight: 700, color: 'var(--warning)',
                     letterSpacing: '0.5px',
                   }}>
                     NOVO
@@ -257,14 +257,14 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                     <div style={{ fontWeight: 700, fontSize: '13px', color: isActive ? '#f1f5f9' : '#94a3b8', lineHeight: 1.3, transition: 'color 0.2s' }}>
                       {addon.name}
                     </div>
-                    <div style={{ fontSize: '10px', color: '#64748b' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                       v{addon.version} · {addon.author}
                     </div>
                   </div>
                 </div>
 
                 {/* Description */}
-                <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8', lineHeight: 1.45, flex: 1 }}>
+                <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.45, flex: 1 }}>
                   {addon.description}
                 </p>
 
@@ -279,7 +279,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   {addon.tags.map(tag => (
                     <span key={tag} style={{
                       background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '10px', padding: '1px 6px', fontSize: '9px', color: '#64748b',
+                      borderRadius: '10px', padding: '1px 6px', fontSize: '9px', color: 'var(--text-secondary)',
                     }}>
                       {tag}
                     </span>
@@ -306,7 +306,7 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   {isActive && (
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: '5px',
-                      color: '#6ee7b7', fontSize: '9px', fontWeight: 600,
+                      color: 'var(--success)', fontSize: '9px', fontWeight: 600,
                       background: 'rgba(16,185,129,0.08)', borderRadius: '6px', padding: '2px 6px',
                     }}>
                       <Check size={10} /> Injetado

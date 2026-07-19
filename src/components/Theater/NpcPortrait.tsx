@@ -16,7 +16,7 @@ export const NpcPortrait: React.FC<Props> = ({ name, imageUrl, onClose }) => (
         position: 'absolute', top: -10, right: -10, zIndex: 10,
         width: 22, height: 22, borderRadius: '50%',
         background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.2)',
-        color: 'white', cursor: 'pointer', display: 'flex',
+        color: 'var(--text-primary)', cursor: 'pointer', display: 'flex',
         alignItems: 'center', justifyContent: 'center',
       }}
     >

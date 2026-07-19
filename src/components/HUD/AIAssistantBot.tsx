@@ -110,6 +110,7 @@ export const AIAssistantBot: React.FC = () => {
     <>
       {/* Botão Flutuante */}
       <button
+        className="ai-assistant-btn"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -123,7 +124,7 @@ export const AIAssistantBot: React.FC = () => {
           borderRadius: '50%',
           background: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
           border: '2px solid rgba(255,255,255,0.2)',
-          color: 'white',
+          color: 'var(--text-primary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -150,7 +151,7 @@ export const AIAssistantBot: React.FC = () => {
       {/* Painel do Chat */}
       {isOpen && (
         <div 
-          className="glass-panel animate-fade-in"
+          className="glass-panel ai-assistant-panel animate-fade-in"
           style={{
             position: 'fixed',
             left: `${Math.min(pos.x, window.innerWidth - 330)}px`,
@@ -174,7 +175,7 @@ export const AIAssistantBot: React.FC = () => {
           {/* Messages */}
           <div style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {aiChat.length === 0 && (
-              <div style={{ margin: 'auto', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic', fontSize: '0.85rem' }}>
+              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.85rem' }}>
                 <Bot size={32} style={{ opacity: 0.3, marginBottom: '8px', display: 'inline-block' }} />
                 <br/>
                 Olá! Como posso te ajudar com as regras, testes ou atributos hoje?
@@ -185,7 +186,7 @@ export const AIAssistantBot: React.FC = () => {
               <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
                   background: msg.role === 'user' ? 'linear-gradient(135deg, #ec4899, #be185d)' : 'rgba(30,41,59,0.8)',
-                  padding: '10px 14px', borderRadius: '12px', maxWidth: '85%', fontSize: '0.85rem', color: '#f1f5f9',
+                  padding: '10px 14px', borderRadius: '12px', maxWidth: '85%', fontSize: '0.85rem', color: 'var(--text-primary)',
                   border: msg.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.05)'
                 }}>
                   {msg.role === 'ai' && <Bot size={14} style={{ marginBottom: '-2px', marginRight: '6px', color: '#ec4899', display: 'inline-block' }} />}
@@ -214,12 +215,12 @@ export const AIAssistantBot: React.FC = () => {
                 onChange={(e) => setAiInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
                 placeholder="Pergunte uma regra..."
-                style={{ flex: 1, padding: '10px 12px', borderRadius: '20px', border: '1px solid rgba(236,72,153,0.4)', background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: '0.85rem' }}
+                style={{ flex: 1, padding: '10px 12px', borderRadius: '20px', border: '1px solid rgba(236,72,153,0.4)', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', fontSize: '0.85rem' }}
               />
               <button 
                 onClick={handleAskAI}
                 disabled={isAiLoading || !aiInput.trim()}
-                style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #ec4899, #be185d)', border: 'none', color: 'white', cursor: isAiLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #ec4899, #be185d)', border: 'none', color: 'var(--text-primary)', cursor: isAiLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Send size={16} style={{ marginLeft: '-2px' }} />
               </button>

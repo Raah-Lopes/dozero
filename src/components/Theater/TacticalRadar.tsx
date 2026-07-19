@@ -9,7 +9,7 @@ const ZONES: { id: DistanceZone; label: string; icon: React.ReactNode; color: st
   { id: 'close', label: 'Perto', icon: <Target size={14} />, color: '#f59e0b' },
   { id: 'medium', label: 'Médio', icon: <Crosshair size={14} />, color: '#3b82f6' },
   { id: 'far', label: 'Longe', icon: <Navigation size={14} />, color: '#8b5cf6' },
-  { id: 'extreme', label: 'Extremo', icon: <MapIcon size={14} />, color: '#64748b' }
+  { id: 'extreme', label: 'Extremo', icon: <MapIcon size={14} />, color: 'var(--text-secondary)' }
 ];
 
 export const TacticalRadar: React.FC = () => {
@@ -25,7 +25,7 @@ export const TacticalRadar: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
-      <h3 style={{ margin: 0, fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Radar Tático</h3>
+      <h3 style={{ margin: 0, fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Radar Tático</h3>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', paddingRight: '4px', flex: 1 }}>
         {allEntities.map(ent => {
@@ -50,7 +50,7 @@ export const TacticalRadar: React.FC = () => {
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '4px', overflow: 'hidden',
                   background: ent.isEnemy ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'white', fontWeight: 'bold'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'var(--text-primary)', fontWeight: 'bold'
                 }}>
                   {ent.avatar ? <img src={ent.avatar} alt={ent.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : ent.name.substring(0, 2).toUpperCase()}
                 </div>
@@ -91,7 +91,7 @@ export const TacticalRadar: React.FC = () => {
           );
         })}
         {allEntities.length === 0 && (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.8rem', fontStyle: 'italic' }}>
+          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic' }}>
             Nenhum combatente em cena.
           </div>
         )}

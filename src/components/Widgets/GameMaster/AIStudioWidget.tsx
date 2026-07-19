@@ -20,17 +20,17 @@ interface AIStudioWidgetProps {
 // ── Tipos e constantes ───────────────────────────────────────────────────────
 
 const CONTENT_TABS: { id: RPGContentType; label: string; icon: React.ReactNode; color: string }[] = [
-  { id: 'pc',            label: 'PC',         icon: <User size={14} />,         color: '#6ee7b7' },
-  { id: 'npc',           label: 'NPC',        icon: <Bot size={14} />,          color: '#93c5fd' },
-  { id: 'monstro',       label: 'Monstro',    icon: <Skull size={14} />,        color: '#fca5a5' },
-  { id: 'local',         label: 'Local',      icon: <Map size={14} />,          color: '#fcd34d' },
-  { id: 'item_magico',   label: 'Item',       icon: <Sword size={14} />,        color: '#d8b4fe' },
+  { id: 'pc',            label: 'PC',         icon: <User size={14} />,         color: 'var(--success)' },
+  { id: 'npc',           label: 'NPC',        icon: <Bot size={14} />,          color: 'var(--mana)' },
+  { id: 'monstro',       label: 'Monstro',    icon: <Skull size={14} />,        color: 'var(--danger)' },
+  { id: 'local',         label: 'Local',      icon: <Map size={14} />,          color: 'var(--warning)' },
+  { id: 'item_magico',   label: 'Item',       icon: <Sword size={14} />,        color: 'var(--accent-primary)' },
   { id: 'resumo_sessao', label: 'Sessão',     icon: <BookOpen size={14} />,     color: '#fb923c' },
   { id: 'quest',         label: 'Quest',      icon: <Dices size={14} />,        color: '#34d399' },
   { id: 'encontro',      label: 'Encontro',   icon: <Zap size={14} />,          color: '#f87171' },
   { id: 'dlc_expand',    label: 'Auditar',    icon: <Search size={14} />,       color: '#a78bfa' },
   { id: 'dlc_factory',   label: 'Fábrica',    icon: <ToyBrick size={14} />,     color: '#f43f5e' },
-  { id: 'chat',          label: 'Chat',       icon: <MessageSquare size={14} />, color: '#60a5fa' },
+  { id: 'chat',          label: 'Chat',       icon: <MessageSquare size={14} />, color: 'var(--mana)' },
 ];
 
 const PROVIDER_LABELS: Record<AIProviderType, string> = {
@@ -392,7 +392,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                 <option key={m.id} value={m.id}>{m.label}{m.free ? ' ✓' : ''}</option>
               ))}
             </select>
-            <ChevronDown size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+            <ChevronDown size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', pointerEvents: 'none' }} />
           </div>
 
           {/* Status do modelo */}
@@ -404,7 +404,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
           <button
             className="ai-btn"
             onClick={() => setShowConfig(!showConfig)}
-            style={{ background: showConfig ? 'rgba(255,255,255,0.1)' : 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}
+            style={{ background: showConfig ? 'rgba(255,255,255,0.1)' : 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}
           >
             <Settings size={13} />
           </button>
@@ -442,7 +442,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.65rem', color: '#94a3b8', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.65rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={useWikiCtx} onChange={e => setUseWikiCtx(e.target.checked)} style={{ accentColor: currentColor }} />
                 Usar contexto da wiki
               </label>
@@ -551,7 +551,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                   <label className="ai-field-label" style={{ marginBottom: '8px', display: 'block' }}>O que você quer gerar nesta DLC?</label>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {['npc', 'loot', 'local', 'quest', 'item_magico'].map(cat => (
-                      <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', color: '#f1f5f9', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', border: `1px solid ${categoriasDlc.includes(cat) ? currentColor : 'rgba(255,255,255,0.1)'}` }}>
+                      <label key={cat} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', color: 'var(--text-primary)', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', border: `1px solid ${categoriasDlc.includes(cat) ? currentColor : 'rgba(255,255,255,0.1)'}` }}>
                         <input
                           type="checkbox"
                           checked={categoriasDlc.includes(cat)}
@@ -669,7 +669,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                           <button 
                             onClick={() => setChatInput((prev) => prev + (prev ? '\n\n' : '') + `> ${msg.text.split('\n').join('\n> ')}\n\n`)} 
                             title="Citar e Responder"
-                            style={{ color: '#64748b', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
+                            style={{ color: 'var(--text-secondary)', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
                             onMouseEnter={e => e.currentTarget.style.color = currentColor}
                             onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
                           >
@@ -678,7 +678,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                           <button 
                             onClick={() => navigator.clipboard.writeText(msg.text)} 
                             title="Copiar texto"
-                            style={{ color: '#64748b', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
+                            style={{ color: 'var(--text-secondary)', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
                             onMouseEnter={e => e.currentTarget.style.color = currentColor}
                             onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
                           >
@@ -740,10 +740,10 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                       <button className="ai-btn" onClick={handleCopy} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: copyDone ? '#34d399' : '#94a3b8' }}>
                         <Copy size={12} /> {copyDone ? 'Copiado!' : 'Copiar'}
                       </button>
-                      <button className="ai-btn" onClick={handleDownload} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }}>
+                      <button className="ai-btn" onClick={handleDownload} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)' }}>
                         <Download size={12} /> .md
                       </button>
-                      <button className="ai-btn" onClick={handleGenerate} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#94a3b8' }} title="Regenerar">
+                      <button className="ai-btn" onClick={handleGenerate} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)' }} title="Regenerar">
                         <RefreshCw size={12} />
                       </button>
                     </>
@@ -784,7 +784,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                 {showSavePanel && output && (
                   <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.3)', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
                     <Save size={14} style={{ color: currentColor, flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.65rem', color: '#94a3b8', flexShrink: 0 }}>Salvar em:</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', flexShrink: 0 }}>Salvar em:</span>
                     <input
                       type="text"
                       value={savePath}

@@ -61,7 +61,7 @@ export const NarrativeTrack: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <BookOpen size={15} color="#a855f7" />
+          <BookOpen size={15} color="var(--accent-primary)" />
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.85rem', color: '#e2e8f0' }}>
             Trilha Narrativa
           </span>
@@ -115,7 +115,7 @@ export const NarrativeTrack: React.FC = () => {
               onClick={() => setCurrentScene(scene.id)}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {isActive && <ChevronRight size={12} color="#a855f7" />}
+                {isActive && <ChevronRight size={12} color="var(--accent-primary)" />}
                 <span style={{ fontSize: '0.7rem', color: '#475569', minWidth: '18px' }}>
                   {idx + 1}.
                 </span>
@@ -145,7 +145,7 @@ export const NarrativeTrack: React.FC = () => {
                       setEditingTitle(null);
                     }}
                     onClick={e => e.stopPropagation()}
-                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: '4px', color: 'white', padding: '2px 6px', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}
+                    style={{ flex: 1, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 6px', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}
                   />
                 ) : (
                   <span
