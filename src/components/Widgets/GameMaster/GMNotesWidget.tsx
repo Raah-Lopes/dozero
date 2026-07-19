@@ -102,84 +102,94 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
       title="Bloco de Notas do Mestre" 
       initialX={200} 
       initialY={100} 
-      width={600} 
-      height={500} 
+      width={650} 
+      height={550} 
       onClose={onClose}
     >
-      <div className="flex flex-col h-full bg-slate-900 text-slate-200">
+      <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-xl text-slate-200 font-sans">
         
-        {/* Toolbar de Abas */}
-        <div className="flex bg-slate-950 border-b border-slate-800 overflow-x-auto select-none no-scrollbar">
+        {/* Toolbar de Abas (Estilo Pills Modernos) */}
+        <div className="flex bg-slate-900/40 border-b border-white/5 overflow-x-auto select-none no-scrollbar p-2 gap-2 items-center">
           {tabs.map(tab => (
             <div 
               key={tab.id}
               onClick={() => setActiveTabId(tab.id)}
               onDoubleClick={() => handleRenameTab(tab.id, tab.title)}
-              className={`group flex items-center gap-2 px-4 py-2 border-r border-slate-800 cursor-pointer min-w-[120px] max-w-[200px] shrink-0
-                ${activeTabId === tab.id ? 'bg-slate-800 border-t-2 border-t-indigo-500 text-indigo-300' : 'hover:bg-slate-800/50 text-slate-400'}`}
+              className={`group flex items-center gap-2 px-4 py-1.5 rounded-full cursor-pointer min-w-[120px] max-w-[200px] shrink-0 transition-all duration-300 border
+                ${activeTabId === tab.id 
+                  ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
+                  : 'bg-white/5 border-transparent hover:bg-white/10 text-slate-400'}`}
             >
-              <FileText size={14} className={activeTabId === tab.id ? 'text-indigo-400' : ''} />
-              <span className="truncate flex-1 text-sm font-medium">{tab.title}</span>
+              <FileText size={14} className={activeTabId === tab.id ? 'text-indigo-400' : 'text-slate-500'} />
+              <span className="truncate flex-1 text-sm font-medium tracking-wide">{tab.title}</span>
               {tabs.length > 1 && (
                 <button 
                   onClick={(e) => handleCloseTab(tab.id, e)}
-                  className="opacity-0 group-hover:opacity-100 hover:text-red-400 p-1 rounded-md transition-all"
+                  className="opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 p-1 rounded-full transition-all duration-200"
                 >
-                  <X size={14} />
+                  <X size={12} />
                 </button>
               )}
             </div>
           ))}
           <button 
             onClick={handleAddTab}
-            className="p-2 px-4 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 transition-colors flex items-center justify-center"
+            className="p-1.5 ml-1 rounded-full bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-400 border border-transparent hover:border-indigo-500/30 transition-all duration-300 flex items-center justify-center hover:scale-105 active:scale-95"
             title="Nova Nota"
           >
-            <Plus size={18} />
+            <Plus size={16} />
           </button>
         </div>
 
         {/* Action Bar */}
-        <div className="flex justify-between items-center px-4 py-2 bg-slate-900 border-b border-slate-800">
-          <div className="text-xs text-slate-500 italic">
-            * Notas são salvas localmente no navegador como rascunhos.
+        <div className="flex justify-between items-center px-4 py-3 bg-gradient-to-r from-slate-900/50 to-slate-800/20 border-b border-white/5">
+          <div className="flex items-center gap-2 text-xs text-slate-400/70 font-medium">
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+            Salvo localmente
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={handleClearTab}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded bg-slate-800 hover:bg-red-900/50 text-slate-300 hover:text-red-400 transition-all border border-slate-700 hover:border-red-500/50"
+              className="group flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-full bg-slate-800/50 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all duration-300 border border-white/5 hover:border-red-500/30 hover:shadow-[0_0_10px_rgba(239,68,68,0.1)]"
               title="Apagar conteúdo atual"
             >
-              <Trash2 size={14} />
-              Limpar Rascunho
+              <Trash2 size={14} className="group-hover:scale-110 transition-transform" />
+              Limpar
             </button>
             <button
               onClick={handleSaveToWiki}
               disabled={isSaving}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-900/20 disabled:opacity-50"
+              className="group flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-full bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-300 shadow-lg shadow-indigo-900/30 hover:shadow-indigo-500/30 border border-indigo-400/20 disabled:opacity-50 hover:scale-105 active:scale-95"
             >
-              <Save size={14} />
+              <Save size={14} className="group-hover:scale-110 transition-transform" />
               {isSaving ? 'Salvando...' : 'Salvar na Wiki'}
             </button>
           </div>
         </div>
 
         {/* Editor Area */}
-        <div className="flex-1 overflow-y-auto bg-slate-900">
+        <div className="flex-1 overflow-y-auto bg-transparent relative">
           {activeTab ? (
-            <div className="h-full">
-              {/* @mdxeditor/editor precisa de um container que force ele a pegar o tamanho todo. 
-                  Como o WikiEditor já é estilizado, apenas passamos o valor. */}
+            <div className="h-full absolute inset-0 animate-fade-in">
               <WikiEditor 
-                key={activeTab.id} // força recarregar o editor interno se mudar de aba
+                key={activeTab.id} 
                 markdown={activeTab.content} 
                 onChange={handleContentChange} 
                 onSave={handleSaveToWiki}
               />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-500">
-              Nenhuma nota aberta.
+            <div className="flex flex-col items-center justify-center h-full text-slate-500 bg-slate-950/30">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4 border border-white/5 shadow-inner">
+                <FileText size={32} className="text-slate-600" />
+              </div>
+              <p className="text-sm font-medium tracking-wide">Nenhuma nota aberta.</p>
+              <button 
+                onClick={handleAddTab}
+                className="mt-4 px-6 py-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all text-sm font-medium"
+              >
+                Criar Rascunho
+              </button>
             </div>
           )}
         </div>
