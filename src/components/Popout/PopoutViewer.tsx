@@ -7,6 +7,9 @@ import { ChatWindow } from '../Chat/ChatWindow';
 import { CombatTracker } from '../HUD/CombatTracker';
 import { CombatLog } from '../Chat/CombatLog';
 import { TargetTerminal } from '../Widgets/PlayerTools/TargetTerminal';
+import { NPCPanel } from '../HUD/NPCPanel';
+import { MapSettingsPanel } from '../HUD/MapSettingsPanel';
+import { FloatingDocument } from '../UI/FloatingDocument';
 
 interface PopoutViewerProps {
   widgetId: string;
@@ -27,7 +30,9 @@ export const PopoutViewer: React.FC<PopoutViewerProps> = ({ widgetId }) => {
   // Handle legacy/specific standalones that are NOT in WidgetLayer yet
   if (widgetId === 'chatWindow') return <PopoutContainer title="Chat P2P"><ChatWindow /></PopoutContainer>;
   if (widgetId === 'combatTracker') return <PopoutContainer title="Iniciativa"><CombatTracker /></PopoutContainer>;
-  if (widgetId === 'combatLog') return <PopoutContainer title="Registro de Combate"><CombatLog /></PopoutContainer>;
+  if (widgetId === 'combatLog' || widgetId === 'chat') return <PopoutContainer title="Registro de Combate"><CombatLog /></PopoutContainer>;
+  if (widgetId === 'npcPanel') return <PopoutContainer title="NPCs"><div style={{padding: '1rem', height: '100%'}}><NPCPanel /></div></PopoutContainer>;
+  if (widgetId === 'mapSettings') return <PopoutContainer title="Configurar Cenário"><div style={{padding: '1rem', height: '100%'}}><MapSettingsPanel /></div></PopoutContainer>;
   
   if (widgetId.startsWith('sheet-')) {
     const sheetKey = widgetId.replace('sheet-', '');
@@ -39,6 +44,11 @@ export const PopoutViewer: React.FC<PopoutViewerProps> = ({ widgetId }) => {
         <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />
       </PopoutContainer>
     );
+  }
+
+  if (widgetId.startsWith('doc-')) {
+    const filepath = widgetId.replace('doc-', '');
+    return <FloatingDocument id={widgetId} filepath={filepath} onClose={() => {}} />;
   }
 
   // Generic fallback: Use WidgetLayer!
