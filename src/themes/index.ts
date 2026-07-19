@@ -54,10 +54,12 @@ import { defaultTheme } from './default';
 import { eldritchTheme } from './eldritch';
 import { codexTheme } from './codex';
 import { nextGenTheme } from './nextgen';
+import { daylightTheme } from './daylight';
 
 export const THEMES: ThemeDefinition[] = [
   defaultTheme,
   nextGenTheme,
+  daylightTheme,
   eldritchTheme,
   codexTheme,
 ];
