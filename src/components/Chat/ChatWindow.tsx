@@ -346,11 +346,11 @@ export const ChatWindow: React.FC = () => {
       
       {/* TABS */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', alignItems: 'center' }}>
-        <button onClick={() => setTab('geral')} style={{ flex: 1, padding: '8px', background: tab === 'geral' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Geral</button>
-        <button onClick={() => setTab('in-game')} style={{ flex: 1, padding: '8px', background: tab === 'in-game' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>In-Game</button>
-        <button onClick={() => setTab('sistema')} style={{ flex: 1, padding: '8px', background: tab === 'sistema' ? 'rgba(255,255,255,0.1)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Sistema</button>
+        <button onClick={() => setTab('geral')} style={{ flex: 1, padding: '8px', background: tab === 'geral' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Geral</button>
+        <button onClick={() => setTab('in-game')} style={{ flex: 1, padding: '8px', background: tab === 'in-game' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>In-Game</button>
+        <button onClick={() => setTab('sistema')} style={{ flex: 1, padding: '8px', background: tab === 'sistema' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Sistema</button>
         
-        <button onClick={() => { setIsSelectMode(!isSelectMode); setSelectedIds(new Set()); }} title="Modo Seleção" style={{ padding: '8px', background: isSelectMode ? 'rgba(255,255,255,0.2)' : 'transparent', color: 'var(--text-primary)', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>
+        <button onClick={() => { setIsSelectMode(!isSelectMode); setSelectedIds(new Set()); }} title="Modo Seleção" style={{ padding: '8px', background: isSelectMode ? 'var(--accent-primary)' : 'transparent', color: isSelectMode ? 'var(--bg-primary)' : 'var(--text-primary)', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>
           {isSelectMode ? 'Cancelar' : 'Selecionar'}
         </button>
         {isSelectMode && selectedIds.size > 0 && (

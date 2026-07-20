@@ -87,7 +87,7 @@ const ThemeCard: React.FC<{
       <div style={{ padding: '12px 14px 14px', background: theme.bgSecondary }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
           <span style={{
-            fontSize: '0.85rem', fontWeight: 800, color: theme.textPrimary,
+            fontSize: '0.85rem', fontWeight: 800, color: theme.id.includes('chronicles') ? '#3e2723' : theme.textPrimary,
             fontFamily: theme.fontDisplay,
           }}>
             {theme.name}
@@ -102,7 +102,7 @@ const ThemeCard: React.FC<{
             </div>
           )}
         </div>
-        <p style={{ margin: 0, fontSize: '0.67rem', color: theme.textSecondary, lineHeight: 1.5 }}>
+        <p style={{ margin: 0, fontSize: '0.67rem', color: theme.id.includes('chronicles') ? '#5d4037' : theme.textSecondary, lineHeight: 1.5 }}>
           {theme.description}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>

@@ -600,7 +600,8 @@ html[data-theme="chronicles-parchment"] {
   background-image: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%);
 }
 
-html[data-theme^="chronicles"] .glass-panel {
+html[data-theme^="chronicles"] .glass-panel,
+html[data-theme^="chronicles"] .draggable-window-container {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background: var(--bg-secondary) !important;
@@ -623,6 +624,11 @@ html[data-theme^="chronicles"] .btn-icon {
   --text-primary: #3e2723;
   --text-secondary: #5d4037;
   color: var(--text-primary) !important;
+}
+
+html[data-theme^="chronicles"] .btn-icon svg,
+html[data-theme^="chronicles"] .ai-assistant-btn svg {
+  color: #3e2723 !important;
 }
 
 html[data-theme^="chronicles"] .btn-icon:hover {
@@ -768,8 +774,14 @@ html[data-theme^="chronicles"] .floating-window-header {
 }
 html[data-theme^="chronicles"] .floating-window-content {
   background: var(--bg-secondary) !important;
-  --text-primary: #3e2723;
-  --text-secondary: #5d4037;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme^="chronicles"] .floating-window-header span,
+html[data-theme^="chronicles"] .theater-drawer-header span,
+html[data-theme^="chronicles"] .chat-bubble-player .chat-author,
+html[data-theme^="chronicles"] .chat-tabs button,
+html[data-theme^="chronicles"] .window-tabs button {
   color: var(--text-primary) !important;
 }
 
