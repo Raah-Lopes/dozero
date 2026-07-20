@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { AlertTriangle, FileText, Paperclip, Loader2 } from 'lucide-react';
-import { loadMarkdownFile, saveMarkdownContent } from '../../../../utils/githubApi';
+import { loadMarkdownFile, saveMarkdownContent, saveImageToCloud } from '../../../../utils/githubApi';
 import { getWikiConfig } from '../../../../store';
 import { convertImageToWebP } from '../../../../utils/imageUtils';
 
@@ -120,15 +120,10 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
       const safeName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `${safeName}_${Date.now()}.webp`;
 
-      const res = await fetch('/api/wiki/save-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath, filename, base64: webpBase64 }),
-      });
-      const data = await res.json();
-      if (data.url) {
+      const url = await saveImageToCloud(webpBase64, filename);
+      if (url) {
         const altText = file.name.replace(/\.[^.]+$/, '');
-        insertTextAtCursor(`\n![${altText}](${data.url})\n`);
+        insertTextAtCursor(`\n![${altText}](${url})\n`);
       }
     } catch (err) {
       console.error('Erro ao anexar imagem:', err);

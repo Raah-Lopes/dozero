@@ -4,7 +4,7 @@ import * as yaml from 'js-yaml';
 import { state, pushChatMessage, updateTokenProps } from '../../../../store';
 import type { CampaignTabProps } from './types';
 import { WikiLinkedTextarea } from './Shared';
-import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../../utils/githubApi';
+import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder, saveImageToCloud } from '../../../../utils/githubApi';
 import { slugify, questTemplate } from '../CampaignManagerWidget';
 import type { CampaignQuest, QuestLootItem } from '../../../../store';
 import { convertImageToWebP } from '../../../../utils/imageUtils';
@@ -733,13 +733,10 @@ const addQuest = async (type: 'main' | 'side') => {
                     const file = e.dataTransfer.files?.[0];
                     if (!file) return;
                     try {
-                      const config = (await import('../../../../store')).getWikiConfig();
-                      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
                       const { base64: webp } = await convertImageToWebP(file, 0.85, 800);
                       const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
-                      const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
-                      const data2 = await res2.json();
-                      if (data2.url) updateQuest(activeQuest.id, { coverUrl: data2.url });
+                      const url = await saveImageToCloud(webp, `missao_capa_${fname}_${Date.now()}.webp`);
+                      if (url) updateQuest(activeQuest.id, { coverUrl: url });
                     } catch (err) { console.error('Erro ao enviar capa:', err); }
                   }}
                 >
@@ -753,13 +750,10 @@ const addQuest = async (type: 'main' | 'side') => {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         try {
-                          const config = (await import('../../../../store')).getWikiConfig();
-                          const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
                           const { base64: webp } = await convertImageToWebP(file, 0.85, 800);
                           const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
-                          const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
-                          const data2 = await res2.json();
-                          if (data2.url) updateQuest(activeQuest.id, { coverUrl: data2.url });
+                          const url = await saveImageToCloud(webp, `missao_capa_${fname}_${Date.now()}.webp`);
+                          if (url) updateQuest(activeQuest.id, { coverUrl: url });
                         } catch (err) { console.error('Erro ao enviar capa:', err); }
                         e.target.value = '';
                       }}

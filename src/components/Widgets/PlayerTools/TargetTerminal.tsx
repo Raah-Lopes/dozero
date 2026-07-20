@@ -7,7 +7,7 @@ import {
     ShieldAlert, Sparkles, Settings, Activity, 
     FileText, Heart, Skull, Cpu, User, Crosshair
 } from 'lucide-react';
-import { loadMarkdownFile, saveMarkdownContent } from '../../../utils/githubApi';
+import { loadMarkdownFile, saveMarkdownContent, saveImageToCloud } from '../../../utils/githubApi';
 import { WoDParser } from '../../../rules/WoDParser';
 import { state, applyDamageToToken, pushChatMessage, updateTokenProps, getTargets, toggleTarget, addCombatParticipant } from '../../../store';
 import { useWiki } from '../../../hooks/useWiki';
@@ -277,32 +277,10 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     
     // Yjs gets base64 always
     handlePropChange('imageUrl', base64);
-    
-    // Wiki gets file path
-    let wikiImageRef = base64;
-    try {
-      const path = tokenId ? wikiEntry?.path : wikiPath;
-      if (path) {
-        const cleanName = (tokenData?.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-        const finalFilename = `${cleanName}_${Date.now()}.webp`;
-        const res = await fetch('/api/wiki/save-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            repoPath: 'D:/DOZERO/wikidozero', // fallback
-            filename: finalFilename, 
-            base64 
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          wikiImageRef = data.url;
-        }
-      }
-    } catch (err) {
-      console.error('Erro ao salvar imagem na wiki', err);
-    }
-    
+
+    // Salva na nuvem (ImgBB → Catbox → local ANEXOS)
+    const cleanName = (tokenData?.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+    const wikiImageRef = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
     handlePropChangeEnd('imageUrl', wikiImageRef);
   };
 

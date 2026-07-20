@@ -17,7 +17,7 @@ status: jogador
 nome: Sentinela Ômega 01
 nivel: 3
 XP: 0
-imagem: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
+imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_01_1784589545705.webp
 tags:
   - personagem
   - automato
@@ -63,8 +63,8 @@ macros:
     formula: 1d20+5
     tipo: ataque
     descricao: 'Um disparo de sua pistola de plasma, calibrado para atordoar em vez de matar. Dano: 1d6+3 (energia, não-letal), com chance de causar condição ''Atordoado'' em falha de salvaguarda de CON (CD 13).'
-avatar: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
-imageUrl: http://localhost:5174/api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_1782616768048.webp
+avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_01_1784589545705.webp
+imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_01_1784589545705.webp
 titulo: Sentinela Ômega 01
 title: Sentinela Ômega 01
 energia: 100
@@ -141,6 +141,7 @@ xp: 0
 classe: ''
 borderColor: '#858200'
 ---
+
 
 
 

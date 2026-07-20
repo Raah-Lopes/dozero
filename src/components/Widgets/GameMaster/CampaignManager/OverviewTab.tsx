@@ -4,6 +4,7 @@ import type { CampaignTabProps } from './types';
 import { LegacyBadge } from './Shared';
 import { WikiLinkedTextarea } from './Shared';
 import { getWikiConfig } from '../../../../store';
+import { saveImageToCloud } from '../../../../utils/githubApi';
 import { convertImageToWebP } from '../../../../utils/imageUtils';
 
 interface OverviewTabProps extends CampaignTabProps {
@@ -34,14 +35,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
       const safeName = campaign.name.replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `capa_${safeName}.webp`;
-
-      const res = await fetch('/api/wiki/save-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath, filename, base64: webpBase64 }),
-      });
-      const data = await res.json();
-      if (data.url) upd({ imageUrl: data.url });
+      
+      const url = await saveImageToCloud(webpBase64, filename);
+      if (url) upd({ imageUrl: url });
     } catch (err) {
       console.error('Erro ao fazer upload da capa:', err);
     } finally {

@@ -5,6 +5,7 @@ import { useWiki } from '../../../hooks/useWiki';
 import { state, updateTokenProps, getWikiConfig } from '../../../store';
 import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
 import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
+import { saveImageToCloud } from '../../../utils/githubApi';
 import { resolveImageUrl, convertImageToWebP } from '../../../utils/imageUtils';
 import { User, Skull, Cpu, Shield, Zap, Sword, Star, Eye, EyeOff } from 'lucide-react';
 
@@ -108,26 +109,10 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
 
     const { base64: webpDataUrl } = await convertImageToWebP(file, 0.7, 512);
 
-    // ponytail: wiki article gets file path for persistence, Yjs token always gets base64 (works on Vercel/P2P)
-    let wikiImageRef = webpDataUrl;
-    try {
-      const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-      const entry = index.find(en => en.path === uploadingPath);
-      const cleanName = (entry?.metadata?.nome || entry?.metadata?.titulo || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-      const finalFilename = `${cleanName}_${Date.now()}.webp`;
-      const res = await fetch('/api/wiki/save-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath, filename: finalFilename, base64: webpDataUrl })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        wikiImageRef = data.url; // File path for wiki article only
-      }
-    } catch (err) {
-      console.error('Erro ao salvar imagem na wiki, usando base64:', err);
-    }
+    // Salva na nuvem (ImgBB → Catbox → local ANEXOS)
+    const entry = index.find(en => en.path === uploadingPath);
+    const cleanName = (entry?.metadata?.nome || entry?.metadata?.titulo || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+    const wikiImageRef = await saveImageToCloud(webpDataUrl, `${cleanName}_${Date.now()}.webp`);
 
     // Wiki article stores file path (or base64 fallback)
     const success = await syncTokenFieldToWiki(uploadingPath, 'imagem', wikiImageRef);

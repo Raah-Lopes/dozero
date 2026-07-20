@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub, initializeWikiTemplate, openLocalFolder } from '../../utils/githubApi';
+import { fetchRepositoryTree, fetchMarkdownContent, saveMarkdownContent, createFolder, moveFileOrFolder, pushToGithub, initializeWikiTemplate, openLocalFolder, saveImageToCloud } from '../../utils/githubApi';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
 import { 
@@ -217,22 +217,10 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     try {
       setSyncing(true);
-      
       const { base64, filename } = await convertImageToWebP(file);
-
-      const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-      
-      const res = await fetch('/api/wiki/save-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath, filename: filename, base64 })
-      });
-      
-      if (!res.ok) throw new Error("Erro ao salvar imagem localmente");
+      await saveImageToCloud(base64, filename);
       await loadTree();
     } catch (err: any) {
       console.error(err);
@@ -258,16 +246,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
         } 
         else if (file.type.startsWith('image/')) {
           const { base64, filename } = await convertImageToWebP(file);
-          
-          // O save-image salva no ANEXOS sempre. 
-          // Se quiseríamos salvar na pasta atual, teríamos que mudar a API.
-          // Por enquanto, enviamos normal:
-          const res = await fetch('/api/wiki/save-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repoPath, filename, base64 })
-          });
-          if (!res.ok) throw new Error(`Falha ao salvar ${filename}`);
+          await saveImageToCloud(base64, filename);
         } else {
           console.warn(`Tipo de arquivo não suportado: ${file.name}`);
         }

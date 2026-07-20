@@ -1,5 +1,6 @@
 import { getWikiConfig } from '../store';
 import { WikiIndexer } from '../services/wiki/WikiIndexer';
+import { uploadImageToCloud } from '../services/cloudUpload';
 
 export interface GithubTreeItem {
   path: string;
@@ -89,6 +90,34 @@ export async function openLocalFolder(path: string = ''): Promise<void> {
   });
 
   if (!response.ok) throw new Error("Erro ao abrir pasta local");
+}
+
+/**
+ * Salva imagem com 3 frentes: ImgBB → Catbox.moe → local ANEXOS.
+ * Retorna a URL da imagem (nuvem ou local).
+ */
+export async function saveImageToCloud(base64: string, filename: string): Promise<string> {
+  // Tenta nuvem primeiro (ImgBB ou Catbox)
+  const cloudUrl = await uploadImageToCloud(base64, filename);
+  if (cloudUrl) return cloudUrl;
+
+  // Fallback: salva local em ANEXOS (só funciona no dev local)
+  if (import.meta.env.PROD) {
+    console.warn('[saveImageToCloud] Modo Vercel: sem nuvem configurada, usando base64.');
+    return base64; // último recurso
+  }
+  const config = getWikiConfig();
+  const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+  const res = await fetch('/api/wiki/save-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repoPath, filename, base64 })
+  });
+  if (res.ok) {
+    const data = await res.json();
+    return data.url as string;
+  }
+  return base64; // último recurso
 }
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {

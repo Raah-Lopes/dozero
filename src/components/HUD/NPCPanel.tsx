@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { state, updateTokenProps } from '../../store';
 import { useWiki } from '../../hooks/useWiki';
-import { loadMarkdownFile, saveMarkdownContent } from '../../utils/githubApi';
+import { loadMarkdownFile, saveMarkdownContent, saveImageToCloud } from '../../utils/githubApi';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { NPCParser } from '../../services/oracle/NPCParser';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
@@ -400,34 +400,22 @@ export const NPCPanel: React.FC = () => {
     try {
       const { base64 } = await convertImageToWebP(file, 0.7, 512);
       
-      // Salva no Yjs sempre como base64
+      // Yjs: base64 imediato para sincronizar com todos
       updateTokenProps(token.id, { imageUrl: base64 });
 
-      // Salva na Wiki como arquivo (se houver ficha)
+      // Nuvem (ImgBB → Catbox → local ANEXOS)
+      const cleanName = (token.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+      const wikiImageRef = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
+
+      // Atualiza Yjs com URL permanente e sincroniza wiki
+      updateTokenProps(token.id, { imageUrl: wikiImageRef });
+
       const entry = wikiIndex.find(en => {
         if (token.wikiSlug && en.slug === token.wikiSlug) return true;
         const nameRaw = (token.name || '').trim().toLowerCase();
         return (en.metadata?.titulo || '').toLowerCase().trim() === nameRaw || en.slug.toLowerCase().trim() === nameRaw;
       });
-
       if (entry) {
-        let wikiImageRef = base64;
-        const cleanName = (token.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-        const finalFilename = `${cleanName}_${Date.now()}.webp`;
-        const res = await fetch('/api/wiki/save-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            repoPath: 'D:/DOZERO/wikidozero',
-            filename: finalFilename, 
-            base64 
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          wikiImageRef = data.url;
-        }
-        
         const success = await syncTokenFieldToWiki(entry.path, 'avatar', wikiImageRef);
         if (success) {
           WikiIndexer.clearCache();

@@ -19,6 +19,7 @@ import {
 import type { MDXEditorMethods } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { getWikiConfig } from '../../store';
+import { saveImageToCloud } from '../../utils/githubApi';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { DataviewRenderer } from './DataviewRenderer';
 import { MermaidRenderer } from './MermaidRenderer';
@@ -72,25 +73,9 @@ export const WikiEditor: React.FC<WikiEditorProps> = ({ markdown, onChange, onSa
                 }
               }
 
-              // Enviar para o servidor local
-              const config = getWikiConfig();
-              const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-              
-              const res = await fetch('/api/wiki/save-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  repoPath,
-                  filename: finalFilename,
-                  base64
-                })
-              });
-              
-              if (!res.ok) throw new Error("Erro ao salvar imagem");
-              const data = await res.json();
-              
-              // Retornar a URL que o editor vai inserir no markdown (ex: ANEXOS/foto.png)
-              return data.url;
+              // Enviar para nuvem ou servidor local
+              const url = await saveImageToCloud(base64, finalFilename);
+              return url;
             },
             imagePreviewHandler: async (url: string) => {
               // Quando o editor for renderizar a imagem, dizemos para buscar da nossa API crua
