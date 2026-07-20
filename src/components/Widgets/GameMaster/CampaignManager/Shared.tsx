@@ -115,7 +115,7 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
 
-      const { base64: webpBase64 } = await convertImageToWebP(file, 0.9, 1200);
+      const { base64: webpBase64 } = await convertImageToWebP(file, 0.85, 1200);
 
       const safeName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `${safeName}_${Date.now()}.webp`;

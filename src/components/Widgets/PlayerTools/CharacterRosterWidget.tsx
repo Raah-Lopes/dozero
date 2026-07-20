@@ -106,7 +106,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
     const file = e.target.files?.[0];
     if (!file || !uploadingPath) return;
 
-    const { base64: webpDataUrl } = await convertImageToWebP(file, 0.9, 512);
+    const { base64: webpDataUrl } = await convertImageToWebP(file, 0.7, 512);
 
     // Salvar a imagem como arquivo na pasta ANEXOS da wiki
     const config = getWikiConfig();

@@ -334,7 +334,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const { base64 } = await convertImageToWebP(file, 0.9, 1024);
+    const { base64 } = await convertImageToWebP(file, 0.7, 512);
     addNode('image', { imagePath: base64, title: file.name });
     e.target.value = '';
   };

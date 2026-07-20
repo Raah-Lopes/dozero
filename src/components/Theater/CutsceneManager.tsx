@@ -93,7 +93,7 @@ const CutsceneEditor: React.FC<EditorProps> = ({ initial, onSave, onCancel }) =>
             onChange={async e => {
               const file = e.target.files?.[0];
               if (!file) return;
-              const { base64 } = await convertImageToWebP(file, 0.9, 1280);
+              const { base64 } = await convertImageToWebP(file, 0.8, 1024);
               setImageUrl(base64);
               e.target.value = '';
             }}

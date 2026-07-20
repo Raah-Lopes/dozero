@@ -79,7 +79,7 @@ export const MapSettingsPanel: React.FC = () => {
 
   // ponytail: helper wraps central utility and returns {url, width, height} needed by background store
   const toWebPWithSize = async (file: File): Promise<{ url: string; width: number; height: number }> => {
-    const { base64 } = await convertImageToWebP(file, 0.9, 2048);
+    const { base64 } = await convertImageToWebP(file, 0.7, 1024);
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => resolve({ url: base64, width: img.naturalWidth, height: img.naturalHeight });

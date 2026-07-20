@@ -735,7 +735,7 @@ const addQuest = async (type: 'main' | 'side') => {
                     try {
                       const config = (await import('../../../../store')).getWikiConfig();
                       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-                      const { base64: webp } = await convertImageToWebP(file, 0.9, 800);
+                      const { base64: webp } = await convertImageToWebP(file, 0.85, 800);
                       const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
                       const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
                       const data2 = await res2.json();
@@ -755,7 +755,7 @@ const addQuest = async (type: 'main' | 'side') => {
                         try {
                           const config = (await import('../../../../store')).getWikiConfig();
                           const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-                          const { base64: webp } = await convertImageToWebP(file, 0.9, 800);
+                          const { base64: webp } = await convertImageToWebP(file, 0.85, 800);
                           const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
                           const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
                           const data2 = await res2.json();

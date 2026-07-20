@@ -30,7 +30,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
 
-      const { base64: webpBase64 } = await convertImageToWebP(file, 0.9, 1400);
+      const { base64: webpBase64 } = await convertImageToWebP(file, 0.85, 1200);
 
       const safeName = campaign.name.replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `capa_${safeName}.webp`;
