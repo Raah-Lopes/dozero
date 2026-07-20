@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain';
-export type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
+export type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
 
 interface WindowManagerState {
   // Generic openWindows (e.g. combatLog, etc)
@@ -18,8 +18,6 @@ interface WindowManagerState {
   setActiveModal: (modal: ModalMode) => void;
 
   // Toggle panels
-  showMapSettings: boolean;
-  setShowMapSettings: (show: boolean) => void;
   showActors: boolean;
   setShowActors: (show: boolean) => void;
   showToolsDropdown: boolean;
@@ -77,9 +75,6 @@ export const useWindowManager = create<WindowManagerState>((set) => ({
 
   activeModal: 'none',
   setActiveModal: (modal) => set({ activeModal: modal }),
-
-  showMapSettings: false,
-  setShowMapSettings: (show) => set({ showMapSettings: show }),
 
   showActors: false,
   setShowActors: (show) => set({ showActors: show }),

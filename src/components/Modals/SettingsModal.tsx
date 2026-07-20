@@ -10,18 +10,20 @@ import { useTheme } from '../../hooks/useTheme';
 import { THEMES } from '../../themes';
 import type { ThemeDefinition } from '../../themes';
 import { DLCManagerTab } from './DLCManagerTab';
-import { Bot, ToyBrick } from 'lucide-react';
+import { MapSettingsPanel } from '../HUD/MapSettingsPanel';
+import { Bot, ToyBrick, Map } from 'lucide-react';
 
 interface SettingsModalProps {
   onClose: () => void;
   initialTab?: Tab;
 }
 
-type Tab = 'geral' | 'aparencia' | 'modulos' | 'ia' | 'wiki' | 'integracoes';
+type Tab = 'geral' | 'aparencia' | 'cenario' | 'modulos' | 'ia' | 'wiki' | 'integracoes';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'geral', label: 'Geral',  icon: <Settings2 size={15} /> },
   { id: 'aparencia', label: 'Aparência', icon: <Palette size={15} /> },
+  { id: 'cenario', label: 'Cenário & Grid', icon: <Map size={15} /> },
   { id: 'modulos', label: 'Módulos', icon: <ToyBrick size={15} /> },
   { id: 'ia', label: 'Robô IA', icon: <Bot size={15} /> },
   { id: 'wiki',  label: 'Wiki',   icon: <Globe size={15} /> },
@@ -534,20 +536,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   return (
     // ── Backdrop ──
     <div
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={e => { if (e.target === e.currentTarget && activeTab !== 'cenario') onClose(); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 99990,
-        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: activeTab === 'cenario' ? 'transparent' : 'rgba(0,0,0,0.55)', 
+        backdropFilter: activeTab === 'cenario' ? 'none' : 'blur(6px)',
+        display: 'flex', alignItems: 'center', 
+        justifyContent: activeTab === 'cenario' ? 'flex-end' : 'center',
+        paddingRight: activeTab === 'cenario' ? '20px' : '0',
         animation: 'fadeIn 0.2s ease-out',
-        pointerEvents: 'auto',
+        pointerEvents: activeTab === 'cenario' ? 'none' : 'auto',
       }}
     >
       {/* ── Panel ── */}
       <div style={{
         width: '100%',
         maxWidth: '560px',
-        margin: '0 16px',
+        margin: activeTab === 'cenario' ? '0' : '0 16px',
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
@@ -555,8 +560,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         border: '1px solid var(--glass-border)',
         borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03)',
+        boxShadow: activeTab === 'cenario' ? '0 10px 40px rgba(0,0,0,0.5)' : '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03)',
         animation: 'fadeIn 0.22s ease-out',
+        pointerEvents: 'auto',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
 
         {/* ── Header ── */}
@@ -596,7 +603,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
 
         {/* ── Tab Bar ── */}
         <div style={{
-          display: 'flex', gap: '4px', padding: '12px 20px 0',
+          display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '12px 20px 0',
           borderBottom: '1px solid var(--glass-border)', flexShrink: 0,
           background: 'rgba(0,0,0,0.1)',
         }}>
@@ -625,9 +632,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
           })}
         </div>
 
+        {/* ── Tab Content ── */}
         <div style={{ padding: '24px', overflowY: 'auto', flex: 1, minHeight: '300px' }}>
           {activeTab === 'geral' && renderGeral()}
           {activeTab === 'aparencia' && renderAparencia()}
+          {activeTab === 'cenario' && <MapSettingsPanel />}
           {activeTab === 'modulos' && renderModulos()}
           {activeTab === 'ia' && renderIA()}
           {activeTab === 'wiki'  && renderWiki()}

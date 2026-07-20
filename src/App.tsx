@@ -10,7 +10,7 @@ import { SettingsModal } from './components/Modals/SettingsModal';
 import { AIAssistantBot } from './components/HUD/AIAssistantBot';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
-import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
+
 // import { ThemePickerModal } from './components/Modals/ThemePickerModal';
 import { useTheme } from './hooks/useTheme';
 import { QuestTrackerHUD } from './components/Widgets/GameMaster/QuestTrackerHUD';
@@ -43,7 +43,7 @@ import { CutsceneManager } from './components/Theater/CutsceneManager';
 // import { RoomManagerWidget } from './components/Widgets/System/RoomManagerWidget';
 
 // Trigger HMR
-type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'chat' | 'clockConfig' | 'widgets';
+type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
 
 function App() {
   const [isReady, _setIsReady] = useState(true);
@@ -55,7 +55,6 @@ function App() {
     openWindows, toggleWindow,
     viewMode, setViewMode,
     activeModal, setActiveModal,
-    showMapSettings, setShowMapSettings,
     showActors, setShowActors,
     showToolsDropdown, setShowToolsDropdown,
     openSheets, setOpenSheets,
@@ -67,7 +66,7 @@ function App() {
   const handleCloseActorLibrary = useCallback(() => setShowActors(false), [setShowActors]);
   const handleCloseCombatLog = useCallback(() => toggleWindow('combatLog'), [toggleWindow]);
   const handleCloseChatWindow = useCallback(() => toggleWindow('chatWindow'), [toggleWindow]);
-  const handleCloseMapSettings = useCallback(() => setShowMapSettings(false), [setShowMapSettings]);
+
 
 
   const handleCloseSheet = useCallback((sheetKey: string) => {
@@ -355,7 +354,7 @@ function App() {
               {activeModal.startsWith('settings') && (
                 <SettingsModal 
                   onClose={() => setActiveModal('none')} 
-                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : 'geral'} 
+                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : activeModal === 'settings-cenario' ? 'cenario' : 'geral'} 
                 />
               )}
               {activeModal === 'chat' && (
@@ -471,11 +470,6 @@ function App() {
               <ChatWindow />
             </DraggableWindow>
           )}
-          {showMapSettings && (
-            <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={200} width={300} onClose={handleCloseMapSettings}>
-              <MapSettingsPanel />
-            </DraggableWindow>
-          )}
 
           {/* Overlays Visuais e Funcionais */}
           <ClimaxOverlay />
@@ -515,7 +509,7 @@ function App() {
                 onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
                 onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
                 onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
-                onOpenMapSettings={() => { setShowMapSettings(true); setActiveModal('none'); }}
+                onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
                 onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
                 onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
                 onOpenRoomManager={() => { setActiveModal('players'); }}
