@@ -11,11 +11,10 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Tab = 'geral' | 'rede' | 'wiki' | 'integracoes';
+type Tab = 'geral' | 'wiki' | 'integracoes';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'geral', label: 'Geral',  icon: <Settings2 size={15} /> },
-  { id: 'rede',  label: 'Rede',   icon: <Wifi size={15} /> },
   { id: 'wiki',  label: 'Wiki',   icon: <Globe size={15} /> },
   { id: 'integracoes', label: 'Integrações', icon: <Plug size={15} /> },
 ];
@@ -93,8 +92,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
   // ── State ──
   const { currentEngineId, setEngine, engines } = useRulesEngine();
-  const [livekitUrl,   setLivekitUrl]   = useState(localStorage.getItem('livekitUrl')   || '');
-  const [livekitToken, setLivekitToken] = useState(localStorage.getItem('livekitToken') || '');
   const [isGM,         setIsGM]         = useState(localStorage.getItem('isGM') === 'true');
   const [wikiRepo,     setWikiRepo]     = useState('');
   const [wikiBranch,   setWikiBranch]   = useState('main');
@@ -110,8 +107,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
   const handleSave = async () => {
     setSaving(true);
-    localStorage.setItem('livekitUrl',   livekitUrl);
-    localStorage.setItem('livekitToken', livekitToken);
     localStorage.setItem('isGM',         isGM ? 'true' : 'false');
     localStorage.setItem('n8nWebhookUrl', n8nWebhookUrl);
     updateWikiConfig({ repoUrl: wikiRepo, branch: wikiBranch, token: wikiToken });
@@ -199,46 +194,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             );
           })}
         </div>
-      </Field>
-    </div>
-  );
-
-  const renderRede = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{
-        padding: '12px 14px', borderRadius: '10px',
-        background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.15)',
-        display: 'flex', alignItems: 'flex-start', gap: '10px',
-      }}>
-        <Wifi size={14} color="#38bdf8" style={{ flexShrink: 0, marginTop: '2px' }} />
-        <p style={{ margin: 0, fontSize: '0.72rem', color: 'rgba(125,211,252,0.8)', lineHeight: 1.6 }}>
-          Configure o servidor LiveKit para habilitar voz e vídeo P2P durante as sessões.
-        </p>
-      </div>
-
-      <Field label="WebSocket URL" icon={<Wifi size={13} />} hint="URL do servidor SFU no formato wss://...">
-        <form onSubmit={e => e.preventDefault()}>
-          <input
-            type="text"
-            placeholder="wss://seu-projeto.livekit.cloud"
-            value={livekitUrl}
-            onChange={e => setLivekitUrl(e.target.value)}
-            style={inputStyle}
-          />
-        </form>
-      </Field>
-
-      <Field label="Access Token" icon={<KeyRound size={13} />} hint="Token JWT de acesso gerado pelo seu servidor LiveKit.">
-        <form onSubmit={e => e.preventDefault()}>
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder="eyJh..."
-            value={livekitToken}
-            onChange={e => setLivekitToken(e.target.value)}
-            style={inputStyle}
-          />
-        </form>
       </Field>
     </div>
   );
@@ -420,7 +375,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         {/* ── Tab Content ── */}
         <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
           {activeTab === 'geral' && renderGeral()}
-          {activeTab === 'rede'  && renderRede()}
           {activeTab === 'wiki'  && renderWiki()}
           {activeTab === 'integracoes' && renderIntegracoes()}
         </div>
