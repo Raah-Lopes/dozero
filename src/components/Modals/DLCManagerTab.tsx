@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { state } from '../../../store';
+import { state } from '../../store';
 import {
   ToyBrick, Check, Search, Zap, Swords, Skull, Anchor, Beaker,
   Clock, Volume2, BookMarked, Sparkles, Tag, FolderOpen
