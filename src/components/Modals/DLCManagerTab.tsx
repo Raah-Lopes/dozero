@@ -163,7 +163,7 @@ export const DLCManagerTab: React.FC = () => {
             </div>
           </div>
 
-          {/* Search */}
+        {/* Search */}
           <div style={{ position: 'relative', marginBottom: '8px' }}>
             <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             <input
@@ -316,6 +316,5 @@ export const DLCManagerTab: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
   );
 };
