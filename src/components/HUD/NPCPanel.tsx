@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 import { getWikiConfig } from '../../store';
-import { resolveImageUrl } from '../../utils/imageUtils';
+import { resolveImageUrl, convertImageToWebP } from '../../utils/imageUtils';
 
 const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
 
@@ -397,49 +397,11 @@ export const NPCPanel: React.FC = () => {
     const token = state.tokens.get(uploadingTokenId) as any;
     if (!token) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxSize = 200; 
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height && width > maxSize) {
-          height *= maxSize / width;
-          width = maxSize;
-        } else if (height > maxSize) {
-          width *= maxSize / height;
-          height = maxSize;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
-        
-        const config = getWikiConfig();
-        const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-        const cleanName = (token.name || 'npc').replace(/[^a-zA-Z0-9]/g, '_');
-        const finalFilename = `${cleanName}_${Date.now()}.webp`;
-        
-        fetch('/api/wiki/save-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ repoPath, filename: finalFilename, base64: webpDataUrl })
-        }).then(res => res.json()).then(data => {
-          handleUpdateTokenProp(token, 'imageUrl', data.url);
-        }).catch(err => {
-          console.error("Erro ao salvar anexo na wiki", err);
-          handleUpdateTokenProp(token, 'imageUrl', webpDataUrl);
-        });
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    convertImageToWebP(file, 0.7, 512).then(({ base64 }) => {
+      handleUpdateTokenProp(token, 'imageUrl', base64);
+    }).catch(err => {
+      console.error("Erro ao converter imagem do token", err);
+    });
   };
 
   // Filter board tokens

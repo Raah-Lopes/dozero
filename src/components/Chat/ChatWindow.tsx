@@ -6,6 +6,7 @@ import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { useCastData } from '../Theater/hooks/useCastData';
 import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plus, Mail, Bell, BellOff } from 'lucide-react';
 import { PollWidget } from './PollWidget';
+import { convertImageToWebP } from '../../utils/imageUtils';
 
 export const ChatWindow: React.FC = () => {
   const { members } = useCastData();
@@ -310,24 +311,9 @@ export const ChatWindow: React.FC = () => {
     const file = e.dataTransfer.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        if (width > 800) { height = Math.round((height * 800) / width); width = 800; }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if(ctx) ctx.drawImage(img, 0, 0, width, height);
-        const webp = canvas.toDataURL('image/webp', 0.8);
-        pushAdvancedChatMessage(`[IMG]${webp}`, { tipo: tab, autor: playerName });
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    convertImageToWebP(file, 0.75, 512).then(({ base64 }) => {
+      pushAdvancedChatMessage(`[IMG]${base64}`, { tipo: tab, autor: playerName });
+    }).catch(err => console.error('Chat image compress failed', err));
   };
 
   return (

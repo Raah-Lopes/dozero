@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { useSceneState } from './hooks/useSceneState';
 import { Type, Image as ImageIcon, Trash2, ArrowUp, ArrowDown, Settings } from 'lucide-react';
 import { GlassAccordion } from '../UI/GlassAccordion';
+import { convertImageToWebP } from '../../utils/imageUtils';
 
 export const PropsPanel: React.FC = () => {
   const { currentScene, patchCurrentScene } = useSceneState();
@@ -29,40 +30,29 @@ export const PropsPanel: React.FC = () => {
     patchCurrentScene({ props: [...props, newProp] });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      const img = new Image();
-      img.onload = () => {
-        // Calculate initial size preserving aspect ratio (max 200px)
-        let w = img.width;
-        let h = img.height;
-        if (w > 200 || h > 200) {
-          const ratio = Math.min(200 / w, 200 / h);
-          w = w * ratio;
-          h = h * ratio;
-        }
-
-        const newProp = {
-          id: `prop_${Date.now()}`,
-          type: 'image' as const,
-          url: dataUrl,
-          label: file.name,
-          x: 200 + Math.random() * 50,
-          y: 200 + Math.random() * 50,
-          width: w,
-          height: h,
-          zIndex: props.length + 1
-        };
-        patchCurrentScene({ props: [...props, newProp] });
+    const { base64 } = await convertImageToWebP(file, 0.75, 512);
+    const img = new Image();
+    img.onload = () => {
+      let w = Math.min(img.width, 200);
+      let h = Math.round(img.height * (w / img.width));
+      const newProp = {
+        id: `prop_${Date.now()}`,
+        type: 'image' as const,
+        url: base64,
+        label: file.name,
+        x: 200 + Math.random() * 50,
+        y: 200 + Math.random() * 50,
+        width: w,
+        height: h,
+        zIndex: props.length + 1
       };
-      img.src = dataUrl;
+      patchCurrentScene({ props: [...props, newProp] });
     };
-    reader.readAsDataURL(file);
+    img.src = base64;
     e.target.value = '';
   };
 

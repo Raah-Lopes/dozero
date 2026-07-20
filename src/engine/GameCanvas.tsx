@@ -1265,6 +1265,7 @@ export const GameCanvas: React.FC = () => {
               }
 
               draggingTokenId = id;
+              isTouchPanning = false; // Prevent camera fighting token drag on mobile
               tokenDragOffsets = {};
               propDragOffsets = {};
               tokenStartPositions = {};
@@ -1426,11 +1427,17 @@ export const GameCanvas: React.FC = () => {
         if (draggingTextId && draggingTextId.startsWith('prop_')) draggingTextId = null;
       };
 
-      const handleNativeMove = (e: PointerEvent) => {
-        const rect = app.canvas.getBoundingClientRect();
-        const worldPoint = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      // ── Stage-level drag: use Pixi events so coordinates are always correct on mobile ──
+      // The Pixi event system already accounts for devicePixelRatio and canvas offset,
+      // avoiding the DOM vs Pixi coordinate mismatch that causes jank/snapping on touch.
+      app.stage.eventMode = 'static';
+      app.stage.hitArea = new Rectangle(-1e6, -1e6, 2e6, 2e6);
 
+      app.stage.on('pointermove', (e: any) => {
         if (draggingTokenId || (draggingTextId && draggingTextId.startsWith('prop_'))) {
+          // e.getLocalPosition(viewport) gives world coords via Pixi event system (handles devicePixelRatio correctly)
+          const worldPoint = e.getLocalPosition(viewport);
+
           getSelectedTokens().forEach(selId => {
             const selToken = tokenSprites[selId]?.container;
             const offset = tokenDragOffsets[selId];
@@ -1439,46 +1446,57 @@ export const GameCanvas: React.FC = () => {
               selToken.y = worldPoint.y + offset.y;
             }
           });
-          
+
           getSelectedProps().forEach(selId => {
-             const selProp = propSprites[selId];
-             const offset = propDragOffsets[selId];
-             if (selProp && offset) {
-                selProp.x = worldPoint.x + offset.x;
-                selProp.y = worldPoint.y + offset.y;
-                if (propHoverTexts[selId]) {
-                   propHoverTexts[selId].x = selProp.x;
-                   propHoverTexts[selId].y = selProp.y - (selProp.height / 2) - 10;
-                }
-             }
+            const selProp = propSprites[selId];
+            const offset = propDragOffsets[selId];
+            if (selProp && offset) {
+              selProp.x = worldPoint.x + offset.x;
+              selProp.y = worldPoint.y + offset.y;
+              if (propHoverTexts[selId]) {
+                propHoverTexts[selId].x = selProp.x;
+                propHoverTexts[selId].y = selProp.y - (selProp.height / 2) - 10;
+              }
+            }
           });
-          
+
           if (getSelectedProps().length > 0) {
-             window.dispatchEvent(new Event('prop-selection-updated'));
+            window.dispatchEvent(new Event('prop-selection-updated'));
           }
-        } else if (draggingTextId) {
-           const container = textSprites[draggingTextId];
-           if (container) {
-              const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-              container.x = localPos.x + textDragOffset.x;
-              container.y = localPos.y + textDragOffset.y;
-           }
+        }
+      });
+
+      const onStageDragEnd = () => {
+        if (draggingTokenId || (draggingTextId && draggingTextId.startsWith('prop_'))) {
+          onDragEnd();
+        }
+      };
+      app.stage.on('pointerup', onStageDragEnd);
+      app.stage.on('pointerupoutside', onStageDragEnd);
+
+      // Text drag stays on window (text containers live outside pixi viewport)
+      const handleNativeMove = (e: PointerEvent) => {
+        if (!draggingTextId || draggingTextId.startsWith('prop_')) return;
+        const container = textSprites[draggingTextId];
+        if (container) {
+          const rect = app.canvas.getBoundingClientRect();
+          const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+          container.x = localPos.x + textDragOffset.x;
+          container.y = localPos.y + textDragOffset.y;
         }
       };
 
       const handleNativeUp = (e: PointerEvent) => {
-        if (draggingTokenId || (draggingTextId && draggingTextId.startsWith('prop_'))) {
-            onDragEnd();
-        } else if (draggingTextId) {
-           const container = textSprites[draggingTextId];
-           if (container) {
-              import('../store').then(s => {
-                 s.updateMapTextPosition(draggingTextId!, container.x, container.y);
-              });
-              container.alpha = 1;
-              container.cursor = 'grab';
-           }
-           draggingTextId = null;
+        if (draggingTextId && !draggingTextId.startsWith('prop_')) {
+          const container = textSprites[draggingTextId];
+          if (container) {
+            import('../store').then(s => {
+              s.updateMapTextPosition(draggingTextId!, container.x, container.y);
+            });
+            container.alpha = 1;
+            container.cursor = 'grab';
+          }
+          draggingTextId = null;
         }
       };
 

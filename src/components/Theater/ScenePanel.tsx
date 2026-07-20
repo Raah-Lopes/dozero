@@ -8,6 +8,7 @@ import { setTheaterMood, setTheaterWeather, type MoodType, type WeatherType, typ
 import { generateAI } from '../../services/ai/AIProvider';
 import { QuestLog } from './QuestLog';
 import { exportSceneAsMarkdown } from './sceneExport';
+import { convertImageToWebP } from '../../utils/imageUtils';
 import { GlassAccordion } from '../UI/GlassAccordion';
 
 const MOODS: { value: MoodType; label: string; icon: string }[] = [
@@ -74,14 +75,11 @@ export const ScenePanel: React.FC = () => {
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
   const assetImageInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAssetImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAssetImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setAssetUrl(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    const { base64 } = await convertImageToWebP(file, 0.75, 512);
+    setAssetUrl(base64);
   };
 
   const handleSaveAsset = () => {
@@ -208,14 +206,11 @@ export const ScenePanel: React.FC = () => {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      patchCurrentScene({ imageUrl: ev.target?.result as string });
-    };
-    reader.readAsDataURL(file);
+    const { base64 } = await convertImageToWebP(file, 0.75, 512);
+    patchCurrentScene({ imageUrl: base64 });
   };
 
   
