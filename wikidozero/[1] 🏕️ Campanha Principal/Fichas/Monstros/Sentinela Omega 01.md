@@ -12,8 +12,8 @@ inventario:
     quantidade: 1
     descricao: Uma clássica espada de aço temperado.
     equipado: false
-tipo: PC
-status: vivo
+tipo: Personagem
+status: jogador
 nome: Sentinela Ômega 01
 nivel: 3
 XP: 0
@@ -141,6 +141,10 @@ xp: 0
 classe: ''
 borderColor: '#858200'
 ---
+
+
+
+
 
 
 

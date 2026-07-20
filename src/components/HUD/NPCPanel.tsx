@@ -390,18 +390,53 @@ export const NPCPanel: React.FC = () => {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !uploadingTokenId) return;
 
     const token = state.tokens.get(uploadingTokenId) as any;
     if (!token) return;
 
-    convertImageToWebP(file, 0.7, 512).then(({ base64 }) => {
-      handleUpdateTokenProp(token, 'imageUrl', base64);
-    }).catch(err => {
-      console.error("Erro ao converter imagem do token", err);
-    });
+    try {
+      const { base64 } = await convertImageToWebP(file, 0.7, 512);
+      
+      // Salva no Yjs sempre como base64
+      updateTokenProps(token.id, { imageUrl: base64 });
+
+      // Salva na Wiki como arquivo (se houver ficha)
+      const entry = wikiIndex.find(en => {
+        if (token.wikiSlug && en.slug === token.wikiSlug) return true;
+        const nameRaw = (token.name || '').trim().toLowerCase();
+        return (en.metadata?.titulo || '').toLowerCase().trim() === nameRaw || en.slug.toLowerCase().trim() === nameRaw;
+      });
+
+      if (entry) {
+        let wikiImageRef = base64;
+        const cleanName = (token.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+        const finalFilename = `${cleanName}_${Date.now()}.webp`;
+        const res = await fetch('/api/wiki/save-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            repoPath: 'D:/DOZERO/wikidozero',
+            filename: finalFilename, 
+            base64 
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          wikiImageRef = data.url;
+        }
+        
+        const success = await syncTokenFieldToWiki(entry.path, 'avatar', wikiImageRef);
+        if (success) {
+          WikiIndexer.clearCache();
+          window.dispatchEvent(new Event('wiki-updated'));
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao converter/salvar imagem do token", err);
+    }
   };
 
   // Filter board tokens

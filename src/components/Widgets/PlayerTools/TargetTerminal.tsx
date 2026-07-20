@@ -265,7 +265,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   };
 
   const handleAvatarClick = () => {
-    if (isGM && fileInputRef.current) {
+    if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
@@ -274,8 +274,36 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     const file = e.target.files?.[0];
     if (!file) return;
     const { base64 } = await convertImageToWebP(file, 0.7, 512);
+    
+    // Yjs gets base64 always
     handlePropChange('imageUrl', base64);
-    handlePropChangeEnd('imageUrl', base64);
+    
+    // Wiki gets file path
+    let wikiImageRef = base64;
+    try {
+      const path = tokenId ? wikiEntry?.path : wikiPath;
+      if (path) {
+        const cleanName = (tokenData?.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+        const finalFilename = `${cleanName}_${Date.now()}.webp`;
+        const res = await fetch('/api/wiki/save-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            repoPath: 'D:/DOZERO/wikidozero', // fallback
+            filename: finalFilename, 
+            base64 
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          wikiImageRef = data.url;
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao salvar imagem na wiki', err);
+    }
+    
+    handlePropChangeEnd('imageUrl', wikiImageRef);
   };
 
   const handleItemAction = async (listName: string, itemIdx: number, action: 'usar' | 'equipar' | 'conjurar') => {
@@ -2263,15 +2291,13 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         }} 
       />
 
-      {isGM && (
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          style={{ display: 'none' }} 
-          accept="image/*"
-          onChange={handleImageUpload}
-        />
-      )}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        style={{ display: 'none' }} 
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
     </div>
   );
 };
