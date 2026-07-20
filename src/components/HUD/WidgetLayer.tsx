@@ -15,8 +15,7 @@ const AutomatedDiceWidget = React.lazy(() => import('../Widgets/PlayerTools/Auto
 const CharacterRosterWidget = React.lazy(() => import('../Widgets/PlayerTools/CharacterRosterWidget').then(m => ({ default: m.CharacterRosterWidget })));
 const ChronosWidget = React.lazy(() => import('../Widgets/GameMaster/ChronosWidget').then(m => ({ default: m.ChronosWidget })));
 const LoreMachineWidget = React.lazy(() => import('../Widgets/Generators/LoreMachineWidget').then(m => ({ default: m.LoreMachineWidget })));
-const DLCManagerWidget = React.lazy(() => import('../Widgets/System/DLCManagerWidget').then(m => ({ default: m.DLCManagerWidget })));
-const WorldEngineWidget = React.lazy(() => import('../Widgets/Generators/WorldEngineWidget').then(m => ({ default: m.WorldEngineWidget })));
+const WorldEngineWidget = React.lazy(() => import('../Widgets/System/WorldEngineWidget').then(m => ({ default: m.WorldEngineWidget })));
 const EntityForgeWidget = React.lazy(() => import('./EntityForgeWidget').then(m => ({ default: m.EntityForgeWidget })));
 const StrongholdWidget = React.lazy(() => import('../Widgets/Generators/StrongholdWidget').then(m => ({ default: m.StrongholdWidget })));
 const ArsenalMestreWidget = React.lazy(() => import('../Widgets/GameMaster/ArsenalMestreWidget').then(m => ({ default: m.ArsenalMestreWidget })));
@@ -71,7 +70,6 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.characterRoster && <CharacterRosterWidget onClose={() => closeWindow('characterRoster')} />}
           {openWindows.chronos && <ChronosWidget onClose={() => closeWindow('chronos')} />}
           {openWindows.loreMachine && <LoreMachineWidget onClose={() => closeWindow('loreMachine')} />}
-          {openWindows.dlcManager && <DLCManagerWidget onClose={() => closeWindow('dlcManager')} />}
           {openWindows.worldEngine && <WorldEngineWidget onClose={() => closeWindow('worldEngine')} />}
           {openWindows.entityForge && <EntityForgeWidget onClose={() => closeWindow('entityForge')} />}
           {openWindows.stronghold && <StrongholdWidget onClose={() => closeWindow('stronghold')} />}

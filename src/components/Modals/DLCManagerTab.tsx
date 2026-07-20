@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { DraggableWindow } from '../../HUD/DraggableWindow';
+
 import { state } from '../../../store';
 import {
   ToyBrick, Check, Search, Zap, Swords, Skull, Anchor, Beaker,
   Clock, Volume2, BookMarked, Sparkles, Tag, FolderOpen
 } from 'lucide-react';
-import { useWiki } from '../../../hooks/useWiki';
+import { useWiki } from '../../hooks/useWiki';
 
 // --- ADDON REGISTRY ---
 type AddonCategory = 'cenario' | 'mecanica' | 'utilidade';
@@ -92,7 +92,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   utilidade: '#64748b',
 };
 
-export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+export const DLCManagerTab: React.FC = () => {
   const [activeDLCs, setActiveDLCs] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('todos');
@@ -146,22 +146,13 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   const activeCount = activeDLCs.length;
 
   return (
-    <DraggableWindow
-      id="dlc-manager"
-      title="Gerenciador de Complementos"
-      initialX={window.innerWidth / 2 - 280}
-      initialY={80}
-      onClose={onClose}
-      width={600}
-      height={650}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '500px', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
 
-        {/* Header */}
-        <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-            <ToyBrick size={22} color="var(--accent-primary)" />
-            <h3 style={{ margin: 0, fontSize: '0.95rem', flex: 1 }}>Complementos</h3>
+      {/* Header */}
+      <div style={{ padding: '0 0 16px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+          <ToyBrick size={20} color="var(--accent-primary)" />
+          <h3 style={{ margin: 0, fontSize: '1rem', flex: 1 }}>Complementos (DLCs)</h3>
             <div style={{
               background: activeCount > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
               border: `1px solid ${activeCount > 0 ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`,
@@ -325,6 +316,6 @@ export const DLCManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
           )}
         </div>
       </div>
-    </DraggableWindow>
+    </div>
   );
 };

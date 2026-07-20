@@ -43,7 +43,7 @@ import { CutsceneManager } from './components/Theater/CutsceneManager';
 // import { RoomManagerWidget } from './components/Widgets/System/RoomManagerWidget';
 
 // Trigger HMR
-type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'chat' | 'clockConfig' | 'widgets';
+type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'chat' | 'clockConfig' | 'widgets';
 
 function App() {
   const [isReady, _setIsReady] = useState(true);
@@ -355,7 +355,7 @@ function App() {
               {activeModal.startsWith('settings') && (
                 <SettingsModal 
                   onClose={() => setActiveModal('none')} 
-                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : 'geral'} 
+                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : 'geral'} 
                 />
               )}
               {activeModal === 'chat' && (
@@ -507,7 +507,7 @@ function App() {
                 onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
                 onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
                 onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
-                onOpenDLCManager={() => { toggleWindow('dlcManager'); setActiveModal('none'); }}
+                onOpenDLCManager={() => { setActiveModal('settings-modulos'); }}
                 onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
                 onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
                 onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
@@ -519,7 +519,7 @@ function App() {
                 onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
                 onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
                 onOpenRoomManager={() => { setActiveModal('players'); }}
-                onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
+                onToggleAIBot={() => { setActiveModal('settings-ia'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
                 onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
                 onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}

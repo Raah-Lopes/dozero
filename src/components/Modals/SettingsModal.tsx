@@ -9,17 +9,21 @@ import { useRulesEngine } from '../../hooks/useRulesEngine';
 import { useTheme } from '../../hooks/useTheme';
 import { THEMES } from '../../themes';
 import type { ThemeDefinition } from '../../themes';
+import { DLCManagerTab } from './DLCManagerTab';
+import { Bot, ToyBrick } from 'lucide-react';
 
 interface SettingsModalProps {
   onClose: () => void;
   initialTab?: Tab;
 }
 
-type Tab = 'geral' | 'aparencia' | 'wiki' | 'integracoes';
+type Tab = 'geral' | 'aparencia' | 'modulos' | 'ia' | 'wiki' | 'integracoes';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'geral', label: 'Geral',  icon: <Settings2 size={15} /> },
   { id: 'aparencia', label: 'Aparência', icon: <Palette size={15} /> },
+  { id: 'modulos', label: 'Módulos', icon: <ToyBrick size={15} /> },
+  { id: 'ia', label: 'Robô IA', icon: <Bot size={15} /> },
   { id: 'wiki',  label: 'Wiki',   icon: <Globe size={15} /> },
   { id: 'integracoes', label: 'Integrações', icon: <Plug size={15} /> },
 ];
@@ -203,6 +207,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const { currentEngineId, setEngine, engines } = useRulesEngine();
   const [isGM,         setIsGM]         = useState(localStorage.getItem('isGM') === 'true');
+  const [aiEnabled,    setAiEnabled]    = useState(localStorage.getItem('aiBotEnabled') === 'true');
   const [wikiRepo,     setWikiRepo]     = useState('');
   const [wikiBranch,   setWikiBranch]   = useState('main');
   const [wikiToken,    setWikiToken]    = useState('');
@@ -218,6 +223,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   const handleSave = async () => {
     setSaving(true);
     localStorage.setItem('isGM',         isGM ? 'true' : 'false');
+    localStorage.setItem('aiBotEnabled', aiEnabled ? 'true' : 'false');
     localStorage.setItem('n8nWebhookUrl', n8nWebhookUrl);
     updateWikiConfig({ repoUrl: wikiRepo, branch: wikiBranch, token: wikiToken });
     await new Promise(r => setTimeout(r, 700));
@@ -385,6 +391,62 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+
+  const renderModulos = () => (
+    <div style={{ height: '100%', minHeight: '500px' }}>
+      <DLCManagerTab />
+    </div>
+  );
+
+  const renderIA = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{
+        padding: '12px 14px', borderRadius: '10px',
+        background: 'rgba(236,72,153,0.05)', border: '1px solid rgba(236,72,153,0.15)',
+        display: 'flex', alignItems: 'flex-start', gap: '10px',
+      }}>
+        <Bot size={14} color="#ec4899" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <p style={{ margin: 0, fontSize: '0.72rem', color: 'rgba(244,114,182,0.8)', lineHeight: 1.6 }}>
+          O Robô Assistente analisa o chat e ajuda o mestre a narrar, sugerindo descrições, criando imagens e interagindo com os jogadores via "/bot".
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Bot size={20} color="var(--accent-primary)" />
+          <div>
+            <span style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>Robô Assistente</span>
+            <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Ativar interação automática no chat</span>
+          </div>
+        </div>
+        <Toggle id="ai-toggle" checked={aiEnabled} onChange={(v) => {
+          setAiEnabled(v);
+          if (v) window.dispatchEvent(new CustomEvent('toggle-ai-bot', { detail: { forceState: true } }));
+          else window.dispatchEvent(new CustomEvent('toggle-ai-bot', { detail: { forceState: false } }));
+        }} />
+      </div>
+
+      <div style={{ marginTop: '10px' }}>
+        <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Deseja configurar a personalidade ou dar comandos específicos para a Inteligência Artificial?</p>
+        <button 
+          onClick={() => {
+            onClose();
+            window.dispatchEvent(new CustomEvent('toggle-window', { detail: 'aiStudio' }));
+          }}
+          style={{
+            background: 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(236,72,153,0.02) 100%)',
+            border: '1px solid rgba(236,72,153,0.2)',
+            borderRadius: '8px', padding: '12px 16px', color: '#f472b6',
+            fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '8px',
+            transition: 'all 0.2s',
+          }}
+        >
+          <Bot size={16} /> Abrir AI Studio Completo
+        </button>
       </div>
     </div>
   );
@@ -563,10 +625,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
           })}
         </div>
 
-        {/* ── Tab Content ── */}
-        <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: '24px', overflowY: 'auto', flex: 1, minHeight: '300px' }}>
           {activeTab === 'geral' && renderGeral()}
           {activeTab === 'aparencia' && renderAparencia()}
+          {activeTab === 'modulos' && renderModulos()}
+          {activeTab === 'ia' && renderIA()}
           {activeTab === 'wiki'  && renderWiki()}
           {activeTab === 'integracoes' && renderIntegracoes()}
         </div>
