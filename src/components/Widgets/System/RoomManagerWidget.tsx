@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Copy, RefreshCw, Key, Link as LinkIcon, QrCode, Network } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Copy, RefreshCw, Key, Link as LinkIcon, QrCode, Network, Database, Trash2 } from 'lucide-react';
 
 export const RoomManagerWidget: React.FC = () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -10,6 +10,37 @@ export const RoomManagerWidget: React.FC = () => {
   const [newPass, setNewPass] = useState('');
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  
+  const [localRooms, setLocalRooms] = useState<string[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+
+  const scanLocalRooms = async () => {
+    setIsScanning(true);
+    try {
+      if (window.indexedDB && window.indexedDB.databases) {
+        const dbs = await window.indexedDB.databases();
+        const roomNames = dbs.map(d => d.name).filter(Boolean) as string[];
+        setLocalRooms(roomNames);
+      } else {
+        alert("Seu navegador não suporta a listagem de bancos IndexedDB.");
+      }
+    } catch (e) {
+      console.error("Erro ao scanear dbs:", e);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleDeleteRoom = (roomNameToDelete: string) => {
+    if (roomNameToDelete === currentRoom) {
+      alert("Você não pode deletar a sala atual em que está!");
+      return;
+    }
+    if (confirm(`Aviso: Isso vai deletar permanentemente os dados da sala "${roomNameToDelete}" no SEU PC. Deseja continuar?`)) {
+      window.indexedDB.deleteDatabase(roomNameToDelete);
+      setLocalRooms(prev => prev.filter(r => r !== roomNameToDelete));
+    }
+  };
 
   // Generate current invite link
   // Se estamos no localhost, substituímos para o link da Vercel para que o QR Code e o convite funcionem no celular dos jogadores.
@@ -152,6 +183,57 @@ export const RoomManagerWidget: React.FC = () => {
             Criar & Entrar na Sala
           </button>
         </form>
+      </div>
+
+      {/* Local Rooms Scanner */}
+      <div className="glass-panel" style={{ padding: '16px', borderRadius: '8px' }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Database size={20} className="theme-orange" />
+          Salas Salvas Localmente
+        </h3>
+        <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          Abaixo estão os dados salvos no cachê do seu navegador. Você pode limpar salas antigas para liberar espaço.
+        </p>
+
+        <button 
+          className="btn-secondary" 
+          onClick={scanLocalRooms}
+          style={{ width: '100%', padding: '10px', marginBottom: '12px' }}
+        >
+          {isScanning ? 'Procurando...' : 'Escanear Salas no PC'}
+        </button>
+
+        {localRooms.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '4px' }}>
+            {localRooms.map(r => (
+              <div key={r} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '8px', borderRadius: '4px', border: '1px solid var(--glass-border)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: r === currentRoom ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{r}</span>
+                  {r === currentRoom && <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)' }}>(Sala Atual)</span>}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {r !== currentRoom && (
+                    <button 
+                      className="btn-icon theme-blue" 
+                      onClick={() => window.location.href = `${window.location.pathname}?room=${r}`}
+                      title="Entrar"
+                    >
+                      <LinkIcon size={14} />
+                    </button>
+                  )}
+                  <button 
+                    className="btn-icon theme-red" 
+                    onClick={() => handleDeleteRoom(r)}
+                    disabled={r === currentRoom}
+                    title="Excluir Dados Locais"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>
