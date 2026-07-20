@@ -12,10 +12,9 @@ export const RoomManagerWidget: React.FC = () => {
   const [showQR, setShowQR] = useState(false);
 
   // Generate current invite link
-  // If we are on localhost, using the origin is fine, but for QR codes meant for players, 
-  // it would be better if we could share the Vercel link. However, players will play on the Vercel link anyway.
-  // We'll construct the link using current origin.
-  const inviteLink = `${window.location.origin}/?room=${currentRoom}${currentPass ? `&pass=${currentPass}` : ''}`;
+  // Se estamos no localhost, substituímos para o link da Vercel para que o QR Code e o convite funcionem no celular dos jogadores.
+  const baseUrl = window.location.origin.includes('localhost') ? 'https://dozero-vert.vercel.app' : window.location.origin;
+  const inviteLink = `${baseUrl}/?room=${currentRoom}${currentPass ? `&pass=${currentPass}` : ''}`;
   
   // Ponytail lazy dependency-free QR Code!
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteLink)}`;
