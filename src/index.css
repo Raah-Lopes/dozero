@@ -50,11 +50,16 @@
 }
 
 body {
-  background-color: var(--bg-primary);
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-deep);
   color: var(--text-primary);
-  font-family: var(--font-body);
-  overflow: hidden; /* Prevent scrolling, this is a full screen app */
-  user-select: none; /* Game-like feel */
+  /* Prevenir engasgos no mobile ao arrastar tokens */
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -1427,7 +1427,8 @@ export const GameCanvas: React.FC = () => {
       };
 
       const handleNativeMove = (e: PointerEvent) => {
-        const worldPoint = viewport.toLocal({ x: e.clientX, y: e.clientY });
+        const rect = app.canvas.getBoundingClientRect();
+        const worldPoint = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
 
         if (draggingTokenId || (draggingTextId && draggingTextId.startsWith('prop_'))) {
           getSelectedTokens().forEach(selId => {
@@ -1458,7 +1459,6 @@ export const GameCanvas: React.FC = () => {
         } else if (draggingTextId) {
            const container = textSprites[draggingTextId];
            if (container) {
-              const rect = app.canvas.getBoundingClientRect();
               const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
               container.x = localPos.x + textDragOffset.x;
               container.y = localPos.y + textDragOffset.y;
@@ -1484,6 +1484,7 @@ export const GameCanvas: React.FC = () => {
 
       window.addEventListener('pointermove', handleNativeMove);
       window.addEventListener('pointerup', handleNativeUp);
+      window.addEventListener('pointercancel', handleNativeUp);
 
       window.addEventListener('locate-texts', () => {
          const texts = Array.from(state.mapTexts.values()) as any[];
@@ -1531,6 +1532,7 @@ export const GameCanvas: React.FC = () => {
         if (prevTokenCleanup) prevTokenCleanup();
         window.removeEventListener('pointermove', handleNativeMove);
         window.removeEventListener('pointerup', handleNativeUp);
+        window.removeEventListener('pointercancel', handleNativeUp);
         window.removeEventListener('token-selection-updated', updateSelectionVisuals);
         // NOTE: we skip removing locate-texts because it's harmless or we can add named func if needed.
       };
