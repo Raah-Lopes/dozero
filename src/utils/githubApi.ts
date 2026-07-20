@@ -92,6 +92,10 @@ export async function openLocalFolder(path: string = ''): Promise<void> {
 }
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {
+  if (import.meta.env.PROD) {
+    console.warn("Modo Vercel: Salvamento local desativado.");
+    return;
+  }
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
@@ -108,6 +112,7 @@ export async function saveMarkdownContent(path: string, content: string): Promis
 }
 
 export async function createFolder(path: string): Promise<void> {
+  if (import.meta.env.PROD) return;
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
@@ -124,6 +129,7 @@ export async function createFolder(path: string): Promise<void> {
 }
 
 export async function moveFileOrFolder(oldPath: string, newPath: string): Promise<void> {
+  if (import.meta.env.PROD) return;
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
@@ -140,6 +146,7 @@ export async function moveFileOrFolder(oldPath: string, newPath: string): Promis
 }
 
 export async function deleteFileOrFolder(path: string): Promise<void> {
+  if (import.meta.env.PROD) return;
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   

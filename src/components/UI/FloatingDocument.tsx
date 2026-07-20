@@ -24,7 +24,9 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!inline) {
+  const isBlock = match || String(children).includes('\n');
+
+  if (isBlock) {
     return (
       <div style={{ position: 'relative', margin: '1em 0', background: 'rgba(0,0,0,0.4)', borderRadius: '6px', border: '1px solid var(--glass-border)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderTopLeftRadius: '6px', borderTopRightRadius: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
