@@ -5,7 +5,7 @@ import { useWiki } from '../../../hooks/useWiki';
 import { state, updateTokenProps, getWikiConfig } from '../../../store';
 import { syncTokenFieldToWiki } from '../../../services/wiki/syncWiki';
 import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
-import { resolveImageUrl } from '../../../utils/imageUtils';
+import { resolveImageUrl, convertImageToWebP } from '../../../utils/imageUtils';
 import { User, Skull, Cpu, Shield, Zap, Sword, Star, Eye, EyeOff } from 'lucide-react';
 
 interface CharacterRosterWidgetProps {
@@ -102,78 +102,48 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !uploadingPath) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        const maxSize = 200;
-        let width = img.width;
-        let height = img.height;
+    const { base64: webpDataUrl } = await convertImageToWebP(file, 0.9, 512);
 
-        if (width > height && width > maxSize) {
-          height *= maxSize / width;
-          width = maxSize;
-        } else if (height > maxSize) {
-          width *= maxSize / height;
-          height = maxSize;
-        }
+    // Salvar a imagem como arquivo na pasta ANEXOS da wiki
+    const config = getWikiConfig();
+    const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+    const entry = index.find(en => en.path === uploadingPath);
+    const cleanName = (entry?.metadata?.nome || entry?.metadata?.titulo || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+    const finalFilename = `${cleanName}_${Date.now()}.webp`;
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+    let savedUrl = webpDataUrl;
+    try {
+      const res = await fetch('/api/wiki/save-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoPath, filename: finalFilename, base64: webpDataUrl })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        savedUrl = data.url;
+      }
+    } catch (err) {
+      console.error('Erro ao salvar imagem na wiki, usando base64:', err);
+    }
 
-        const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
-
-        // Salvar a imagem como arquivo na pasta ANEXOS da wiki
-        const config = getWikiConfig();
-        const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-        const entry = index.find(en => en.path === uploadingPath);
-        const cleanName = (entry?.metadata?.nome || entry?.metadata?.titulo || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-        const finalFilename = `${cleanName}_${Date.now()}.webp`;
-
-        let savedUrl = webpDataUrl;
-        try {
-          const res = await fetch('/api/wiki/save-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repoPath, filename: finalFilename, base64: webpDataUrl })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            savedUrl = data.url; // Ex: "ANEXOS/Jubbaer_1234567890.webp"
-          }
-        } catch (err) {
-          console.error("Erro ao salvar imagem na wiki, usando base64:", err);
-        }
-
-        const success = await syncTokenFieldToWiki(uploadingPath, 'imagem', savedUrl);
-        if (success) {
-          if (entry) {
-            const entrySlug = entry.slug;
-            const entryName = (entry.metadata?.nome || entry.metadata?.titulo || '').trim().toLowerCase();
-            
-            Array.from(state.tokens.entries()).forEach(([tokId, tokData]: [string, any]) => {
-              const matchesSlug = tokData.wikiSlug && tokData.wikiSlug === entrySlug;
-              const matchesName = !tokData.wikiSlug && tokData.name && tokData.name.trim().toLowerCase() === entryName;
-              if (matchesSlug || matchesName) {
-                updateTokenProps(tokId, { imageUrl: savedUrl });
-              }
-            });
-          }
-
-          WikiIndexer.clearCache();
-          window.dispatchEvent(new Event('wiki-updated'));
-        }
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    const success = await syncTokenFieldToWiki(uploadingPath, 'imagem', savedUrl);
+    if (success) {
+      if (entry) {
+        const entrySlug = entry.slug;
+        const entryName = (entry.metadata?.nome || entry.metadata?.titulo || '').trim().toLowerCase();
+        Array.from(state.tokens.entries()).forEach(([tokId, tokData]: [string, any]) => {
+          const matchesSlug = tokData.wikiSlug && tokData.wikiSlug === entrySlug;
+          const matchesName = !tokData.wikiSlug && tokData.name && tokData.name.trim().toLowerCase() === entryName;
+          if (matchesSlug || matchesName) updateTokenProps(tokId, { imageUrl: savedUrl });
+        });
+      }
+      WikiIndexer.clearCache();
+      window.dispatchEvent(new Event('wiki-updated'));
+    }
   };
 
   return (

@@ -4,6 +4,7 @@ import type { CampaignTabProps } from './types';
 import { LegacyBadge } from './Shared';
 import { WikiLinkedTextarea } from './Shared';
 import { getWikiConfig } from '../../../../store';
+import { convertImageToWebP } from '../../../../utils/imageUtils';
 
 interface OverviewTabProps extends CampaignTabProps {
   openInWiki: (path: string) => void;
@@ -29,22 +30,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
 
-      // Read and resize image to 1400px wide max
-      const reader = new FileReader();
-      const dataUrl: string = await new Promise((res, rej) => {
-        reader.onload = ev => res(ev.target?.result as string);
-        reader.onerror = rej;
-        reader.readAsDataURL(file);
-      });
-      const img = new Image();
-      await new Promise<void>(res => { img.onload = () => res(); img.src = dataUrl; });
-      const canvas = document.createElement('canvas');
-      const maxW = 1400;
-      const ratio = Math.min(1, maxW / img.width);
-      canvas.width = Math.round(img.width * ratio);
-      canvas.height = Math.round(img.height * ratio);
-      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const webpBase64 = canvas.toDataURL('image/webp', 0.85);
+      const { base64: webpBase64 } = await convertImageToWebP(file, 0.9, 1400);
 
       const safeName = campaign.name.replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `capa_${safeName}.webp`;
@@ -55,9 +41,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         body: JSON.stringify({ repoPath, filename, base64: webpBase64 }),
       });
       const data = await res.json();
-      if (data.url) {
-        upd({ imageUrl: data.url });
-      }
+      if (data.url) upd({ imageUrl: data.url });
     } catch (err) {
       console.error('Erro ao fazer upload da capa:', err);
     } finally {

@@ -16,6 +16,7 @@ import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 import { syncTokenFieldToWiki, syncMultipleFieldsToWiki } from '../../../services/wiki/syncWiki';
 import { LevelUpWidget } from './LevelUpWidget';
 import { TrendingUp } from 'lucide-react';
+import { convertImageToWebP } from '../../../utils/imageUtils';
 
 interface Macro {
   id: string;
@@ -269,39 +270,12 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxSize = 200; 
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height && width > maxSize) {
-          height *= maxSize / width;
-          width = maxSize;
-        } else if (height > maxSize) {
-          width *= maxSize / height;
-          height = maxSize;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
-        handlePropChange('imageUrl', webpDataUrl);
-        handlePropChangeEnd('imageUrl', webpDataUrl);
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    const { base64 } = await convertImageToWebP(file, 0.9, 512);
+    handlePropChange('imageUrl', base64);
+    handlePropChangeEnd('imageUrl', base64);
   };
 
   const handleItemAction = async (listName: string, itemIdx: number, action: 'usar' | 'equipar' | 'conjurar') => {

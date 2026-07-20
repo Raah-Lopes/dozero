@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../utils/githubApi';
 import { pushChatMessage } from '../../../store';
+import { convertImageToWebP } from '../../../utils/imageUtils';
 import { useWiki } from '../../../hooks/useWiki';
 import { state } from '../../../services/yjs';
 
@@ -330,12 +331,11 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => addNode('image', { imagePath: ev.target?.result as string, title: file.name });
-    reader.readAsDataURL(file);
+    const { base64 } = await convertImageToWebP(file, 0.9, 1024);
+    addNode('image', { imagePath: base64, title: file.name });
     e.target.value = '';
   };
 

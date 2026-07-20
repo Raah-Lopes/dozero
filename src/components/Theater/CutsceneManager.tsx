@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Play, Pencil, Trash2, Plus, Check, X, Clock } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
+import { convertImageToWebP } from '../../utils/imageUtils';
 import { saveCutscene, updateCutscene, deleteCutscene } from '../../store';
 import type { SavedCutscene } from '../../store';
 
@@ -89,13 +90,11 @@ const CutsceneEditor: React.FC<EditorProps> = ({ initial, onSave, onCancel }) =>
             type="file"
             accept="image/*"
             style={{ display: 'none' }}
-            onChange={e => {
+            onChange={async e => {
               const file = e.target.files?.[0];
               if (!file) return;
-              const reader = new FileReader();
-              reader.onload = ev => setImageUrl(ev.target?.result as string);
-              reader.readAsDataURL(file);
-              // reset so same file can be picked again
+              const { base64 } = await convertImageToWebP(file, 0.9, 1280);
+              setImageUrl(base64);
               e.target.value = '';
             }}
           />

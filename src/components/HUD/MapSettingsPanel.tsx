@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection, getMapConfig, updateMapConfig, setActiveTool } from '../../store';
 import type { BackgroundData, MapConfig } from '../../store';
 import { ImagePlus, Trash2, Eye, EyeOff, Grid, RefreshCw, MousePointer2, Type, Search, Eraser } from 'lucide-react';
+import { convertImageToWebP } from '../../utils/imageUtils';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
@@ -76,59 +77,37 @@ export const MapSettingsPanel: React.FC = () => {
     };
   }, []);
 
-  const compressToWebP = (file: File): Promise<{ url: string, width: number, height: number }> => {
+  // ponytail: helper wraps central utility and returns {url, width, height} needed by background store
+  const toWebPWithSize = async (file: File): Promise<{ url: string; width: number; height: number }> => {
+    const { base64 } = await convertImageToWebP(file, 0.9, 2048);
     return new Promise((resolve) => {
-      const url = URL.createObjectURL(file);
-      const img = new globalThis.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) ctx.drawImage(img, 0, 0);
-        
-        const dataUrl = canvas.toDataURL('image/webp', 0.8);
-        URL.revokeObjectURL(url);
-        resolve({ url: dataUrl, width: img.width, height: img.height });
-      };
-      img.src = url;
+      const img = new Image();
+      img.onload = () => resolve({ url: base64, width: img.naturalWidth, height: img.naturalHeight });
+      img.src = base64;
     });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      for (const file of files) {
-        const { url, width, height } = await compressToWebP(file);
-        
-        const newBg: BackgroundData = {
-          id: 'bg_' + Date.now() + Math.random().toString(36).substr(2, 5),
-          name: file.name.split('.')[0],
-          imageUrl: url,
-          x: window.innerWidth / 2 + (Math.random() * 50 - 25),
-          y: window.innerHeight / 2 + (Math.random() * 50 - 25),
-          width,
-          height,
-          scale: 1,
-          opacity: 1,
-          locked: false,
-          hidden: false
-        };
-        
-        addBackground(newBg);
-      }
-      e.target.value = '';
+    for (const file of files) {
+      const { url, width, height } = await toWebPWithSize(file);
+      addBackground({
+        id: 'bg_' + Date.now() + Math.random().toString(36).substr(2, 5),
+        name: file.name.split('.')[0],
+        imageUrl: url, x: window.innerWidth / 2, y: window.innerHeight / 2,
+        width, height, scale: 1, opacity: 1, locked: false, hidden: false,
+      });
     }
+    e.target.value = '';
   };
 
   const handleReplaceImage = async (bgId: string) => {
     const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
+    input.type = 'file'; input.accept = 'image/*';
     input.onchange = async (e: any) => {
       const file = e.target.files?.[0];
       if (file) {
-        const { url } = await compressToWebP(file);
+        const { url } = await toWebPWithSize(file);
         updateBackgroundProps(bgId, { imageUrl: url });
       }
     };
@@ -467,7 +446,7 @@ export const MapSettingsPanel: React.FC = () => {
               onChange={async (e) => {
                 const files = Array.from(e.target.files || []);
                 for (const file of files) {
-                  const { url } = await compressToWebP(file);
+                  const { url } = await toWebPWithSize(file);
                   const name = file.name.split('.')[0];
                   const m = await import('../../store/props');
                   m.localPropLibrary.push({ url, name });

@@ -12,52 +12,42 @@ export const resolveImageUrl = (url: string | undefined | null): string => {
   return resolveMediaUrl(url, repoPath);
 };
 
-export const convertImageToWebP = async (file: File, quality: number = 0.8, maxDimension: number = 800): Promise<{ base64: string, filename: string }> => {
+export const convertImageToWebP = async (
+  file: File,
+  quality: number = 0.9,
+  maxDimension: number = 1024
+): Promise<{ base64: string, filename: string }> => {
   return new Promise((resolve, reject) => {
-    // Se for um SVG, mantemos original para nao perder vetor
+    // SVGs keep their original format (no raster conversion)
     const isSvg = file.type === 'image/svg+xml';
-    
-    const originalName = file.name;
-    const lastDotIndex = originalName.lastIndexOf('.');
-    const baseName = lastDotIndex !== -1 ? originalName.substring(0, lastDotIndex) : originalName;
-    const finalFilename = isSvg ? originalName : `${baseName}.webp`;
+    const baseName = file.name.replace(/\.[^.]+$/, '');
+    const finalFilename = isSvg ? file.name : `${baseName}.webp`;
 
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
-      
-      if (isSvg) {
-        return resolve({ base64: dataUrl, filename: finalFilename });
-      }
+      if (isSvg) return resolve({ base64: dataUrl, filename: finalFilename });
 
       const img = new Image();
       img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-
+        let { width, height } = img;
         if (width > maxDimension || height > maxDimension) {
-           const ratio = Math.min(maxDimension / width, maxDimension / height);
-           width = Math.round(width * ratio);
-           height = Math.round(height * ratio);
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
         }
-
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          return reject(new Error("Não foi possível criar o contexto do Canvas para conversão."));
-        }
+        if (!ctx) return reject(new Error('Canvas context unavailable'));
         ctx.drawImage(img, 0, 0, width, height);
-        
-        // Export to webp
-        const webpBase64 = canvas.toDataURL('image/webp', quality);
-        resolve({ base64: webpBase64, filename: finalFilename });
+        resolve({ base64: canvas.toDataURL('image/webp', quality), filename: finalFilename });
       };
-      img.onerror = () => reject(new Error("Falha ao carregar imagem para conversão."));
+      img.onerror = () => reject(new Error('Failed to load image'));
       img.src = dataUrl;
     };
-    reader.onerror = () => reject(new Error("Falha ao ler o arquivo de imagem."));
+    reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsDataURL(file);
   });
 };

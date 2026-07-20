@@ -7,6 +7,7 @@ import { WikiLinkedTextarea } from './Shared';
 import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../../utils/githubApi';
 import { slugify, questTemplate } from '../CampaignManagerWidget';
 import type { CampaignQuest, QuestLootItem } from '../../../../store';
+import { convertImageToWebP } from '../../../../utils/imageUtils';
 
 const STATUS_CONFIG = {
   quest: {
@@ -734,17 +735,7 @@ const addQuest = async (type: 'main' | 'side') => {
                     try {
                       const config = (await import('../../../../store')).getWikiConfig();
                       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-                      const reader = new FileReader();
-                      const dataUrl: string = await new Promise((res, rej) => { reader.onload = ev => res(ev.target?.result as string); reader.onerror = rej; reader.readAsDataURL(file); });
-                      const img2 = new window.Image();
-                      await new Promise<void>(res => { img2.onload = () => res(); img2.src = dataUrl; });
-                      const cnv = document.createElement('canvas');
-                      const maxSize = 800;
-                      let w = img2.width, h = img2.height;
-                      if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; } else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
-                      cnv.width = w; cnv.height = h;
-                      cnv.getContext('2d')!.drawImage(img2, 0, 0, w, h);
-                      const webp = cnv.toDataURL('image/webp', 0.82);
+                      const { base64: webp } = await convertImageToWebP(file, 0.9, 800);
                       const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
                       const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
                       const data2 = await res2.json();
@@ -764,17 +755,7 @@ const addQuest = async (type: 'main' | 'side') => {
                         try {
                           const config = (await import('../../../../store')).getWikiConfig();
                           const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-                          const reader = new FileReader();
-                          const dataUrl: string = await new Promise((res, rej) => { reader.onload = ev => res(ev.target?.result as string); reader.onerror = rej; reader.readAsDataURL(file); });
-                          const img2 = new window.Image();
-                          await new Promise<void>(res => { img2.onload = () => res(); img2.src = dataUrl; });
-                          const cnv = document.createElement('canvas');
-                          const maxSize = 800;
-                          let w = img2.width, h = img2.height;
-                          if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; } else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
-                          cnv.width = w; cnv.height = h;
-                          cnv.getContext('2d')!.drawImage(img2, 0, 0, w, h);
-                          const webp = cnv.toDataURL('image/webp', 0.82);
+                          const { base64: webp } = await convertImageToWebP(file, 0.9, 800);
                           const fname = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
                           const res2 = await fetch('/api/wiki/save-image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repoPath, filename: `missao_capa_${fname}_${Date.now()}.webp`, base64: webp }) });
                           const data2 = await res2.json();

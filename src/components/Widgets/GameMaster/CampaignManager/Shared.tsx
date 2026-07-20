@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { AlertTriangle, FileText, Paperclip, Loader2 } from 'lucide-react';
 import { loadMarkdownFile, saveMarkdownContent } from '../../../../utils/githubApi';
 import { getWikiConfig } from '../../../../store';
+import { convertImageToWebP } from '../../../../utils/imageUtils';
 
 export const LegacyBadge: React.FC = () => (
   <span style={{
@@ -114,25 +115,7 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
 
-      // Convert to WebP
-      const reader = new FileReader();
-      const dataUrl: string = await new Promise((res, rej) => {
-        reader.onload = ev => res(ev.target?.result as string);
-        reader.onerror = rej;
-        reader.readAsDataURL(file);
-      });
-
-      // Resize via canvas
-      const img = new Image();
-      await new Promise<void>(res => { img.onload = () => res(); img.src = dataUrl; });
-      const canvas = document.createElement('canvas');
-      const maxSize = 1200;
-      let w = img.width, h = img.height;
-      if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
-      if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
-      const webpBase64 = canvas.toDataURL('image/webp', 0.85);
+      const { base64: webpBase64 } = await convertImageToWebP(file, 0.9, 1200);
 
       const safeName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `${safeName}_${Date.now()}.webp`;
