@@ -1890,9 +1890,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               width: '68px', height: '68px', borderRadius: '6px', overflow: 'hidden',
               border: `2px solid ${getStatusColor(tokenData.status || 'npc').replace('0.2', '0.8')}`,
               boxShadow: '0 0 10px rgba(0,0,0,0.5)',
-              position: 'relative', cursor: isGM ? 'pointer' : 'default'
+              position: 'relative', cursor: 'pointer'
             }}
-            title={isGM ? "Clique para trocar a imagem" : ""}
+            title="Clique para trocar a imagem"
           >
             <div style={{
               position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
