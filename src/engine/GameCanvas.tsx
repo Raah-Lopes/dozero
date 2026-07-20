@@ -230,7 +230,7 @@ export const GameCanvas: React.FC = () => {
                  selectionBox.clear();
                  selectionBox.visible = true;
                  clearTokenSelection();
-                 try { if (navigator.vibrate) navigator.vibrate(50); } catch(err){}
+                 // Removed vibrate to prevent Chrome intervention warning in setTimeout
                }
             }, 500);
           }
