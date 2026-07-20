@@ -2,19 +2,24 @@ import React, { useState, useEffect } from 'react';
 import {
   X, Save, Globe, Wifi, Settings2, Shield,
   BookOpen, GitBranch, KeyRound, Check, Loader2,
-  Swords, Scroll, User, Plug
+  Swords, Scroll, User, Plug, Palette
 } from 'lucide-react';
 import { getWikiConfig, updateWikiConfig } from '../../store';
 import { useRulesEngine } from '../../hooks/useRulesEngine';
+import { useTheme } from '../../hooks/useTheme';
+import { THEMES } from '../../themes';
+import type { ThemeDefinition } from '../../themes';
 
 interface SettingsModalProps {
   onClose: () => void;
+  initialTab?: Tab;
 }
 
-type Tab = 'geral' | 'wiki' | 'integracoes';
+type Tab = 'geral' | 'aparencia' | 'wiki' | 'integracoes';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'geral', label: 'Geral',  icon: <Settings2 size={15} /> },
+  { id: 'aparencia', label: 'Aparência', icon: <Palette size={15} /> },
   { id: 'wiki',  label: 'Wiki',   icon: <Globe size={15} /> },
   { id: 'integracoes', label: 'Integrações', icon: <Plug size={15} /> },
 ];
@@ -85,12 +90,117 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; id: s
   </label>
 );
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<Tab>('geral');
+const ThemeCard: React.FC<{
+  theme: ThemeDefinition;
+  isActive: boolean;
+  onSelect: () => void;
+}> = ({ theme, isActive, onSelect }) => {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onClick={onSelect}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        borderRadius: '14px',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        border: isActive
+          ? `2px solid ${theme.accentPrimary}`
+          : `2px solid ${hovered ? theme.accentPrimary + '80' : 'rgba(255,255,255,0.07)'}`,
+        background: theme.bgSecondary,
+        transform: hovered || isActive ? 'translateY(-3px)' : 'none',
+        transition: 'all 0.22s ease',
+        boxShadow: isActive
+          ? `0 0 24px ${theme.accentGlow}, 0 8px 24px rgba(0,0,0,0.5)`
+          : hovered
+            ? `0 8px 24px rgba(0,0,0,0.5)`
+            : '0 4px 12px rgba(0,0,0,0.4)',
+        position: 'relative',
+      }}
+    >
+      <div style={{
+        height: '100px',
+        background: theme.bgPrimary,
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', left: '10px', top: '10px',
+          width: '55%', height: '70px', borderRadius: '8px',
+          background: theme.glassBg,
+          border: `1px solid ${theme.glassBorder}`,
+          backdropFilter: 'blur(8px)',
+          display: 'flex', flexDirection: 'column', gap: '5px', padding: '8px',
+        }}>
+          <div style={{ height: '8px', width: '60%', borderRadius: '4px', background: theme.accentPrimary, opacity: 0.9 }} />
+          <div style={{ height: '5px', width: '80%', borderRadius: '3px', background: theme.textSecondary, opacity: 0.5 }} />
+          <div style={{ height: '5px', width: '50%', borderRadius: '3px', background: theme.textSecondary, opacity: 0.3 }} />
+        </div>
+        <div style={{
+          position: 'absolute', right: '10px', top: '10px',
+          width: '32%', height: '70px', borderRadius: '8px',
+          background: theme.glassBg,
+          border: `1px solid ${theme.glassBorder}`,
+          display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px',
+        }}>
+          {[0.8, 0.5, 0.3].map((op, i) => (
+            <div key={i} style={{ height: '14px', borderRadius: '4px', background: theme.bgTertiary, opacity: op }} />
+          ))}
+        </div>
+        <div style={{
+          position: 'absolute', bottom: '8px', left: '14px',
+          width: '10px', height: '10px', borderRadius: '50%',
+          background: theme.accentPrimary,
+          boxShadow: `0 0 8px ${theme.accentGlow}`,
+        }} />
+      </div>
+
+      <div style={{ padding: '12px 14px 14px', background: theme.bgSecondary }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span style={{
+            fontSize: '0.85rem', fontWeight: 800, color: theme.id.includes('chronicles') ? '#3e2723' : theme.textPrimary,
+            fontFamily: theme.fontDisplay,
+          }}>
+            {theme.name}
+          </span>
+          {isActive && (
+            <div style={{
+              width: '20px', height: '20px', borderRadius: '50%',
+              background: theme.accentPrimary, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Check size={12} color="white" />
+            </div>
+          )}
+        </div>
+        <p style={{ margin: 0, fontSize: '0.67rem', color: theme.id.includes('chronicles') ? '#5d4037' : theme.textSecondary, lineHeight: 1.5 }}>
+          {theme.description}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+          {[theme.accentPrimary, theme.bgTertiary, theme.textSecondary, theme.success, theme.warning].map((c, i) => (
+            <div key={i} style={{
+              width: '14px', height: '14px', borderRadius: '50%', background: c, flexShrink: 0,
+              border: '1px solid rgba(255,255,255,0.15)',
+            }} />
+          ))}
+          <span style={{ marginLeft: 'auto', fontSize: '0.6rem', color: theme.textSecondary, opacity: 0.7 }}>
+            por {theme.author}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTab = 'geral' }) => {
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // ── State ──
+  const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const { currentEngineId, setEngine, engines } = useRulesEngine();
   const [isGM,         setIsGM]         = useState(localStorage.getItem('isGM') === 'true');
   const [wikiRepo,     setWikiRepo]     = useState('');
@@ -195,6 +305,87 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           })}
         </div>
       </Field>
+    </div>
+  );
+
+  const renderAparencia = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Palette size={16} color="var(--accent-primary)" />
+        <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Temas Visuais</h3>
+      </div>
+      <p style={{ margin: '-16px 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+        Selecione uma temática para personalizar toda a interface.
+      </p>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+        gap: '16px',
+      }}>
+        {THEMES.map(theme => (
+          <ThemeCard
+            key={theme.id}
+            theme={theme}
+            isActive={theme.id === currentThemeId}
+            onSelect={() => setTheme(theme.id)}
+          />
+        ))}
+      </div>
+
+      <div style={{
+        marginTop: '8px', padding: '16px', borderRadius: '10px',
+        background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
+        display: 'flex', flexDirection: 'column', gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Settings2 size={16} color="var(--accent-primary)" />
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Ajuste Fino</h3>
+          </div>
+          <button 
+            className="btn-icon"
+            onClick={clearOverrides}
+            title="Restaurar Padrões do Tema"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        
+        <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+          Substitua as cores principais do tema atual para o seu próprio gosto.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginTop: '8px' }}>
+          {[
+            { key: 'textPrimary', label: 'Texto Principal' },
+            { key: 'textSecondary', label: 'Texto Secundário' },
+            { key: 'bgPrimary', label: 'Fundo Principal' },
+            { key: 'bgSecondary', label: 'Fundo Secundário' },
+            { key: 'accentPrimary', label: 'Cor de Destaque' },
+            { key: 'glassBg', label: 'Fundo Translúcido' },
+          ].map(f => (
+            <div key={f.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{f.label}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input 
+                  type="color" 
+                  value={(themeOverrides as any)[f.key] || THEMES.find(t => t.id === currentThemeId)?.[f.key as keyof ThemeDefinition] || '#000000'} 
+                  onChange={e => updateOverrides({ [f.key]: e.target.value })}
+                  style={{ width: '28px', height: '28px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
+                />
+                <input 
+                  type="text" 
+                  value={(themeOverrides as any)[f.key] || ''} 
+                  placeholder="Padrão"
+                  onChange={e => updateOverrides({ [f.key]: e.target.value })}
+                  style={{ flex: 1, background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '4px 6px', fontSize: '0.7rem', borderRadius: '4px' }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 
@@ -375,6 +566,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         {/* ── Tab Content ── */}
         <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
           {activeTab === 'geral' && renderGeral()}
+          {activeTab === 'aparencia' && renderAparencia()}
           {activeTab === 'wiki'  && renderWiki()}
           {activeTab === 'integracoes' && renderIntegracoes()}
         </div>

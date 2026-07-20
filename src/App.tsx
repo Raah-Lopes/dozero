@@ -11,7 +11,7 @@ import { AIAssistantBot } from './components/HUD/AIAssistantBot';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
 import { MapSettingsPanel } from './components/HUD/MapSettingsPanel';
-import { ThemePickerModal } from './components/Modals/ThemePickerModal';
+// import { ThemePickerModal } from './components/Modals/ThemePickerModal';
 import { useTheme } from './hooks/useTheme';
 import { QuestTrackerHUD } from './components/Widgets/GameMaster/QuestTrackerHUD';
 import { TextContextBar } from './components/UI/TextContextBar';
@@ -43,7 +43,7 @@ import { CutsceneManager } from './components/Theater/CutsceneManager';
 // import { RoomManagerWidget } from './components/Widgets/System/RoomManagerWidget';
 
 // Trigger HMR
-type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets' | 'themes';
+type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'chat' | 'clockConfig' | 'widgets';
 
 function App() {
   const [isReady, _setIsReady] = useState(true);
@@ -349,10 +349,15 @@ function App() {
           }} />
 
           {/* Modal Layer (players, settings, chat, themes) */}
-          {(activeModal === 'players' || activeModal === 'settings' || activeModal === 'chat' || activeModal === 'themes') && (
+          {(activeModal === 'players' || activeModal.startsWith('settings') || activeModal === 'chat') && (
             <div className="hud-modal-layer">
               {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
-              {activeModal === 'settings' && <SettingsModal onClose={() => setActiveModal('none')} />}
+              {activeModal.startsWith('settings') && (
+                <SettingsModal 
+                  onClose={() => setActiveModal('none')} 
+                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : 'geral'} 
+                />
+              )}
               {activeModal === 'chat' && (
                 <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -361,16 +366,6 @@ function App() {
                   </div>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
                 </div>
-              )}
-              {activeModal === 'themes' && (
-                <ThemePickerModal 
-                  currentThemeId={currentThemeId} 
-                  themeOverrides={themeOverrides}
-                  updateOverrides={updateOverrides}
-                  clearOverrides={clearOverrides}
-                  onSelect={setTheme} 
-                  onClose={() => setActiveModal('none')} 
-                />
               )}
             </div>
           )}
@@ -526,7 +521,7 @@ function App() {
                 onOpenRoomManager={() => { setActiveModal('players'); }}
                 onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
-                onOpenThemes={() => { setActiveModal('themes'); }}
+                onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
                 onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
               />
               </div>
