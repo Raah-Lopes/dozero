@@ -40,6 +40,7 @@ import * as yaml from 'js-yaml';
 import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
+import { RoomManagerWidget } from './components/Widgets/System/RoomManagerWidget';
 
 // Trigger HMR
 type ModalMode = 'none' | 'players' | 'settings' | 'chat' | 'clockConfig' | 'widgets' | 'themes';
@@ -67,6 +68,7 @@ function App() {
   const handleCloseCombatLog = useCallback(() => toggleWindow('combatLog'), [toggleWindow]);
   const handleCloseChatWindow = useCallback(() => toggleWindow('chatWindow'), [toggleWindow]);
   const handleCloseMapSettings = useCallback(() => setShowMapSettings(false), [setShowMapSettings]);
+  const handleCloseRoomManager = useCallback(() => toggleWindow('roomManager'), [toggleWindow]);
 
   const handleCloseSheet = useCallback((sheetKey: string) => {
     setOpenSheets(prev => prev.filter(id => id !== sheetKey));
@@ -474,6 +476,11 @@ function App() {
               <ChatWindow />
             </DraggableWindow>
           )}
+          {openWindows.roomManager && (
+            <DraggableWindow id="roomManager" title="Gestor de Salas (Multiplayer)" initialX={window.innerWidth / 2 - 200} initialY={100} width={400} height={550} onClose={handleCloseRoomManager}>
+              <RoomManagerWidget />
+            </DraggableWindow>
+          )}
 
           {showMapSettings && (
             <DraggableWindow id="mapSettings" title="Configurar Cenário" initialX={window.innerWidth / 2 - 150} initialY={200} width={300} onClose={handleCloseMapSettings}>
@@ -522,6 +529,7 @@ function App() {
                 onOpenMapSettings={() => { setShowMapSettings(true); setActiveModal('none'); }}
                 onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
                 onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
+                onOpenRoomManager={() => { toggleWindow('roomManager'); setActiveModal('none'); }}
                 onToggleAIBot={() => { window.dispatchEvent(new CustomEvent('toggle-ai-bot')); setActiveModal('none'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
                 onOpenThemes={() => { setActiveModal('themes'); }}
