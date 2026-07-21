@@ -27,7 +27,7 @@ usos_cura: 3
 saqueado: false
 ativo: false
 status_efeitos: []
-imagem: ANEXOS/Thalion_Brightweave.png
+imagem: https://i.ibb.co/nSV8LyJ/34c8a8921606.jpg
 inventario:
   - id: pocao_1
     nome: Poção de Vida P

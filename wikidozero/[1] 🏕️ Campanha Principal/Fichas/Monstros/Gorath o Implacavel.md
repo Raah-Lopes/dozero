@@ -27,7 +27,7 @@ usos_cura: 3
 saqueado: false
 ativo: false
 status_efeitos: []
-imagem: ANEXOS/Gorath_o_Implacavel.png
+imagem: https://i.ibb.co/9kFGjkvY/d493fb50475f.jpg
 inventario: []
 HP: 110
 HP_max: 120

@@ -27,7 +27,7 @@ usos_cura: 3
 saqueado: false
 ativo: false
 status_efeitos: []
-imagem: ANEXOS/Kael_Ironfist.png
+imagem: https://i.ibb.co/7qfpgfW/9e9c9c0846b2.jpg
 inventario:
   - id: pocao_1
     nome: Poção de Vida P

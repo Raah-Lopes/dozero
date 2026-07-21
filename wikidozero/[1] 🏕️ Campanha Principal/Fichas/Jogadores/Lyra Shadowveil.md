@@ -23,7 +23,7 @@ defesa: 16
 velocidade: 14
 ataque: 14
 status: jogador
-imagem: ANEXOS/Lyra_Shadowveil.png
+imagem: https://i.ibb.co/gMNLNwnN/678e26cca200.jpg
 usos_cura: 3
 status_efeitos: []
 saqueado: false
