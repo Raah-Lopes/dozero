@@ -1876,13 +1876,14 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
       <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch', background: 'rgba(15, 23, 42, 0.4)', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)', flexShrink: 0 }}>
         {/* Avatar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
-          <div 
+          <button
+            type="button"
             onClick={handleAvatarClick}
             style={{
               width: '68px', height: '68px', borderRadius: '6px', overflow: 'hidden',
               border: `2px solid ${getStatusColor(tokenData.status || 'npc').replace('0.2', '0.8')}`,
               boxShadow: '0 0 10px rgba(0,0,0,0.5)',
-              position: 'relative', cursor: 'pointer'
+              position: 'relative', cursor: 'pointer', padding: 0, background: 'transparent'
             }}
             title="Clique para trocar a imagem"
           >
@@ -1896,7 +1897,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               alt="Avatar" 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
-          </div>
+          </button>
           
           {/* Quick Wiki View Button */}
           {wikiEntry && (

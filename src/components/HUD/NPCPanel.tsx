@@ -737,12 +737,13 @@ export const NPCPanel: React.FC = () => {
 
                         {/* Name & Avatar */}
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <div 
+                          <button
+                            type="button"
                             onClick={() => handleAvatarClick(t.id)}
                             style={{
                               width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden',
                               border: '1px dashed var(--glass-border)', cursor: 'pointer', position: 'relative',
-                              flexShrink: 0
+                              flexShrink: 0, padding: 0, background: 'transparent'
                             }}
                             title="Alterar Imagem/Avatar"
                           >
@@ -760,7 +761,7 @@ export const NPCPanel: React.FC = () => {
                             }}>
                               EDIT
                             </div>
-                          </div>
+                          </button>
 
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Nome do Token</label>
@@ -1043,12 +1044,13 @@ export const NPCPanel: React.FC = () => {
 
                         {/* Name & Avatar */}
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <div 
+                          <button
+                            type="button"
                             onClick={() => handleAvatarClick(t.id)}
                             style={{
                               width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden',
                               border: '1px dashed var(--glass-border)', cursor: 'pointer', position: 'relative',
-                              flexShrink: 0
+                              flexShrink: 0, padding: 0, background: 'transparent'
                             }}
                             title="Alterar Imagem/Avatar"
                           >
@@ -1066,7 +1068,7 @@ export const NPCPanel: React.FC = () => {
                             }}>
                               EDIT
                             </div>
-                          </div>
+                          </button>
 
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Nome do Token</label>
