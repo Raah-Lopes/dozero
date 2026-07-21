@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {  Timer, Activity, Zap } from 'lucide-react';
 import { DraggableWindow } from '../HUD/DraggableWindow';
 
@@ -20,6 +20,22 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
   const [seconds, setSeconds] = useState(initialSec);
   const [hpMod, setHpMod] = useState(existingClock ? existingClock.hpMod : '-50%');
   const [mpMod, setMpMod] = useState(existingClock ? existingClock.mpMod : '0');
+
+  useEffect(() => {
+    if (existingClock) {
+      setLabel(existingClock.label || 'Relógio');
+      setMinutes(Math.floor(existingClock.durationMs / 60000).toString());
+      setSeconds(Math.floor((existingClock.durationMs % 60000) / 1000).toString());
+      setHpMod(existingClock.hpMod || '0');
+      setMpMod(existingClock.mpMod || '0');
+    } else {
+      setLabel('Bomba Mágica');
+      setMinutes('5');
+      setSeconds('0');
+      setHpMod('-50%');
+      setMpMod('0');
+    }
+  }, [existingClock]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

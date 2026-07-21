@@ -175,7 +175,10 @@ function App() {
     };
     window.addEventListener('token-dblclick', handleDblClick);
 
-    const handleOpenClockConfig = () => setActiveModal('clockConfig');
+    const handleOpenClockConfig = () => {
+      setEditingClockId(null);
+      setActiveModal('clockConfig');
+    };
     window.addEventListener('open-clock-config', handleOpenClockConfig);
 
     // Auto-limpeza de Coordenadas Fantasmas
@@ -549,7 +552,7 @@ function App() {
                 onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
                 onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
                 onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
-                onOpenClockConfig={() => setActiveModal('clockConfig')}
+                onOpenClockConfig={() => { setEditingClockId(null); setActiveModal('clockConfig'); }}
                 onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
                 onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
                 onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}

@@ -229,13 +229,33 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
             </button>
 
             <button
+              onClick={onEdit}
+              title="Editar Configurações do Relógio"
+              style={{
+                padding: '0.5rem 0.75rem',
+                background: 'rgba(168, 85, 247, 0.2)',
+                color: '#c084fc',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid rgba(168, 85, 247, 0.4)',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.4)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.2)'}
+            >
+              <Settings size={16} />
+            </button>
+
+            <button
               onClick={async () => {
                 const ok = await confirmDialog(`Destruir o relógio "${clock.label}"?`);
                 if (ok) removeTensionClock(clock.id);
               }}
               title="Destruir Relógio"
               style={{
-                padding: '0.5rem 1rem',
+                padding: '0.5rem 0.75rem',
                 background: 'rgba(153, 27, 27, 0.5)',
                 color: 'var(--danger)',
                 borderRadius: '4px',
