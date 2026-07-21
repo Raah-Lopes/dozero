@@ -92,7 +92,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'aibot', cat: 'System', title: 'Robô Assistente IA', icon: Bot, action: props.onToggleAIBot, theme: 'theme-pink' },
   ];
 
-
+  const categories = ['Game Master', 'Player Tools', 'Generators & AI', 'System'];
   
   const filteredWidgets = widgets.filter(w => w.title.toLowerCase().includes(search.toLowerCase()));
 
@@ -182,6 +182,22 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
           .widget-item:hover .widget-label {
             color: var(--text-primary);
           }
+          
+          /* Mobile Overrides for Widget Hub */
+          @media (max-width: 768px) {
+            .widget-grid {
+              grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+              gap: 1.2rem 0.5rem;
+            }
+            .widget-btn {
+              width: 56px;
+              height: 56px;
+              border-radius: 12px;
+            }
+            .widget-label {
+              font-size: 0.68rem;
+            }
+          }
           .widget-btn.disabled {
             opacity: 0.3;
             cursor: not-allowed;
@@ -244,55 +260,48 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
             </div>
           </div>
         )}
-        
-        {/* Todas as Ferramentas */}
-        <div className="widget-category">
-          {search ? (
-            <div className="widget-category-title" style={{ color: 'var(--text-secondary)' }}>Resultados da Pesquisa</div>
-          ) : (
-            <div className="widget-category-title" style={{ color: 'var(--text-secondary)' }}>Todas as Ferramentas</div>
-          )}
+
+        {categories.map(cat => {
+          const catWidgets = filteredWidgets.filter(w => w.cat === cat);
+          if (catWidgets.length === 0) return null;
           
-          <div className="widget-grid">
-            {filteredWidgets.map(w => {
-              const Icon = w.icon;
-              const isFav = favorites.includes(w.id);
-              
-              return (
-                <div className="widget-item" key={w.id} style={{ position: 'relative' }}>
-                  <button 
-                    onClick={w.action} 
-                    title={w.title} 
-                    className={`widget-btn ${w.theme}`} 
-                    style={w.shadow ? { boxShadow: w.shadow } : {}}
-                  >
-                    <Icon size={30} />
-                  </button>
-                  <button
-                    onClick={(e) => toggleFavorite(w.id, e)}
-                    style={{
-                      position: 'absolute', top: '-4px', right: '4px',
-                      background: isFav ? 'rgba(251, 191, 36, 0.2)' : 'rgba(0,0,0,0.5)',
-                      border: 'none', borderRadius: '50%', cursor: 'pointer', padding: '4px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      opacity: isFav ? 1 : 0.4, transition: 'opacity 0.2s'
-                    }}
-                    title={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-                  >
-                    <Star size={12} fill={isFav ? "#fbbf24" : "none"} color={isFav ? "#fbbf24" : "#cbd5e1"} />
-                  </button>
-                  <span className="widget-label">{w.title}</span>
-                </div>
-              );
-            })}
-            
-            {filteredWidgets.length === 0 && (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-                Nenhuma ferramenta encontrada.
+          return (
+            <div className="widget-category" key={cat}>
+              <div className="widget-category-title">{cat}</div>
+              <div className="widget-grid" style={{ justifyContent: cat === 'System' ? 'start' : 'center' }}>
+                {catWidgets.map(w => {
+                  const Icon = w.icon;
+                  const isFav = favorites.includes(w.id);
+                  return (
+                    <div className="widget-item" key={w.id} style={{ position: 'relative' }}>
+                      <button 
+                        onClick={w.action} 
+                        title={w.title} 
+                        className={`widget-btn ${w.theme}`} 
+                        style={w.shadow ? { boxShadow: w.shadow } : {}}
+                      >
+                        <Icon size={30} />
+                      </button>
+                      <button
+                        onClick={(e) => toggleFavorite(w.id, e)}
+                        style={{
+                          position: 'absolute', top: 0, right: 0,
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          padding: '2px', color: isFav ? '#fbbf24' : 'rgba(255,255,255,0.2)',
+                          transition: 'color 0.15s',
+                        }}
+                        title={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                      >
+                        <Star size={11} fill={isFav ? '#fbbf24' : 'none'} />
+                      </button>
+                      <span className="widget-label">{w.title}</span>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
