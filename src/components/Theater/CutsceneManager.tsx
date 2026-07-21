@@ -88,7 +88,7 @@ const CutsceneEditor: React.FC<EditorProps> = ({ initial, onSave, onCancel }) =>
           <input
             id="cutscene-file-upload"
             type="file"
-            accept="image/*"
+            accept=".png,.jpg,.jpeg,.webp,.gif,.svg"
             style={{ display: 'none' }}
             onChange={async e => {
               const file = e.target.files?.[0];

@@ -316,7 +316,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                       <input
                         id="theater-bg-upload-input"
                         type="file"
-                        accept="image/*"
+                        accept=".png,.jpg,.jpeg,.webp,.gif,.svg"
                         style={{ display: 'none' }}
                         onChange={async e => {
                           const file = e.target.files?.[0];

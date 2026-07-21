@@ -174,7 +174,7 @@ export const WikiLinkedTextarea: React.FC<WikiLinkedTextareaProps> = ({
           <input
             ref={imageInputRef}
             type="file"
-            accept="image/*"
+            accept=".png,.jpg,.jpeg,.webp,.gif,.svg"
             style={{ display: 'none' }}
             onChange={handleImageAttach}
           />

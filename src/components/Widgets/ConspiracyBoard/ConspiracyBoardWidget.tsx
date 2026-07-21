@@ -739,7 +739,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
           
           <button className="cw-fab-btn" title="Importar Wiki .md" onClick={() => setShowMdModal(true)}><FilePlus size={16} color={TYPE_CONFIG.md.color} /></button>
           <button className="cw-fab-btn" title="Importar Imagem" onClick={() => fileInputRef.current?.click()}><ImageIcon size={16} color={TYPE_CONFIG.image.color} /></button>
-          <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+          <input type="file" ref={fileInputRef} accept=".png,.jpg,.jpeg,.webp,.gif,.svg" style={{ display: 'none' }} onChange={handleImageUpload} />
           
           <div style={{ position: 'relative' }}>
             <button className="cw-fab-btn" title="Cor de Fundo" onClick={() => setShowBgPicker(v => !v)}>

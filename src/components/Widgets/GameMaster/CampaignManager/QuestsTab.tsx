@@ -744,7 +744,7 @@ const addQuest = async (type: 'main' | 'side') => {
                     <Image size={12} /> Imagem
                     <input
                       type="file"
-                      accept="image/*"
+                      accept=".png,.jpg,.jpeg,.webp,.gif,.svg"
                       style={{ display: 'none' }}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];

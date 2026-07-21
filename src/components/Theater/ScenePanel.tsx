@@ -346,7 +346,7 @@ export const ScenePanel: React.FC = () => {
           ))}
         </div>
 
-        <input ref={imageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+        <input ref={imageInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.svg" style={{ display: 'none' }} onChange={handleImageUpload} />
       </div>
 
       {/* Mood & Weather & Audio & Transition controls */}
@@ -750,7 +750,7 @@ export const ScenePanel: React.FC = () => {
                 <input
                   ref={assetImageInputRef}
                   type="file"
-                  accept="image/*"
+                  accept=".png,.jpg,.jpeg,.webp,.gif,.svg"
                   style={{ display: 'none' }}
                   onChange={handleAssetImageUpload}
                 />

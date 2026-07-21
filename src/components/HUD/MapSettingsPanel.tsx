@@ -341,7 +341,7 @@ export const MapSettingsPanel: React.FC = () => {
               <ImagePlus size={16} /> Adicionar Mapas
             </label>
             <input 
-              type="file" accept="image/*" multiple onChange={handleImageUpload}
+              type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.svg" multiple onChange={handleImageUpload}
               style={{
                 padding: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--glass-border)',
                 borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: '0.85rem', cursor: 'pointer'
@@ -442,7 +442,7 @@ export const MapSettingsPanel: React.FC = () => {
               <ImagePlus size={16} /> Adicionar Props à Biblioteca
             </label>
             <input 
-              type="file" accept="image/*" multiple
+              type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.svg" multiple
               onChange={async (e) => {
                 const files = Array.from(e.target.files || []);
                 for (const file of files) {

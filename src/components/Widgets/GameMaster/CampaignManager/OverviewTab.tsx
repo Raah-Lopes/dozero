@@ -72,7 +72,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 border: '1px solid rgba(255,255,255,0.2)', color: '#e2e8f0', transition: 'all 0.2s',
               }}
             >
-              <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+              <input ref={coverInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.svg" style={{ display: 'none' }} onChange={handleCoverUpload} />
               {uploadingCover ? <Loader2 size={11} style={{ animation: 'spin 1s linear infinite' }} /> : <ImagePlus size={11} />}
               {uploadingCover ? 'Enviando...' : 'Trocar Capa'}
             </label>
@@ -86,7 +86,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               color: 'rgba(168,85,247,0.7)', transition: 'all 0.2s',
             }}
           >
-            <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+            <input ref={coverInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.svg" style={{ display: 'none' }} onChange={handleCoverUpload} />
             {uploadingCover
               ? <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
               : <ImagePlus size={24} />}

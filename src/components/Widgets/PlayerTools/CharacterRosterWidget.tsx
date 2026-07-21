@@ -150,7 +150,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
           type="file" 
           ref={fileInputRef} 
           style={{ display: 'none' }} 
-          accept="image/*" 
+          accept=".png,.jpg,.jpeg,.webp,.gif,.svg" 
           onChange={handleImageUpload} 
         />
 

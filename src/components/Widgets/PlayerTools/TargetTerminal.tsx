@@ -2273,7 +2273,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         type="file" 
         ref={fileInputRef} 
         style={{ display: 'none' }} 
-        accept="image/*"
+        accept=".png,.jpg,.jpeg,.webp,.gif,.svg"
         onChange={handleImageUpload}
       />
     </div>

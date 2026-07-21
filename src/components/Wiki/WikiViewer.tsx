@@ -599,7 +599,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                 type="file" 
                 ref={fileInputRef} 
                 style={{ display: 'none' }} 
-                accept="image/*" 
+                accept=".png,.jpg,.jpeg,.webp,.gif,.svg" 
                 onChange={handleFileChange} 
             />
           
