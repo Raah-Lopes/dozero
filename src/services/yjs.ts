@@ -32,10 +32,7 @@ try {
   webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
     signaling: [
-      'wss://dozero.onrender.com',           // Principal
-      'wss://signaling.yjs.dev',             // Fallback Oficial 1
-      'wss://y-webrtc-signaling-eu.herokuapp.com', // Fallback Oficial 2
-      'wss://y-webrtc-signaling-us.herokuapp.com'  // Fallback Oficial 3
+      'wss://dozero.onrender.com'
     ]
   });
 } catch (error) {
