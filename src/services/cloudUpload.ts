@@ -1,4 +1,4 @@
-﻿const IMGBB_KEY = import.meta.env.VITE_IMGBB_KEY as string | undefined;
+const IMGBB_KEY = (import.meta.env.VITE_IMGBB_KEY as string | undefined) || 'c36f8cd520e987d6142af2ba999b57b6';
 
 export async function uploadImageToCloud(base64: string, filename?: string): Promise<string | null> {
   const pureBase64 = base64.replace(/^data:image\/\w+;base64,/, "");

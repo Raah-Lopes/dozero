@@ -99,10 +99,10 @@ function App() {
     localStorage.setItem('dozero_viewMode', viewMode);
   }, [viewMode]);
 
-  // 2.5 Clean up broken old token images on load
+  // 2.5 Clean up broken old token images on load (Only on Vercel/PROD where media endpoint 404s)
   useEffect(() => {
-    // Quando a sala carregar os tokens, vamos ver se algum está com o link antigo quebrado.
-    // Se estiver, vamos remover o `imageUrl` para forçar ele a ler o corrigido da wiki.
+    if (!import.meta.env.PROD) return;
+    
     const sanitizeTokens = () => {
       Array.from(state.tokens.entries()).forEach(([id, t]: [string, any]) => {
         if (t.imageUrl && t.imageUrl.includes('/api/wiki/media')) {
@@ -113,10 +113,7 @@ function App() {
       });
     };
     
-    // Tenta agora
     sanitizeTokens();
-    
-    // E tenta quando as coisas mudarem nos primeiros segundos (para pegar o sync do Yjs)
     const interval = setInterval(sanitizeTokens, 2000);
     setTimeout(() => clearInterval(interval), 10000);
   }, []);
