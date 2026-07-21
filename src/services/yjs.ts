@@ -61,7 +61,8 @@ export const state = {
   props: doc.getMap('props'),
   trades: doc.getMap('trades'),
   conspiracy: doc.getMap('conspiracy'),
-  players: doc.getMap('players')
+  players: doc.getMap('players'),
+  chatConfig: doc.getMap('chatConfig')
 };
 
 export function connectProvider() {

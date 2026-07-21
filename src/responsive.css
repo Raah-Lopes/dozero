@@ -190,6 +190,15 @@
 /* 📱 MOBILE & TABLET RESPONSIVE OVERRIDES                        */
 /* ============================================================== */
 
+/* Desktop override for bottom nav & FAB if user enables desktop shortcut mode */
+body.show-desktop-nav .mobile-bottom-nav {
+  display: flex !important;
+}
+
+body.show-desktop-nav .fab-container {
+  display: block !important;
+}
+
 @media (max-width: 768px) {
   .mobile-bottom-nav {
     display: flex;
@@ -204,12 +213,14 @@
     left: 0 !important;
     top: 0 !important;
     width: 100vw !important;
-    height: calc(100vh - 64px) !important;
+    height: calc(100vh - 64px - env(safe-area-inset-bottom, 0px)) !important;
     max-width: 100vw !important;
-    max-height: calc(100vh - 64px) !important;
+    max-height: calc(100vh - 64px - env(safe-area-inset-bottom, 0px)) !important;
     position: fixed !important;
     border-radius: 0 !important;
     z-index: 999999 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
   /* Touch Targets for close buttons on mobile */

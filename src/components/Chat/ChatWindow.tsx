@@ -1,9 +1,10 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { pushAdvancedChatMessage, ChatMessageOptions } from '../../store/chat';
+import { pushAdvancedChatMessage, ChatMessageOptions, getGMChatConfig } from '../../store/chat';
 import { state } from '../../store';
 import { Pin, X, Terminal } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { toast } from '../UI/Toast';
 
 // Components
 import { ChatHeader } from './ChatHeader';
@@ -53,6 +54,8 @@ export const ChatWindow: React.FC = () => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, tab, searchQuery]);
 
+  const lastSendTimeRef = useRef<number>(0);
+
   const handleInputChange = (val: string) => {
     setInput(val);
     setTypingStatus(val.trim().length > 0);
@@ -60,6 +63,31 @@ export const ChatWindow: React.FC = () => {
 
   const handleSend = () => {
     if (!input.trim()) return;
+
+    const isGM = localStorage.getItem('isGM') === 'true';
+    const gmConfig = getGMChatConfig();
+
+    if (!isGM) {
+      if (gmConfig.chatLocked) {
+        toast.error('🔒 O Mestre bloqueou o envio de mensagens no chat no momento.');
+        return;
+      }
+      if (gmConfig.whispersDisabled && input.startsWith('/w ')) {
+        toast.error('🤫 Sussurros privados estão desativados pelo Mestre.');
+        return;
+      }
+      if (gmConfig.slowModeSeconds > 0) {
+        const now = Date.now();
+        const elapsed = (now - lastSendTimeRef.current) / 1000;
+        if (elapsed < gmConfig.slowModeSeconds) {
+          const wait = Math.ceil(gmConfig.slowModeSeconds - elapsed);
+          toast.warn(`⏱️ Modo lento ativo. Aguarde ${wait}s para enviar outra mensagem.`);
+          return;
+        }
+        lastSendTimeRef.current = now;
+      }
+    }
+
     setTypingStatus(false);
     
     let text = input;

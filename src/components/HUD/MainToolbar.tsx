@@ -148,6 +148,9 @@ export function MainToolbar() {
           <button onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} className={`btn-icon theme-violet ${viewMode === 'theater' ? 'active' : ''}`} title="Teatro da Mente">
             <Film size={20} />
           </button>
+          <button onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))} className="btn-icon theme-amber" title="Pesquisa Global (Ctrl+K)">
+            <Search size={20} />
+          </button>
         </div>
       </div>
 

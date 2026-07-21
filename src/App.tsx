@@ -35,9 +35,10 @@ import { MainToolbar } from './components/HUD/MainToolbar';
 import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps } from './store';
-import type { TensionClock } from './store';
-import { loadMarkdownFile } from './utils/githubApi';
-import * as yaml from 'js-yaml';
+import { MobileBottomNav } from './components/HUD/MobileBottomNav';
+import { MobileQuickActions } from './components/HUD/MobileQuickActions';
+import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
+import { GlobalSearchModal } from './components/Modals/GlobalSearchModal';
 import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
@@ -90,6 +91,30 @@ function App() {
   }, [setOpenWikiDocs]);
 
   // ===== SPLIT INTO MULTIPLE useEffects ===== //
+
+  useEffect(() => {
+    if (localStorage.getItem('showDesktopNav') === 'true') {
+      document.body.classList.add('show-desktop-nav');
+    }
+  }, []);
+
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenSearch = () => setIsGlobalSearchOpen(true);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsGlobalSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('open-global-search', handleOpenSearch);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('open-global-search', handleOpenSearch);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // 1. Handle wiki document opening
   useEffect(() => {
@@ -560,6 +585,7 @@ function App() {
           <MobileBottomNav />
           <MobileQuickActions />
           <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
+          <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
         </>
       </div>
   );

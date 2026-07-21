@@ -118,3 +118,26 @@ export function castVote(pollId: string, userId: string, optionIndex: number) {
     state.polls.set(pollId, { ...pollData, votes: newVotes });
   }
 }
+
+export interface GMChatConfig {
+  chatLocked: boolean;         // Somente Mestre envia mensagens
+  whispersDisabled: boolean;   // Jogadores não podem enviar sussurros
+  slowModeSeconds: number;     // Cooldown em segundos entre mensagens para jogadores (0 = desativado)
+}
+
+export function updateGMChatConfig(newConfig: Partial<GMChatConfig>) {
+  const current = (state.chatConfig?.get('config') as GMChatConfig) || {
+    chatLocked: false,
+    whispersDisabled: false,
+    slowModeSeconds: 0
+  };
+  state.chatConfig?.set('config', { ...current, ...newConfig });
+}
+
+export function getGMChatConfig(): GMChatConfig {
+  return (state.chatConfig?.get('config') as GMChatConfig) || {
+    chatLocked: false,
+    whispersDisabled: false,
+    slowModeSeconds: 0
+  };
+}

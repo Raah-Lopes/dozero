@@ -341,6 +341,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         ))}
       </div>
 
+      {/* Desktop Bottom Nav Toggle */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '14px 16px', borderRadius: '12px',
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)'
+      }}>
+        <div>
+          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            Exibir Barra de Atalhos Inferior no PC (Modo Atalhos)
+          </p>
+          <p style={{ margin: '2px 0 0', fontSize: '0.68rem', color: 'var(--text-secondary)', opacity: 0.7 }}>
+            Ativa a barra inferior e botão flutuante (FAB) também em telas de computador
+          </p>
+        </div>
+        <Toggle 
+          id="desktop-nav-toggle" 
+          checked={localStorage.getItem('showDesktopNav') === 'true'} 
+          onChange={val => {
+            localStorage.setItem('showDesktopNav', String(val));
+            if (val) document.body.classList.add('show-desktop-nav');
+            else document.body.classList.remove('show-desktop-nav');
+          }} 
+        />
+      </div>
+
       <div style={{
         marginTop: '8px', padding: '16px', borderRadius: '10px',
         background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',

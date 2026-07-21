@@ -110,28 +110,27 @@ export const AIAssistantBot: React.FC = () => {
     <>
       {/* Botão Flutuante */}
       <button
-        className="ai-assistant-btn"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        onClick={handleToggle}
         style={{
           position: 'fixed',
           left: `${pos.x}px`,
           top: `${pos.y}px`,
-          touchAction: 'none', // Prevents browser panning when dragging on mobile
-          width: '50px',
-          height: '50px',
+          width: '52px',
+          height: '52px',
           borderRadius: '50%',
           background: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
           border: '2px solid rgba(255,255,255,0.2)',
           color: 'var(--text-primary)',
+          boxShadow: '0 4px 15px rgba(236, 72, 153, 0.4)',
+          cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          cursor: isDragging.current ? 'grabbing' : 'pointer',
-          boxShadow: '0 4px 15px rgba(236, 72, 153, 0.5)',
-          zIndex: 9999,
-          transition: isDragging.current ? 'none' : 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          zIndex: 999999,
+          transition: 'transform 0.2s ease',
+          touchAction: 'none',
           transform: isOpen ? 'scale(0.9)' : 'scale(1)',
         }}
         onMouseOver={e => (e.currentTarget.style.transform = isOpen ? 'scale(0.9)' : 'scale(1.1)')}
@@ -154,13 +153,14 @@ export const AIAssistantBot: React.FC = () => {
           className="glass-panel ai-assistant-panel animate-fade-in"
           style={{
             position: 'fixed',
-            left: `${Math.min(pos.x, window.innerWidth - 330)}px`,
-            top: `${Math.max(20, pos.y - 460)}px`,
-            width: '320px',
-            height: '450px',
+            left: window.innerWidth <= 768 ? '10px' : `${Math.min(pos.x, window.innerWidth - 330)}px`,
+            top: window.innerWidth <= 768 ? '10px' : `${Math.max(20, pos.y - 460)}px`,
+            width: window.innerWidth <= 768 ? 'calc(100vw - 20px)' : '320px',
+            height: window.innerWidth <= 768 ? 'calc(100vh - 160px)' : '450px',
+            maxHeight: '85vh',
             display: 'flex',
             flexDirection: 'column',
-            zIndex: 9998,
+            zIndex: 999999,
             boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
             border: '1px solid rgba(236,72,153,0.3)',
             overflow: 'hidden'

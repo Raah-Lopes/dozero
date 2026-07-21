@@ -1,6 +1,8 @@
-import React from 'react';
-import { Search, HelpCircle, Bell, BellOff, Trash2, X, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, HelpCircle, Bell, BellOff, Trash2, X, Download, Shield } from 'lucide-react';
 import { state } from '../../store';
+import { updateGMChatConfig, getGMChatConfig, GMChatConfig } from '../../store/chat';
+import { toast } from '../UI/Toast';
 
 interface ChatHeaderProps {
   tab: 'geral' | 'in-game' | 'sistema';
@@ -24,6 +26,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   isSelectMode, setIsSelectMode, selectedIds, setSelectedIds,
   chatSound, setChatSound, setClearedAt, setShowHelpModal
 }) => {
+  const [showGMChatMenu, setShowGMChatMenu] = useState(false);
+  const [gmConfig, setGmConfig] = useState<GMChatConfig>(() => getGMChatConfig());
+
+  useEffect(() => {
+    const handler = () => setGmConfig(getGMChatConfig());
+    state.chatConfig?.observe(handler);
+    return () => state.chatConfig?.unobserve(handler);
+  }, []);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <div style={{
@@ -131,6 +141,79 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           >
             {chatSound ? <Bell size={14} /> : <BellOff size={14} />}
           </button>
+
+          {/* PAINEL DO MESTRE DO CHAT */}
+          {localStorage.getItem('isGM') === 'true' && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowGMChatMenu(!showGMChatMenu)}
+                title="Controles do Chat (Mestre)"
+                style={{ padding: '6px', background: showGMChatMenu ? 'rgba(239,68,68,0.2)' : 'transparent', color: showGMChatMenu ? 'var(--danger)' : 'var(--chat-text-secondary)', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+              >
+                <Shield size={14} />
+              </button>
+
+              {showGMChatMenu && (
+                <div style={{
+                  position: 'absolute', top: '30px', right: 0,
+                  background: 'var(--chat-bg-primary)', backdropFilter: 'blur(12px)',
+                  border: '1px solid var(--chat-border)', borderRadius: '8px',
+                  padding: '10px', boxShadow: '0 8px 25px rgba(0,0,0,0.6)', zIndex: 300,
+                  display: 'flex', flexDirection: 'column', gap: '8px', width: '220px'
+                }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--chat-accent)', fontWeight: 'bold', borderBottom: '1px solid var(--chat-border)', paddingBottom: '4px' }}>
+                    🛡️ Gerenciamento do Mestre:
+                  </div>
+                  
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={gmConfig.chatLocked || false}
+                      onChange={e => {
+                        updateGMChatConfig({ chatLocked: e.target.checked });
+                        setGmConfig(getGMChatConfig());
+                        toast.info(e.target.checked ? '🔒 Chat bloqueado para jogadores!' : '🔓 Chat liberado!');
+                      }}
+                    />
+                    <span>🔒 Bloquear Chat (Somente Mestre)</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={gmConfig.whispersDisabled || false}
+                      onChange={e => {
+                        updateGMChatConfig({ whispersDisabled: e.target.checked });
+                        setGmConfig(getGMChatConfig());
+                        toast.info(e.target.checked ? '🤫 Sussurros desativados!' : '💬 Sussurros liberados!');
+                      }}
+                    />
+                    <span>🤫 Desativar Sussurros</span>
+                  </label>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--chat-text-secondary)' }}>⏱️ Modo Lento (Cooldown):</span>
+                    <select
+                      value={gmConfig.slowModeSeconds || 0}
+                      onChange={e => {
+                        const sec = parseInt(e.target.value, 10);
+                        updateGMChatConfig({ slowModeSeconds: sec });
+                        setGmConfig(getGMChatConfig());
+                        toast.info(sec > 0 ? `⏱️ Cooldown de ${sec}s ativado!` : '⏱️ Modo lento desativado.');
+                      }}
+                      style={{ padding: '4px', background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', color: 'var(--chat-text-primary)', borderRadius: '4px', fontSize: '0.75rem' }}
+                    >
+                      <option value={0}>Sem Cooldown (Desativado)</option>
+                      <option value={3}>3 segundos</option>
+                      <option value={5}>5 segundos</option>
+                      <option value={10}>10 segundos</option>
+                      <option value={30}>30 segundos</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* EXPORTAR CHAT */}
           <button
