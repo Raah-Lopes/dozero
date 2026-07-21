@@ -213,14 +213,39 @@ body.show-desktop-nav .fab-container {
     left: 0 !important;
     top: 0 !important;
     width: 100vw !important;
-    height: calc(100vh - 64px - env(safe-area-inset-bottom, 0px)) !important;
+    height: 100dvh !important;
     max-width: 100vw !important;
-    max-height: calc(100vh - 64px - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: 100dvh !important;
     position: fixed !important;
     border-radius: 0 !important;
-    z-index: 999999 !important;
+    z-index: 1000001 !important; /* Above mobile bottom nav */
     box-sizing: border-box !important;
     overflow: hidden !important;
+  }
+
+  /* Move floating window controls inside the screen on mobile */
+  .window-floating-actions {
+    position: absolute !important;
+    top: 6px !important;
+    right: 6px !important;
+    left: auto !important;
+    transform: none !important;
+    flex-direction: row !important;
+    padding: 4px !important;
+  }
+
+  /* Global Search Modal Fullscreen */
+  .global-search-overlay {
+    padding: 0 !important;
+  }
+  
+  .global-search-modal {
+    margin-top: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
   }
 
   /* Touch Targets for close buttons on mobile */

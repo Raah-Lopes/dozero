@@ -71,6 +71,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
 
   return (
     <div 
+      className="global-search-overlay"
       style={{
         position: 'fixed', inset: 0, background: 'rgba(5, 10, 25, 0.85)',
         backdropFilter: 'blur(10px)', zIndex: 2000000, display: 'flex',
