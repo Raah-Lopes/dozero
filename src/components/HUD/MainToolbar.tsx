@@ -103,18 +103,21 @@ export function MainToolbar() {
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))', gap: '15px', overflowY: 'auto' }}>
               {filteredTools.length > 0 ? filteredTools.map(tool => (
                 <button 
                   key={tool.id}
-                  onClick={tool.action}
+                  onClick={() => {
+                    tool.action();
+                    setIsMenuOpen(false); // fechar o menu mobile ao clicar
+                  }}
                   className={`glass-panel ${tool.isActive ? 'active' : ''}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: tool.isActive ? 'rgba(255,255,255,0.1)' : 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '8px', textAlign: 'left', width: '100%' }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px 5px', background: tool.isActive ? 'rgba(255,255,255,0.1)' : 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '12px', textAlign: 'center', width: '100%' }}
                 >
-                  <div className={`btn-icon ${tool.colorClass} ${tool.isActive ? 'active' : ''}`} style={{ background: 'transparent', pointerEvents: 'none' }}>
+                  <div className={`btn-icon ${tool.colorClass} ${tool.isActive ? 'active' : ''}`} style={{ background: 'transparent', pointerEvents: 'none', width: 'auto', height: 'auto', marginBottom: '4px' }}>
                     {tool.icon}
                   </div>
-                  <span style={{ fontSize: '1.1rem' }}>{tool.label}</span>
+                  <span style={{ fontSize: '0.75rem', lineHeight: '1.2', fontWeight: 500, color: tool.isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{tool.label}</span>
                 </button>
               )) : (
                 <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '20px' }}>Nenhuma ferramenta encontrada.</p>
