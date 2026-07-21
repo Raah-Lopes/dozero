@@ -17,7 +17,7 @@ status: vivo
 nome: Jacir Malemog
 nivel: 3
 XP: 1000
-imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+imagem: https://i.ibb.co/zV3tX0JC/09e6a97d8347.webp
 tags:
   - personagem
   - slime
@@ -64,7 +64,7 @@ macros:
     formula: 1d20+5
     tipo: ataque
     descricao: 'Jacir estica um membro para um ataque surpresa. Dano: 1d8 + 3 (blunt). Gasta 2 PM.'
-avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
+avatar: https://i.ibb.co/zV3tX0JC/09e6a97d8347.webp
 imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Jacir_Malemog_1782699516557.webp
 sizeScale: 1.4
 showName: true
