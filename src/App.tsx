@@ -43,9 +43,6 @@ import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
 import { Toaster, ConfirmDialog } from './components/UI/Toast';
-import { MobileBottomNav } from './components/HUD/MobileBottomNav';
-import { MobileQuickActions } from './components/HUD/MobileQuickActions';
-import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
 
 // Trigger HMR
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
