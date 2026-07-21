@@ -98,6 +98,37 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     return () => window.removeEventListener('bring-window-to-front', handleBringToFront);
   }, [id, isPopout]);
 
+  useEffect(() => {
+    if (isPopout) return;
+    const handleHotkeys = (e: KeyboardEvent) => {
+      if (!e.ctrlKey || !e.shiftKey) return;
+      const key = e.key.toLowerCase();
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      const winW = typeof size.w === 'number' ? size.w : 360;
+      const winH = typeof size.h === 'number' ? size.h : 480;
+
+      let targetPos: { x: number; y: number } | null = null;
+      if (key === '1') targetPos = { x: 0, y: 0 };
+      else if (key === '2') targetPos = { x: screenW - winW, y: 0 };
+      else if (key === '3') targetPos = { x: 0, y: screenH - winH };
+      else if (key === '4') targetPos = { x: screenW - winW, y: screenH - winH };
+      else if (key === 'c') targetPos = { x: Math.max(0, (screenW - winW) / 2), y: Math.max(0, (screenH - winH) / 2) };
+
+      if (targetPos && windowRef.current) {
+        setPos(targetPos);
+        dragCurrentPos.current = targetPos;
+        windowRef.current.style.left = `${targetPos.x}px`;
+        windowRef.current.style.top = `${targetPos.y}px`;
+        localStorage.setItem(storageKey, JSON.stringify({
+          x: targetPos.x, y: targetPos.y, w: size.w, h: size.h, pinned: isPinned
+        }));
+      }
+    };
+    window.addEventListener('keydown', handleHotkeys);
+    return () => window.removeEventListener('keydown', handleHotkeys);
+  }, [id, isPopout, size, isPinned, storageKey]);
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const isFullscreen = isMobile && !isMinimized && !isPopout;
     if (isPinned || isPopout || isFullscreen) return;

@@ -5,7 +5,7 @@ import type { AudioTrack, SoundboardItem } from '../../../utils/audioTypes';
 import {
   Play, Pause, Volume2, Music, FolderOpen, Sliders, Maximize2, Minimize2,
   Square, Zap, HardDrive, Eye, EyeOff, Repeat, Repeat1, ArrowRight, Shuffle,
-  Sparkles, Loader2, Search, Star, StarOff, Edit2, Check, X, Plus, Trash2, LayoutGrid
+  Sparkles, Loader2, Search, Star, StarOff, Edit2, Check, X, Plus, Trash2, LayoutGrid, ExternalLink
 } from 'lucide-react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { get, set } from 'idb-keyval';
@@ -356,6 +356,30 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 {isMiniplayer ? <Maximize2 size={13} /> : <Minimize2 size={13} />}
               </button>
             )}
+            <button
+              onClick={async () => {
+                try {
+                  const audioEl = document.querySelector('#global-audio-sync audio') as HTMLAudioElement;
+                  if (audioEl && (audioEl as any).requestPictureInPicture) {
+                    if (document.pictureInPictureElement) {
+                      await document.exitPictureInPicture();
+                      toast.info('Saindo de PiP');
+                    } else {
+                      await (audioEl as any).requestPictureInPicture();
+                      toast.success('Entrando em Picture-in-Picture');
+                    }
+                  } else {
+                    toast.info('PiP disponível durante reprodução de faixas/vídeo.');
+                  }
+                } catch (e) {
+                  toast.info('PiP disponível para players de mídia suportados.');
+                }
+              }}
+              style={btnBase}
+              title="Picture-in-Picture (PiP)"
+            >
+              <ExternalLink size={13} />
+            </button>
           </div>
         </div>
 
