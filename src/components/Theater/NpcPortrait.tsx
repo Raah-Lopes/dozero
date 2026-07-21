@@ -24,7 +24,7 @@ export const NpcPortrait: React.FC<Props> = ({ name, imageUrl, onClose }) => (
     </button>
 
     {imageUrl ? (
-      <img src={imageUrl} alt={name} className="theater-npc-portrait-img" />
+      <img loading="lazy" decoding="async" src={imageUrl} alt={name} className="theater-npc-portrait-img" />
     ) : (
       <div className="theater-npc-portrait-img-placeholder">🧙</div>
     )}

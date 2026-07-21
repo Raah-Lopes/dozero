@@ -4,6 +4,7 @@ import { usePersonagens, FichaPersonagem } from '../../../hooks/usePersonagens';
 import { state, pushChatMessage } from '../../../store';
 import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
 import * as yaml from 'js-yaml';
+import { toast } from '../../UI/Toast';
 import { 
   Coins, ArrowLeftRight, Store, Gift, Send, 
   Trash2, ShoppingBag, DollarSign
@@ -125,11 +126,11 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     if (donateGold < 0 || donateRiquezas < 0) return;
 
     if (sender.ouro < donateGold) {
-      alert('Você não tem moedas de ouro suficientes.');
+      toast.warn('Você não tem moedas de ouro suficientes.');
       return;
     }
     if (sender.riquezas < donateRiquezas) {
-      alert('Você não tem riquezas suficientes.');
+      toast.warn('Você não tem riquezas suficientes.');
       return;
     }
 
@@ -188,7 +189,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     if (tradeOfferGold < 0 || tradeDemandGold < 0) return;
 
     if (sender.ouro < tradeOfferGold) {
-      alert('Você não tem moedas de ouro suficientes para propor.');
+      toast.warn('Você não tem moedas de ouro suficientes para propor.');
       return;
     }
 
@@ -223,13 +224,13 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     const pReceiver = personagens.find(p => p.caminhoArquivo === trade.receiverPath);
 
     if (!pSender || !pReceiver) {
-      alert('Personagens envolvidos não foram localizados na Wiki.');
+      toast.info('Personagens envolvidos não foram localizados na Wiki.');
       return;
     }
 
     // Verificar se ambos têm as quantias exigidas
     if (pSender.ouro < trade.senderGold || pReceiver.ouro < trade.receiverGold) {
-      alert('Um dos personagens não possui o ouro suficiente para concluir a troca.');
+      toast.warn('Um dos personagens não possui o ouro suficiente para concluir a troca.');
       return;
     }
 
@@ -324,11 +325,11 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
   const handleComprarDoNpc = async (itemLoja: any, indexItem: number) => {
     if (!sender || !merchantNpc) return;
     if (sender.ouro < itemLoja.custo) {
-      alert('Você não possui ouro suficiente.');
+      toast.warn('Você não possui ouro suficiente.');
       return;
     }
     if (itemLoja.quantidade <= 0) {
-      alert('Item fora de estoque.');
+      toast.info('Item fora de estoque.');
       return;
     }
 

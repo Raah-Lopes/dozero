@@ -8,6 +8,7 @@ import { LootParser } from '../../../services/oracle/LootParser';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
 import { saveMarkdownContent } from '../../../utils/githubApi';
 
+import { toast } from '../../UI/Toast';
 interface NPCGeneratorWidgetProps {
   onClose?: () => void;
 }
@@ -141,10 +142,10 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose 
         md += `(Adicione as anotações sobre como os jogadores conheceram esta entidade aqui)\n`;
 
         await saveMarkdownContent(path, md);
-        alert(`✅ Ficha de ${npcData.nome} criada com sucesso em [1] 🏕️ Campanha Principal/NPCs/!`);
+        toast.success(`✅ Ficha de ${npcData.nome} criada com sucesso em [1] 🏕️ Campanha Principal/NPCs/!`);
       } catch (e) {
         console.error(e);
-        alert('Erro ao criar a ficha na Wiki.');
+        toast.error('Erro ao criar a ficha na Wiki.');
       }
     };
 

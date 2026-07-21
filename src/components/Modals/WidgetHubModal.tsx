@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins, FileText, Palette, Video } from 'lucide-react';
+import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins, FileText, Palette, Video, Star } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -38,6 +38,18 @@ interface Props {
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
   const [search, setSearch] = useState('');
+  const [favorites, setFavorites] = useState<string[]>(
+    () => JSON.parse(localStorage.getItem('dozero_hub_favorites') || '[]')
+  );
+
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavorites(prev => {
+      const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id];
+      localStorage.setItem('dozero_hub_favorites', JSON.stringify(next));
+      return next;
+    });
+  };
 
   const widgets = [
     // Game Master
@@ -209,6 +221,30 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
       </style>
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto', paddingRight: '10px' }}>
+
+        {/* ⭐ Favoritos no topo */}
+        {favorites.length > 0 && !search && (
+          <div className="widget-category">
+            <div className="widget-category-title" style={{ color: '#fbbf24' }}>⭐ Favoritos</div>
+            <div className="widget-grid">
+              {widgets.filter(w => favorites.includes(w.id)).map(w => {
+                const Icon = w.icon;
+                return (
+                  <div className="widget-item" key={`fav-${w.id}`} style={{ position: 'relative' }}>
+                    <button onClick={w.action} title={w.title} className={`widget-btn ${w.theme}`} style={w.shadow ? { boxShadow: w.shadow } : {}}>
+                      <Icon size={30} />
+                    </button>
+                    <button onClick={(e) => toggleFavorite(w.id, e)} style={{ position: 'absolute', top: 0, right: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#fbbf24' }} title="Remover dos favoritos">
+                      <Star size={11} fill="#fbbf24" />
+                    </button>
+                    <span className="widget-label">{w.title}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {categories.map(cat => {
           const catWidgets = filteredWidgets.filter(w => w.cat === cat);
           if (catWidgets.length === 0) return null;
@@ -219,8 +255,9 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
               <div className="widget-grid" style={{ justifyContent: cat === 'System' ? 'start' : 'center' }}>
                 {catWidgets.map(w => {
                   const Icon = w.icon;
+                  const isFav = favorites.includes(w.id);
                   return (
-                    <div className="widget-item" key={w.id}>
+                    <div className="widget-item" key={w.id} style={{ position: 'relative' }}>
                       <button 
                         onClick={w.action} 
                         title={w.title} 
@@ -228,6 +265,18 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                         style={w.shadow ? { boxShadow: w.shadow } : {}}
                       >
                         <Icon size={30} />
+                      </button>
+                      <button
+                        onClick={(e) => toggleFavorite(w.id, e)}
+                        style={{
+                          position: 'absolute', top: 0, right: 0,
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          padding: '2px', color: isFav ? '#fbbf24' : 'rgba(255,255,255,0.2)',
+                          transition: 'color 0.15s',
+                        }}
+                        title={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                      >
+                        <Star size={11} fill={isFav ? '#fbbf24' : 'none'} />
                       </button>
                       <span className="widget-label">{w.title}</span>
                     </div>

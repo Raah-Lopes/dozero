@@ -3,6 +3,7 @@ import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { state, restAtStronghold } from '../../../store';
 import { Castle, Coins, Utensils, Droplets, Bed, Sparkles, Plus } from 'lucide-react';
 
+import { toast } from '../../UI/Toast';
 const UPGRADES_DB = [
   { id: 'cozinha', name: 'Cozinha Industrial', desc: 'Sacia completamente a Fome ao descansar.', cost: 100, icon: Utensils, color: '#eab308' },
   { id: 'poco', name: 'Poço Artesiano', desc: 'Mata completamente a Sede ao descansar.', cost: 80, icon: Droplets, color: '#3b82f6' },
@@ -27,7 +28,7 @@ export const StrongholdWidget: React.FC<{ onClose: () => void }> = ({ onClose })
       const newUpgrades = [...data.upgrades, upgradeId];
       state.stronghold.set('data', { ...data, treasury: data.treasury - cost, upgrades: newUpgrades });
     } else {
-      alert("Ouro insuficiente na Tesouraria da Party.");
+      toast.warn("Ouro insuficiente na Tesouraria da Party.");
     }
   };
 

@@ -9,6 +9,7 @@ import { slugify, questTemplate } from '../CampaignManagerWidget';
 import type { CampaignQuest, QuestLootItem } from '../../../../store';
 import { convertImageToWebP } from '../../../../utils/imageUtils';
 
+import { toast } from '../../../UI/Toast';
 const STATUS_CONFIG = {
   quest: {
     active: { label: 'Ativa', color: '#38bdf8', border: 'rgba(56,189,248,0.3)', bg: 'rgba(12,74,110,0.4)' },
@@ -222,12 +223,12 @@ const addQuest = async (type: 'main' | 'side') => {
 
   const handleDistributeLoot = async (questId: string) => {
     if (!selectedCampaign || selectedDistributeTargets.length === 0) {
-      alert("Selecione pelo menos um personagem para receber o loot!");
+      toast.info("Selecione pelo menos um personagem para receber o loot!");
       return;
     }
     const quest = (selectedCampaign.quests || []).find(q => q.id === questId);
     if (!quest || !quest.loot || quest.loot.length === 0) {
-      alert("Não há itens no loot dessa missão para distribuir!");
+      toast.warn("Não há itens no loot dessa missão para distribuir!");
       return;
     }
 
@@ -356,11 +357,11 @@ const addQuest = async (type: 'main' | 'side') => {
       });
       upd({ quests: updatedQuests });
 
-      alert(`Loot distribuído com sucesso para ${successCount} personagem(ns)! A missão foi marcada como Concluída.`);
+      toast.success(`Loot distribuído com sucesso para ${successCount} personagem(ns)! A missão foi marcada como Concluída.`);
       setSelectedDistributeTargets([]);
       setEditingQuestId(null);
     } else {
-      alert("Nenhum personagem pôde receber o loot. Tente novamente.");
+      toast.info("Nenhum personagem pôde receber o loot. Tente novamente.");
     }
     setIsDistributing(false);
   };
@@ -1170,7 +1171,7 @@ const addQuest = async (type: 'main' | 'side') => {
                                   {isChecked && <span style={{ color: '#000', fontSize: '8px', fontWeight: 'bold' }}>✓</span>}
                                 </div>
 
-                                <img
+                                <img loading="lazy" decoding="async"
                                   src={pc.avatar}
                                   alt={pc.name}
                                   style={{

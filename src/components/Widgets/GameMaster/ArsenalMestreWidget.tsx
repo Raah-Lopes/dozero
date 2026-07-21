@@ -5,6 +5,7 @@ import { useWiki } from '../../../hooks/useWiki';
 import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
 import { pushChatMessage } from '../../../store';
 import * as yaml from 'js-yaml';
+import { toast } from '../../UI/Toast';
 import { 
   Sword, Plus, Trash2, UserMinus, UserCheck, 
      X 
@@ -151,7 +152,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
   const handleCreateItemSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemName.trim()) {
-      alert("O nome do item é obrigatório.");
+      toast.info("O nome do item é obrigatório.");
       return;
     }
     const item: ItemCatalogo = {
@@ -419,7 +420,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
   // Distribuir item do catálogo
   const handleDistribuirItem = async (item: ItemCatalogo) => {
     if (!selectedChar) {
-      alert("Selecione um personagem primeiro!");
+      toast.info("Selecione um personagem primeiro!");
       return;
     }
 
@@ -533,10 +534,10 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
 
       pushChatMessage(`📦 <b>Mestre</b> concedeu o item/poder <b>${item.nome}</b> para <b>${selectedChar.nome}</b>.`, false, false);
       refresh?.();
-      alert(`Item "${item.nome}" distribuído com sucesso para ${selectedChar.nome}!`);
+      toast.success(`Item "${item.nome}" distribuído com sucesso para ${selectedChar.nome}!`);
     } catch (e) {
       console.error(e);
-      alert("Erro ao salvar item na ficha.");
+      toast.success("Erro ao salvar item na ficha.");
     }
   };
 
@@ -616,7 +617,7 @@ export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--glass-border)', padding: '10px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
-                      <img src={selectedChar.avatar || '/vite.svg'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img loading="lazy" decoding="async" src={selectedChar.avatar || '/vite.svg'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div>
                       <h4 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{selectedChar.nome}</h4>

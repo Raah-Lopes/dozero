@@ -14,6 +14,8 @@ import {
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 import { getWikiConfig } from '../../store';
 import { resolveImageUrl, convertImageToWebP } from '../../utils/imageUtils';
+import { toast } from '../UI/Toast';
+import { confirmDialog } from '../UI/Toast';
 
 const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
 
@@ -102,11 +104,10 @@ export const NPCPanel: React.FC = () => {
     window.dispatchEvent(new CustomEvent('open-sheet-by-wiki', { detail: path }));
   };
 
-  const handleDeleteToken = (tokenId: string, name: string, e: React.MouseEvent) => {
+  const handleDeleteToken = async (tokenId: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Deseja remover "${name}" do tabuleiro? A ficha Markdown (.md) continuará existindo na Wiki.`)) {
-      state.tokens.delete(tokenId);
-    }
+    const ok = await confirmDialog(`Deseja remover "${name}" do tabuleiro?\nA ficha Markdown (.md) continuará existindo na Wiki.`);
+    if (ok) state.tokens.delete(tokenId);
   };
 
   const handleCloneToken = (token: any, e: React.MouseEvent) => {
@@ -614,7 +615,7 @@ export const NPCPanel: React.FC = () => {
                         <GripVertical size={12} color="var(--text-secondary)" style={{ cursor: 'grab', flexShrink: 0 }} />
                         {/* Tiny Avatar */}
                         {t.imageUrl ? (
-                          <img 
+                          <img loading="lazy" decoding="async" 
                             src={t.imageUrl} 
                             alt={t.name} 
                             style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}
@@ -731,7 +732,7 @@ export const NPCPanel: React.FC = () => {
                             title="Alterar Imagem/Avatar"
                           >
                             {t.imageUrl ? (
-                              <img src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img loading="lazy" decoding="async" src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <User size={16} />
@@ -914,7 +915,7 @@ export const NPCPanel: React.FC = () => {
                       {/* Grid Avatar */}
                       <div style={{ position: 'relative', width: '48px', height: '48px', borderRadius: '4px', overflow: 'hidden' }}>
                         {t.imageUrl ? (
-                          <img 
+                          <img loading="lazy" decoding="async" 
                             src={t.imageUrl} 
                             alt={t.name} 
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
@@ -1038,7 +1039,7 @@ export const NPCPanel: React.FC = () => {
                             title="Alterar Imagem/Avatar"
                           >
                             {t.imageUrl ? (
-                              <img src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img loading="lazy" decoding="async" src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <User size={16} />
@@ -1233,7 +1234,7 @@ export const NPCPanel: React.FC = () => {
                       
                       {/* Avatar Thumbnail */}
                       {avatarUrl ? (
-                        <img 
+                        <img loading="lazy" decoding="async" 
                           src={avatarUrl} 
                           alt={title} 
                           style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}

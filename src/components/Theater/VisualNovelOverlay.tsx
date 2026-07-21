@@ -104,7 +104,7 @@ export const VisualNovelOverlay: React.FC = () => {
     <div className="vn-overlay" onClick={handleSkipOrClose}>
       <div className="vn-container">
         {avatarUrl && (
-          <img src={avatarUrl} alt={speakerName} className="vn-portrait animate-slide-up" />
+          <img loading="lazy" decoding="async" src={avatarUrl} alt={speakerName} className="vn-portrait animate-slide-up" />
         )}
         <div className="vn-dialog-box animate-fade-in-up">
           <div className="vn-speaker-name">{speakerName}</div>

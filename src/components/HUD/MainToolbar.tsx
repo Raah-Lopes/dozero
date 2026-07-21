@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
+import { toast } from '../UI/Toast';
 export function MainToolbar() {
   const {
     viewMode, setViewMode,
@@ -44,9 +45,9 @@ export function MainToolbar() {
       const res = await fetch('/api/wiki/sync-cloud', { method: 'POST' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      alert(data.message || 'Sincronizado com sucesso!');
+      toast.success(data.message || 'Sincronizado com sucesso!');
     } catch (e: any) {
-      alert("Erro ao sincronizar: " + e.message);
+      toast.error("Erro ao sincronizar: " + e.message);
     } finally {
       setIsSyncing(false);
       setIsMenuOpen(false);

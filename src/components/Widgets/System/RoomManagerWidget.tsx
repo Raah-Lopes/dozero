@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, RefreshCw, Key, Link as LinkIcon, QrCode, Network, Database, Trash2 } from 'lucide-react';
 
+import { toast } from '../../UI/Toast';
 export const RoomManagerWidget: React.FC = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const currentRoom = urlParams.get('room') || 'dozero-mesa-principal-v2';
@@ -22,7 +23,7 @@ export const RoomManagerWidget: React.FC = () => {
         const roomNames = dbs.map(d => d.name).filter(Boolean) as string[];
         setLocalRooms(roomNames);
       } else {
-        alert("Seu navegador não suporta a listagem de bancos IndexedDB.");
+        toast.info("Seu navegador não suporta a listagem de bancos IndexedDB.");
       }
     } catch (e) {
       console.error("Erro ao scanear dbs:", e);
@@ -33,7 +34,7 @@ export const RoomManagerWidget: React.FC = () => {
 
   const handleDeleteRoom = (roomNameToDelete: string) => {
     if (roomNameToDelete === currentRoom) {
-      alert("Você não pode deletar a sala atual em que está!");
+      toast.info("Você não pode deletar a sala atual em que está!");
       return;
     }
     if (confirm(`Aviso: Isso vai deletar permanentemente os dados da sala "${roomNameToDelete}" no SEU PC. Deseja continuar?`)) {
@@ -121,7 +122,7 @@ export const RoomManagerWidget: React.FC = () => {
 
         {showQR && (
           <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', background: 'white', padding: '16px', borderRadius: '8px' }}>
-            <img src={qrUrl} alt="QR Code Convite" style={{ width: '200px', height: '200px' }} />
+            <img loading="lazy" decoding="async" src={qrUrl} alt="QR Code Convite" style={{ width: '200px', height: '200px' }} />
             <span style={{ fontSize: '0.8rem', color: '#333' }}>Escaneie para entrar na mesa</span>
           </div>
         )}

@@ -18,6 +18,7 @@ import { LevelUpWidget } from './LevelUpWidget';
 import { TrendingUp } from 'lucide-react';
 import { convertImageToWebP } from '../../../utils/imageUtils';
 
+import { toast } from '../../UI/Toast';
 interface Macro {
   id: string;
   name: string;
@@ -369,7 +370,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
         const custoVal = custoMatch ? parseInt(custoMatch[0], 10) : 0;
         
         if (custoVal > 0 && (tokenData.mana || 0) < custoVal) {
-          alert("Mana/Bateria insuficiente para conjurar!");
+          toast.warn("Mana/Bateria insuficiente para conjurar!");
           return;
         }
 
@@ -1889,7 +1890,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%)',
               pointerEvents: 'none', zIndex: 2
             }} />
-            <img 
+            <img loading="lazy" decoding="async" 
               src={tokenData.imageUrl || (tokenId === 'omega_sentinel' ? '/omega_sentinel.png' : '/vite.svg')} 
               alt="Avatar" 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 

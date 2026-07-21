@@ -52,7 +52,7 @@ export const TacticalRadar: React.FC = () => {
                   background: ent.isEnemy ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'var(--text-primary)', fontWeight: 'bold'
                 }}>
-                  {ent.avatar ? <img src={ent.avatar} alt={ent.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : ent.name.substring(0, 2).toUpperCase()}
+                  {ent.avatar ? <img loading="lazy" decoding="async" src={ent.avatar} alt={ent.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : ent.name.substring(0, 2).toUpperCase()}
                 </div>
                 <span style={{ color: '#e2e8f0', fontSize: '0.8rem', fontWeight: 600, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {ent.name}

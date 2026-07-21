@@ -4,6 +4,7 @@ import { WikiEditor } from '../../Wiki/WikiEditor';
 import { saveMarkdownContent } from '../../../utils/githubApi';
 import { Plus, X, Save, FileText, Trash2 } from 'lucide-react';
 
+import { toast } from '../../UI/Toast';
 interface NoteTab {
   id: string;
   title: string;
@@ -81,9 +82,9 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
       setIsSaving(true);
       const path = `Mestre/Notas/${filename}.md`;
       await saveMarkdownContent(path, activeTab.content);
-      alert(`Nota salva com sucesso em: ${path}`);
+      toast.success(`Nota salva com sucesso em: ${path}`);
     } catch (e: any) {
-      alert(`Erro ao salvar na Wiki: ${e.message}`);
+      toast.success(`Erro ao salvar na Wiki: ${e.message}`);
     } finally {
       setIsSaving(false);
     }

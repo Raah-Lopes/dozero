@@ -6,6 +6,7 @@ import { addTokenFromMarkdown } from '../../store';
 import { Anvil, Search, FileText } from 'lucide-react';
 import * as yaml from 'js-yaml';
 
+import { toast } from '../UI/Toast';
 export const EntityForgeWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { index, isLoading } = useWiki();
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,7 +41,7 @@ export const EntityForgeWidget: React.FC<{ onClose: () => void }> = ({ onClose }
       if (!rawMd) return;
       const parts = rawMd.split('---');
       if (parts.length < 3) {
-        alert("O arquivo não tem formato Frontmatter válido.");
+        toast.warn("O arquivo não tem formato Frontmatter válido.");
         return;
       }
 
@@ -74,7 +75,7 @@ export const EntityForgeWidget: React.FC<{ onClose: () => void }> = ({ onClose }
       addTokenFromMarkdown(tokenData);
     } catch (e) {
       console.error("Erro ao forjar entidade:", e);
-      alert("Falha ao ler ou extrair metadados da entidade.");
+      toast.error("Falha ao ler ou extrair metadados da entidade.");
     }
   };
 

@@ -4,6 +4,7 @@ import { state, removeCombatParticipant, nextCombatTurn, clearCombat, pushChatMe
 import type { CombatParticipant, CombatCondition } from '../../store';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 
+import { toast } from '../UI/Toast';
 // PPR Urgency triggers
 const URGENCY_TRIGGERS = [
   { icon: '🏚️', label: 'Desmoronamento', msg: '⚠️ <b>PERIGO!</b> O teto começa a rachar e pedras caem sobre o campo de batalha!' },
@@ -212,7 +213,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
                 {isNextTurn && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6', animation: 'pprPulse 1.5s ease-in-out infinite' }} />}
 
                 <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `2px solid ${isCurrentTurn ? '#fbbf24' : isNextTurn ? '#3b82f6' : 'var(--text-secondary)'}`, boxShadow: isNextTurn ? '0 0 10px rgba(59,130,246,0.4)' : 'none' }}>
-                  <img src={p.imageUrl || '/vite.svg'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img loading="lazy" decoding="async" src={p.imageUrl || '/vite.svg'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -278,7 +279,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
                   {isGM && !massAttackMode && (
                     <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                       <button onClick={() => removeCombatParticipant(p.tokenId)} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Skull size={10} /> Matar</button>
-                      <button onClick={() => { if ((window as any).rollLootForNPC) (window as any).rollLootForNPC(p.name, 'Nv 3'); else alert('Abra o Gerador de NPCs!'); }} style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--warning)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>💰 Loot</button>
+                      <button onClick={() => { if ((window as any).rollLootForNPC) (window as any).rollLootForNPC(p.name, 'Nv 3'); else toast.info('Abra o Gerador de NPCs!'); }} style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--warning)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>💰 Loot</button>
                       <button onClick={() => setAddingConditionTo(addingConditionTo === p.tokenId ? null : p.tokenId)} style={{ background: addingConditionTo === p.tokenId ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.3)', color: 'var(--accent-primary)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><PlusCircle size={10} /> Status</button>
                       <button onClick={() => toggleMinion(p.tokenId)} style={{ background: isMinion ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.05)', border: `1px solid ${isMinion ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.1)'}`, color: isMinion ? '#fcd34d' : '#94a3b8', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Target size={10} /> {isMinion ? 'Normal' : 'Lacaio'}</button>
                     </div>

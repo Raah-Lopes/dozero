@@ -295,7 +295,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     title="Clique para alterar a imagem"
                   >
                     {p.avatar ? (
-                      <img 
+                      <img loading="lazy" decoding="async" 
                         src={p.avatar} 
                         alt={p.nome} 
                         style={{ width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover', border: `2px solid ${getStatusColor(p.status).replace('0.2', '0.8')}` }} 

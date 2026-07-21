@@ -20,6 +20,7 @@ import { importSceneFromMarkdown } from './sceneExport';
 import { GlassAccordion } from '../UI/GlassAccordion';
 import { convertImageToWebP } from '../../utils/imageUtils';
 
+import { toast } from '../UI/Toast';
 type DrawerTab = 'ambiente' | 'personagens' | 'mecanicas' | 'narrativa';
 
 interface Props {
@@ -197,7 +198,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                             const scene = await importSceneFromMarkdown(file);
                             createScene(scene);
                           } catch (err: any) {
-                            alert(err.message);
+                            toast.info(err.message);
                           }
                           e.target.value = '';
                         }}
@@ -230,7 +231,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                           title={bg.label}
                           style={{ position: 'relative' }}
                         >
-                          <img src={bg.url} alt={bg.label} />
+                          <img loading="lazy" decoding="async" src={bg.url} alt={bg.label} />
                           
                           {/* Botões de ação em overlay (só aparecem no hover) */}
                           <div
@@ -356,7 +357,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                       title="Arraste para o palco ou clique para mostrar"
                     >
                       <div className="theater-npc-avatar">
-                        {npc.url ? <img src={npc.url} alt={npc.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
+                        {npc.url ? <img loading="lazy" decoding="async" src={npc.url} alt={npc.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
                       </div>
                       <div className="theater-npc-info">
                         <div className="theater-npc-name">{npc.title}</div>
@@ -377,7 +378,7 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                       title="Arraste para o palco ou clique para mostrar"
                     >
                       <div className="theater-npc-avatar">
-                        {npc.avatar ? <img src={npc.avatar} alt={npc.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
+                        {npc.avatar ? <img loading="lazy" decoding="async" src={npc.avatar} alt={npc.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
                       </div>
                       <div className="theater-npc-info">
                         <div className="theater-npc-name">{npc.nome}</div>

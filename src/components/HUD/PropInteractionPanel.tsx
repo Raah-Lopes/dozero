@@ -82,7 +82,7 @@ export const PropInteractionPanel: React.FC = () => {
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', cursor: 'move' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <img src={prop.imageUrl} alt="Prop" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+          <img loading="lazy" decoding="async" src={prop.imageUrl} alt="Prop" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
           <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{prop.name}</h3>
         </div>
         <button onClick={() => setPropId(null)} className="btn-icon" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>

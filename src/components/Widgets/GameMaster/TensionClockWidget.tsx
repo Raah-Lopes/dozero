@@ -3,6 +3,7 @@ import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { removeTensionClock, triggerClockConsequence, updateTensionClockProps } from '../../../store';
 import type { TensionClock } from '../../../store';
 import { Clock, Trash2, Pause, Play, Settings } from 'lucide-react';
+import { confirmDialog } from '../../UI/Toast';
 
 interface Props {
   clock: TensionClock;
@@ -107,10 +108,9 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
         width={220}
         variant="default"
         windowStyle={{ zIndex: 9999, pointerEvents: 'auto' }}
-        onClose={() => {
-          if (window.confirm(`Destruir o relógio "${clock.label}"?`)) {
-            removeTensionClock(clock.id);
-          }
+        onClose={async () => {
+          const ok = await confirmDialog(`Destruir o relógio "${clock.label}"?`);
+          if (ok) removeTensionClock(clock.id);
         }}
       >
       <div style={{
@@ -229,10 +229,9 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
             </button>
 
             <button
-              onClick={() => {
-                if (window.confirm(`Destruir o relógio "${clock.label}"?`)) {
-                  removeTensionClock(clock.id);
-                }
+              onClick={async () => {
+                const ok = await confirmDialog(`Destruir o relógio "${clock.label}"?`);
+                if (ok) removeTensionClock(clock.id);
               }}
               title="Destruir Relógio"
               style={{

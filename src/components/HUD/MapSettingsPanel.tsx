@@ -493,7 +493,7 @@ const PropLibraryGallery = () => {
           }}
           title={item.name}
         >
-          <img src={item.url} alt={item.name} draggable={false} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
+          <img loading="lazy" decoding="async" src={item.url} alt={item.name} draggable={false} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
         </div>
       ))}
     </div>

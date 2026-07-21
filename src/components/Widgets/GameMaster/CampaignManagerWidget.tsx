@@ -569,7 +569,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                     <div style={{
                       height: '48px', overflow: 'hidden', borderRadius: '9px 9px 0 0', position: 'relative',
                     }}>
-                      <img src={c.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <img loading="lazy" decoding="async" src={c.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(2,6,23,0.7) 0%, transparent 70%)' }} />
                     </div>
                   )}

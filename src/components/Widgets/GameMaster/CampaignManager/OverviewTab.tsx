@@ -53,7 +53,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', minHeight: '120px' }}>
         {campaign.imageUrl ? (
           <div style={{ position: 'relative' }}>
-            <img
+            <img loading="lazy" decoding="async"
               src={campaign.imageUrl}
               alt="Capa da Campanha"
               style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block', borderRadius: '12px' }}

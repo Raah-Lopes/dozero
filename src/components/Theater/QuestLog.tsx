@@ -5,6 +5,7 @@ import { type TheaterObjective } from '../../store';
 import { GlassAccordion } from '../UI/GlassAccordion';
 import { askAI } from '../../services/ai';
 
+import { toast } from '../UI/Toast';
 export const QuestLog: React.FC = () => {
   const { currentScene, patchCurrentScene } = useSceneState();
   const [addingObj, setAddingObj] = useState(false);
@@ -65,7 +66,7 @@ export const QuestLog: React.FC = () => {
                 addObjective(text);
               } catch (e) {
                 console.error(e);
-                alert('Erro ao gerar missão com IA');
+                toast.error('Erro ao gerar missão com IA');
               }
             }}
             style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '4px', padding: '2px 8px', fontSize: '0.65rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}

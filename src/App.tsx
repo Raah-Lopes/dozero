@@ -41,6 +41,7 @@ import * as yaml from 'js-yaml';
 import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
+import { Toaster, ConfirmDialog } from './components/UI/Toast';
 // import { RoomManagerWidget } from './components/Widgets/System/RoomManagerWidget';
 
 // Trigger HMR
@@ -497,6 +498,8 @@ function App() {
           <DiceOverlay />
           <PPROverlay />
           <GlobalAudioSync />
+          <Toaster />
+          <ConfirmDialog />
 
           <WidgetLayer />
 

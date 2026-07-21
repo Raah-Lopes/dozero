@@ -82,7 +82,7 @@ export const PPROverlay: React.FC = () => {
           justifyContent: 'center',
         }}>
           {banner.imageUrl ? (
-            <img
+            <img loading="lazy" decoding="async"
               src={banner.imageUrl}
               alt={banner.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}

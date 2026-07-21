@@ -11,6 +11,7 @@ import { FrontmatterPanel } from './FrontmatterPanel';
 import { FrontmatterSheetViewer } from './FrontmatterSheetViewer';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
+import { toast } from '../UI/Toast';
 import './wiki.css';
 
 interface TreeNode {
@@ -224,7 +225,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       await loadTree();
     } catch (err: any) {
       console.error(err);
-      alert("Falha ao importar imagem: " + err.message);
+      toast.error("Falha ao importar imagem: " + err.message);
     } finally {
       setSyncing(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -253,7 +254,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       }
       await loadTree();
     } catch (err: any) {
-      alert("Erro ao importar arquivos: " + err.message);
+      toast.error("Erro ao importar arquivos: " + err.message);
     } finally {
       setSyncing(false);
     }
@@ -317,7 +318,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       if (activeFile === oldPath) setActiveFile(newPath);
       loadTree();
     } catch (e: any) {
-      alert("Erro ao mover: " + e.message);
+      toast.error("Erro ao mover: " + e.message);
     }
   };
 
@@ -332,7 +333,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       if (activeFile === oldPath) setActiveFile(newPath);
       loadTree();
     } catch (e: any) {
-      alert("Erro ao renomear: " + e.message);
+      toast.error("Erro ao renomear: " + e.message);
     }
   };
 
@@ -346,7 +347,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       await loadTree();
       setActiveFile(newPath);
     } catch (e: any) {
-      alert("Erro ao criar arquivo: " + e.message);
+      toast.error("Erro ao criar arquivo: " + e.message);
     }
   };
 
@@ -359,7 +360,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       await createFolder(newPath);
       await loadTree();
     } catch (e: any) {
-      alert("Erro ao criar pasta: " + e.message);
+      toast.error("Erro ao criar pasta: " + e.message);
     }
   };
 
@@ -367,9 +368,9 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
     setSyncing(true);
     try {
       await pushToGithub();
-      alert("Sincronizado com o GitHub com sucesso!");
+      toast.success("Sincronizado com o GitHub com sucesso!");
     } catch (e: any) {
-      alert("Erro ao sincronizar: " + e.message);
+      toast.error("Erro ao sincronizar: " + e.message);
     } finally {
       setSyncing(false);
     }
@@ -634,7 +635,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                     await initializeWikiTemplate();
                     await loadTree();
                   } catch (e: any) {
-                    alert("Erro ao inicializar template: " + e.message);
+                    toast.error("Erro ao inicializar template: " + e.message);
                   } finally {
                     setSyncing(false);
                   }
@@ -701,7 +702,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                         await loadTree();
                       } catch (err) {
                         console.error(err);
-                        alert("Erro ao excluir arquivo.");
+                        toast.error("Erro ao excluir arquivo.");
                       }
                     }}
                     style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.5)', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
@@ -742,7 +743,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                      }
                      return (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '20px', paddingTop: '10px' }}>
-                          <img 
+                          <img loading="lazy" decoding="async" 
                             src={imgUrl} 
                             alt={parsedMeta.nome} 
                             style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--accent-primary)', boxShadow: '0 0 20px rgba(168,85,247,0.3)', marginBottom: '10px' }} 

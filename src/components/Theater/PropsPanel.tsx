@@ -125,7 +125,7 @@ export const PropsPanel: React.FC = () => {
                     {p.label?.charAt(0)}
                   </div>
                 ) : (
-                  <img src={p.url} style={{ width: 24, height: 24, objectFit: 'contain', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }} alt="prop" />
+                  <img loading="lazy" decoding="async" src={p.url} style={{ width: 24, height: 24, objectFit: 'contain', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }} alt="prop" />
                 )}
                 
                 <div style={{ flex: 1, minWidth: 0 }}>

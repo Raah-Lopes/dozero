@@ -8,6 +8,7 @@ import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plu
 import { PollWidget } from './PollWidget';
 import { convertImageToWebP } from '../../utils/imageUtils';
 
+import { toast } from '../UI/Toast';
 export const ChatWindow: React.FC = () => {
   const { members } = useCastData();
   const [messages, setMessages] = useState<any[]>([]);
@@ -170,7 +171,7 @@ export const ChatWindow: React.FC = () => {
       
     // Image URL logic
     if (display.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/i)) {
-      display = display.replace(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/i, '<img src="$1" class="chat-image-clickable" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px; margin-top: 4px;" />');
+      display = display.replace(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/i, '<img loading="lazy" decoding="async" src="$1" class="chat-image-clickable" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px; margin-top: 4px;" />');
     }
 
     // Mention logic
@@ -191,7 +192,7 @@ export const ChatWindow: React.FC = () => {
     // Drag-drop image logic
     if (display.startsWith('[IMG]')) {
       const b64 = display.substring(5);
-      display = `<img src="${b64}" class="chat-image-clickable" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px; margin-top: 4px; border: 1px solid var(--glass-border);" />`;
+      display = `<img loading="lazy" decoding="async" src="${b64}" class="chat-image-clickable" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px; margin-top: 4px; border: 1px solid var(--glass-border);" />`;
     }
 
     const autorName = msg.autor_alias || msg.autor;
@@ -242,7 +243,7 @@ export const ChatWindow: React.FC = () => {
         
         {/* Avatar Section */}
         {avatarUrl && msg.tipo !== 'sistema' && (
-          <img 
+          <img loading="lazy" decoding="async" 
             src={avatarUrl} 
             alt={autorName} 
             style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', alignSelf: 'flex-start' }}
@@ -288,7 +289,7 @@ export const ChatWindow: React.FC = () => {
                     if (match) {
                       window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: match.path }));
                     } else {
-                      alert(`O documento ou ficha "${searchname}" não foi encontrado na Wiki.`);
+                      toast.info(`O documento ou ficha "${searchname}" não foi encontrado na Wiki.`);
                     }
                   });
                 } else if (filepath) {
@@ -437,7 +438,7 @@ export const ChatWindow: React.FC = () => {
                     setPollOptions(['', '']);
                     setIsComposingPoll(false);
                   } else {
-                    alert('Preencha a pergunta e no mínimo 2 opções.');
+                    toast.info('Preencha a pergunta e no mínimo 2 opções.');
                   }
                 }} 
                 style={{ padding: '6px 12px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}
@@ -490,7 +491,7 @@ export const ChatWindow: React.FC = () => {
             >
               <X size={24} />
             </button>
-            <img src={lightboxImg} className="chat-lightbox-img" onClick={(e) => e.stopPropagation()} />
+            <img loading="lazy" decoding="async" src={lightboxImg} className="chat-lightbox-img" onClick={(e) => e.stopPropagation()} />
           </div>
         </div>,
         document.body

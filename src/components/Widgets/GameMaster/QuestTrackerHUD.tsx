@@ -182,7 +182,7 @@ export const QuestTrackerHUD: React.FC = () => {
                       <div style={{ height: '40px', overflow: 'hidden', position: 'relative' }}>
                         {quest.coverUrl.startsWith('linear-gradient') || quest.coverUrl.startsWith('radial-gradient')
                           ? <div style={{ width: '100%', height: '100%', background: quest.coverUrl, opacity: 0.7 }} />
-                          : <img src={quest.coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <img loading="lazy" decoding="async" src={quest.coverUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         }
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(8,10,22,0.8) 0%, transparent 70%)' }} />
                       </div>

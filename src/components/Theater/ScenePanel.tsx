@@ -11,6 +11,7 @@ import { exportSceneAsMarkdown } from './sceneExport';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { GlassAccordion } from '../UI/GlassAccordion';
 
+import { toast } from '../UI/Toast';
 const MOODS: { value: MoodType; label: string; icon: string }[] = [
   { value: 'neutral', label: 'Neutro', icon: '⬜' },
   { value: 'suspense', label: 'Suspense', icon: '🟣' },
@@ -123,7 +124,7 @@ export const ScenePanel: React.FC = () => {
       patchCurrentScene({ description: text });
     } catch (e) {
       console.error(e);
-      alert('Erro ao gerar descrição com IA. Verifique sua conexão.');
+      toast.error('Erro ao gerar descrição com IA. Verifique sua conexão.');
     } finally {
       setIsGeneratingDesc(false);
     }
@@ -148,7 +149,7 @@ export const ScenePanel: React.FC = () => {
     e.preventDefault();
     e.stopPropagation();
     if (!assetTitle.trim()) {
-      alert("Por favor, preencha o Título primeiro para a IA saber o que desenhar!");
+      toast.info("Por favor, preencha o Título primeiro para a IA saber o que desenhar!");
       return;
     }
     

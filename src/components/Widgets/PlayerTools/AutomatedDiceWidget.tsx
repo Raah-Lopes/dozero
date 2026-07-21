@@ -9,6 +9,7 @@ import { useRulesEngine } from '../../../hooks/useRulesEngine';
 import * as yaml from 'js-yaml';
 import { Dices, Swords, Target, Skull, ArrowRightCircle, ListOrdered, BookOpen, Bot, Send, Loader2 } from 'lucide-react';
 
+import { toast } from '../../UI/Toast';
 const isD20 = true;
 const calcularSucessoHibrido = (r: any, b: any, c: any, d: any) => ({ grau: 'sucesso', label: 'Sucesso' });
 
@@ -349,7 +350,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
   const rolarMagiaBasica = async () => {
     if (!atacante) return;
     if (atacante.mana < 1) {
-      alert("Mana insuficiente!");
+      toast.warn("Mana insuficiente!");
       return;
     }
 
@@ -468,7 +469,7 @@ export const AutomatedDiceWidget: React.FC<AutomatedDiceWidgetProps> = ({ onClos
 
   const rolarDisputaAtributos = () => {
     if (!atacante || !defensor) {
-      alert("Selecione Atacante e Defensor para rolar disputa!");
+      toast.info("Selecione Atacante e Defensor para rolar disputa!");
       return;
     }
     
@@ -536,16 +537,16 @@ ${vencedor}`, true);
   // Combate Mental
   const rolarCombateMental = async () => {
     if (!atacante || !defensor || mentalAtkPool === null || mentalDefPool === null) {
-      alert("Selecione Atacante e Defensor para o combate mental!");
+      toast.info("Selecione Atacante e Defensor para o combate mental!");
       return;
     }
 
     if (mentalAtkPool <= 0) {
-      alert(`A mente de ${atacante.nome} já está quebrada!`);
+      toast.info(`A mente de ${atacante.nome} já está quebrada!`);
       return;
     }
     if (mentalDefPool <= 0) {
-      alert(`A mente de ${defensor.nome} já está quebrada!`);
+      toast.info(`A mente de ${defensor.nome} já está quebrada!`);
       return;
     }
 
@@ -794,7 +795,7 @@ ${vencedor}`, true);
       const custoVal = custoMatch ? parseInt(custoMatch[0], 10) : 0;
       
       if (custoVal > 0 && atk.mana < custoVal) {
-        alert("Mana insuficiente para conjurar!");
+        toast.warn("Mana insuficiente para conjurar!");
         return;
       }
 
@@ -826,7 +827,7 @@ ${vencedor}`, true);
         if (!isNaN(val)) {
           adicionarLog(`🎲 Dano avulso rolado: **${val}**`, true);
         } else {
-          alert("Expressão de dano inválida. Use ex: 1d6, 2d8+4");
+          toast.error("Expressão de dano inválida. Use ex: 1d6, 2d8+4");
         }
         return;
       }
@@ -854,13 +855,13 @@ ${vencedor}`, true);
       
       adicionarLog(logStr, true);
     } catch(e) {
-      alert("Erro ao rolar dano. Use formato ex: 1d6, 2d8+3");
+      toast.error("Erro ao rolar dano. Use formato ex: 1d6, 2d8+3");
     }
   };
 
   const aplicarMorteDireta = async () => {
     if (!defensor) {
-      alert("Selecione um defensor!");
+      toast.info("Selecione um defensor!");
       return;
     }
     if (!confirm(`Deseja realmente aplicar Morte Direta em ${defensor.nome}?`)) return;
@@ -977,7 +978,7 @@ ${vencedor}`, true);
   const rolarIniciativaGeral = () => {
     const todosEnvolvidos = [atacante, defensor].filter(Boolean) as FichaPersonagem[];
     if (todosEnvolvidos.length === 0) {
-      alert("Selecione pelo menos um atacante ou defensor na aba Combate para rolar iniciativa!");
+      toast.info("Selecione pelo menos um atacante ou defensor na aba Combate para rolar iniciativa!");
       return;
     }
     
@@ -1835,7 +1836,7 @@ ${vencedor}`, true);
                                     setAtacante(updated);
                                     adicionarLog(`🧪 **[FORJA & ALQUIMIA]** **${atacante.nome}** transmutou Ouro e Mana em uma Poção Menor!`, true);
                                   } else {
-                                    alert('Faltam recursos! Necessário: 20 Ouro e 2 PM.');
+                                    toast.warn('Faltam recursos! Necessário: 20 Ouro e 2 PM.');
                                   }
                                 }}
                                 style={{ flex: 1, padding: '4px', background: 'rgba(239, 68, 68, 0.2)', border: 'none', borderRadius: '4px', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold' }}
@@ -1853,7 +1854,7 @@ ${vencedor}`, true);
                                     setAtacante(updated);
                                     adicionarLog(`🧪 **[FORJA & ALQUIMIA]** **${atacante.nome}** destilou um Veneno Paralisante!`, true);
                                   } else {
-                                    alert('Faltam recursos! Necessário: 30 Ouro e 3 PM.');
+                                    toast.warn('Faltam recursos! Necessário: 30 Ouro e 3 PM.');
                                   }
                                 }}
                                 style={{ flex: 1, padding: '4px', background: 'rgba(34, 197, 94, 0.2)', border: 'none', borderRadius: '4px', color: '#86efac', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 'bold' }}

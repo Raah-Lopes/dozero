@@ -15,7 +15,7 @@ export const HeroBadge: React.FC<Props> = ({ member }) => {
     <div className="theater-hero-badge" title={`${member.nome} — ${member.pv}/${member.pv_max} PV`}>
       <div className="theater-hero-badge-avatar">
         {member.avatar ? (
-          <img src={member.avatar} alt={member.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img loading="lazy" decoding="async" src={member.avatar} alt={member.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1rem' }}>{initial}</span>
         )}

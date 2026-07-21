@@ -242,7 +242,7 @@ export const StagePropsLayer: React.FC<StagePropsLayerProps> = ({ propsList }) =
             onPointerDown={(e) => handlePropPointerDown(e, p)}
           >
             {p.type === 'image' && p.url && (
-              <img src={p.url} className="stage-prop-img" alt="prop" draggable={false} />
+              <img loading="lazy" decoding="async" src={p.url} className="stage-prop-img" alt="prop" draggable={false} />
             )}
             {p.type === 'token' && (
               <div className="stage-prop-token" style={{ backgroundColor: p.color }}>

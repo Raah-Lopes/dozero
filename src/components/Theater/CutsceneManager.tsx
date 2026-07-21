@@ -127,7 +127,7 @@ const CutsceneEditor: React.FC<EditorProps> = ({ initial, onSave, onCancel }) =>
           )}
         </div>
         {imageUrl && (
-          <img
+          <img loading="lazy" decoding="async"
             src={imageUrl}
             alt="preview"
             onError={e => (e.currentTarget.style.display = 'none')}

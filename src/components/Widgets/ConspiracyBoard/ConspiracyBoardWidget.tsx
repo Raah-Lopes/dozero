@@ -588,7 +588,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                     {/* Body */}
                     <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
                       {isImage ? (
-                        <img
+                        <img loading="lazy" decoding="async"
                           src={node.imagePath}
                           alt={node.title}
                           draggable={false}

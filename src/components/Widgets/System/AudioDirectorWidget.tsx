@@ -10,6 +10,7 @@ import {
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { get, set } from 'idb-keyval';
 
+import { toast } from '../../UI/Toast';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const CATEGORY_LABELS: Record<AudioTrack['category'], string> = {
@@ -277,7 +278,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
       setAiPrompt('');
       setIsAIOpen(false);
     } catch (e: any) {
-      alert(e.message || 'Erro ao gerar áudio.');
+      toast.error(e.message || 'Erro ao gerar áudio.');
     } finally {
       setIsGenerating(false);
     }

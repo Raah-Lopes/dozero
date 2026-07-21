@@ -7,6 +7,7 @@ import type { NPCCategory, NPCTable } from '../../../services/oracle/NPCParser';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
 import { saveMarkdownContent } from '../../../utils/githubApi';
 
+import { toast } from '../../UI/Toast';
 interface LocationGeneratorWidgetProps {
   onClose?: () => void;
 }
@@ -44,10 +45,10 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
         md += `(Adicione as anotações detalhadas sobre este local aqui)\n`;
 
         await saveMarkdownContent(path, md);
-        alert(`✅ Ficha de ${locData.nome} criada com sucesso em [1] 🏕️ Campanha Principal/Locais/!`);
+        toast.success(`✅ Ficha de ${locData.nome} criada com sucesso em [1] 🏕️ Campanha Principal/Locais/!`);
       } catch (e) {
         console.error(e);
-        alert('Erro ao criar a ficha de Local na Wiki.');
+        toast.error('Erro ao criar a ficha de Local na Wiki.');
       }
     };
 

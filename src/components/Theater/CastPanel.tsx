@@ -103,7 +103,7 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
             title="Arraste para o palco ou clique para abrir a ficha"
           >
             {m.avatar ? (
-              <img 
+              <img loading="lazy" decoding="async" 
                 src={m.avatar} 
                 alt={m.nome} 
                 style={{ width: '32px', height: '42px', borderRadius: '4px', objectFit: 'cover', border: m.status === 'jogador' ? '1px solid #10b981' : '1px solid #3b82f6' }} 

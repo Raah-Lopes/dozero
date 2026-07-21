@@ -4,6 +4,7 @@ import { useGameStore, getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { Settings, Search, X, Map as MapIcon, Share2, GitMerge, Trash2, Edit2 } from 'lucide-react';
 
+import { toast } from '../UI/Toast';
 interface NodeData extends d3.SimulationNodeDatum {
   id: string;
   name: string;
@@ -590,7 +591,7 @@ export const LivingBrain: React.FC = () => {
       await fetchGraph();
     } catch (err) {
       console.error(err);
-      alert("Erro ao editar relação: " + err);
+      toast.error("Erro ao editar relação: " + err);
     }
   };
 
@@ -621,7 +622,7 @@ export const LivingBrain: React.FC = () => {
       await fetchGraph();
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir relação: " + err);
+      toast.error("Erro ao excluir relação: " + err);
     }
   };
 
@@ -643,7 +644,7 @@ export const LivingBrain: React.FC = () => {
       await fetchGraph();
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir arquivo.");
+      toast.error("Erro ao excluir arquivo.");
     }
   };
 
