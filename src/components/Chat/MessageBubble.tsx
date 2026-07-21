@@ -30,7 +30,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   let display = msg.text || '';
   if (display.startsWith('[IMG]')) {
     const imgSrc = display.substring(5);
-    display = `<img src="${imgSrc}" class="chat-image-clickable" style="max-width: 100%; max-height: 200px; border-radius: 8px; cursor: pointer; border: 1px solid var(--chat-border);" />`;
+    display = `<img src="${imgSrc}" class="chat-image-clickable" style="max-width: 100%; max-height: 200px; border-radius: 8px; cursor: pointer; border: 1px solid var(--chat-border); object-fit: contain;" />`;
   } else {
     display = display.replace(/\[\[(.*?)\]\]/g, (_m: string, p1: string) => {
       const parts = p1.split('|');
@@ -54,7 +54,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         background: isSelected ? 'rgba(168,85,247,0.2)' : msg.tipo === 'whisper' ? 'rgba(99,102,241,0.1)' : msg.tipo === 'sistema' ? 'rgba(0,0,0,0.2)' : 'transparent',
         borderLeft: msg.tipo === 'whisper' ? '3px solid #6366f1' : msg.tipo === 'me' ? '3px solid #ec4899' : 'none',
         borderRadius: '6px', cursor: isSelectMode ? 'pointer' : 'default',
-        transition: 'background 0.15s', position: 'relative'
+        transition: 'background 0.15s', position: 'relative',
+        maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden'
       }}
       onClick={() => {
         if (isSelectMode && msg.id) {
@@ -81,14 +82,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )
       )}
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <div style={{ fontSize: '0.72rem', color: 'var(--chat-accent)', marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="chat-author">
+          <span className="chat-author" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '4px' }}>
             {msg.tipo === 'whisper' ? <><EyeOff size={10} style={{ display: 'inline', marginRight: '3px' }} /> Sussurro para {msg.alvo}:</> : 
              msg.tipo === 'me' ? '' : 
              <strong style={{ color: msg.autor_color || 'inherit' }}>{autorName}</strong>}
           </span>
-          <span style={{ color: 'var(--chat-text-secondary)', fontSize: '0.62rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ color: 'var(--chat-text-secondary)', fontSize: '0.62rem', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
             {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             <button 
               onClick={(e) => {
@@ -108,7 +109,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           <PollWidget pollId={msg.pollId} playerName={playerName} />
         ) : (
           <div 
-            style={{ fontSize: '0.83rem', fontStyle: msg.tipo === 'me' ? 'italic' : 'normal', wordBreak: 'break-word', color: msg.tipo === 'sistema' ? 'var(--chat-text-secondary)' : 'var(--chat-text-primary)' }} 
+            style={{ fontSize: '0.83rem', fontStyle: msg.tipo === 'me' ? 'italic' : 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', color: msg.tipo === 'sistema' ? 'var(--chat-text-secondary)' : 'var(--chat-text-primary)' }} 
             dangerouslySetInnerHTML={{ __html: display }} 
             onClick={(e) => {
               if (isSelectMode) return;

@@ -118,11 +118,9 @@ export const CombatLog: React.FC = () => {
   const toggleFiltro = (filtro: string) => {
     const next = new Set(filtrosAtivos);
     if (next.has(filtro)) {
-      // Não deixa desmarcar se for o último
       if (next.size > 1) {
         next.delete(filtro);
       } else {
-        // Se tentar desmarcar o único, marca todos de novo
         ['rolagens', 'combate', 'narrativo', 'sistema'].forEach(f => next.add(f));
       }
     } else {
@@ -132,12 +130,12 @@ export const CombatLog: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       
-      {/* Top Header with Tabs and Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--glass-border)', paddingBottom: '4px', flexShrink: 0 }}>
+      {/* Top Header with Tabs and Actions - Fluid Wrap */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--glass-border)', padding: '4px', flexShrink: 0, flexWrap: 'wrap', gap: '4px', width: '100%', boxSizing: 'border-box' }}>
         {/* Tabs Filter Menu */}
-        <div style={{ display: 'flex', gap: '2px', flex: 1 }}>
+        <div style={{ display: 'flex', gap: '2px', flex: '1 1 140px', minWidth: '120px', flexWrap: 'wrap' }}>
           {(['rolagens', 'combate', 'narrativo', 'sistema'] as const).map(tab => {
             let label = 'Tudo';
             let icon = null;
@@ -154,30 +152,30 @@ export const CombatLog: React.FC = () => {
                 key={tab}
                 onClick={() => toggleFiltro(tab)}
                 style={{
-                  padding: '6px 4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
+                  padding: '4px 4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
                   background: active ? 'rgba(168, 85, 247, 0.18)' : 'transparent',
                   border: 'none', borderBottom: active ? '2px solid var(--accent-primary)' : 'none',
                   color: active ? '#f0abfc' : 'var(--text-secondary)',
                   borderRadius: '4px 4px 0 0', transition: 'all 0.2s',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
-                  flex: 1, minHeight: '32px'
+                  flex: '1 1 45px', minWidth: 0, minHeight: '26px'
                 }}
                 title={`Alternar visualização de ${label}`}
               >
                 {icon}
-                <span className="tab-label">{label}</span>
+                <span className="tab-label" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
               </button>
             );
           })}
         </div>
 
         {/* Floating Menu Toggle */}
-        <div style={{ position: 'relative', marginLeft: '4px', marginRight: '4px' }}>
+        <div style={{ position: 'relative', marginLeft: 'auto', flexShrink: 0 }}>
           <button 
             onClick={() => setShowMenu(!showMenu)} 
             className="btn-icon" 
             title="Opções do Log" 
-            style={{ background: showMenu ? 'var(--accent-primary)' : 'rgba(0,0,0,0.3)', color: showMenu ? 'white' : 'var(--text-secondary)', width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ background: showMenu ? 'var(--accent-primary)' : 'rgba(0,0,0,0.3)', color: showMenu ? 'white' : 'var(--text-secondary)', width: '26px', height: '26px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }}
           >
             <Settings size={13} />
           </button>
@@ -209,7 +207,7 @@ export const CombatLog: React.FC = () => {
       </div>
 
       {/* Message Feed */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem', paddingRight: '0.4rem', paddingTop: '0.5rem', fontFamily: 'monospace' }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem', paddingRight: '0.4rem', paddingTop: '0.5rem', fontFamily: 'monospace', width: '100%', boxSizing: 'border-box' }}>
         {mensagensFiltradas.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>[ Registros de combate vazios ]</p>
         ) : (
@@ -229,17 +227,21 @@ export const CombatLog: React.FC = () => {
                   borderLeft: `2px solid ${msg.isCritical ? '#10b981' : msg.isFailure ? '#ef4444' : 'transparent'}`,
                   background: msg.isCritical ? 'rgba(16, 185, 129, 0.08)' : msg.isFailure ? 'rgba(239, 68, 68, 0.08)' : 'transparent',
                   borderBottom: '1px dotted rgba(255,255,255,0.06)',
-                  alignItems: 'flex-start'
+                  alignItems: 'flex-start',
+                  maxWidth: '100%',
+                  overflow: 'hidden'
                 }}
               >
-                <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', whiteSpace: 'nowrap', opacity: 0.7 }}>[{time}]</span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', whiteSpace: 'nowrap', opacity: 0.7, flexShrink: 0 }}>[{time}]</span>
                 <div 
                   dangerouslySetInnerHTML={{ __html: msg.text }} 
                   style={{ 
                     color: msg.isCritical ? '#a7f3d0' : msg.isFailure ? '#fca5a5' : '#cbd5e1', 
                     fontFamily: 'Inter, sans-serif',
                     wordBreak: 'break-word',
-                    flex: 1
+                    overflowWrap: 'anywhere',
+                    flex: 1,
+                    minWidth: 0
                   }} 
                 />
               </div>

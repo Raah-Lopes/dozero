@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Mic, MicOff, BarChart2, Send, Plus, BookOpen, Image as ImageIcon } from 'lucide-react';
+import { User, Mic, MicOff, BarChart2, Send, BookOpen, Image as ImageIcon } from 'lucide-react';
 import { toast } from '../UI/Toast';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 
@@ -160,7 +160,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     : [];
 
   return (
-    <div style={{ padding: '8px', borderTop: '1px solid var(--chat-border)', position: 'relative' }}>
+    <div style={{ padding: '6px 8px', borderTop: '1px solid var(--chat-border)', position: 'relative', width: '100%', boxSizing: 'border-box' }}>
       
       {/* AUTO-COMPLETE WIKI [[ */}
       {showWikiAutoComplete && matchingWiki.length > 0 && (
@@ -224,92 +224,111 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+      {/* CONTAINER PRINCIPAL DO INPUT - FLEX WRAP FLUIDO */}
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
         
-        {/* BOTÃO DE CONFIGURAÇÃO DE NOME E COR */}
-        <div style={{ position: 'relative' }}>
+        {/* GRUPO DE BOTÕES DA ESQUERDA (IDENTIDADE, IMAGEM, VOZ) */}
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
+          {/* BOTÃO DE CONFIGURAÇÃO DE NOME E COR */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowIdentityPopup(!showIdentityPopup)}
+              title={`Identidade do Chat: ${playerName}`}
+              style={{
+                width: '30px', height: '30px', padding: 0,
+                background: 'var(--chat-bg-secondary)', border: `2px solid ${playerColor}`,
+                borderRadius: '6px', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', color: playerColor, flexShrink: 0
+              }}
+            >
+              <User size={15} />
+            </button>
+
+            {/* POPUP DE IDENTIDADE (NOME & COR) */}
+            {showIdentityPopup && (
+              <div style={{
+                position: 'absolute', bottom: '38px', left: 0,
+                background: 'var(--chat-bg-primary)', backdropFilter: 'blur(12px)',
+                border: '1px solid var(--chat-border)', borderRadius: '8px',
+                padding: '10px', boxShadow: '0 8px 25px rgba(0,0,0,0.6)', zIndex: 200,
+                display: 'flex', flexDirection: 'column', gap: '8px', width: '180px'
+              }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--chat-text-secondary)', fontWeight: 'bold' }}>Sua Identidade no Chat:</div>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <input
+                    type="color" value={playerColor} onChange={(e) => setPlayerColor(e.target.value)} title="Cor do seu nome"
+                    style={{ width: '28px', height: '28px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                  />
+                  <input 
+                    value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="Seu nome"
+                    style={{ flex: 1, padding: '4px 6px', background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', color: playerColor, borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}
+                  />
+                </div>
+                <button onClick={() => setShowIdentityPopup(false)} style={{ padding: '4px', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '4px', color: '#a5b4fc', fontSize: '0.7rem', cursor: 'pointer' }}>Pronto</button>
+              </div>
+            )}
+          </div>
+
+          {/* UPLOAD IMAGEM */}
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
           <button
-            onClick={() => setShowIdentityPopup(!showIdentityPopup)}
-            title={`Identidade do Chat: ${playerName}`}
-            style={{
-              width: '32px', height: '32px', padding: 0,
-              background: 'var(--chat-bg-secondary)', border: `2px solid ${playerColor}`,
-              borderRadius: '6px', cursor: 'pointer', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', color: playerColor
-            }}
+            onClick={() => fileInputRef.current?.click()}
+            title="Enviar Imagem"
+            style={{ width: '30px', height: '30px', padding: 0, background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', borderRadius: '4px', color: 'var(--chat-text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           >
-            <User size={16} />
+            <ImageIcon size={15} />
           </button>
 
-          {/* POPUP DE IDENTIDADE (NOME & COR) */}
-          {showIdentityPopup && (
-            <div style={{
-              position: 'absolute', bottom: '40px', left: 0,
-              background: 'var(--chat-bg-primary)', backdropFilter: 'blur(12px)',
-              border: '1px solid var(--chat-border)', borderRadius: '8px',
-              padding: '10px', boxShadow: '0 8px 25px rgba(0,0,0,0.6)', zIndex: 200,
-              display: 'flex', flexDirection: 'column', gap: '8px', width: '180px'
-            }}>
-              <div style={{ fontSize: '0.7rem', color: 'var(--chat-text-secondary)', fontWeight: 'bold' }}>Sua Identidade no Chat:</div>
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                <input
-                  type="color" value={playerColor} onChange={(e) => setPlayerColor(e.target.value)} title="Cor do seu nome"
-                  style={{ width: '28px', height: '28px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                />
-                <input 
-                  value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="Seu nome"
-                  style={{ flex: 1, padding: '4px 6px', background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', color: playerColor, borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}
-                />
-              </div>
-              <button onClick={() => setShowIdentityPopup(false)} style={{ padding: '4px', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '4px', color: '#a5b4fc', fontSize: '0.7rem', cursor: 'pointer' }}>Pronto</button>
-            </div>
-          )}
+          {/* ENTRADA DE VOZ (MICROFONE) */}
+          <button
+            onClick={handleVoiceInput}
+            title={isListening ? 'Ouvindo... Clique para parar' : 'Entrada por Voz (Ditado)'}
+            style={{
+              width: '30px', height: '30px', padding: 0,
+              background: isListening ? 'rgba(239,68,68,0.25)' : 'var(--chat-bg-secondary)',
+              border: isListening ? '1px solid rgba(239,68,68,0.6)' : '1px solid var(--chat-border)',
+              borderRadius: '4px', color: isListening ? '#fca5a5' : 'var(--chat-text-primary)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}
+          >
+            {isListening ? <MicOff size={15} /> : <Mic size={15} />}
+          </button>
         </div>
 
-        {/* UPLOAD IMAGEM (NOVO) */}
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          title="Enviar Imagem"
-          style={{ width: '32px', height: '32px', padding: 0, background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', borderRadius: '4px', color: 'var(--chat-text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <ImageIcon size={16} />
-        </button>
-
-        {/* ENTRADA DE VOZ (MICROFONE) */}
-        <button
-          onClick={handleVoiceInput}
-          title={isListening ? 'Ouvindo... Clique para parar' : 'Entrada por Voz (Ditado)'}
-          style={{
-            width: '32px', height: '32px', padding: 0,
-            background: isListening ? 'rgba(239,68,68,0.25)' : 'var(--chat-bg-secondary)',
-            border: isListening ? '1px solid rgba(239,68,68,0.6)' : '1px solid var(--chat-border)',
-            borderRadius: '4px', color: isListening ? '#fca5a5' : 'var(--chat-text-primary)',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
-        >
-          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-        </button>
-
-        {/* INPUT DE MENSAGEM PRINCIPAL */}
+        {/* INPUT DE MENSAGEM PRINCIPAL - CRESCE E SE ADAPTA */}
         <input 
           ref={inputRef}
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Mensagem ou /comando... ([[ p/ Wiki)"
-          style={{ flex: 1, padding: '8px', background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', color: 'var(--chat-text-primary)', borderRadius: '4px', fontSize: '0.85rem' }}
+          placeholder="Mensagem..."
+          style={{
+            flex: '1 1 100px', minWidth: '80px', padding: '6px 8px',
+            background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)',
+            color: 'var(--chat-text-primary)', borderRadius: '4px', fontSize: '0.82rem', boxSizing: 'border-box'
+          }}
         />
 
-        {/* CRIAR ENQUETE */}
-        <button onClick={() => setIsComposingPoll(true)} title="Criar Enquete" style={{ padding: '8px', background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', borderRadius: '4px', color: 'var(--chat-text-primary)', cursor: 'pointer' }}>
-          <BarChart2 size={16} />
-        </button>
+        {/* GRUPO DE BOTÕES DA DIREITA (ENQUETE & ENVIAR) */}
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
+          {/* CRIAR ENQUETE */}
+          <button
+            onClick={() => setIsComposingPoll(true)}
+            title="Criar Enquete"
+            style={{ width: '30px', height: '30px', padding: 0, background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', borderRadius: '4px', color: 'var(--chat-text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          >
+            <BarChart2 size={15} />
+          </button>
 
-        {/* ENVIAR */}
-        <button onClick={() => { handleSend(); setShowWikiAutoComplete(false); }} title="Enviar Mensagem" style={{ padding: '8px', background: 'var(--chat-accent)', border: 'none', borderRadius: '4px', color: 'var(--chat-text-primary)', cursor: 'pointer' }}>
-          <Send size={16} />
-        </button>
+          {/* ENVIAR */}
+          <button
+            onClick={() => { handleSend(); setShowWikiAutoComplete(false); }}
+            title="Enviar Mensagem"
+            style={{ height: '30px', padding: '0 10px', background: 'var(--chat-accent)', border: 'none', borderRadius: '4px', color: 'var(--chat-text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 'bold', fontSize: '0.8rem' }}
+          >
+            <Send size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );
