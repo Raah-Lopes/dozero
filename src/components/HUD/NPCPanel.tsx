@@ -383,22 +383,39 @@ export const NPCPanel: React.FC = () => {
   };
 
   const handleAvatarClick = (tokenId: string) => {
+    console.log('[NPCPanel] handleAvatarClick triggered. tokenId:', tokenId, 'fileInputRef.current:', fileInputRef.current);
     setUploadingTokenId(tokenId);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
       fileInputRef.current.click();
+    } else {
+      console.error('[NPCPanel] fileInputRef.current is null!');
     }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[NPCPanel] handleImageUpload triggered.');
     const file = e.target.files?.[0];
-    if (!file || !uploadingTokenId) return;
+    if (!file) {
+      console.warn('[NPCPanel] No file selected.');
+      return;
+    }
+    if (!uploadingTokenId) {
+      console.warn('[NPCPanel] No uploadingTokenId found.');
+      return;
+    }
 
     const token = state.tokens.get(uploadingTokenId) as any;
-    if (!token) return;
+    if (!token) {
+      console.error('[NPCPanel] Token not found in Yjs:', uploadingTokenId);
+      return;
+    }
+
+    console.log('[NPCPanel] Uploading for token:', token.name, 'File:', file.name);
 
     try {
       const { base64 } = await convertImageToWebP(file, 0.7, 512);
+      console.log('[NPCPanel] WebP conversion successful.');
       
       // Yjs: base64 imediato para sincronizar com todos
       updateTokenProps(token.id, { imageUrl: base64 });
@@ -406,6 +423,7 @@ export const NPCPanel: React.FC = () => {
       // Nuvem (ImgBB → Catbox → local ANEXOS)
       const cleanName = (token.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
       const wikiImageRef = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
+      console.log('[NPCPanel] saveImageToCloud returned:', wikiImageRef);
 
       // Atualiza Yjs com URL permanente e sincroniza wiki
       updateTokenProps(token.id, { imageUrl: wikiImageRef });
@@ -423,7 +441,7 @@ export const NPCPanel: React.FC = () => {
         }
       }
     } catch (err) {
-      console.error("Erro ao converter/salvar imagem do token", err);
+      console.error("[NPCPanel] Erro ao converter/salvar imagem do token", err);
     }
   };
 

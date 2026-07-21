@@ -89,8 +89,8 @@ pocoes: []
 maldicoes: []
 objetos_campanha: []
 XP: 0
-imagem: https://i.ibb.co/zVPsycbt/06a3c4964e09.webp
-imageUrl: https://i.ibb.co/zVPsycbt/06a3c4964e09.webp
+imagem: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
+imageUrl: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
 energiaMax: 0
 nivel: 1
 nome: Goma
@@ -130,7 +130,9 @@ magias_preparadas:
     current: 0
     max: 0
 macros: []
+avatar: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
 ---
+
 
 # Goma, O Monge Gelatinoso
 

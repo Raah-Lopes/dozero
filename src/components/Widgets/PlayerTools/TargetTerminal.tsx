@@ -265,23 +265,37 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   };
 
   const handleAvatarClick = () => {
+    console.log('[TargetTerminal] handleAvatarClick triggered. fileInputRef.current:', fileInputRef.current);
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    } else {
+      console.error('[TargetTerminal] fileInputRef.current is null!');
     }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[TargetTerminal] handleImageUpload triggered.');
     const file = e.target.files?.[0];
-    if (!file) return;
-    const { base64 } = await convertImageToWebP(file, 0.7, 512);
-    
-    // Yjs gets base64 always
-    handlePropChange('imageUrl', base64);
+    if (!file) {
+      console.warn('[TargetTerminal] No file selected.');
+      return;
+    }
+    console.log('[TargetTerminal] File selected:', file.name, file.size);
+    try {
+      const { base64 } = await convertImageToWebP(file, 0.7, 512);
+      console.log('[TargetTerminal] WebP conversion successful.');
+      
+      // Yjs gets base64 always
+      handlePropChange('imageUrl', base64);
 
-    // Salva na nuvem (ImgBB → Catbox → local ANEXOS)
-    const cleanName = (tokenData?.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-    const wikiImageRef = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
-    handlePropChangeEnd('imageUrl', wikiImageRef);
+      // Salva na nuvem (ImgBB → Catbox → local ANEXOS)
+      const cleanName = (tokenData?.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
+      const wikiImageRef = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
+      console.log('[TargetTerminal] saveImageToCloud returned:', wikiImageRef);
+      handlePropChangeEnd('imageUrl', wikiImageRef);
+    } catch (err) {
+      console.error('[TargetTerminal] Error in handleImageUpload:', err);
+    }
   };
 
   const handleItemAction = async (listName: string, itemIdx: number, action: 'usar' | 'equipar' | 'conjurar') => {
