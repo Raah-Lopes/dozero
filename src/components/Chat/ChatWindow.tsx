@@ -4,11 +4,34 @@ import { state } from '../../store';
 import { pushAdvancedChatMessage, ChatMessageOptions, createPoll } from '../../store/chat';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { useCastData } from '../Theater/hooks/useCastData';
-import { Send, Pin, Volume2, User, EyeOff, Hash, Trash2, Copy, X, BarChart2, Plus, Mail, Bell, BellOff } from 'lucide-react';
+import {
+  Send, Pin, Volume2, User, EyeOff, Trash2, Copy, X, BarChart2, Plus,
+  Bell, BellOff, Search, Settings, HelpCircle, Terminal, Check
+} from 'lucide-react';
 import { PollWidget } from './PollWidget';
 import { convertImageToWebP } from '../../utils/imageUtils';
-
 import { toast } from '../UI/Toast';
+
+// ─── Comandos do Chat para Auto-Complete ──────────────────────────────────────
+
+interface SlashCommand {
+  cmd: string;
+  desc: string;
+  example: string;
+}
+
+const SLASH_COMMANDS: SlashCommand[] = [
+  { cmd: '/w',     desc: 'Sussurro privado',            example: '/w Nome mensagem' },
+  { cmd: '/me',    desc: 'Ação narrativa / emotiva',    example: '/me sorri misteriosamente' },
+  { cmd: '/as',    desc: 'Falar como NPC / Alias',      example: '/as "Guarda" Pare!' },
+  { cmd: '/roll',  desc: 'Rolar dados',                 example: '/roll 1d20+5' },
+  { cmd: '/play',  desc: 'Tocar efeito sonoro',         example: '/play efeito.mp3' },
+  { cmd: '/pin',   desc: 'Fixar mensagem no topo',      example: '/pin Regra importante' },
+  { cmd: '/clear', desc: 'Limpar histórico local',      example: '/clear' },
+  { cmd: '/ping',  desc: 'Chamar atenção de todos',     example: '/ping' },
+  { cmd: '/help',  desc: 'Ver ajuda de comandos',       example: '/help' },
+];
+
 export const ChatWindow: React.FC = () => {
   const { members } = useCastData();
   const [messages, setMessages] = useState<any[]>([]);
@@ -31,6 +54,13 @@ export const ChatWindow: React.FC = () => {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+
+  // Busca e Filtros
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Identity Popup (Nome e Cor)
+  const [showIdentityPopup, setShowIdentityPopup] = useState(false);
   
   // Poll State
   const [isComposingPoll, setIsComposingPoll] = useState(false);
@@ -40,6 +70,7 @@ export const ChatWindow: React.FC = () => {
   const [openedWhispers, setOpenedWhispers] = useState<Set<string>>(new Set());
   
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const observer = (event: any) => {
@@ -97,7 +128,7 @@ export const ChatWindow: React.FC = () => {
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, tab]);
+  }, [messages, tab, searchQuery]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -122,7 +153,7 @@ export const ChatWindow: React.FC = () => {
       }
     } else if (text.startsWith('/roll ') || text.startsWith('/r ')) {
       const expr = text.replace(/^\/(roll|r)\s+/, '');
-      text = `Rolou: ${expr} = ${Math.floor(Math.random() * 20) + 1}`; // mock roll
+      text = `Rolou: ${expr} = ${Math.floor(Math.random() * 20) + 1}`;
       options.tipo = 'in-game';
     } else if (text.startsWith('/play ')) {
       options.audioTrigger = text.replace('/play ', '');
@@ -148,159 +179,141 @@ export const ChatWindow: React.FC = () => {
       /pin [msg] - Fixar mensagem<br>
       /clear - Limpar histórico<br>
       /ping - Chamar atenção<br>
-      /help - Mostrar esta lista`;
+      /help - Exibir esta lista`;
       pushAdvancedChatMessage(helpMsg, { tipo: 'sistema', autor: 'Sistema' });
       setInput('');
       return;
     }
 
     pushAdvancedChatMessage(text, options);
-    
-    if (options.pinned) {
-      setPinned({ text, options });
-    }
-    
+    if (options.pinned) setPinned({ text, autor: playerName });
     setInput('');
   };
 
+  const handleSelectCommand = (cmdStr: string) => {
+    setInput(cmdStr + ' ');
+    inputRef.current?.focus();
+  };
+
   const renderMessage = (msg: any, i: number) => {
-    // Basic Markdown logic (bold, italic)
-    let display = msg.text
-      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-      .replace(/\*(.*?)\*/g, '<i>$1</i>');
-      
-    // Image URL logic
-    if (display.match(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/i)) {
-      display = display.replace(/(https?:\/\/.*\.(?:png|jpg|jpeg|gif))/i, '<img loading="lazy" decoding="async" src="$1" class="chat-image-clickable" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px; margin-top: 4px;" />');
-    }
-
-    // Mention logic
-    display = display.replace(/@(\w+)/g, '<span style="color: #facc15; font-weight: bold;">@$1</span>');
-
-    // Tooltip logic [Type:Name:Description]
-    display = display.replace(/\[([^:]+):([^:]+):([^\]]+)\]/g, '<span class="chat-tooltip" data-tooltip="$3">🔗 $2</span>');
-
-    // Ficha / Wiki Doc logic [Ficha:Name:Filepath]
-    display = display.replace(/\[Ficha:([^:]+):([^\]]+)\]/gi, '<span class="chat-wiki-link" data-filepath="$2">📝 $1</span>');
+    const isOwner = msg.autor === playerName;
+    const isSelected = selectedIds.has(msg.id);
     
-    // Simplifed Ficha logic: "ficha: nome do personagem"
-    display = display.replace(/\bficha:\s*([^\.,!?;<]+)/gi, (match, p1) => {
-      const name = p1.trim();
-      return `<span class="chat-wiki-link" data-searchname="${name}">📝 ${name}</span>`;
-    });
+    // Process markdown wiki links like [[NomeDoCard]]
+    let display = msg.text || '';
 
-    // Drag-drop image logic
+    // Image check
     if (display.startsWith('[IMG]')) {
-      const b64 = display.substring(5);
-      display = `<img loading="lazy" decoding="async" src="${b64}" class="chat-image-clickable" style="max-width: 150px; max-height: 150px; object-fit: cover; border-radius: 4px; margin-top: 4px; border: 1px solid var(--glass-border);" />`;
+      const imgSrc = display.substring(5);
+      display = `<img src="${imgSrc}" class="chat-image-clickable" style="max-width: 100%; max-height: 200px; border-radius: 8px; cursor: pointer; border: 1px solid var(--glass-border);" />`;
+    } else {
+      display = display.replace(/\[\[(.*?)\]\]/g, (_m: string, p1: string) => {
+        const parts = p1.split('|');
+        const searchName = parts[0].trim();
+        const label = parts[1] ? parts[1].trim() : searchName;
+        return `<span class="chat-wiki-link" data-searchname="${searchName}" style="color: var(--accent-primary); text-decoration: underline; cursor: pointer; font-weight: bold;">📜 ${label}</span>`;
+      });
     }
 
-    const autorName = msg.autor_alias || msg.autor;
-    let bubbleClass = 'chat-bubble-player';
-    if (msg.tipo === 'sistema') bubbleClass = 'chat-bubble-system';
-    if (msg.autor_alias) bubbleClass = 'chat-bubble-npc';
-    if (msg.tipo === 'whisper') bubbleClass = 'chat-bubble-whisper';
-
-    if (msg.tipo === 'whisper') {
-      const isOpened = msg.id && openedWhispers.has(msg.id);
-      if (!isOpened) {
-        return (
-          <div 
-            key={i} 
-            style={{ background: 'linear-gradient(135deg, #4c1d95, #7c3aed)', padding: '16px', borderRadius: '12px', cursor: 'pointer', textAlign: 'center', marginBottom: '8px', border: '2px solid #a78bfa', boxShadow: '0 4px 16px rgba(124,58,237,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
-            onClick={() => msg.id && setOpenedWhispers(new Set([...openedWhispers, msg.id]))}
-          >
-            <Mail size={24} color="var(--text-primary)" />
-            <div style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.05em' }}>CARTA SECRETA</div>
-            <div style={{ color: '#e5e7eb', fontSize: '0.75rem' }}>Para: <span style={{color: '#facc15'}}>{msg.alvo}</span></div>
-            <div style={{ color: '#9ca3af', fontSize: '0.65rem' }}>De: {autorName}</div>
-          </div>
-        );
-      }
-    }
-
-    // Find avatar if possible (for players/NPCs)
-    const autorMember = members.find(m => 
-      m.nome.toLowerCase() === (msg.autor_alias || msg.autor || '').toLowerCase()
-    );
-    const avatarUrl = autorMember?.avatar;
+    // Avatar resolution
+    const autorMember = members.find((m: any) => m.nome === msg.autor || m.nome === msg.autor_alias);
+    const avatarUrl = autorMember?.imagem || autorMember?.avatar;
+    const autorName = msg.autor_alias || msg.autor || 'Anônimo';
 
     return (
-      <div key={i} className={bubbleClass} style={{ marginBottom: '8px', padding: '6px', borderRadius: '4px', display: 'flex', gap: '8px' }}>
-        {isSelectMode && msg.id && (
-          <input 
-            type="checkbox" 
-            checked={selectedIds.has(msg.id)} 
-            onChange={(e) => {
-              const next = new Set(selectedIds);
-              if(e.target.checked) next.add(msg.id);
-              else next.delete(msg.id);
-              setSelectedIds(next);
-            }} 
-            style={{ marginTop: '4px', cursor: 'pointer', transform: 'scale(1.2)' }}
-          />
-        )}
-        
-        {/* Avatar Section */}
-        {avatarUrl && msg.tipo !== 'sistema' && (
-          <img loading="lazy" decoding="async" 
-            src={avatarUrl} 
-            alt={autorName} 
-            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', alignSelf: 'flex-start' }}
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
+      <div 
+        key={msg.id || i}
+        style={{
+          display: 'flex',
+          gap: '8px',
+          margin: '4px 0',
+          padding: '6px 8px',
+          background: isSelected ? 'rgba(168,85,247,0.2)' : msg.tipo === 'whisper' ? 'rgba(99,102,241,0.1)' : msg.tipo === 'sistema' ? 'rgba(0,0,0,0.2)' : 'transparent',
+          borderLeft: msg.tipo === 'whisper' ? '3px solid #6366f1' : msg.tipo === 'me' ? '3px solid #ec4899' : 'none',
+          borderRadius: '6px',
+          cursor: isSelectMode ? 'pointer' : 'default',
+          transition: 'background 0.15s',
+        }}
+        onClick={() => {
+          if (isSelectMode && msg.id) {
+            const next = new Set(selectedIds);
+            if (next.has(msg.id)) next.delete(msg.id);
+            else next.add(msg.id);
+            setSelectedIds(next);
+          }
+        }}
+      >
+        {/* AVATAR */}
+        {msg.tipo !== 'sistema' && (
+          avatarUrl ? (
+            <img 
+              loading="lazy" decoding="async"
+              src={avatarUrl} 
+              alt={autorName}
+              style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid var(--glass-border)' }}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          ) : (
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.7rem', color: msg.autor_color || '#a855f7' }}>
+              <User size={14} />
+            </div>
+          )
         )}
 
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', marginBottom: '2px', display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--accent-primary)', marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="chat-author">
-            {msg.tipo === 'whisper' ? <><EyeOff size={10} style={{display:'inline'}}/> Whisper to {msg.alvo}:</> : 
-             msg.tipo === 'me' ? '' : 
-             <strong style={{ color: msg.autor_color || 'inherit' }}>{autorName}</strong>}
-          </span>
-          <span style={{color: 'gray', display: 'flex', alignItems: 'center'}}>
-            {new Date(msg.timestamp).toLocaleTimeString()}
-            <button 
-              onClick={() => navigator.clipboard.writeText(msg.text)} 
-              title="Copiar mensagem"
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', marginLeft: '4px', padding: 0 }}
-            >
-              <Copy size={10} />
-            </button>
-          </span>
-        </div>
+              {msg.tipo === 'whisper' ? <><EyeOff size={10} style={{ display: 'inline', marginRight: '3px' }} /> Sussurro para {msg.alvo}:</> : 
+               msg.tipo === 'me' ? '' : 
+               <strong style={{ color: msg.autor_color || 'inherit' }}>{autorName}</strong>}
+            </span>
+            <span style={{ color: '#64748b', fontSize: '0.62rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(msg.text);
+                  toast.info('Mensagem copiada!');
+                }} 
+                title="Copiar mensagem"
+                style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}
+              >
+                <Copy size={10} />
+              </button>
+            </span>
+          </div>
+
           {msg.pollId ? (
             <PollWidget pollId={msg.pollId} playerName={playerName} />
           ) : (
             <div 
-              style={{ fontSize: '0.85rem', fontStyle: msg.tipo === 'me' ? 'italic' : 'normal' }} 
+              style={{ fontSize: '0.83rem', fontStyle: msg.tipo === 'me' ? 'italic' : 'normal', wordBreak: 'break-word', color: msg.tipo === 'sistema' ? '#94a3b8' : '#e2e8f0' }} 
               dangerouslySetInnerHTML={{ __html: display }} 
               onClick={(e) => {
-              const target = e.target as HTMLElement;
-              if (target.tagName === 'IMG' && target.classList.contains('chat-image-clickable')) {
-                setLightboxImg((target as HTMLImageElement).src);
-              } else if (target.tagName === 'SPAN' && target.classList.contains('chat-wiki-link')) {
-                let filepath = target.getAttribute('data-filepath');
-                const searchname = target.getAttribute('data-searchname');
-                
-                if (searchname && !filepath) {
-                  WikiIndexer.buildIndex().then(index => {
-                    const match = index.find(entry => entry.slug.toLowerCase() === searchname.toLowerCase());
-                    if (match) {
-                      window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: match.path }));
-                    } else {
-                      toast.info(`O documento ou ficha "${searchname}" não foi encontrado na Wiki.`);
-                    }
-                  });
-                } else if (filepath) {
-                  window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: filepath }));
-                }
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'IMG' && target.classList.contains('chat-image-clickable')) {
+                  setLightboxImg((target as HTMLImageElement).src);
+                } else if (target.tagName === 'SPAN' && target.classList.contains('chat-wiki-link')) {
+                  let filepath = target.getAttribute('data-filepath');
+                  const searchname = target.getAttribute('data-searchname');
+                  
+                  if (searchname && !filepath) {
+                    WikiIndexer.buildIndex().then(index => {
+                      const match = index.find(entry => entry.slug.toLowerCase() === searchname.toLowerCase());
+                      if (match) {
+                        window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: match.path }));
+                      } else {
+                        toast.info(`O documento ou ficha "${searchname}" não foi encontrado na Wiki.`);
+                      }
+                    });
+                  } else if (filepath) {
+                    window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: filepath }));
+                  }
                 }
               }}
             />
           )}
+        </div>
       </div>
-    </div>
     );
   };
 
@@ -317,6 +330,12 @@ export const ChatWindow: React.FC = () => {
     }).catch(err => console.error('Chat image compress failed', err));
   };
 
+  // Comandos filtrados ao digitar "/"
+  const isCommandInput = input.startsWith('/');
+  const matchingCommands = isCommandInput
+    ? SLASH_COMMANDS.filter(c => c.cmd.toLowerCase().startsWith(input.trim().toLowerCase()))
+    : [];
+
   return (
     <div 
       onDragOver={handleDragOver} 
@@ -327,19 +346,26 @@ export const ChatWindow: React.FC = () => {
       {isDragging && (
         <div className="chat-drop-overlay">
           <span>Solte a imagem aqui</span>
-          <span style={{fontSize: '0.8rem', opacity: 0.7}}>(Será convertida para WebP)</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>(Será convertida para WebP)</span>
         </div>
       )}
       
-      {/* TABS */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', alignItems: 'center' }}>
-        <button onClick={() => setTab('geral')} style={{ flex: 1, padding: '8px', background: tab === 'geral' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Geral</button>
-        <button onClick={() => setTab('in-game')} style={{ flex: 1, padding: '8px', background: tab === 'in-game' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>In-Game</button>
-        <button onClick={() => setTab('sistema')} style={{ flex: 1, padding: '8px', background: tab === 'sistema' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none' }}>Sistema</button>
+      {/* HEADER E ABAS */}
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', alignItems: 'center', flexWrap: 'wrap' }}>
+        <button onClick={() => setTab('geral')} style={{ flex: 1, padding: '8px 4px', background: tab === 'geral' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', fontSize: '0.8rem', cursor: 'pointer' }}>Geral</button>
+        <button onClick={() => setTab('in-game')} style={{ flex: 1, padding: '8px 4px', background: tab === 'in-game' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', fontSize: '0.8rem', cursor: 'pointer' }}>In-Game</button>
+        <button onClick={() => setTab('sistema')} style={{ flex: 1, padding: '8px 4px', background: tab === 'sistema' ? 'var(--glass-bg)' : 'transparent', color: 'var(--text-primary)', border: 'none', fontSize: '0.8rem', cursor: 'pointer' }}>Sistema</button>
         
-        <button onClick={() => { setIsSelectMode(!isSelectMode); setSelectedIds(new Set()); }} title="Modo Seleção" style={{ padding: '8px', background: isSelectMode ? 'var(--accent-primary)' : 'transparent', color: isSelectMode ? 'var(--bg-primary)' : 'var(--text-primary)', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>
+        {/* BUSCA */}
+        <button onClick={() => setShowSearch(!showSearch)} title="Buscar no Histórico" style={{ padding: '8px', background: showSearch ? 'rgba(168,85,247,0.2)' : 'transparent', color: showSearch ? '#a855f7' : 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
+          <Search size={15} />
+        </button>
+
+        {/* SELEÇÃO MULTIPLA */}
+        <button onClick={() => { setIsSelectMode(!isSelectMode); setSelectedIds(new Set()); }} title="Modo Seleção" style={{ padding: '8px', background: isSelectMode ? 'var(--accent-primary)' : 'transparent', color: isSelectMode ? 'var(--bg-primary)' : 'var(--text-secondary)', border: 'none', cursor: 'pointer', fontSize: '0.75rem' }}>
           {isSelectMode ? 'Cancelar' : 'Selecionar'}
         </button>
+
         {isSelectMode && selectedIds.size > 0 && (
           <button onClick={() => {
             if(confirm(`Apagar ${selectedIds.size} mensagens definitivamente para todos?`)) {
@@ -356,26 +382,49 @@ export const ChatWindow: React.FC = () => {
           </button>
         )}
 
+        {/* NOTIFICAÇÃO SONORA */}
         <button onClick={() => {
           const newState = !chatSound;
           setChatSound(newState);
           localStorage.setItem('chatSound', String(newState));
         }} title="Notificações Sonoras" style={{ padding: '8px', background: 'transparent', color: chatSound ? 'var(--accent-primary)' : 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
-          {chatSound ? <Bell size={16} /> : <BellOff size={16} />}
+          {chatSound ? <Bell size={15} /> : <BellOff size={15} />}
         </button>
+
+        {/* LIMPAR CHAT */}
         <button onClick={() => { if(confirm('Limpar seu chat local?')) setClearedAt(Date.now()); }} title="Limpar Chat Local" style={{ padding: '8px', background: 'transparent', color: 'var(--warning)', border: 'none', cursor: 'pointer' }}>
-          <Trash2 size={16} />
+          <Trash2 size={15} />
         </button>
       </div>
 
-      {/* PINNED MESSAGE */}
-      {pinned && (
-        <div style={{ padding: '8px', background: 'rgba(234, 179, 8, 0.2)', borderBottom: '1px solid #eab308' }}>
-          <Pin size={12} style={{ marginRight: '4px' }} /> <strong>Fixado:</strong> {pinned.text}
+      {/* BARRA DE BUSCA EXPANDÍVEL */}
+      {showSearch && (
+        <div style={{ padding: '6px 8px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Search size={14} style={{ color: 'var(--text-secondary)' }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Buscar mensagem ou autor..."
+            style={{ flex: 1, background: 'transparent', border: 'none', color: '#f8fafc', fontSize: '0.8rem', outline: 'none' }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}>
+              <X size={14} />
+            </button>
+          )}
         </div>
       )}
 
-      {/* MESSAGES */}
+      {/* MENSAGEM FIXADA */}
+      {pinned && (
+        <div style={{ padding: '6px 10px', background: 'rgba(234, 179, 8, 0.15)', borderBottom: '1px solid #eab308', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Pin size={12} style={{ color: '#fde047' }} />
+          <span><strong>Fixado:</strong> {pinned.text}</span>
+        </div>
+      )}
+
+      {/* LISTA DE MENSAGENS */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
         {React.useMemo(() => {
           return messages.filter(m => {
@@ -386,17 +435,57 @@ export const ChatWindow: React.FC = () => {
               const isSender = m.autor === playerName || m.autor_alias === playerName;
               if (!isTarget && !isSender) return false;
             }
+            if (searchQuery.trim()) {
+              const q = searchQuery.toLowerCase();
+              const textMatch = m.text?.toLowerCase().includes(q);
+              const autorMatch = m.autor?.toLowerCase().includes(q) || m.autor_alias?.toLowerCase().includes(q);
+              if (!textMatch && !autorMatch) return false;
+            }
             return true;
           }).map((msg, i) => renderMessage(msg, i));
-        }, [messages, tab, clearedAt, playerName, isSelectMode, selectedIds, openedWhispers])}
+        }, [messages, tab, clearedAt, playerName, isSelectMode, selectedIds, openedWhispers, searchQuery])}
       </div>
 
-      {/* INPUT */}
-      <div style={{ padding: '8px', borderTop: '1px solid var(--glass-border)' }}>
+      {/* PALETA DE COMANDOS INTELIGENTE (POPOVER AO DIGITAR "/") */}
+      {isCommandInput && matchingCommands.length > 0 && (
+        <div style={{
+          position: 'absolute', bottom: '50px', left: '8px', right: '8px',
+          background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(168,85,247,0.4)', borderRadius: '8px',
+          padding: '6px', boxShadow: '0 -10px 25px rgba(0,0,0,0.6)', zIndex: 100,
+          display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '180px', overflowY: 'auto'
+        }}>
+          <div style={{ fontSize: '0.62rem', color: '#a855f7', fontWeight: 'bold', padding: '2px 6px', textTransform: 'uppercase' }}>
+            Comandos Rápidos (/):
+          </div>
+          {matchingCommands.map(item => (
+            <button
+              key={item.cmd}
+              onClick={() => handleSelectCommand(item.cmd)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '5px 8px', background: 'rgba(255,255,255,0.04)',
+                border: '1px solid transparent', borderRadius: '4px', cursor: 'pointer',
+                color: '#e2e8f0', fontSize: '0.75rem', textAlign: 'left'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(168,85,247,0.2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+            >
+              <span style={{ fontWeight: 'bold', color: '#f0abfc' }}>{item.cmd}</span>
+              <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{item.desc}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* BARRA INFERIOR DE INPUT & IDENTIDADE */}
+      <div style={{ padding: '8px', borderTop: '1px solid var(--glass-border)', position: 'relative' }}>
+        
+        {/* COMPOSIÇÃO DE ENQUETE */}
         {isComposingPoll ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0,0,0,0.4)', padding: '8px', borderRadius: '6px', border: '1px solid var(--glass-border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <strong style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>📊 Nova Votação</strong>
+              <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Nova Enquete</span>
               <button onClick={() => setIsComposingPoll(false)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}><X size={16} /></button>
             </div>
             
@@ -449,31 +538,74 @@ export const ChatWindow: React.FC = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <input
-              type="color"
-              value={playerColor}
-              onChange={(e) => setPlayerColor(e.target.value)}
-              title="Cor do seu nome"
-              style={{ width: '28px', height: '28px', padding: '0', border: 'none', background: 'none', cursor: 'pointer', borderRadius: '4px' }}
-            />
+            
+            {/* BOTÃO DE CONFIGURAÇÃO DE NOME E COR */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowIdentityPopup(!showIdentityPopup)}
+                title={`Identidade do Chat: ${playerName}`}
+                style={{
+                  width: '32px', height: '32px', padding: 0,
+                  background: 'rgba(0,0,0,0.4)', border: `2px solid ${playerColor}`,
+                  borderRadius: '6px', cursor: 'pointer', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', color: playerColor
+                }}
+              >
+                <User size={16} />
+              </button>
+
+              {/* POPUP DE IDENTIDADE (NOME & COR) */}
+              {showIdentityPopup && (
+                <div style={{
+                  position: 'absolute', bottom: '40px', left: 0,
+                  background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px',
+                  padding: '10px', boxShadow: '0 8px 25px rgba(0,0,0,0.6)', zIndex: 200,
+                  display: 'flex', flexDirection: 'column', gap: '8px', width: '180px'
+                }}>
+                  <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 'bold' }}>Sua Identidade no Chat:</div>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <input
+                      type="color"
+                      value={playerColor}
+                      onChange={(e) => setPlayerColor(e.target.value)}
+                      title="Cor do seu nome"
+                      style={{ width: '28px', height: '28px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                    />
+                    <input 
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                      placeholder="Seu nome"
+                      style={{ flex: 1, padding: '4px 6px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: playerColor, borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowIdentityPopup(false)}
+                    style={{ padding: '4px', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '4px', color: '#a5b4fc', fontSize: '0.7rem', cursor: 'pointer' }}
+                  >
+                    Pronto
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* INPUT DE MENSAGEM PRINCIPAL */}
             <input 
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Nome"
-              title="Seu nome no chat"
-              style={{ width: '80px', padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: playerColor, borderRadius: '4px', fontWeight: 'bold' }}
-            />
-            <input 
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Mensagem ou /comando..."
-              style={{ flex: 1, padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px' }}
+              placeholder="Digite mensagem ou /comando..."
+              style={{ flex: 1, padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }}
             />
-            <button onClick={() => setIsComposingPoll(true)} title="Criar Enquete" style={{ padding: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer' }}>
+
+            {/* CRIAR ENQUETE */}
+            <button onClick={() => setIsComposingPoll(true)} title="Criar Enquete" style={{ padding: '8px', background: 'rgba(255,255,255,0.08)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer' }}>
               <BarChart2 size={16} />
             </button>
-            <button onClick={handleSend} style={{ padding: '8px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer' }}>
+
+            {/* ENVIAR */}
+            <button onClick={handleSend} title="Enviar Mensagem" style={{ padding: '8px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'var(--text-primary)', cursor: 'pointer' }}>
               <Send size={16} />
             </button>
           </div>

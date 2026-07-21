@@ -2,6 +2,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { state } from '../../store';
 import { Trash2, Download, Settings, Filter, Dices, Sword, BookOpen, MessageSquare } from 'lucide-react';
+import { toast } from '../UI/Toast';
+import { confirmDialog } from '../UI/Toast';
 
 interface LogMessage {
   text: string;
@@ -17,49 +19,48 @@ export const CombatLog: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Initial load
     setMessages(state.chat.toArray() as LogMessage[]);
 
-    // Subscribe to Yjs changes
     const observer = () => {
       setMessages(state.chat.toArray() as LogMessage[]);
     };
 
     state.chat.observe(observer);
-
     return () => {
       state.chat.unobserve(observer);
     };
   }, []);
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, filtro]);
 
-  const classificarMensagem = (texto: string) => {
+  // Classificação mais precisa com regex
+  const classificarMensagem = (texto: string): 'rolagens' | 'combate' | 'narrativo' | 'sistema' => {
     const clean = texto.toLowerCase();
-    
-    // Danos, cura, PV, status, buffs, debuffs e pools vitais
-    if (clean.includes('dano') || clean.includes('curou') || clean.includes('recuperou') || clean.includes('pv') || clean.includes('mana') || clean.includes('pm') || clean.includes('energia') || clean.includes('condição')) {
-      if (clean.includes('rolou') || clean.includes('resultado') || clean.includes('dado')) {
+
+    // 1. Danos, acertos, ataques, cura, PV, mana, condições de combate
+    if (
+      /dano|curou|recuperou|pv|mana|pm|energia|ataque|atacar|defender|disparar|esquiva|defesa|crítico|falha crítica|acerto|morto|sangrando|queimando|atordoado/i.test(clean)
+    ) {
+      if (/rolou|resultado|dado|1d20|2d6|1d6|1d100|🎲/i.test(clean)) {
         return 'rolagens';
       }
       return 'combate';
     }
-    
-    // Rolagens de dados pura ou testes de perícia/atributos
-    if (clean.includes('rolou') || clean.includes('resultado') || clean.includes('dado') || clean.includes('🎲') || clean.includes('sucessos') || clean.includes('iniciativa') || clean.includes('teste de')) {
+
+    // 2. Rolagens de dados pura ou testes de perícia/atributos
+    if (/rolou|resultado|dado|1d20|2d6|1d8|1d10|1d12|1d100|🎲|sucessos|iniciativa|teste de|percepção|furtividade/i.test(clean)) {
       return 'rolagens';
     }
-    
-    // Narrativa, cenas, Teatro da Mente, evocações
-    if (clean.includes('conjurou') || clean.includes('forjado') || clean.includes('adicionado') || clean.includes('cena') || clean.includes('ambiente') || clean.includes('descrição')) {
+
+    // 3. Narrativa, cenas, Teatro da Mente, evocações, /me
+    if (/conjurou|forjado|adicionado|cena|ambiente|descrição|história|\/me/i.test(clean)) {
       return 'narrativo';
     }
-    
+
     return 'sistema';
   };
 
@@ -79,11 +80,14 @@ export const CombatLog: React.FC = () => {
     a.download = `Log_Combate_${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success('Log exportado com sucesso!');
   };
 
-  const handleClear = () => {
-    if (confirm('Tem certeza que deseja apagar todo o registro de combate?')) {
+  const handleClear = async () => {
+    const ok = await confirmDialog('Tem certeza que deseja apagar todo o registro de combate?');
+    if (ok) {
       state.chat.delete(0, state.chat.length);
+      toast.info('Registro de combate limpo.');
     }
   };
 
@@ -118,12 +122,12 @@ export const CombatLog: React.FC = () => {
                 onClick={() => setFiltro(tab)}
                 style={{
                   padding: '6px 4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
-                  background: active ? 'rgba(168, 85, 247, 0.15)' : 'transparent',
+                  background: active ? 'rgba(168, 85, 247, 0.18)' : 'transparent',
                   border: 'none', borderBottom: active ? '2px solid var(--accent-primary)' : 'none',
                   color: active ? '#f0abfc' : 'var(--text-secondary)',
                   borderRadius: '4px 4px 0 0', transition: 'all 0.2s',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px',
-                  flex: 1
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
+                  flex: 1, minHeight: '32px'
                 }}
               >
                 {icon}
@@ -139,23 +143,23 @@ export const CombatLog: React.FC = () => {
             onClick={() => setShowMenu(!showMenu)} 
             className="btn-icon" 
             title="Opções do Log" 
-            style={{ background: showMenu ? 'var(--accent-primary)' : 'rgba(0,0,0,0.3)', color: showMenu ? 'white' : 'var(--text-secondary)', width: '24px', height: '24px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ background: showMenu ? 'var(--accent-primary)' : 'rgba(0,0,0,0.3)', color: showMenu ? 'white' : 'var(--text-secondary)', width: '28px', height: '28px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <Settings size={12} />
+            <Settings size={13} />
           </button>
 
           {showMenu && (
             <div className="animate-fade-in" style={{ 
               position: 'absolute', top: '100%', right: 0, marginTop: '0.25rem', 
-              background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', 
-              padding: '0.25rem', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.25rem', 
+              background: 'rgba(10,15,30,0.97)', border: '1px solid var(--glass-border)', 
+              padding: '0.3rem', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.25rem', 
               boxShadow: '0 4px 15px rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', zIndex: 100
             }}>
-              <button onClick={() => { handleExport(); setShowMenu(false); }} className="btn-icon" title="Exportar Log (.txt)" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', width: '24px', height: '24px', padding: 0 }}>
-                <Download size={12} />
+              <button onClick={() => { handleExport(); setShowMenu(false); }} className="btn-icon" title="Exportar Log (.txt)" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)', width: '28px', height: '28px', padding: 0 }}>
+                <Download size={13} />
               </button>
-              <button onClick={() => { handleClear(); setShowMenu(false); }} className="btn-icon" title="Limpar Log" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', width: '24px', height: '24px', padding: 0 }}>
-                <Trash2 size={12} />
+              <button onClick={() => { handleClear(); setShowMenu(false); }} className="btn-icon" title="Limpar Log" style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', width: '28px', height: '28px', padding: 0 }}>
+                <Trash2 size={13} />
               </button>
             </div>
           )}
@@ -165,7 +169,7 @@ export const CombatLog: React.FC = () => {
       {/* Message Feed */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem', paddingRight: '0.4rem', paddingTop: '0.5rem', fontFamily: 'monospace' }}>
         {mensagensFiltradas.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>[ Sistema Aguardando Registros ]</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>[ Registros de combate vazios ]</p>
         ) : (
           mensagensFiltradas.map((msg, index) => {
             const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -175,14 +179,14 @@ export const CombatLog: React.FC = () => {
                 key={index} 
                 className="animate-fade-in"
                 style={{ 
-                  padding: '0.2rem 0.4rem', 
+                  padding: '0.25rem 0.4rem', 
                   display: 'flex',
                   gap: '0.5rem',
                   fontSize: '0.75rem',
                   lineHeight: '1.4',
                   borderLeft: `2px solid ${msg.isCritical ? '#10b981' : msg.isFailure ? '#ef4444' : 'transparent'}`,
-                  background: msg.isCritical ? 'rgba(16, 185, 129, 0.05)' : msg.isFailure ? 'rgba(239, 68, 68, 0.05)' : 'transparent',
-                  borderBottom: '1px dotted rgba(255,255,255,0.05)',
+                  background: msg.isCritical ? 'rgba(16, 185, 129, 0.08)' : msg.isFailure ? 'rgba(239, 68, 68, 0.08)' : 'transparent',
+                  borderBottom: '1px dotted rgba(255,255,255,0.06)',
                   alignItems: 'flex-start'
                 }}
               >
