@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { state } from '../../store';
-import { pushAdvancedChatMessage, ChatMessageOptions, createPoll } from '../../store/chat';
+import { pushAdvancedChatMessage, ChatMessageOptions, createPoll, toggleMessageReaction } from '../../store/chat';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { useCastData } from '../Theater/hooks/useCastData';
 import {
   Send, Pin, Volume2, User, EyeOff, Trash2, Copy, X, BarChart2, Plus,
-  Bell, BellOff, Search, Settings, HelpCircle, Terminal, Check
+  Bell, BellOff, Search, Settings, HelpCircle, Mic, MicOff, Smile
 } from 'lucide-react';
 import { PollWidget } from './PollWidget';
 import { convertImageToWebP } from '../../utils/imageUtils';
@@ -31,6 +31,8 @@ const SLASH_COMMANDS: SlashCommand[] = [
   { cmd: '/ping',  desc: 'Chamar atenção de todos',     example: '/ping' },
   { cmd: '/help',  desc: 'Ver ajuda de comandos',       example: '/help' },
 ];
+
+const QUICK_REACTIONS = ['👍', '❤️', '😂', '🎲', '🔥'];
 
 export const ChatWindow: React.FC = () => {
   const { members } = useCastData();
@@ -61,7 +63,17 @@ export const ChatWindow: React.FC = () => {
 
   // Identity Popup (Nome e Cor)
   const [showIdentityPopup, setShowIdentityPopup] = useState(false);
+
+  // Entradas de Voz (Web Speech API)
+  const [isListening, setIsListening] = useState(false);
+
+  // Digitando (Typing Indicator)
+  const [typingPlayers, setTypingPlayers] = useState<string[]>([]);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
+  // Reações Hover
+  const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
+
   // Poll State
   const [isComposingPoll, setIsComposingPoll] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
@@ -72,6 +84,7 @@ export const ChatWindow: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Observa mensagens do Chat no Yjs
   useEffect(() => {
     const observer = (event: any) => {
       setMessages(state.chat.toArray());
@@ -100,7 +113,29 @@ export const ChatWindow: React.FC = () => {
     return () => state.chat.unobserve(observer);
   }, [chatSound, playerName]);
 
-  // Push local changes to state.players
+  // Observa jogadores digitando no Yjs
+  useEffect(() => {
+    const observer = () => {
+      const typers: string[] = [];
+      const now = Date.now();
+      Array.from(state.players.entries() as Iterable<[string, any]>).forEach(([id, p]) => {
+        if (id !== clientId && p.isTyping && now - (p.typingTime || 0) < 4000) {
+          typers.push(p.name || 'Jogador');
+        }
+      });
+      setTypingPlayers(typers);
+    };
+
+    state.players.observe(observer);
+    observer();
+    const interval = setInterval(observer, 2000);
+    return () => {
+      state.players.unobserve(observer);
+      clearInterval(interval);
+    };
+  }, [clientId]);
+
+  // Push local identity changes to state.players
   useEffect(() => {
     const current = state.players.get(clientId) as any;
     if (!current || current.name !== playerName || current.color !== playerColor) {
@@ -110,29 +145,69 @@ export const ChatWindow: React.FC = () => {
     localStorage.setItem('playerColor', playerColor);
   }, [playerName, playerColor, clientId]);
 
-  // Listen for GM changes
-  useEffect(() => {
-    const observer = () => {
-      const myIdentity = state.players.get(clientId) as any;
-      if (myIdentity) {
-        setPlayerName(prev => (prev !== myIdentity.name ? myIdentity.name : prev));
-        setPlayerColor(prev => (prev !== myIdentity.color ? myIdentity.color : prev));
-      }
-    };
-    state.players.observe(observer);
-    return () => {
-      state.players.unobserve(observer);
-      state.players.set(clientId, { name: playerName, color: playerColor, isOnline: false });
-    };
-  }, [clientId]);
-
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, tab, searchQuery]);
 
+  // Atualiza status de digitando quando digita
+  const handleInputChange = (val: string) => {
+    setInput(val);
+    
+    // Atualiza estado de digitando no Yjs
+    const current = state.players.get(clientId) as any || {};
+    if (val.trim()) {
+      state.players.set(clientId, { ...current, isTyping: true, typingTime: Date.now() });
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        const p = state.players.get(clientId) as any;
+        if (p) state.players.set(clientId, { ...p, isTyping: false });
+      }, 3000);
+    } else {
+      state.players.set(clientId, { ...current, isTyping: false });
+    }
+  };
+
+  // Reconhecimento de Voz (Web Speech API)
+  const handleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.warn('Reconhecimento de voz não suportado neste navegador.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    setIsListening(true);
+    toast.info('🎙️ Ouvindo... Fale agora.');
+
+    recognition.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript;
+      setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+      setIsListening(false);
+      toast.success('Voz capturada com sucesso!');
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      toast.error('Erro ao capturar voz.');
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   const handleSend = () => {
     if (!input.trim()) return;
     
+    // Limpa indicador de digitando
+    const current = state.players.get(clientId) as any;
+    if (current) state.players.set(clientId, { ...current, isTyping: false });
+
     let text = input;
     let options: ChatMessageOptions = { tipo: tab, autor: playerName, autor_color: playerColor };
 
@@ -196,8 +271,8 @@ export const ChatWindow: React.FC = () => {
   };
 
   const renderMessage = (msg: any, i: number) => {
-    const isOwner = msg.autor === playerName;
     const isSelected = selectedIds.has(msg.id);
+    const isHovered = hoveredMsgId === msg.id;
     
     // Process markdown wiki links like [[NomeDoCard]]
     let display = msg.text || '';
@@ -215,14 +290,17 @@ export const ChatWindow: React.FC = () => {
       });
     }
 
-    // Avatar resolution
     const autorMember = members.find((m: any) => m.nome === msg.autor || m.nome === msg.autor_alias);
     const avatarUrl = autorMember?.imagem || autorMember?.avatar;
     const autorName = msg.autor_alias || msg.autor || 'Anônimo';
 
+    const reactions: Record<string, string[]> = msg.reactions || {};
+
     return (
       <div 
         key={msg.id || i}
+        onMouseEnter={() => setHoveredMsgId(msg.id)}
+        onMouseLeave={() => setHoveredMsgId(null)}
         style={{
           display: 'flex',
           gap: '8px',
@@ -233,6 +311,7 @@ export const ChatWindow: React.FC = () => {
           borderRadius: '6px',
           cursor: isSelectMode ? 'pointer' : 'default',
           transition: 'background 0.15s',
+          position: 'relative',
         }}
         onClick={() => {
           if (isSelectMode && msg.id) {
@@ -312,7 +391,54 @@ export const ChatWindow: React.FC = () => {
               }}
             />
           )}
+
+          {/* EMOJI REAÇÕES ATIVAS DA MENSAGEM */}
+          {Object.keys(reactions).length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '4px' }}>
+              {Object.entries(reactions).map(([emoji, users]) => {
+                const hasReacted = users.includes(playerName);
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => msg.id && toggleMessageReaction(msg.id, emoji, playerName)}
+                    title={`${users.join(', ')} reagiu`}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '2px',
+                      padding: '1px 5px', borderRadius: '10px',
+                      background: hasReacted ? 'rgba(168,85,247,0.25)' : 'rgba(255,255,255,0.06)',
+                      border: hasReacted ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                      color: '#e2e8f0', fontSize: '0.65rem', cursor: 'pointer'
+                    }}
+                  >
+                    <span>{emoji}</span>
+                    <span style={{ fontSize: '0.6rem', color: hasReacted ? '#f0abfc' : '#94a3b8' }}>{users.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
+
+        {/* BARRA DE EMOJIS RAPIDA NO HOVER */}
+        {isHovered && msg.id && !isSelectMode && (
+          <div style={{
+            position: 'absolute', top: '-14px', right: '8px',
+            background: 'rgba(10,15,30,0.96)', backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.15)', borderRadius: '14px',
+            padding: '2px 6px', display: 'flex', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 10
+          }}>
+            {QUICK_REACTIONS.map(emoji => (
+              <button
+                key={emoji}
+                onClick={() => toggleMessageReaction(msg.id, emoji, playerName)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '1px' }}
+                title={`Reagir com ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -330,7 +456,6 @@ export const ChatWindow: React.FC = () => {
     }).catch(err => console.error('Chat image compress failed', err));
   };
 
-  // Comandos filtrados ao digitar "/"
   const isCommandInput = input.startsWith('/');
   const matchingCommands = isCommandInput
     ? SLASH_COMMANDS.filter(c => c.cmd.toLowerCase().startsWith(input.trim().toLowerCase()))
@@ -443,8 +568,16 @@ export const ChatWindow: React.FC = () => {
             }
             return true;
           }).map((msg, i) => renderMessage(msg, i));
-        }, [messages, tab, clearedAt, playerName, isSelectMode, selectedIds, openedWhispers, searchQuery])}
+        }, [messages, tab, clearedAt, playerName, isSelectMode, selectedIds, openedWhispers, searchQuery, hoveredMsgId])}
       </div>
+
+      {/* INDICADOR DE DIGITANDO */}
+      {typingPlayers.length > 0 && (
+        <div style={{ padding: '2px 10px', fontSize: '0.65rem', color: '#a5b4fc', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span>💬</span>
+          <span>{typingPlayers.join(', ')} {typingPlayers.length > 1 ? 'estão' : 'está'} digitando...</span>
+        </div>
+      )}
 
       {/* PALETA DE COMANDOS INTELIGENTE (POPOVER AO DIGITAR "/") */}
       {isCommandInput && matchingCommands.length > 0 && (
@@ -589,11 +722,26 @@ export const ChatWindow: React.FC = () => {
               )}
             </div>
 
+            {/* ENTRADA DE VOZ (MICROFONE) */}
+            <button
+              onClick={handleVoiceInput}
+              title={isListening ? 'Ouvindo... Clique para parar' : 'Entrada por Voz (Ditado)'}
+              style={{
+                width: '32px', height: '32px', padding: 0,
+                background: isListening ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)',
+                border: isListening ? '1px solid rgba(239,68,68,0.6)' : '1px solid var(--glass-border)',
+                borderRadius: '4px', color: isListening ? '#fca5a5' : 'var(--text-primary)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
+
             {/* INPUT DE MENSAGEM PRINCIPAL */}
             <input 
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Digite mensagem ou /comando..."
               style={{ flex: 1, padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }}

@@ -2,12 +2,9 @@ import { state } from '../services/yjs';
 import { dispatchWebhookEvent } from '../services/webhook';
 
 function sanitizeHtml(html: string): string {
-  // Strip <script> and <iframe> tags entirely
   let clean = html.replace(/<(script|iframe)[^>]*>[\s\S]*?<\/\1>/gi, '');
-  // Strip inline event handlers (onXXXX=...)
   clean = clean.replace(/\s+on[a-z]+=(['"])(.*?)\1/gi, '');
   clean = clean.replace(/\s+on[a-z]+=[^\s>]+/gi, '');
-  // Strip javascript: urls
   clean = clean.replace(/href=(['"])javascript:.*?\1/gi, 'href="#"');
   return clean;
 }
@@ -24,6 +21,7 @@ export interface ChatMessageOptions {
   pinned?: boolean;
   audioTrigger?: string;
   pollId?: string;
+  reactions?: Record<string, string[]>;
 }
 
 export interface PollData {
@@ -56,7 +54,8 @@ export function pushAdvancedChatMessage(message: string, options: ChatMessageOpt
     isFailure: options.isFailure || false,
     pinned: options.pinned || false,
     audioTrigger: options.audioTrigger,
-    pollId: options.pollId
+    pollId: options.pollId,
+    reactions: options.reactions || {}
   }]);
   
   dispatchWebhookEvent('chat_message_advanced', {
@@ -66,6 +65,27 @@ export function pushAdvancedChatMessage(message: string, options: ChatMessageOpt
     isCritical: options.isCritical || false,
     isFailure: options.isFailure || false
   });
+}
+
+export function toggleMessageReaction(messageId: string, emoji: string, playerName: string) {
+  const arr = state.chat.toArray();
+  for (let i = 0; i < arr.length; i++) {
+    const msg = arr[i] as any;
+    if (msg.id === messageId) {
+      const reactions: Record<string, string[]> = msg.reactions ? { ...msg.reactions } : {};
+      const users: string[] = reactions[emoji] ? [...reactions[emoji]] : [];
+      if (users.includes(playerName)) {
+        reactions[emoji] = users.filter(u => u !== playerName);
+        if (reactions[emoji].length === 0) delete reactions[emoji];
+      } else {
+        reactions[emoji] = [...users, playerName];
+      }
+      const updated = { ...msg, reactions };
+      state.chat.delete(i, 1);
+      state.chat.insert(i, [updated]);
+      break;
+    }
+  }
 }
 
 export function createPoll(question: string, options: string[], isAnonymous: boolean, autor: string) {
@@ -90,14 +110,11 @@ export function castVote(pollId: string, userId: string, optionIndex: number) {
   const pollData = state.polls.get(pollId) as PollData | undefined;
   if (pollData) {
     const newVotes = { ...pollData.votes };
-    
-    // Toggle vote off if clicking the same option
     if (newVotes[userId] === optionIndex) {
       delete newVotes[userId];
     } else {
       newVotes[userId] = optionIndex;
     }
-    
     state.polls.set(pollId, { ...pollData, votes: newVotes });
   }
 }

@@ -1,7 +1,7 @@
 // src/components/Chat/CombatLog.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { state } from '../../store';
-import { Trash2, Download, Settings, Filter, Dices, Sword, BookOpen, MessageSquare } from 'lucide-react';
+import { Trash2, Download, Settings, Filter, Dices, Sword, BookOpen, MessageSquare, FileText, Code } from 'lucide-react';
 import { toast } from '../UI/Toast';
 import { confirmDialog } from '../UI/Toast';
 
@@ -37,11 +37,10 @@ export const CombatLog: React.FC = () => {
     }
   }, [messages, filtro]);
 
-  // Classificação mais precisa com regex
+  // Classificação precisa com regex
   const classificarMensagem = (texto: string): 'rolagens' | 'combate' | 'narrativo' | 'sistema' => {
     const clean = texto.toLowerCase();
 
-    // 1. Danos, acertos, ataques, cura, PV, mana, condições de combate
     if (
       /dano|curou|recuperou|pv|mana|pm|energia|ataque|atacar|defender|disparar|esquiva|defesa|crítico|falha crítica|acerto|morto|sangrando|queimando|atordoado/i.test(clean)
     ) {
@@ -51,12 +50,10 @@ export const CombatLog: React.FC = () => {
       return 'combate';
     }
 
-    // 2. Rolagens de dados pura ou testes de perícia/atributos
     if (/rolou|resultado|dado|1d20|2d6|1d8|1d10|1d12|1d100|🎲|sucessos|iniciativa|teste de|percepção|furtividade/i.test(clean)) {
       return 'rolagens';
     }
 
-    // 3. Narrativa, cenas, Teatro da Mente, evocações, /me
     if (/conjurou|forjado|adicionado|cena|ambiente|descrição|história|\/me/i.test(clean)) {
       return 'narrativo';
     }
@@ -64,23 +61,45 @@ export const CombatLog: React.FC = () => {
     return 'sistema';
   };
 
-  const handleExport = () => {
-    const textContent = messages.map(m => {
-      const div = document.createElement('div');
-      div.innerHTML = m.text;
-      const stripped = div.textContent || div.innerText || '';
-      const date = new Date(m.timestamp).toLocaleTimeString();
-      return `[${date}] ${stripped}`;
-    }).join('\n');
+  const handleExport = (format: 'txt' | 'md' | 'json' = 'txt') => {
+    let content = '';
+    let mimeType = 'text/plain';
+    let ext = 'txt';
 
-    const blob = new Blob([textContent], { type: 'text/plain' });
+    if (format === 'json') {
+      content = JSON.stringify(messages, null, 2);
+      mimeType = 'application/json';
+      ext = 'json';
+    } else if (format === 'md') {
+      mimeType = 'text/markdown';
+      ext = 'md';
+      content = `# Registro de Combate - DOZERO VTT\nData: ${new Date().toLocaleDateString()}\n\n| Horário | Categoria | Conteúdo |\n|---|---|---|\n`;
+      content += messages.map(m => {
+        const div = document.createElement('div');
+        div.innerHTML = m.text;
+        const stripped = (div.textContent || div.innerText || '').replace(/\|/g, '\\|');
+        const date = new Date(m.timestamp).toLocaleTimeString();
+        const cat = classificarMensagem(m.text).toUpperCase();
+        return `| ${date} | ${cat} | ${stripped} |`;
+      }).join('\n');
+    } else {
+      content = messages.map(m => {
+        const div = document.createElement('div');
+        div.innerHTML = m.text;
+        const stripped = div.textContent || div.innerText || '';
+        const date = new Date(m.timestamp).toLocaleTimeString();
+        return `[${date}] ${stripped}`;
+      }).join('\n');
+    }
+
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Log_Combate_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `Log_Combate_${new Date().toISOString().slice(0, 10)}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Log exportado com sucesso!');
+    toast.success(`Log exportado em formato .${ext}!`);
   };
 
   const handleClear = async () => {
@@ -152,14 +171,22 @@ export const CombatLog: React.FC = () => {
             <div className="animate-fade-in" style={{ 
               position: 'absolute', top: '100%', right: 0, marginTop: '0.25rem', 
               background: 'rgba(10,15,30,0.97)', border: '1px solid var(--glass-border)', 
-              padding: '0.3rem', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.25rem', 
-              boxShadow: '0 4px 15px rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', zIndex: 100
+              padding: '0.4rem', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', gap: '4px', 
+              boxShadow: '0 8px 25px rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', zIndex: 100, width: '130px'
             }}>
-              <button onClick={() => { handleExport(); setShowMenu(false); }} className="btn-icon" title="Exportar Log (.txt)" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)', width: '28px', height: '28px', padding: 0 }}>
-                <Download size={13} />
+              <div style={{ fontSize: '0.62rem', color: '#94a3b8', fontWeight: 'bold', padding: '2px 4px' }}>Exportar como:</div>
+              <button onClick={() => { handleExport('txt'); setShowMenu(false); }} style={{ padding: '4px 6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#e2e8f0', fontSize: '0.7rem', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FileText size={12} /> Texto (.txt)
               </button>
-              <button onClick={() => { handleClear(); setShowMenu(false); }} className="btn-icon" title="Limpar Log" style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', width: '28px', height: '28px', padding: 0 }}>
-                <Trash2 size={13} />
+              <button onClick={() => { handleExport('md'); setShowMenu(false); }} style={{ padding: '4px 6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#e2e8f0', fontSize: '0.7rem', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <BookOpen size={12} /> Markdown (.md)
+              </button>
+              <button onClick={() => { handleExport('json'); setShowMenu(false); }} style={{ padding: '4px 6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#e2e8f0', fontSize: '0.7rem', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Code size={12} /> JSON (.json)
+              </button>
+              <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2px 0' }} />
+              <button onClick={() => { handleClear(); setShowMenu(false); }} style={{ padding: '4px 6px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', color: '#fca5a5', fontSize: '0.7rem', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Trash2 size={12} /> Limpar Log
               </button>
             </div>
           )}
