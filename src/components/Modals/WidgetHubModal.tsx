@@ -237,6 +237,13 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                     <button onClick={(e) => toggleFavorite(w.id, e)} style={{ position: 'absolute', top: 0, right: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#fbbf24' }} title="Remover dos favoritos">
                       <Star size={11} fill="#fbbf24" />
                     </button>
+                    <span className="widget-label">{w.title}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         
         {/* Todas as Ferramentas */}
         <div className="widget-category">
