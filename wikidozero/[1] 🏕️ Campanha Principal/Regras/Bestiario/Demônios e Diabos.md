@@ -1,7 +1,12 @@
 ---
 tipo: Lore
-tags: [bestiario, dnd, lore]
+tags:
+  - bestiario
+  - dnd
+  - lore
+ativo: false
 ---
+
 # Demônios e Diabos
 
 Forças de corrupção do Abismo e dos Nove Infernos.

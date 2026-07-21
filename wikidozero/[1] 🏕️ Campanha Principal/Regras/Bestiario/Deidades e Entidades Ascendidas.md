@@ -1,7 +1,12 @@
 ---
 tipo: Lore
-tags: [bestiario, dnd, lore]
+tags:
+  - bestiario
+  - dnd
+  - lore
+ativo: false
 ---
+
 # Deidades e Entidades Ascendidas
 
 Os deuses que regem as regras da realidade.

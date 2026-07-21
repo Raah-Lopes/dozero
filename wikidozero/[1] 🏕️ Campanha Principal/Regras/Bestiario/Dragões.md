@@ -1,7 +1,12 @@
 ---
 tipo: Lore
-tags: [bestiario, dnd, lore]
+tags:
+  - bestiario
+  - dnd
+  - lore
+ativo: false
 ---
+
 # Dragões
 
 Os majestosos e temíveis répteis arcanos.

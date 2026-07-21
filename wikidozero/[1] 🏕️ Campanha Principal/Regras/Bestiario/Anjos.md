@@ -1,7 +1,12 @@
 ---
 tipo: Lore
-tags: [bestiario, dnd, lore]
+tags:
+  - bestiario
+  - dnd
+  - lore
+ativo: false
 ---
+
 # Anjos
 
 Seres celestiais de pura luz e justiça.

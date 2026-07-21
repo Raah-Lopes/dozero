@@ -23,7 +23,7 @@ tags:
   - automato
   - mercenario
   - brega
-ativo: true
+ativo: false
 origem: Forjado nas fornalhas da Corporação Ômega, Setor 7
 Localizacao: ''
 HP: 14
@@ -141,6 +141,7 @@ xp: 0
 classe: ''
 borderColor: '#858200'
 ---
+
 
 
 

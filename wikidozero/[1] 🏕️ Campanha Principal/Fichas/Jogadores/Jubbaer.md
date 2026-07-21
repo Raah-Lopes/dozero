@@ -34,7 +34,7 @@ nivel: 5
 XP: 0
 tags:
   - personagem
-ativo: true
+ativo: false
 origem: Cidade Subterrânea
 Localizacao: Barrio de Hidromel
 HP: 20
@@ -158,6 +158,7 @@ inteligencia: 10
 sabedoria: 10
 carisma: 10
 ---
+
 
 
 
