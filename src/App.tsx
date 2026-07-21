@@ -32,6 +32,7 @@ import { FloatingDocument } from './components/UI/FloatingDocument';
 import { TheaterView } from './components/Theater/TheaterView';
 import { WidgetLayer } from './components/HUD/WidgetLayer';
 import { MainToolbar } from './components/HUD/MainToolbar';
+import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps } from './store';
 import type { TensionClock } from './store';
@@ -498,6 +499,9 @@ function App() {
           <GlobalAudioSync />
 
           <WidgetLayer />
+
+          {/* Barra de ações rápidas do jogador */}
+          <PlayerQuickBar playerName={localStorage.getItem('dozero_player_name') || 'Jogador'} />
 
           {/* WidgetHubModal fora da hud-layer para evitar interferencia do canvas PixiJS */}
           {activeModal === 'widgets' && (
