@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, HelpCircle, Bell, BellOff, Trash2, X } from 'lucide-react';
+import { Search, HelpCircle, Bell, BellOff, Trash2, X, Download } from 'lucide-react';
 import { state } from '../../store';
 
 interface ChatHeaderProps {
@@ -130,6 +130,34 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             style={{ padding: '6px', background: 'transparent', color: chatSound ? 'var(--chat-accent)' : 'var(--chat-text-secondary)', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
           >
             {chatSound ? <Bell size={14} /> : <BellOff size={14} />}
+          </button>
+
+          {/* EXPORTAR CHAT */}
+          <button
+            onClick={() => {
+              const arr = state.chat.toArray();
+              if (arr.length === 0) {
+                toast.info('Nenhuma mensagem para exportar.');
+                return;
+              }
+              const lines = arr.map((m: any) => {
+                const date = new Date(m.timestamp || Date.now()).toLocaleTimeString();
+                const autor = m.autor_alias || m.autor || 'Anônimo';
+                return `[${date}] ${autor}: ${m.text || ''}`;
+              }).join('\n');
+              const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `Chat_DOZERO_${new Date().toISOString().slice(0, 10)}.txt`;
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success('Histórico do chat exportado!');
+            }}
+            title="Exportar Histórico (.txt)"
+            style={{ padding: '6px', background: 'transparent', color: 'var(--chat-text-secondary)', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+          >
+            <Download size={14} />
           </button>
 
           {/* LIMPAR CHAT */}

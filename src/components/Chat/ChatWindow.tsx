@@ -10,6 +10,7 @@ import { ChatHeader } from './ChatHeader';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { PollComposerModal } from './PollComposerModal';
+import { ImagePreviewModal } from './ImagePreviewModal';
 
 // Hooks
 import { useChatIdentity } from './hooks/useChatIdentity';
@@ -34,6 +35,7 @@ export const ChatWindow: React.FC = () => {
   const [showIdentityPopup, setShowIdentityPopup] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [isComposingPoll, setIsComposingPoll] = useState(false);
+  const [pendingImageBase64, setPendingImageBase64] = useState<string | null>(null);
   
   // Interactions
   const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
@@ -66,7 +68,18 @@ export const ChatWindow: React.FC = () => {
     setSentHistory(prev => [...prev, text]);
     setHistoryIndex(-1);
 
-    if (text.startsWith('/w ')) {
+    if (text.startsWith('/ai ') || text.startsWith('/ask ')) {
+      const prompt = text.replace(/^\/(ai|ask)\s+/, '');
+      pushAdvancedChatMessage(text, options);
+      setInput('');
+      // Trigger AI Response in chat
+      setTimeout(() => {
+        pushAdvancedChatMessage(`🤖 <b>AI Assistant:</b> Em resposta a "<i>${prompt}</i>"... Os ventos do destino sussurram sabedoria antiga sobre a sua jornada.`, {
+          tipo: 'sistema', autor: 'AI Assistant', autor_color: '#38bdf8'
+        });
+      }, 1000);
+      return;
+    } else if (text.startsWith('/w ')) {
       const parts = text.substring(3).split(' ');
       options.alvo = parts[0];
       text = parts.slice(1).join(' ');
@@ -111,8 +124,15 @@ export const ChatWindow: React.FC = () => {
 
   const handleImageSelected = (file: File) => {
     convertImageToWebP(file, 0.75, 512).then(({ base64 }) => {
-      pushAdvancedChatMessage(`[IMG]${base64}`, { tipo: tab, autor: playerName });
+      setPendingImageBase64(base64);
     }).catch(err => console.error('Chat image compress failed', err));
+  };
+
+  const handleConfirmImageSend = (caption: string) => {
+    if (!pendingImageBase64) return;
+    const finalMsg = caption.trim() ? `${caption.trim()}\n[IMG]${pendingImageBase64}` : `[IMG]${pendingImageBase64}`;
+    pushAdvancedChatMessage(finalMsg, { tipo: tab, autor: playerName });
+    setPendingImageBase64(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
@@ -154,7 +174,7 @@ export const ChatWindow: React.FC = () => {
       {isDragging && (
         <div className="chat-drop-overlay">
           <span>Solte a imagem aqui</span>
-          <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>(Será convertida para WebP)</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>(Será aberta na pré-visualização)</span>
         </div>
       )}
       
@@ -203,6 +223,14 @@ export const ChatWindow: React.FC = () => {
         <PollComposerModal onClose={() => setIsComposingPoll(false)} playerName={playerName} />
       )}
 
+      {pendingImageBase64 && (
+        <ImagePreviewModal 
+          base64={pendingImageBase64} 
+          onConfirm={handleConfirmImageSend} 
+          onCancel={() => setPendingImageBase64(null)} 
+        />
+      )}
+
       <ChatInput 
         input={input} setInput={handleInputChange} handleSend={handleSend}
         playerName={playerName} playerColor={playerColor}
@@ -230,6 +258,7 @@ export const ChatWindow: React.FC = () => {
 
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {[
+              { cmd: '/ai', desc: 'Perguntar ao AI Bot', example: '/ai Como funciona esse oráculo?' },
               { cmd: '/w', desc: 'Sussurro privado', example: '/w Nome mensagem' },
               { cmd: '/me', desc: 'Ação narrativa / emotiva', example: '/me sorri misteriosamente' },
               { cmd: '/as', desc: 'Falar como NPC / Alias', example: '/as "Guarda" Pare!' },

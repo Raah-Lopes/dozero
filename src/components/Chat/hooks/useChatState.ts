@@ -7,28 +7,47 @@ export function useChatState(clientId: string, playerName: string) {
   const [typingPlayers, setTypingPlayers] = useState<string[]>([]);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Solocitar permissão de Notificação do Navegador
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
   // Observers para as Mensagens do Chat
   useEffect(() => {
     const observer = (event: any) => {
       setMessages(state.chat.toArray());
-      // Notificação sonora para novas mensagens
-      if (chatSound && event && event.changes && event.changes.added && event.changes.added.size > 0) {
+      if (event && event.changes && event.changes.added && event.changes.added.size > 0) {
         const arr = state.chat.toArray();
         const lastMsg = arr[arr.length - 1] as any;
         if (lastMsg && lastMsg.autor !== playerName && lastMsg.tipo !== 'sistema') {
-          try {
-            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, ctx.currentTime);
-            gain.gain.setValueAtTime(0.05, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.1);
-          } catch (e) {}
+          // Notificação sonora
+          if (chatSound) {
+            try {
+              const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(880, ctx.currentTime);
+              gain.gain.setValueAtTime(0.05, ctx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+              osc.start();
+              osc.stop(ctx.currentTime + 0.1);
+            } catch (e) {}
+          }
+
+          // Notificação Push do Navegador se a janela estiver minimizada/em segundo plano
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && document.hidden) {
+            try {
+              new Notification(`DOZERO: ${lastMsg.autor || 'Chat'}`, {
+                body: lastMsg.text?.replace(/<[^>]*>?/gm, '') || 'Nova mensagem recebida',
+                icon: '/vite.svg'
+              });
+            } catch (e) {}
+          }
         }
       }
     };

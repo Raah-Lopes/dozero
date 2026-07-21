@@ -10,6 +10,7 @@ interface SlashCommand {
 }
 
 const SLASH_COMMANDS: SlashCommand[] = [
+  { cmd: '/ai',    desc: 'Perguntar ao AI Bot',         example: '/ai Como funciona este oráculo?' },
   { cmd: '/w',     desc: 'Sussurro privado',            example: '/w Nome mensagem' },
   { cmd: '/me',    desc: 'Ação narrativa / emotiva',    example: '/me sorri misteriosamente' },
   { cmd: '/as',    desc: 'Falar como NPC / Alias',      example: '/as "Guarda" Pare!' },
