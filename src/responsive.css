@@ -45,19 +45,188 @@
   position: relative;
 }
 
-/* Mobile & Tablet Constraints */
+/* ============================================================== */
+/* 📱 MOBILE BOTTOM NAVIGATION BAR                                */
+/* ============================================================== */
+
+.mobile-bottom-nav {
+  display: none; /* Hidden on desktop */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--glass-border);
+  justify-content: space-around;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 1000000;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+}
+
+.mobile-bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 54px;
+  min-height: 44px;
+}
+
+.mobile-bottom-nav .nav-item.active {
+  color: var(--accent-primary);
+  transform: translateY(-2px);
+}
+
+.mobile-bottom-nav .nav-item:active {
+  transform: scale(0.92);
+}
+
+.mobile-bottom-nav .nav-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.mobile-bottom-nav .notification-badge {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--danger);
+}
+
+/* ============================================================== */
+/* 🎯 FLOATING ACTION BUTTON (FAB) FOR QUICK ACTIONS              */
+/* ============================================================== */
+
+.fab-container {
+  display: none;
+  position: fixed;
+  bottom: 76px; /* Above mobile bottom nav */
+  right: 16px;
+  z-index: 999998;
+}
+
+.fab-main {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-main:active {
+  transform: scale(0.9);
+}
+
+.fab-actions {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+}
+
+.fab-action {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.fab-action:active {
+  transform: scale(0.92);
+}
+
+.fab-tooltip {
+  position: absolute;
+  right: 52px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* ============================================================== */
+/* 📱 MOBILE & TABLET RESPONSIVE OVERRIDES                        */
+/* ============================================================== */
+
 @media (max-width: 768px) {
-  /* Draggable Windows become clamped Modals on Mobile */
-  .draggable-window-container:not(.minimized) {
-    left: 2.5vw !important;
-    top: 5vh !important;
-    width: 95vw !important;
-    max-height: 80vh !important;
-    position: fixed !important;
-    z-index: 999999 !important; /* Always on top when open on mobile */
+  .mobile-bottom-nav {
+    display: flex;
   }
 
-  /* Center hud-modal-layer on mobile without breaking fixed backdrops */
+  .fab-container {
+    display: block;
+  }
+
+  /* Draggable Windows become clamped Fullscreen Modals on Mobile */
+  .draggable-window-container:not(.minimized) {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 64px) !important;
+    max-width: 100vw !important;
+    max-height: calc(100vh - 64px) !important;
+    position: fixed !important;
+    border-radius: 0 !important;
+    z-index: 999999 !important;
+  }
+
+  /* Touch Targets for close buttons on mobile */
+  .draggable-window-close-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Prevent auto zoom on iOS inputs */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Center hud-modal-layer on mobile */
   .hud-modal-layer {
     position: fixed !important;
     inset: 0 !important;
@@ -65,16 +234,53 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    pointer-events: none !important; /* Let clicks pass to background if no modal is covering */
+    pointer-events: none !important;
   }
+  
   .hud-modal-layer > * {
     pointer-events: auto !important;
   }
 
-  /* Make sure modals fit on screen */
   .hud-modal-layer .glass-panel {
     max-width: 95vw !important;
-    max-height: 85vh !important;
+    max-height: 80vh !important;
     overflow-y: auto;
   }
+}
+
+/* ============================================================== */
+/* 💻 MULTI-MONITOR DASHBOARD & PRESETS STYLES                    */
+/* ============================================================== */
+
+.layout-presets-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.preset-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+
+.preset-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.popout-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-sm);
 }

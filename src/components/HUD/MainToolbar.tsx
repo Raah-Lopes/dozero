@@ -62,6 +62,7 @@ export function MainToolbar() {
     { id: 'hub', label: 'Menu Geral (Hub de Ferramentas)', icon: <LayoutGrid size={20} />, action: () => toggleModal('widgets'), isActive: activeModal === 'widgets', colorClass: 'theme-purple' },
     { id: 'wiki', label: 'Wiki da Campanha', icon: <BookOpen size={20} />, action: () => handleSetViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki'), isActive: viewMode === 'wiki', colorClass: 'theme-cyan' },
     { id: 'theater', label: 'Teatro da Mente', icon: <Film size={20} />, action: () => handleSetViewMode(viewMode === 'theater' ? 'canvas' : 'theater'), isActive: viewMode === 'theater', colorClass: 'theme-violet' },
+    { id: 'layouts', label: 'Layouts & Multi-Monitor', icon: <LayoutGrid size={20} />, action: () => { window.dispatchEvent(new CustomEvent('open-layout-presets')); setIsMenuOpen(false); }, isActive: false, colorClass: 'theme-violet' },
     { id: 'players', label: 'Convidar Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },
     { id: 'chat', label: 'Chat P2P (Mensagens)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('chatWindow'), isActive: openWindows.chatWindow, colorClass: 'theme-blue' },
     { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },

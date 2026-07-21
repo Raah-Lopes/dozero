@@ -42,7 +42,9 @@ import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
 import { Toaster, ConfirmDialog } from './components/UI/Toast';
-// import { RoomManagerWidget } from './components/Widgets/System/RoomManagerWidget';
+import { MobileBottomNav } from './components/HUD/MobileBottomNav';
+import { MobileQuickActions } from './components/HUD/MobileQuickActions';
+import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
 
 // Trigger HMR
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
@@ -68,6 +70,14 @@ function App() {
   const handleCloseActorLibrary = useCallback(() => setShowActors(false), [setShowActors]);
   const handleCloseCombatLog = useCallback(() => toggleWindow('combatLog'), [toggleWindow]);
   const handleCloseChatWindow = useCallback(() => toggleWindow('chatWindow'), [toggleWindow]);
+
+  const [isLayoutPresetsOpen, setIsLayoutPresetsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenPresets = () => setIsLayoutPresetsOpen(true);
+    window.addEventListener('open-layout-presets', handleOpenPresets);
+    return () => window.removeEventListener('open-layout-presets', handleOpenPresets);
+  }, []);
 
 
 
@@ -547,6 +557,9 @@ function App() {
               </div>
             </div>
           )}
+          <MobileBottomNav />
+          <MobileQuickActions />
+          <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         </>
       </div>
   );

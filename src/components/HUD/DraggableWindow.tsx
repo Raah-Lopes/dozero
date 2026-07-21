@@ -425,7 +425,21 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
               onClick={(e) => { 
                 e.stopPropagation(); 
                 const popoutId = widgetKey || id;
-                window.open(`${window.location.pathname}?widget=${popoutId}`, '_blank', 'width=450,height=700');
+                const currentScreen = typeof window !== 'undefined' ? {
+                  availLeft: window.screen?.availLeft || 0,
+                  availTop: window.screen?.availTop || 0,
+                  width: window.screen?.width || 1920,
+                  height: window.screen?.height || 1080
+                } : { availLeft: 0, availTop: 0, width: 1920, height: 1080 };
+
+                localStorage.setItem(`popout_${popoutId}`, JSON.stringify({
+                  isOpen: true,
+                  screen: currentScreen,
+                  title: title,
+                  timestamp: Date.now()
+                }));
+
+                window.open(`${window.location.pathname}?widget=${popoutId}`, `popout_${popoutId}`, 'width=450,height=700');
                 if (onClose) onClose();
               }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -455,6 +469,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
           
           {!isPopout && onClose && (
             <button 
+              className="draggable-window-close-btn"
               onClick={(e) => { e.stopPropagation(); onClose(); }}
               onPointerDown={(e) => e.stopPropagation()}
               title="Fechar Janela"
