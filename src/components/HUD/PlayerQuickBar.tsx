@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Swords, Footprints, MessageCircle, Dices,
-  ChevronRight, ChevronLeft, User, Sparkles, Send, RotateCcw
+  ChevronRight, ChevronLeft, User, Sparkles, Send, RotateCcw,
+  Activity, Zap
 } from 'lucide-react';
 import { pushAdvancedChatMessage } from '../../store/chat';
 import { state } from '../../services/yjs';
 import { toast } from '../UI/Toast';
+import { syncTokenFieldToWiki, syncMultipleFieldsToWiki } from '../../services/wiki/syncWiki';
 
-// ponytail: Rolagem customizada e vinculação com tokens em componente único sem dependências externas
+// ponytail: Rolagem customizada, vinculação com token e sincronização de ficha markdown no Yjs/Wiki
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,9 +31,16 @@ interface TokenItem {
   maxHp?: number;
   mana?: number;
   maxMana?: number;
+  status_efeitos?: string[];
+  wikiPath?: string;
   imageUrl?: string;
   isPlayer?: boolean;
 }
+
+const CONDICOES_DISPONIVEIS = [
+  'Confuso', 'Amedrontado', 'Sangrando', 'Queimando', 
+  'Atordoado', 'Invisível', 'Caído', 'Morto', 'Envenenado', 'Cego'
+];
 
 // ─── Dados das abas ──────────────────────────────────────────────────────────
 
@@ -91,7 +100,6 @@ function parseAndRollExpression(formula: string): {
   const clean = formula.replace(/\s+/g, '').toLowerCase();
   if (!clean) return { total: 0, breakdown: '0', isCrit: false, isFail: false };
 
-  // Match termos como: +1d20, -2d100, +5, -30, 1d20, d6, 10
   const regex = /([+-]?)(?:(\d*)d(\d+)|(\d+))/g;
   let match: RegExpExecArray | null;
   let total = 0;
@@ -105,7 +113,6 @@ function parseAndRollExpression(formula: string): {
     const sign = signStr === '-' ? -1 : 1;
 
     if (match[3] !== undefined) {
-      // Rolagem de dado (ex: 2d100 ou 1d20 ou d6)
       const count = parseInt(match[2]) || 1;
       const sides = parseInt(match[3]) || 6;
       const rolls: number[] = [];
@@ -124,7 +131,6 @@ function parseAndRollExpression(formula: string): {
       const prefix = parts.length === 0 ? (signStr === '-' ? '-' : '') : ` ${signStr} `;
       parts.push(`${prefix}${count}d${sides}${rollStr}`);
     } else if (match[4] !== undefined) {
-      // Modificador estático (ex: 30 ou 5)
       const val = parseInt(match[4]);
       total += sign * val;
       const prefix = parts.length === 0 ? (signStr === '-' ? '-' : '') : ` ${signStr} `;
@@ -159,6 +165,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
   const [isLinkedToCharacter, setIsLinkedToCharacter] = useState(false);
   const [selectedTokenId, setSelectedTokenId] = useState<string>('');
   const [availableTokens, setAvailableTokens] = useState<TokenItem[]>([]);
+  const [showEffectMenu, setShowEffectMenu] = useState(false);
 
   // Observa tokens no Yjs
   useEffect(() => {
@@ -170,6 +177,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
         maxHp: t.maxHp,
         mana: t.mana,
         maxMana: t.maxMana,
+        status_efeitos: Array.isArray(t.status_efeitos) ? t.status_efeitos : [],
+        wikiPath: t.wikiPath || t.caminhoArquivo,
         imageUrl: t.imageUrl,
         isPlayer: t.isPlayer
       }));
@@ -188,7 +197,6 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
   // Executa rolagem padrão ou de fórmula
   const executeRoll = useCallback((actionLabel: string, emoji: string, formulaStr: string, isDamage: boolean = false) => {
-    // Adiciona bônus global se for rolagem simples (ex: 1d20)
     let fullFormula = formulaStr;
     if (bonus !== 0) {
       fullFormula += bonus >= 0 ? `+${bonus}` : `${bonus}`;
@@ -215,14 +223,13 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
       ...prev
     ].slice(0, 5));
 
-    // Se estiver vinculado ao token e for dano/cura, notifica opção de aplicar
     if (isLinkedToCharacter && activeToken && isDamage) {
-      toast.info(`Rolagem de Dano (${total}). Clique no histórico abaixo para aplicar no HP de ${activeToken.name}.`);
+      toast.info(`Rolagem de Dano (${total}). Clique no histórico abaixo para aplicar no HP/Ficha de ${activeToken.name}.`);
     }
   }, [bonus, isLinkedToCharacter, activeToken, playerName]);
 
-  // Aplica dano/cura direto no Token no Yjs
-  const handleApplyDamageToToken = (amount: number, isHeal: boolean = false) => {
+  // Aplica dano/cura direto no Token no Yjs E na Ficha Markdown (.md) da Wiki
+  const handleApplyDamageToToken = async (amount: number, isHeal: boolean = false) => {
     if (!activeToken) {
       toast.warn('Nenhum token selecionado para aplicar!');
       return;
@@ -234,21 +241,81 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
     const delta = isHeal ? Math.abs(amount) : -Math.abs(amount);
     const newHp = Math.max(0, currentHp + delta);
 
+    let currentEffects: string[] = Array.isArray(tokenRaw.status_efeitos)
+      ? [...tokenRaw.status_efeitos]
+      : [];
+
+    if (newHp === 0 && !currentEffects.includes('Morto')) {
+      currentEffects.push('Morto');
+    } else if (newHp > 0 && isHeal && currentEffects.includes('Morto')) {
+      currentEffects = currentEffects.filter(e => e !== 'Morto');
+    }
+
+    // 1. Atualiza Token no Yjs
     state.tokens.set(activeToken.id, {
       ...tokenRaw,
-      hp: newHp
+      hp: newHp,
+      status_efeitos: currentEffects
     });
 
-    const actionText = isHeal ? `recuperou ${Math.abs(amount)} HP` : `sofreu ${Math.abs(amount)} de dano`;
-    toast.success(`[${activeToken.name}] ${actionText}! HP atual: ${newHp}`);
+    // 2. Sincroniza diretamente na Ficha (.md) da Wiki
+    const wikiPath = tokenRaw.wikiPath || tokenRaw.caminhoArquivo || activeToken.wikiPath;
+    let sheetSynced = false;
+    if (wikiPath) {
+      sheetSynced = await syncMultipleFieldsToWiki(wikiPath, {
+        hp: newHp,
+        status_efeitos: currentEffects
+      });
+    }
 
-    pushAdvancedChatMessage(`🩸 **${activeToken.name}** ${actionText}! (HP: ${newHp}/${tokenRaw.maxHp || '?'})`, {
+    const actionText = isHeal ? `recuperou ${Math.abs(amount)} HP` : `sofreu ${Math.abs(amount)} de dano`;
+    const tagFicha = sheetSynced ? ' 📄 [Ficha Sincronizada]' : '';
+    toast.success(`[${tokenRaw.name}] ${actionText}! HP: ${newHp}/${tokenRaw.maxHp || '?'}${tagFicha}`);
+
+    pushAdvancedChatMessage(`🩸 **${tokenRaw.name}** ${actionText}! (HP: ${newHp}/${tokenRaw.maxHp || '?'})${tagFicha}`, {
       tipo: 'sistema',
       autor: 'Sistema'
     });
   };
 
-  // Botões de conveniência para construir fórmulas customizadas
+  // Alterna efeito de status diretamente no Token E na Ficha Markdown (.md)
+  const handleToggleStatusEffect = async (condition: string) => {
+    if (!activeToken) return;
+    const tokenRaw = state.tokens.get(activeToken.id) as any;
+    if (!tokenRaw) return;
+
+    const currentEffects: string[] = Array.isArray(tokenRaw.status_efeitos)
+      ? [...tokenRaw.status_efeitos]
+      : [];
+
+    const hasCond = currentEffects.includes(condition);
+    const updatedEffects = hasCond
+      ? currentEffects.filter(c => c !== condition)
+      : [...currentEffects, condition];
+
+    // 1. Atualiza Token no Yjs
+    state.tokens.set(activeToken.id, {
+      ...tokenRaw,
+      status_efeitos: updatedEffects
+    });
+
+    // 2. Sincroniza diretamente na Ficha (.md) da Wiki
+    const wikiPath = tokenRaw.wikiPath || tokenRaw.caminhoArquivo || activeToken.wikiPath;
+    let sheetSynced = false;
+    if (wikiPath) {
+      sheetSynced = await syncTokenFieldToWiki(wikiPath, 'status_efeitos', updatedEffects);
+    }
+
+    const act = hasCond ? 'removida de' : 'aplicada a';
+    const tagFicha = sheetSynced ? ' 📄 [Ficha Sincronizada]' : '';
+    toast.success(`Condição "${condition}" ${act} [${tokenRaw.name}]!${tagFicha}`);
+
+    pushAdvancedChatMessage(`⚠️ Condição **${condition}** ${act} **${tokenRaw.name}**!${tagFicha}`, {
+      tipo: 'sistema',
+      autor: 'Sistema'
+    });
+  };
+
   const appendFormula = (val: string) => {
     setCustomFormula(prev => {
       if (!prev || prev === '0') return val;
@@ -284,7 +351,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
         {open && (
           <div style={{ width: '230px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '85vh', overflowY: 'auto' }}>
 
-            {/* Vinculação com Personagem / Token */}
+            {/* Vinculação com Personagem / Token & Ficha */}
             <div style={{
               background: isLinkedToCharacter ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
               border: isLinkedToCharacter ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.08)',
@@ -292,7 +359,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isLinkedToCharacter ? '#a5b4fc' : '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <User size={12} /> Vincular Token
+                  <User size={12} /> Vincular Token & Ficha
                 </span>
                 <input
                   type="checkbox"
@@ -303,7 +370,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
               </div>
 
               {isLinkedToCharacter && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <select
                     value={selectedTokenId}
                     onChange={e => setSelectedTokenId(e.target.value)}
@@ -322,9 +389,68 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                   </select>
 
                   {activeToken && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', color: '#cbd5e1', paddingTop: '2px' }}>
-                      <span>❤️ HP: {activeToken.hp ?? '?'}/{activeToken.maxHp ?? '?'}</span>
-                      <span>✨ MP: {activeToken.mana ?? '?'}/{activeToken.maxMana ?? '?'}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', color: '#cbd5e1' }}>
+                        <span>❤️ HP: <strong>{activeToken.hp ?? '?'}</strong>/{activeToken.maxHp ?? '?'}</span>
+                        <span>✨ MP: <strong>{activeToken.mana ?? '?'}</strong>/{activeToken.maxMana ?? '?'}</span>
+                      </div>
+
+                      {/* Efeitos de Status Ativos */}
+                      {activeToken.status_efeitos && activeToken.status_efeitos.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
+                          {activeToken.status_efeitos.map(cond => (
+                            <span
+                              key={cond}
+                              onClick={() => handleToggleStatusEffect(cond)}
+                              title="Clique para remover efeito do Token e da Ficha"
+                              style={{
+                                fontSize: '0.58rem', padding: '1px 5px', borderRadius: '3px',
+                                background: cond === 'Morto' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.25)',
+                                border: cond === 'Morto' ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(245,158,11,0.4)',
+                                color: cond === 'Morto' ? '#fca5a5' : '#fde68a', cursor: 'pointer'
+                              }}
+                            >
+                              ⚠️ {cond} ×
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Botão de Alternar Menu de Efeitos */}
+                      <button
+                        onClick={() => setShowEffectMenu(v => !v)}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                          padding: '3px', background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
+                          color: '#a5b4fc', fontSize: '0.62rem', cursor: 'pointer'
+                        }}
+                      >
+                        <Zap size={10} /> {showEffectMenu ? 'Fechar Efeitos' : '+ Adicionar Efeito/Status'}
+                      </button>
+
+                      {/* Grade de Efeitos Rápida */}
+                      {showEffectMenu && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px' }}>
+                          {CONDICOES_DISPONIVEIS.map(cond => {
+                            const isApplied = activeToken.status_efeitos?.includes(cond);
+                            return (
+                              <button
+                                key={cond}
+                                onClick={() => handleToggleStatusEffect(cond)}
+                                style={{
+                                  padding: '2px 4px', fontSize: '0.58rem', textAlign: 'left',
+                                  background: isApplied ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.04)',
+                                  border: isApplied ? '1px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.08)',
+                                  borderRadius: '3px', color: isApplied ? '#a5b4fc' : '#cbd5e1', cursor: 'pointer'
+                                }}
+                              >
+                                {isApplied ? '✓ ' : ''}{cond}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -402,7 +528,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
               </div>
             )}
 
-            {/* Conteúdo da Aba Personalizada / Construtor de Fórmulas (ex: 1d20+2d100-30) */}
+            {/* Conteúdo da Aba Personalizada / Construtor de Fórmulas */}
             {tab === 'custom' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -465,7 +591,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
               </div>
             )}
 
-            {/* Mini-log de Histórico e Ações de Aplicação no Token */}
+            {/* Mini-log de Histórico e Ações de Aplicação Direta no Token & Ficha */}
             {lastResults.length > 0 && (
               <div style={{
                 borderTop: '1px solid rgba(255,255,255,0.08)',
@@ -480,14 +606,14 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                       <div style={{ display: 'flex', gap: '2px' }}>
                         <button
                           onClick={() => handleApplyDamageToToken(r.val, false)}
-                          title={`Aplicar ${r.val} de dano no HP de ${activeToken.name}`}
+                          title={`Aplicar ${r.val} de dano no HP de ${activeToken.name} (Token + Ficha .md)`}
                           style={{ padding: '1px 4px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', color: '#fca5a5', fontSize: '0.58rem', cursor: 'pointer' }}
                         >
                           -HP
                         </button>
                         <button
                           onClick={() => handleApplyDamageToToken(r.val, true)}
-                          title={`Curar ${r.val} de HP em ${activeToken.name}`}
+                          title={`Curar ${r.val} de HP em ${activeToken.name} (Token + Ficha .md)`}
                           style={{ padding: '1px 4px', background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: '3px', color: '#86efac', fontSize: '0.58rem', cursor: 'pointer' }}
                         >
                           +HP
