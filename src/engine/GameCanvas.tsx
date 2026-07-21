@@ -3,61 +3,10 @@ import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, Alph
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 
-function hexRound(q: number, r: number) {
-  let s = -q - r;
-  let rq = Math.round(q);
-  let rr = Math.round(r);
-  let rs = Math.round(s);
-  const q_diff = Math.abs(rq - q);
-  const r_diff = Math.abs(rr - r);
-  const s_diff = Math.abs(rs - s);
-  if (q_diff > r_diff && q_diff > s_diff) rq = -rr - rs;
-  else if (r_diff > s_diff) rr = -rq - rs;
-  return { q: rq, r: rr };
-}
-
-// Distance util
-function euclideanDistance(x1: number, y1: number, x2: number, y2: number) {
-  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-}
-
-function pixelToHex(x: number, y: number, type: 'hex_h' | 'hex_v', size: number) {
-  let q: number, r: number;
-  if (type === 'hex_h') { // flat-top
-    q = (2/3 * x) / size;
-    r = (-1/3 * x + Math.sqrt(3)/3 * y) / size;
-  } else { // pointy-top
-    q = (Math.sqrt(3)/3 * x - 1/3 * y) / size;
-    r = (2/3 * y) / size;
-  }
-  return hexRound(q, r);
-}
-
-function hexToPixel(q: number, r: number, type: 'hex_h' | 'hex_v', size: number) {
-  let x: number, y: number;
-  if (type === 'hex_h') { // flat-top
-    x = size * (3/2 * q);
-    y = size * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r);
-  } else { // pointy-top
-    x = size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
-    y = size * (3/2 * r);
-  }
-  return { x, y };
-}
-
-function snapToGrid(x: number, y: number, config: any) {
-  if (config.gridType === 'square' || config.gridType === 'dots_square') {
-    return {
-      x: Math.round(x / config.gridSize) * config.gridSize,
-      y: Math.round(y / config.gridSize) * config.gridSize
-    };
-  } else if (config.gridType === 'hex_h' || config.gridType === 'hex_v' || config.gridType === 'dots_hex') {
-    const hexType = (config.gridType === 'hex_h') ? 'hex_h' : 'hex_v';
-    const hex = pixelToHex(x, y, hexType, config.gridSize);
-    return hexToPixel(hex.q, hex.r, hexType, config.gridSize);
-  }
-  return { x, y };
-}
+import { hexRound, euclideanDistance, pixelToHex, hexToPixel, snapToGrid } from './utils/gridUtils';
+import { renderGrid } from './renderers/gridRenderer';
+import { renderRuler, clearRuler } from './renderers/rulerRenderer';
+import { renderFogOfWar } from './renderers/fogRenderer';
 
 const prevHpMap: Record<string, number> = {};
 let lastTokenClickTime = 0;
@@ -285,19 +234,7 @@ export const GameCanvas: React.FC = () => {
         if (isMeasuring) {
           const currentPos = getWorldPos(e.clientX, e.clientY);
           const config = getMapConfig();
-          const distPx = euclideanDistance(measureStart.x, measureStart.y, currentPos.x, currentPos.y);
-          const distMeters = (distPx / config.gridSize) * 1.5;
-
-          rulerGraphic.clear();
-          rulerGraphic.moveTo(measureStart.x, measureStart.y);
-          rulerGraphic.lineTo(currentPos.x, currentPos.y);
-          rulerGraphic.stroke({ width: 4 / viewport.scale.x, color: 0xff0000, alpha: 0.8 });
-
-          rulerText.text = `${distMeters.toFixed(1)}m`;
-          rulerText.x = currentPos.x + 15 / viewport.scale.x;
-          rulerText.y = currentPos.y + 15 / viewport.scale.y;
-          rulerText.scale.set(1 / viewport.scale.x);
-          rulerText.visible = true;
+          renderRuler(rulerGraphic, rulerText, measureStart, currentPos, config.gridSize, viewport.scale.x);
         }
       };
 
@@ -322,8 +259,7 @@ export const GameCanvas: React.FC = () => {
         }
         if (isMeasuring) {
           isMeasuring = false;
-          rulerGraphic.clear();
-          rulerText.visible = false;
+          clearRuler(rulerGraphic, rulerText);
         }
         if (isSelecting) {
           isSelecting = false;
@@ -493,80 +429,7 @@ export const GameCanvas: React.FC = () => {
           app.renderer.background.alpha = 0;
         }
 
-        if (config.gridAlpha <= 0) return;
-        
-        let colorNum = 0x1e293b;
-        if (config.gridColor.startsWith('#')) {
-           colorNum = parseInt(config.gridColor.replace('#', '0x'), 16);
-        }
-
-        const size = config.gridSize;
-        const range = 2500; // Limits grid to 5000x5000 bounds to prevent WebGL buffer overflow
-        
-        if (config.gridType === 'square') {
-          grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.gridAlpha });
-          for (let i = -range; i < range; i += size) {
-            grid.moveTo(i, -range);
-            grid.lineTo(i, range);
-          }
-          for (let j = -range; j < range; j += size) {
-            grid.moveTo(-range, j);
-            grid.lineTo(range, j);
-          }
-          grid.stroke();
-        } else if (config.gridType === 'dots_square') {
-          const radius = Math.max(2, size * 0.05);
-          for (let i = -range; i < range; i += size) {
-            for (let j = -range; j < range; j += size) {
-               grid.rect(i - radius, j - radius, radius * 2, radius * 2);
-            }
-          }
-          grid.fill({ color: colorNum, alpha: config.gridAlpha });
-        } else if (config.gridType === 'hex_v' || config.gridType === 'hex_h') {
-          grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.gridAlpha });
-          const type = config.gridType;
-          const stepX = (type === 'hex_v') ? size * Math.sqrt(3) : size * 1.5;
-          const stepY = (type === 'hex_v') ? size * 1.5 : size * Math.sqrt(3);
-          
-          const drawnHexes = new Set<string>();
-          for (let i = -range; i < range; i += stepX) {
-            for (let j = -range; j < range; j += stepY) {
-               const { q, r } = pixelToHex(i, j, type, size);
-               const key = `${q},${r}`;
-               if (drawnHexes.has(key)) continue;
-               drawnHexes.add(key);
-
-               const center = hexToPixel(q, r, type, size);
-               for (let angle_i = 0; angle_i < 6; angle_i++) {
-                 const angle_deg = type === 'hex_v' ? 60 * angle_i - 30 : 60 * angle_i;
-                 const angle_rad = Math.PI / 180 * angle_deg;
-                 const px = center.x + size * Math.cos(angle_rad);
-                 const py = center.y + size * Math.sin(angle_rad);
-                 if (angle_i === 0) grid.moveTo(px, py);
-                 else grid.lineTo(px, py);
-               }
-               grid.closePath();
-            }
-          }
-          grid.stroke();
-        } else if (config.gridType === 'dots_hex') {
-          const radius = Math.max(2, size * 0.05);
-          const stepX = size * Math.sqrt(3);
-          const stepY = size * 1.5;
-          const drawnHexes = new Set<string>();
-          for (let i = -range; i < range; i += stepX) {
-            for (let j = -range; j < range; j += stepY) {
-               const { q, r } = pixelToHex(i, j, 'hex_v', size);
-               const key = `${q},${r}`;
-               if (drawnHexes.has(key)) continue;
-               drawnHexes.add(key);
-
-               const center = hexToPixel(q, r, 'hex_v', size);
-               grid.rect(center.x - radius, center.y - radius, radius * 2, radius * 2);
-            }
-          }
-          grid.fill({ color: colorNum, alpha: config.gridAlpha });
-        }
+        renderGrid(grid, config);
       };
 
       let lastFowHash = '';
@@ -591,40 +454,9 @@ export const GameCanvas: React.FC = () => {
         if (currentHash === lastFowHash) return;
         lastFowHash = currentHash;
 
-        fogOverlay.clear();
-        fogHoles.clear();
+        renderFogOfWar(fogContainer, fogOverlay, fogHoles, config, viewport, visionSources);
         
         if (config.fogOfWar) {
-          // Desenhamos a escuridão exata no tamanho da tela visível para evitar limites da GPU
-          const wl = -viewport.x / viewport.scale.x - 1000;
-          const wt = -viewport.y / viewport.scale.y - 1000;
-          const ww = window.innerWidth / viewport.scale.x + 2000;
-          const wh = window.innerHeight / viewport.scale.y + 2000;
-
-          fogOverlay.rect(wl, wt, ww, wh);
-          let fowColor = 0x000000;
-          if (config.fowColor && config.fowColor.startsWith('#')) {
-             fowColor = parseInt(config.fowColor.replace('#', '0x'), 16);
-          }
-          fogOverlay.fill({ color: fowColor, alpha: 0.95 });
-          
-          // Draw holes
-          visionSources.forEach(t => {
-             const radius = t.visionRadius || ((config.fowRadius || 6) * config.gridSize);
-             if (config.fowShape === 'square') {
-                fogHoles.rect(t.x - radius, t.y - radius, radius * 2, radius * 2);
-             } else if (config.fowShape === 'hexagon') {
-                fogHoles.moveTo(t.x + radius, t.y);
-                for (let i = 1; i <= 6; i++) {
-                   fogHoles.lineTo(t.x + radius * Math.cos(i * Math.PI / 3), t.y + radius * Math.sin(i * Math.PI / 3));
-                }
-             } else {
-                fogHoles.circle(t.x, t.y, radius);
-             }
-          });
-          // O blendMode 'erase' vai fazer esses buracos brancos apagarem o fogOverlay
-          fogHoles.fill({ color: 0xffffff }); 
-          fogContainer.visible = true;
 
           // Hide tokens if requested
           if (config.fowHideTokens) {
