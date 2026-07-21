@@ -109,23 +109,24 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
 
     const { base64: webpDataUrl } = await convertImageToWebP(file, 0.7, 512);
 
-    // Salva na nuvem (ImgBB → Catbox → local ANEXOS)
+    // Sobe para nuvem primeiro
     const entry = index.find(en => en.path === uploadingPath);
     const cleanName = (entry?.metadata?.nome || entry?.metadata?.titulo || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-    const wikiImageRef = await saveImageToCloud(webpDataUrl, `${cleanName}_${Date.now()}.webp`);
+    const cloudUrl = await saveImageToCloud(webpDataUrl, `${cleanName}_${Date.now()}.webp`);
+    if (!cloudUrl) return;
 
-    // Wiki article stores file path (or base64 fallback)
-    const success = await syncTokenFieldToWiki(uploadingPath, 'imagem', wikiImageRef);
+    // Grava URL permanente no arquivo wiki
+    const success = await syncTokenFieldToWiki(uploadingPath, 'imagem', cloudUrl);
     if (success) {
-      if (index.find(en => en.path === uploadingPath)) {
-        const entry = index.find(en => en.path === uploadingPath)!;
-        const entrySlug = entry.slug;
-        const entryName = (entry.metadata?.nome || entry.metadata?.titulo || '').trim().toLowerCase();
-        // Yjs token always gets base64 — works on Vercel, P2P, any device
+      const matchEntry = index.find(en => en.path === uploadingPath);
+      if (matchEntry) {
+        const entrySlug = matchEntry.slug;
+        const entryName = (matchEntry.metadata?.nome || matchEntry.metadata?.titulo || '').trim().toLowerCase();
+        // Yjs token recebe URL (nunca base64 — causaria bloat e tokens sumindo)
         Array.from(state.tokens.entries()).forEach(([tokId, tokData]: [string, any]) => {
           const matchesSlug = tokData.wikiSlug && tokData.wikiSlug === entrySlug;
           const matchesName = !tokData.wikiSlug && tokData.name && tokData.name.trim().toLowerCase() === entryName;
-          if (matchesSlug || matchesName) updateTokenProps(tokId, { imageUrl: webpDataUrl });
+          if (matchesSlug || matchesName) updateTokenProps(tokId, { imageUrl: cloudUrl });
         });
       }
       WikiIndexer.clearCache();

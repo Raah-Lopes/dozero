@@ -167,6 +167,7 @@ carisma: 10
 
 
 
+
 > \[!quote]- Interpretação e Lore
 > **Nome Completo:** Jubbaer, a Guerreira Bebada | **Imagem:**
 > **Resumo:**

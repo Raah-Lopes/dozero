@@ -394,39 +394,22 @@ export const NPCPanel: React.FC = () => {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('[NPCPanel] handleImageUpload triggered.');
     const file = e.target.files?.[0];
-    if (!file) {
-      console.warn('[NPCPanel] No file selected.');
-      return;
-    }
-    if (!uploadingTokenId) {
-      console.warn('[NPCPanel] No uploadingTokenId found.');
-      return;
-    }
-
+    if (!file || !uploadingTokenId) return;
     const token = state.tokens.get(uploadingTokenId) as any;
-    if (!token) {
-      console.error('[NPCPanel] Token not found in Yjs:', uploadingTokenId);
-      return;
-    }
-
-    console.log('[NPCPanel] Uploading for token:', token.name, 'File:', file.name);
+    if (!token) return;
 
     try {
       const { base64 } = await convertImageToWebP(file, 0.7, 512);
-      console.log('[NPCPanel] WebP conversion successful.');
       
-      // Yjs: base64 imediato para sincronizar com todos
-      updateTokenProps(token.id, { imageUrl: base64 });
-
-      // Nuvem (ImgBB → Catbox → local ANEXOS)
+      // Nunca escreve base64 no Yjs — bloataria o documento e faria tokens sumirem
+      // Sobe para nuvem primeiro
       const cleanName = (token.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-      const wikiImageRef = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
-      console.log('[NPCPanel] saveImageToCloud returned:', wikiImageRef);
+      const cloudUrl = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
+      if (!cloudUrl) return;
 
-      // Atualiza Yjs com URL permanente e sincroniza wiki
-      updateTokenProps(token.id, { imageUrl: wikiImageRef });
+      // Só então grava a URL permanente no Yjs
+      updateTokenProps(token.id, { imageUrl: cloudUrl });
 
       const entry = wikiIndex.find(en => {
         if (token.wikiSlug && en.slug === token.wikiSlug) return true;
@@ -434,7 +417,7 @@ export const NPCPanel: React.FC = () => {
         return (en.metadata?.titulo || '').toLowerCase().trim() === nameRaw || en.slug.toLowerCase().trim() === nameRaw;
       });
       if (entry) {
-        const success = await syncTokenFieldToWiki(entry.path, 'avatar', wikiImageRef);
+        const success = await syncTokenFieldToWiki(entry.path, 'avatar', cloudUrl);
         if (success) {
           WikiIndexer.clearCache();
           window.dispatchEvent(new Event('wiki-updated'));

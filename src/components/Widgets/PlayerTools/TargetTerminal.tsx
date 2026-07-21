@@ -274,25 +274,22 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('[TargetTerminal] handleImageUpload triggered.');
     const file = e.target.files?.[0];
-    if (!file) {
-      console.warn('[TargetTerminal] No file selected.');
-      return;
-    }
-    console.log('[TargetTerminal] File selected:', file.name, file.size);
+    if (!file) return;
     try {
       const { base64 } = await convertImageToWebP(file, 0.7, 512);
-      console.log('[TargetTerminal] WebP conversion successful.');
       
-      // Yjs gets base64 always
-      handlePropChange('imageUrl', base64);
+      // Preview LOCAL só: nunca salvar base64 no Yjs (bloataria o documento)
+      setTokenData((prev: any) => prev ? { ...prev, imageUrl: base64 } : null);
 
-      // Salva na nuvem (ImgBB → Catbox → local ANEXOS)
+      // Sobe para nuvem e só então grava no Yjs a URL permanente
       const cleanName = (tokenData?.name || 'avatar').replace(/[^a-zA-Z0-9]/g, '_');
-      const wikiImageRef = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
-      console.log('[TargetTerminal] saveImageToCloud returned:', wikiImageRef);
-      handlePropChangeEnd('imageUrl', wikiImageRef);
+      const cloudUrl = await saveImageToCloud(base64, `${cleanName}_${Date.now()}.webp`);
+      if (cloudUrl) {
+        handlePropChange('imageUrl', cloudUrl);
+        handlePropChangeEnd('imageUrl', cloudUrl);
+        setTokenData((prev: any) => prev ? { ...prev, imageUrl: cloudUrl } : null);
+      }
     } catch (err) {
       console.error('[TargetTerminal] Error in handleImageUpload:', err);
     }
