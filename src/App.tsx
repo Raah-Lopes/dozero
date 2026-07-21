@@ -99,6 +99,28 @@ function App() {
     localStorage.setItem('dozero_viewMode', viewMode);
   }, [viewMode]);
 
+  // 2.5 Clean up broken old token images on load
+  useEffect(() => {
+    // Quando a sala carregar os tokens, vamos ver se algum está com o link antigo quebrado.
+    // Se estiver, vamos remover o `imageUrl` para forçar ele a ler o corrigido da wiki.
+    const sanitizeTokens = () => {
+      Array.from(state.tokens.entries()).forEach(([id, t]: [string, any]) => {
+        if (t.imageUrl && t.imageUrl.includes('/api/wiki/media')) {
+          console.log('[Sanitize] Limpando imageUrl quebrado do token:', t.name);
+          t.imageUrl = '';
+          state.tokens.set(id, t);
+        }
+      });
+    };
+    
+    // Tenta agora
+    sanitizeTokens();
+    
+    // E tenta quando as coisas mudarem nos primeiros segundos (para pegar o sync do Yjs)
+    const interval = setInterval(sanitizeTokens, 2000);
+    setTimeout(() => clearInterval(interval), 10000);
+  }, []);
+
   const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
 
   // Cutscene event listener
