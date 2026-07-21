@@ -428,94 +428,122 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
             <GripHorizontal size={14} style={{ opacity: isPinned ? 0.2 : 1 }} />
             <span className="text-gold" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>{title}</span>
           </div>
-        
-          <div style={{ position: 'absolute', right: '0.25rem', top: '0.25rem', display: 'flex', gap: '0.25rem' }}>
-          {!isPopout && (
-            <button 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                setIsPinned(!isPinned);
-                localStorage.setItem(storageKey, JSON.stringify({
-                  x: pos.x, y: pos.y, w: size.w, h: size.h, pinned: !isPinned
-                }));
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              title={isPinned ? "Desafixar Janela" : "Fixar Janela (Bloquear sobreposição)"}
-              style={{ 
-                background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'transparent', border: 'none', color: isPinned ? 'white' : 'var(--text-secondary)', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', borderRadius: '4px'
-              }}
-            >
-              <Pin size={14} />
-            </button>
-          )}
-          
-          {/* PopOut Button for multi-monitor - Available for ALL widgets now! */}
-          {!isPopout && (
-            <button 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                const popoutId = widgetKey || id;
-                const currentScreen = typeof window !== 'undefined' ? {
-                  availLeft: window.screen?.availLeft || 0,
-                  availTop: window.screen?.availTop || 0,
-                  width: window.screen?.width || 1920,
-                  height: window.screen?.height || 1080
-                } : { availLeft: 0, availTop: 0, width: 1920, height: 1080 };
 
-                localStorage.setItem(`popout_${popoutId}`, JSON.stringify({
-                  isOpen: true,
-                  screen: currentScreen,
-                  title: title,
-                  timestamp: Date.now()
-                }));
-
-                window.open(`${window.location.pathname}?widget=${popoutId}`, `popout_${popoutId}`, 'width=450,height=700');
-                if (onClose) onClose();
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              title="Destacar para outra tela (Pop-out)"
-              style={{ 
-                background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
-              }}
-            >
-              <ExternalLink size={14} />
-            </button>
-          )}
-          
+          {/* Floating Action Circle Pill at top exterior center of window */}
           {!isPopout && (
-          <button 
-            onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            title={isMinimized ? "Restaurar Janela" : "Minimizar Janela"}
-            style={{ 
-              background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
-            }}
-          >
-            <Minus size={14} />
-          </button>
-          )}
-          
-          {!isPopout && onClose && (
-            <button 
-              className="draggable-window-close-btn"
-              onClick={(e) => { e.stopPropagation(); onClose(); }}
-              onPointerDown={(e) => e.stopPropagation()}
-              title="Fechar Janela"
-              style={{ 
-                background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem'
+            <div 
+              className="window-floating-actions"
+              style={{
+                position: 'absolute',
+                top: '-16px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 20,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '3px 8px',
+                background: 'rgba(10, 15, 30, 0.95)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: '20px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                pointerEvents: 'auto'
               }}
-              onMouseOver={e => e.currentTarget.style.color = '#ef4444'}
-              onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}
             >
-              <X size={14} />
-            </button>
+              {/* Pin Button */}
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setIsPinned(!isPinned);
+                  localStorage.setItem(storageKey, JSON.stringify({
+                    x: pos.x, y: pos.y, w: size.w, h: size.h, pinned: !isPinned
+                  }));
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                title={isPinned ? "Desafixar Janela" : "Fixar Janela"}
+                style={{ 
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.06)',
+                  border: isPinned ? '1px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
+                  color: isPinned ? '#e9d5ff' : 'var(--text-secondary)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                }}
+              >
+                <Pin size={12} />
+              </button>
+
+              {/* PopOut Button */}
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  const popoutId = widgetKey || id;
+                  const currentScreen = typeof window !== 'undefined' ? {
+                    availLeft: window.screen?.availLeft || 0,
+                    availTop: window.screen?.availTop || 0,
+                    width: window.screen?.width || 1920,
+                    height: window.screen?.height || 1080
+                  } : { availLeft: 0, availTop: 0, width: 1920, height: 1080 };
+
+                  localStorage.setItem(`popout_${popoutId}`, JSON.stringify({
+                    isOpen: true,
+                    screen: currentScreen,
+                    title: title,
+                    timestamp: Date.now()
+                  }));
+
+                  window.open(`${window.location.pathname}?widget=${popoutId}`, `popout_${popoutId}`, 'width=450,height=700');
+                  if (onClose) onClose();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                title="Destacar para outra tela (Pop-out)"
+                style={{ 
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'var(--text-secondary)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                }}
+              >
+                <ExternalLink size={12} />
+              </button>
+
+              {/* Minimize Button (-) */}
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                title={isMinimized ? "Restaurar Janela" : "Minimizar Janela"}
+                style={{ 
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  background: 'rgba(234, 179, 8, 0.25)', border: '1px solid rgba(234, 179, 8, 0.5)',
+                  color: '#fef08a', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                }}
+              >
+                <Minus size={12} />
+              </button>
+
+              {/* Close Button (X) */}
+              {onClose && (
+                <button 
+                  className="draggable-window-close-btn"
+                  onClick={(e) => { e.stopPropagation(); onClose(); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  title="Fechar Janela"
+                  style={{ 
+                    width: '24px', height: '24px', borderRadius: '50%',
+                    background: 'rgba(239, 68, 68, 0.3)', border: '1px solid rgba(239, 68, 68, 0.6)',
+                    color: '#fca5a5', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.8)'; e.currentTarget.style.color = 'white'; }}
+                  onMouseOut={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)'; e.currentTarget.style.color = '#fca5a5'; }}
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
           )}
         </div>
-      </div>
       ) : (
         <div
           onPointerDown={handlePointerDown}
