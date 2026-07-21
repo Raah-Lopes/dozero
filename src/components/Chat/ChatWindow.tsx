@@ -51,7 +51,15 @@ export const ChatWindow: React.FC = () => {
 
   // Auto-scroll on new messages
   React.useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current) {
+      // Usar setTimeout para garantir que a renderização (DOM) foi concluída
+      // antes de calcular o scrollHeight
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      }, 50);
+    }
   }, [messages, tab, searchQuery]);
 
   const lastSendTimeRef = useRef<number>(0);
@@ -132,6 +140,9 @@ export const ChatWindow: React.FC = () => {
       options.pinned = true;
       text = text.replace('/pin ', '');
     } else if (text.startsWith('/clear')) {
+      if (state.chat.length > 0) {
+        state.chat.delete(0, state.chat.length);
+      }
       setClearedAt(Date.now());
       setInput('');
       return;
@@ -151,7 +162,8 @@ export const ChatWindow: React.FC = () => {
   };
 
   const handleImageSelected = (file: File) => {
-    convertImageToWebP(file, 0.75, 512).then(({ base64 }) => {
+    // Aumentar a compressão (0.6, 300px max) para evitar travar o WebRTC P2P
+    convertImageToWebP(file, 0.6, 300).then(({ base64 }) => {
       setPendingImageBase64(base64);
     }).catch(err => console.error('Chat image compress failed', err));
   };
