@@ -15,7 +15,7 @@ interface LogMessage {
 export const CombatLog: React.FC = () => {
   const [messages, setMessages] = useState<LogMessage[]>([]);
   const [showMenu, setShowMenu] = useState(false);
-  const [filtro, setFiltro] = useState<'todos' | 'rolagens' | 'combate' | 'narrativo' | 'sistema'>('todos');
+  const [filtrosAtivos, setFiltrosAtivos] = useState<Set<string>>(new Set(['rolagens', 'combate', 'narrativo', 'sistema']));
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export const CombatLog: React.FC = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, filtro]);
+  }, [messages, filtrosAtivos]);
 
   // Classificação precisa com regex
   const classificarMensagem = (texto: string): 'rolagens' | 'combate' | 'narrativo' | 'sistema' => {
@@ -111,10 +111,25 @@ export const CombatLog: React.FC = () => {
   };
 
   const mensagensFiltradas = messages.filter(msg => {
-    if (filtro === 'todos') return true;
     const cat = classificarMensagem(msg.text);
-    return cat === filtro;
+    return filtrosAtivos.has(cat);
   });
+
+  const toggleFiltro = (filtro: string) => {
+    const next = new Set(filtrosAtivos);
+    if (next.has(filtro)) {
+      // Não deixa desmarcar se for o último
+      if (next.size > 1) {
+        next.delete(filtro);
+      } else {
+        // Se tentar desmarcar o único, marca todos de novo
+        ['rolagens', 'combate', 'narrativo', 'sistema'].forEach(f => next.add(f));
+      }
+    } else {
+      next.add(filtro);
+    }
+    setFiltrosAtivos(next);
+  };
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
@@ -123,22 +138,21 @@ export const CombatLog: React.FC = () => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--glass-border)', paddingBottom: '4px', flexShrink: 0 }}>
         {/* Tabs Filter Menu */}
         <div style={{ display: 'flex', gap: '2px', flex: 1 }}>
-          {(['todos', 'rolagens', 'combate', 'narrativo', 'sistema'] as const).map(tab => {
+          {(['rolagens', 'combate', 'narrativo', 'sistema'] as const).map(tab => {
             let label = 'Tudo';
             let icon = null;
             
-            if (tab === 'todos') { label = 'Tudo'; icon = <Filter size={11} />; }
-            else if (tab === 'rolagens') { label = 'Testes'; icon = <Dices size={11} />; }
+            if (tab === 'rolagens') { label = 'Testes'; icon = <Dices size={11} />; }
             else if (tab === 'combate') { label = 'Combate'; icon = <Sword size={11} />; }
             else if (tab === 'narrativo') { label = 'História'; icon = <BookOpen size={11} />; }
             else if (tab === 'sistema') { label = 'Geral'; icon = <MessageSquare size={11} />; }
             
-            const active = filtro === tab;
+            const active = filtrosAtivos.has(tab);
             
             return (
               <button
                 key={tab}
-                onClick={() => setFiltro(tab)}
+                onClick={() => toggleFiltro(tab)}
                 style={{
                   padding: '6px 4px', fontSize: '0.65rem', fontWeight: 'bold', cursor: 'pointer',
                   background: active ? 'rgba(168, 85, 247, 0.18)' : 'transparent',
@@ -148,6 +162,7 @@ export const CombatLog: React.FC = () => {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
                   flex: 1, minHeight: '32px'
                 }}
+                title={`Alternar visualização de ${label}`}
               >
                 {icon}
                 <span className="tab-label">{label}</span>

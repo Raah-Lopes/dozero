@@ -41,6 +41,14 @@
   --scrollbar-thumb: #1e293b;
   /* Missing variable referenced in wiki.css — now provided */
   --accent-secondary: #9333ea;
+  
+  /* Chat Variables */
+  --chat-bg-primary: rgba(10, 15, 30, 0.95);
+  --chat-bg-secondary: rgba(0, 0, 0, 0.4);
+  --chat-border: rgba(255, 255, 255, 0.15);
+  --chat-accent: var(--accent-primary);
+  --chat-text-primary: var(--text-primary);
+  --chat-text-secondary: var(--text-secondary);
 }
 
 * {
