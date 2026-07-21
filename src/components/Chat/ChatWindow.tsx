@@ -6,13 +6,13 @@ import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { useCastData } from '../Theater/hooks/useCastData';
 import {
   Send, Pin, Volume2, User, EyeOff, Trash2, Copy, X, BarChart2, Plus,
-  Bell, BellOff, Search, Settings, HelpCircle, Mic, MicOff, Smile
+  Bell, BellOff, Search, Settings, HelpCircle, Mic, MicOff, BookOpen, Terminal
 } from 'lucide-react';
 import { PollWidget } from './PollWidget';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { toast } from '../UI/Toast';
 
-// ─── Comandos do Chat para Auto-Complete ──────────────────────────────────────
+// ─── Comandos do Chat para Auto-Complete & Modal ──────────────────────────────
 
 interface SlashCommand {
   cmd: string;
@@ -74,6 +74,18 @@ export const ChatWindow: React.FC = () => {
   // Reações Hover
   const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
 
+  // Modal de Ajuda de Comandos Visual (?)
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
+  // Auto-Complete Wiki [[
+  const [wikiEntries, setWikiEntries] = useState<any[]>([]);
+  const [showWikiAutoComplete, setShowWikiAutoComplete] = useState(false);
+  const [wikiSearchTerm, setWikiSearchTerm] = useState('');
+
+  // Histórico de mensagens enviadas (Seta para Cima ↑)
+  const [sentHistory, setSentHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+
   // Poll State
   const [isComposingPoll, setIsComposingPoll] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
@@ -83,6 +95,13 @@ export const ChatWindow: React.FC = () => {
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Carrega lista de Wiki para auto-complete de [[
+  useEffect(() => {
+    WikiIndexer.buildIndex().then(index => {
+      setWikiEntries(index || []);
+    }).catch(() => {});
+  }, []);
 
   // Observa mensagens do Chat no Yjs
   useEffect(() => {
@@ -149,11 +168,11 @@ export const ChatWindow: React.FC = () => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, tab, searchQuery]);
 
-  // Atualiza status de digitando quando digita
+  // Atualiza status de digitando e verifica gatilhos de auto-complete
   const handleInputChange = (val: string) => {
     setInput(val);
     
-    // Atualiza estado de digitando no Yjs
+    // Status de digitando no Yjs
     const current = state.players.get(clientId) as any || {};
     if (val.trim()) {
       state.players.set(clientId, { ...current, isTyping: true, typingTime: Date.now() });
@@ -164,6 +183,38 @@ export const ChatWindow: React.FC = () => {
       }, 3000);
     } else {
       state.players.set(clientId, { ...current, isTyping: false });
+    }
+
+    // Auto-complete Wiki [[
+    const wikiMatch = val.match(/\[\[([^\]]*)$/);
+    if (wikiMatch) {
+      setShowWikiAutoComplete(true);
+      setWikiSearchTerm(wikiMatch[1]);
+    } else {
+      setShowWikiAutoComplete(false);
+    }
+  };
+
+  // Teclas de atalho no Input (Esc, ArrowUp, ArrowDown)
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSend();
+    } else if (e.key === 'Escape') {
+      setShowIdentityPopup(false);
+      setShowSearch(false);
+      setShowHelpModal(false);
+      setShowWikiAutoComplete(false);
+    } else if (e.key === 'ArrowUp' && input === '' && sentHistory.length > 0) {
+      e.preventDefault();
+      const nextIdx = historyIndex < sentHistory.length - 1 ? historyIndex + 1 : historyIndex;
+      setHistoryIndex(nextIdx);
+      setInput(sentHistory[sentHistory.length - 1 - nextIdx] || '');
+    } else if (e.key === 'ArrowDown' && historyIndex >= 0) {
+      e.preventDefault();
+      const nextIdx = historyIndex - 1;
+      setHistoryIndex(nextIdx);
+      if (nextIdx < 0) setInput('');
+      else setInput(sentHistory[sentHistory.length - 1 - nextIdx] || '');
     }
   };
 
@@ -186,7 +237,7 @@ export const ChatWindow: React.FC = () => {
       const transcript = e.results[0][0].transcript;
       setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
       setIsListening(false);
-      toast.success('Voz capturada com sucesso!');
+      toast.success('Voz capturada!');
     };
 
     recognition.onerror = () => {
@@ -210,6 +261,10 @@ export const ChatWindow: React.FC = () => {
 
     let text = input;
     let options: ChatMessageOptions = { tipo: tab, autor: playerName, autor_color: playerColor };
+
+    // Salva no histórico de envios
+    setSentHistory(prev => [...prev, text]);
+    setHistoryIndex(-1);
 
     // Parse commands
     if (text.startsWith('/w ')) {
@@ -245,17 +300,7 @@ export const ChatWindow: React.FC = () => {
       setInput('');
       return;
     } else if (text.startsWith('/help')) {
-      const helpMsg = `**Comandos disponíveis:**<br>
-      /w [nome] [msg] - Sussurro privado<br>
-      /me [ação] - Ação narrativa<br>
-      /as "[NPC]" [msg] - Falar como NPC<br>
-      /roll [expr] - Rolar dados<br>
-      /play [som] - Tocar som<br>
-      /pin [msg] - Fixar mensagem<br>
-      /clear - Limpar histórico<br>
-      /ping - Chamar atenção<br>
-      /help - Exibir esta lista`;
-      pushAdvancedChatMessage(helpMsg, { tipo: 'sistema', autor: 'Sistema' });
+      setShowHelpModal(true);
       setInput('');
       return;
     }
@@ -267,6 +312,13 @@ export const ChatWindow: React.FC = () => {
 
   const handleSelectCommand = (cmdStr: string) => {
     setInput(cmdStr + ' ');
+    setShowWikiAutoComplete(false);
+    inputRef.current?.focus();
+  };
+
+  const handleSelectWikiEntry = (title: string) => {
+    setInput(prev => prev.replace(/\[\[([^\]]*)$/, `[[${title}]] `));
+    setShowWikiAutoComplete(false);
     inputRef.current?.focus();
   };
 
@@ -274,10 +326,8 @@ export const ChatWindow: React.FC = () => {
     const isSelected = selectedIds.has(msg.id);
     const isHovered = hoveredMsgId === msg.id;
     
-    // Process markdown wiki links like [[NomeDoCard]]
     let display = msg.text || '';
 
-    // Image check
     if (display.startsWith('[IMG]')) {
       const imgSrc = display.substring(5);
       display = `<img src="${imgSrc}" class="chat-image-clickable" style="max-width: 100%; max-height: 200px; border-radius: 8px; cursor: pointer; border: 1px solid var(--glass-border);" />`;
@@ -293,7 +343,6 @@ export const ChatWindow: React.FC = () => {
     const autorMember = members.find((m: any) => m.nome === msg.autor || m.nome === msg.autor_alias);
     const avatarUrl = autorMember?.imagem || autorMember?.avatar;
     const autorName = msg.autor_alias || msg.autor || 'Anônimo';
-
     const reactions: Record<string, string[]> = msg.reactions || {};
 
     return (
@@ -392,7 +441,7 @@ export const ChatWindow: React.FC = () => {
             />
           )}
 
-          {/* EMOJI REAÇÕES ATIVAS DA MENSAGEM */}
+          {/* EMOJI REAÇÕES ATIVAS */}
           {Object.keys(reactions).length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '4px' }}>
               {Object.entries(reactions).map(([emoji, users]) => {
@@ -419,7 +468,7 @@ export const ChatWindow: React.FC = () => {
           )}
         </div>
 
-        {/* BARRA DE EMOJIS RAPIDA NO HOVER */}
+        {/* BARRA DE EMOJIS RÁPIDA NO HOVER */}
         {isHovered && msg.id && !isSelectMode && (
           <div style={{
             position: 'absolute', top: '-14px', right: '8px',
@@ -461,6 +510,10 @@ export const ChatWindow: React.FC = () => {
     ? SLASH_COMMANDS.filter(c => c.cmd.toLowerCase().startsWith(input.trim().toLowerCase()))
     : [];
 
+  const matchingWiki = showWikiAutoComplete
+    ? wikiEntries.filter(w => (w.title || w.slug || '').toLowerCase().includes(wikiSearchTerm.toLowerCase())).slice(0, 5)
+    : [];
+
   return (
     <div 
       onDragOver={handleDragOver} 
@@ -484,6 +537,11 @@ export const ChatWindow: React.FC = () => {
         {/* BUSCA */}
         <button onClick={() => setShowSearch(!showSearch)} title="Buscar no Histórico" style={{ padding: '8px', background: showSearch ? 'rgba(168,85,247,0.2)' : 'transparent', color: showSearch ? '#a855f7' : 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
           <Search size={15} />
+        </button>
+
+        {/* GUIA DE COMANDOS (?) */}
+        <button onClick={() => setShowHelpModal(true)} title="Guia Visual de Comandos (?)" style={{ padding: '8px', background: 'transparent', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
+          <HelpCircle size={15} />
         </button>
 
         {/* SELEÇÃO MULTIPLA */}
@@ -579,8 +637,39 @@ export const ChatWindow: React.FC = () => {
         </div>
       )}
 
+      {/* AUTO-COMPLETE WIKI [[ */}
+      {showWikiAutoComplete && matchingWiki.length > 0 && (
+        <div style={{
+          position: 'absolute', bottom: '50px', left: '8px', right: '8px',
+          background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(59,130,246,0.4)', borderRadius: '8px',
+          padding: '6px', boxShadow: '0 -10px 25px rgba(0,0,0,0.6)', zIndex: 110,
+          display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '160px', overflowY: 'auto'
+        }}>
+          <div style={{ fontSize: '0.62rem', color: '#60a5fa', fontWeight: 'bold', padding: '2px 6px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <BookOpen size={10} /> Linkar Página da Wiki ([[):
+          </div>
+          {matchingWiki.map((entry: any) => (
+            <button
+              key={entry.path || entry.title}
+              onClick={() => handleSelectWikiEntry(entry.title || entry.slug)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '5px 8px', background: 'rgba(255,255,255,0.04)',
+                border: '1px solid transparent', borderRadius: '4px', cursor: 'pointer',
+                color: '#e2e8f0', fontSize: '0.75rem', textAlign: 'left'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(59,130,246,0.2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+            >
+              <span style={{ color: '#93c5fd', fontWeight: 'bold' }}>📜 {entry.title || entry.slug}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* PALETA DE COMANDOS INTELIGENTE (POPOVER AO DIGITAR "/") */}
-      {isCommandInput && matchingCommands.length > 0 && (
+      {isCommandInput && matchingCommands.length > 0 && !showWikiAutoComplete && (
         <div style={{
           position: 'absolute', bottom: '50px', left: '8px', right: '8px',
           background: 'rgba(10,15,30,0.97)', backdropFilter: 'blur(12px)',
@@ -742,8 +831,8 @@ export const ChatWindow: React.FC = () => {
               ref={inputRef}
               value={input}
               onChange={(e) => handleInputChange(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Digite mensagem ou /comando..."
+              onKeyDown={handleInputKeyDown}
+              placeholder="Digite mensagem ou /comando... (digite [[ p/ Wiki)"
               style={{ flex: 1, padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }}
             />
 
@@ -759,6 +848,49 @@ export const ChatWindow: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* MODAL DE AJUDA VISUAL DE COMANDOS (?) */}
+      {showHelpModal && (
+        <div style={{
+          position: 'absolute', inset: 0, background: 'rgba(10,15,30,0.96)', backdropFilter: 'blur(12px)',
+          zIndex: 500, padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+            <h4 style={{ margin: 0, color: '#f0abfc', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.95rem' }}>
+              <Terminal size={18} /> Guia de Comandos do Chat
+            </h4>
+            <button onClick={() => setShowHelpModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              <X size={18} />
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {SLASH_COMMANDS.map(c => (
+              <div
+                key={c.cmd}
+                style={{
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '6px', padding: '8px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '0.85rem' }}>{c.cmd} <span style={{ color: '#cbd5e1', fontWeight: 'normal', fontSize: '0.75rem' }}>— {c.desc}</span></div>
+                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontFamily: 'monospace', marginTop: '2px' }}>Exemplo: {c.example}</div>
+                </div>
+                <button
+                  onClick={() => {
+                    handleSelectCommand(c.cmd);
+                    setShowHelpModal(false);
+                  }}
+                  style={{ padding: '4px 8px', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: '4px', color: '#f0abfc', fontSize: '0.7rem', cursor: 'pointer' }}
+                >
+                  Usar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* LIGHTBOX PORTAL */}
       {lightboxImg && createPortal(
