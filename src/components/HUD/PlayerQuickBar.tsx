@@ -196,7 +196,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
     const { total, breakdown, isCrit, isFail } = parseAndRollExpression(fullFormula);
 
-    const author = isLinkedToCharacter && activeToken ? activeToken.name : playerName;
+    const autor = isLinkedToCharacter && activeToken ? activeToken.name : playerName;
     const tagToken = isLinkedToCharacter && activeToken ? ` 👤 [${activeToken.name}]` : '';
 
     const critMsg = isCrit ? ' 🌟 CRÍTICO!' : isFail ? ' 💀 FALHA CRÍTICA!' : '';
@@ -204,8 +204,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
     pushAdvancedChatMessage(msg, {
       tipo: 'in-game',
-      autor,
-      autor_alias: author,
+      autor: autor,
+      autor_alias: autor,
       isCritical: isCrit,
       isFailure: isFail,
     });
@@ -274,7 +274,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
         transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
         background: 'rgba(10,15,30,0.95)',
         backdropFilter: 'blur(12px)',
-        border: open ? '1px solid rgba(255,255,255,0.12)' : 'none',
+        borderTop: open ? '1px solid rgba(255,255,255,0.12)' : 'none',
+        borderBottom: open ? '1px solid rgba(255,255,255,0.12)' : 'none',
+        borderLeft: open ? '1px solid rgba(255,255,255,0.12)' : 'none',
         borderRight: 'none',
         borderRadius: '12px 0 0 12px',
         boxShadow: open ? '-4px 0 24px rgba(0,0,0,0.6)' : 'none',
@@ -510,7 +512,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
           height: '72px',
           background: 'rgba(10,15,30,0.95)',
           backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.12)',
+          borderTop: '1px solid rgba(255,255,255,0.12)',
+          borderBottom: '1px solid rgba(255,255,255,0.12)',
+          borderLeft: '1px solid rgba(255,255,255,0.12)',
           borderRight: 'none',
           borderRadius: '10px 0 0 10px',
           cursor: 'pointer',
