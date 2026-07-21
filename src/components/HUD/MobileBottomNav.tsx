@@ -3,19 +3,20 @@ import { LayoutGrid, BookOpen, MessageSquare, Dices, Grid } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
 export const MobileBottomNav: React.FC = () => {
-  const { viewMode, setViewMode, toggleWindow, openWindows, setWidgetHubOpen } = useWindowManager();
+  const { viewMode, setViewMode, toggleWindow, openWindows, activeModal, setActiveModal } = useWindowManager();
 
-  const isChatOpen = openWindows['chatWindow']?.isOpen;
-  const isDiceOpen = openWindows['diceRoller']?.isOpen;
+  const isChatOpen = !!openWindows['chatWindow'];
+  const isDiceOpen = !!openWindows['diceRoller'];
 
   const navItems = [
     {
       id: 'canvas',
       icon: LayoutGrid,
       label: 'Mapa',
-      active: viewMode === 'canvas' && !isChatOpen && !isDiceOpen,
+      active: viewMode === 'canvas' && !isChatOpen && !isDiceOpen && activeModal === 'none',
       action: () => {
         setViewMode('canvas');
+        if (activeModal !== 'none') setActiveModal('none');
       }
     },
     {
@@ -31,7 +32,7 @@ export const MobileBottomNav: React.FC = () => {
       id: 'chat',
       icon: MessageSquare,
       label: 'Chat',
-      active: !!isChatOpen,
+      active: isChatOpen,
       action: () => {
         toggleWindow('chatWindow');
       }
@@ -40,7 +41,7 @@ export const MobileBottomNav: React.FC = () => {
       id: 'dice',
       icon: Dices,
       label: 'Dados',
-      active: !!isDiceOpen,
+      active: isDiceOpen,
       action: () => {
         toggleWindow('diceRoller');
       }
@@ -49,9 +50,9 @@ export const MobileBottomNav: React.FC = () => {
       id: 'menu',
       icon: Grid,
       label: 'Hub',
-      active: false,
+      active: activeModal === 'widgets',
       action: () => {
-        setWidgetHubOpen(true);
+        setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets');
       }
     }
   ];
