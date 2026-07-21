@@ -90,8 +90,7 @@ maldicoes: []
 objetos_campanha: []
 XP: 0
 imagem: https://i.ibb.co/zVPsycbt/06a3c4964e09.webp
-imageUrl: >-
-  /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Goma_1782615592140.webp
+imageUrl: https://i.ibb.co/zVPsycbt/06a3c4964e09.webp
 energiaMax: 0
 nivel: 1
 nome: Goma
