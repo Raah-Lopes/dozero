@@ -428,25 +428,26 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
             <span className="text-gold" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>{title}</span>
           </div>
 
-          {/* Floating Action Circle Pill at top exterior center of window */}
+          {/* Floating Action Vertical Circle Pill on exterior right middle of window */}
           {!isPopout && (
             <div 
               className="window-floating-actions"
               style={{
                 position: 'absolute',
-                top: '-20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
+                top: '50%',
+                right: '-32px',
+                transform: 'translateY(-50%)',
                 zIndex: 9999,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '4px 10px',
+                padding: '8px 4px',
                 background: 'rgba(10, 15, 30, 0.96)',
                 backdropFilter: 'blur(12px)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: '20px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.6)',
                 pointerEvents: 'auto'
               }}
             >
