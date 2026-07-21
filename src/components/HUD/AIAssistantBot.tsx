@@ -104,6 +104,12 @@ export const AIAssistantBot: React.FC = () => {
     }
   };
 
+  const handleToggle = () => {
+    if (!isDragging.current) {
+      setIsOpen(prev => !prev);
+    }
+  };
+
   if (!isVisible) return null;
 
   return (
