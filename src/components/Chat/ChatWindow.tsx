@@ -4,6 +4,7 @@ import { pushAdvancedChatMessage, ChatMessageOptions, getGMChatConfig } from '..
 import { state, useIsGM } from '../../store';
 import { Pin, X, Terminal } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { saveImageToCloud } from '../../utils/githubApi';
 import { toast } from '../UI/Toast';
 
 // Components
@@ -168,11 +169,20 @@ export const ChatWindow: React.FC = () => {
     }).catch(err => console.error('Chat image compress failed', err));
   };
 
-  const handleConfirmImageSend = (caption: string) => {
+  const handleConfirmImageSend = async (caption: string) => {
     if (!pendingImageBase64) return;
-    const finalMsg = caption.trim() ? `${caption.trim()}\n[IMG]${pendingImageBase64}` : `[IMG]${pendingImageBase64}`;
-    pushAdvancedChatMessage(finalMsg, { tipo: tab, autor: playerName });
-    setPendingImageBase64(null);
+    toast.info("Enviando imagem para a nuvem...");
+    try {
+      const url = await saveImageToCloud(pendingImageBase64, `chat_${Date.now()}.webp`);
+      const imgMarkup = `<img src="${url}" alt="Imagem" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 4px; display: block; object-fit: contain;" />`;
+      const finalMsg = caption.trim() ? `${caption.trim()}<br/>${imgMarkup}` : imgMarkup;
+      pushAdvancedChatMessage(finalMsg, { tipo: tab, autor: playerName });
+    } catch (err) {
+      console.error('[Chat] Error uploading image:', err);
+      toast.error('Erro ao enviar imagem.');
+    } finally {
+      setPendingImageBase64(null);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };

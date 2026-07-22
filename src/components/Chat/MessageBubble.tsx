@@ -36,6 +36,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   const isReactionVisible = isHovered || showReactions;
 
+  const formattedText = React.useMemo(() => {
+    let txt = msg.text || '';
+    if (txt.includes('[IMG]')) {
+      txt = txt.replace(/\[IMG\]\(?([^)\s\n]+)\)?/gi, (_match: string, src: string) => {
+        return `<img src="${src}" alt="Imagem" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 4px; display: block; object-fit: contain;" />`;
+      });
+    }
+    return txt;
+  }, [msg.text]);
+
   return (
     <div
       onMouseEnter={() => setHoveredMsgId(msg.id)}
@@ -110,7 +120,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {/* CONTEÚDO DA MENSAGEM */}
         <div 
           style={{ fontSize: '0.8rem', wordBreak: 'break-word', color: msg.tipo === 'me' ? '#f472b6' : 'var(--chat-text-primary)' }}
-          dangerouslySetInnerHTML={{ __html: msg.text }}
+          dangerouslySetInnerHTML={{ __html: formattedText }}
           onClick={(e) => {
             const target = e.target as HTMLElement;
             if (target.classList.contains('wiki-link')) {
