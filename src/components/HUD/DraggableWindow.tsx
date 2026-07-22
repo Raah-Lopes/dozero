@@ -428,25 +428,25 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
             <span className="text-gold" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>{title}</span>
           </div>
 
-          {/* Floating Action Vertical Circle Pill on exterior right middle of window */}
+          {/* Floating Action Pill (Horizontal top-right on mobile, Vertical exterior right on desktop) */}
           {!isPopout && (
             <div 
               className="window-floating-actions"
               style={{
                 position: 'absolute',
-                top: '50%',
-                right: '-32px',
-                transform: 'translateY(-50%)',
+                top: isMobile ? '6px' : '50%',
+                right: isMobile ? '6px' : '-32px',
+                transform: isMobile ? 'none' : 'translateY(-50%)',
                 zIndex: 9999,
                 display: 'flex',
-                flexDirection: 'column',
+                flexDirection: isMobile ? 'row' : 'column',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '8px 4px',
+                gap: isMobile ? '8px' : '6px',
+                padding: isMobile ? '4px 8px' : '8px 4px',
                 background: 'rgba(10, 15, 30, 0.96)',
                 backdropFilter: 'blur(12px)',
                 border: '1px solid var(--glass-border)',
-                borderRadius: '20px',
+                borderRadius: isMobile ? '14px' : '20px',
                 boxShadow: '0 4px 15px rgba(0,0,0,0.6)',
                 pointerEvents: 'auto'
               }}
@@ -463,14 +463,14 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                 onPointerDown={(e) => e.stopPropagation()}
                 title={isPinned ? "Desafixar Janela" : "Fixar Janela"}
                 style={{ 
-                  width: '24px', height: '24px', borderRadius: '50%',
+                  width: isMobile ? '30px' : '24px', height: isMobile ? '30px' : '24px', borderRadius: '50%',
                   background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.06)',
                   border: isPinned ? '1px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
                   color: isPinned ? '#e9d5ff' : 'var(--text-secondary)', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
-                <Pin size={12} />
+                <Pin size={isMobile ? 14 : 12} />
               </button>
 
               {/* PopOut Button */}
@@ -498,13 +498,13 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                 onPointerDown={(e) => e.stopPropagation()}
                 title="Destacar para outra tela (Pop-out)"
                 style={{ 
-                  width: '24px', height: '24px', borderRadius: '50%',
+                  width: isMobile ? '30px' : '24px', height: isMobile ? '30px' : '24px', borderRadius: '50%',
                   background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
                   color: 'var(--text-secondary)', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
-                <ExternalLink size={12} />
+                <ExternalLink size={isMobile ? 14 : 12} />
               </button>
 
               {/* Minimize Button (-) */}
@@ -513,13 +513,13 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                 onPointerDown={(e) => e.stopPropagation()}
                 title={isMinimized ? "Restaurar Janela" : "Minimizar Janela"}
                 style={{ 
-                  width: '24px', height: '24px', borderRadius: '50%',
+                  width: isMobile ? '30px' : '24px', height: isMobile ? '30px' : '24px', borderRadius: '50%',
                   background: 'rgba(234, 179, 8, 0.25)', border: '1px solid rgba(234, 179, 8, 0.5)',
                   color: '#fef08a', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                 }}
               >
-                <Minus size={12} />
+                <Minus size={isMobile ? 14 : 12} />
               </button>
 
               {/* Close Button (X) */}
@@ -530,7 +530,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                   onPointerDown={(e) => e.stopPropagation()}
                   title="Fechar Janela"
                   style={{ 
-                    width: '24px', height: '24px', borderRadius: '50%',
+                    width: isMobile ? '30px' : '24px', height: isMobile ? '30px' : '24px', borderRadius: '50%',
                     background: 'rgba(239, 68, 68, 0.3)', border: '1px solid rgba(239, 68, 68, 0.6)',
                     color: '#fca5a5', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
@@ -538,7 +538,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                   onMouseOver={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.8)'; e.currentTarget.style.color = 'white'; }}
                   onMouseOut={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)'; e.currentTarget.style.color = '#fca5a5'; }}
                 >
-                  <X size={12} />
+                  <X size={isMobile ? 14 : 12} />
                 </button>
               )}
             </div>

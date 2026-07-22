@@ -1,48 +1,36 @@
-import React from 'react';
-import { User, EyeOff, Copy } from 'lucide-react';
+// src/components/Chat/MessageBubble.tsx
+import React, { useState } from 'react';
+import { EyeOff, User, Copy } from 'lucide-react';
 import { toggleMessageReaction } from '../../store/chat';
-import { PollWidget } from './PollWidget';
-import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { toast } from '../UI/Toast';
-import { useCastData } from '../Theater/hooks/useCastData';
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '🎲', '🔥'];
 
 interface MessageBubbleProps {
   msg: any;
   playerName: string;
+  isHovered: boolean;
+  setHoveredMsgId: (id: string | null) => void;
   isSelectMode: boolean;
+  isSelected: boolean;
   selectedIds: Set<string>;
   setSelectedIds: (ids: Set<string>) => void;
-  hoveredMsgId: string | null;
-  setHoveredMsgId: (id: string | null) => void;
-  setLightboxImg: (src: string | null) => void;
+  wikiDocs: { id: string; filepath: string }[];
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
-  msg, playerName, isSelectMode, selectedIds, setSelectedIds,
-  hoveredMsgId, setHoveredMsgId, setLightboxImg
+  msg,
+  playerName,
+  isHovered,
+  setHoveredMsgId,
+  isSelectMode,
+  isSelected,
+  selectedIds,
+  setSelectedIds,
+  wikiDocs
 }) => {
-  const { members } = useCastData();
-  const isSelected = selectedIds.has(msg.id);
-  const isHovered = hoveredMsgId === msg.id;
-
-  let display = msg.text || '';
-  if (display.startsWith('[IMG]')) {
-    const imgSrc = display.substring(5);
-    display = `<img src="${imgSrc}" class="chat-image-clickable" style="max-width: 100%; max-height: 200px; border-radius: 8px; cursor: pointer; border: 1px solid var(--chat-border); object-fit: contain;" />`;
-  } else {
-    display = display.replace(/\[\[(.*?)\]\]/g, (_m: string, p1: string) => {
-      const parts = p1.split('|');
-      const searchName = parts[0].trim();
-      const label = parts[1] ? parts[1].trim() : searchName;
-      return `<span class="chat-wiki-link" data-searchname="${searchName}" style="color: var(--chat-accent); text-decoration: underline; cursor: pointer; font-weight: bold;">📜 ${label}</span>`;
-    });
-  }
-
-  const autorMember = members.find((m: any) => m.nome === msg.autor || m.nome === msg.autor_alias);
-  const avatarUrl = autorMember?.imagem || autorMember?.avatar;
-  const autorName = msg.autor_alias || msg.autor || 'Anônimo';
+  const autorName = msg.autor || 'Anônimo';
+  const avatarUrl = msg.autor_avatar;
   const reactions: Record<string, string[]> = msg.reactions || {};
 
   return (
@@ -55,7 +43,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         borderLeft: msg.tipo === 'whisper' ? '3px solid #6366f1' : msg.tipo === 'me' ? '3px solid #ec4899' : 'none',
         borderRadius: '6px', cursor: isSelectMode ? 'pointer' : 'default',
         transition: 'background 0.15s', position: 'relative',
-        maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden'
+        maxWidth: '100%', boxSizing: 'border-box', overflow: 'visible',
+        zIndex: isHovered ? 999 : 1
       }}
       onClick={() => {
         if (isSelectMode && msg.id) {
@@ -82,7 +71,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )
       )}
 
-      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '0.72rem', color: 'var(--chat-accent)', marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="chat-author" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '4px' }}>
             {msg.tipo === 'whisper' ? <><EyeOff size={10} style={{ display: 'inline', marginRight: '3px' }} /> Sussurro para {msg.alvo}:</> : 
@@ -98,43 +87,33 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 toast.info('Mensagem copiada!');
               }} 
               title="Copiar mensagem"
-              style={{ background: 'transparent', border: 'none', color: 'var(--chat-text-secondary)', cursor: 'pointer', padding: 0 }}
+              style={{ background: 'none', border: 'none', color: 'var(--chat-text-secondary)', cursor: 'pointer', padding: 0 }}
             >
-              <Copy size={10} />
+              <Copy size={11} />
             </button>
           </span>
         </div>
 
-        {msg.pollId ? (
-          <PollWidget pollId={msg.pollId} playerName={playerName} />
-        ) : (
-          <div 
-            style={{ fontSize: '0.83rem', fontStyle: msg.tipo === 'me' ? 'italic' : 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere', color: msg.tipo === 'sistema' ? 'var(--chat-text-secondary)' : 'var(--chat-text-primary)' }} 
-            dangerouslySetInnerHTML={{ __html: display }} 
-            onClick={(e) => {
-              if (isSelectMode) return;
-              const target = e.target as HTMLElement;
-              if (target.tagName === 'IMG' && target.classList.contains('chat-image-clickable')) {
-                setLightboxImg((target as HTMLImageElement).src);
-              } else if (target.tagName === 'SPAN' && target.classList.contains('chat-wiki-link')) {
-                let filepath = target.getAttribute('data-filepath');
-                const searchname = target.getAttribute('data-searchname');
-                if (searchname && !filepath) {
-                  WikiIndexer.buildIndex().then(index => {
-                    const match = index.find(entry => entry.slug.toLowerCase() === searchname.toLowerCase());
-                    if (match) {
-                      window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: match.path }));
-                    } else {
-                      toast.info(`O documento "${searchname}" não foi encontrado na Wiki.`);
-                    }
-                  });
-                } else if (filepath) {
+        {/* CONTEÚDO DA MENSAGEM */}
+        <div 
+          style={{ fontSize: '0.8rem', wordBreak: 'break-word', color: msg.tipo === 'me' ? '#f472b6' : 'var(--chat-text-primary)' }}
+          dangerouslySetInnerHTML={{ __html: msg.text }}
+          onClick={(e) => {
+            const target = e.target as HTMLElement;
+            if (target.classList.contains('wiki-link')) {
+              const name = target.getAttribute('data-wiki-name');
+              if (name) {
+                const doc = wikiDocs.find(w => w.id.toLowerCase() === name.toLowerCase());
+                const filepath = doc ? doc.filepath : null;
+                if (!filepath) {
+                  toast.error(`Doc Wiki "${name}" não encontrado.`);
+                } else {
                   window.dispatchEvent(new CustomEvent('open-wiki-doc', { detail: filepath }));
                 }
               }
-            }}
-          />
-        )}
+            }
+          }}
+        />
 
         {/* EMOJI REAÇÕES ATIVAS */}
         {Object.keys(reactions).length > 0 && (
@@ -165,16 +144,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       {/* BARRA DE EMOJIS RÁPIDA NO HOVER */}
       {isHovered && msg.id && !isSelectMode && (
         <div style={{
-          position: 'absolute', top: '-14px', right: '8px',
-          background: 'var(--chat-bg-primary)', backdropFilter: 'blur(8px)',
-          border: '1px solid var(--chat-border)', borderRadius: '14px',
-          padding: '2px 6px', display: 'flex', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 10
+          position: 'absolute', top: '-18px', right: '8px',
+          background: 'rgba(15, 23, 42, 0.98)', backdropFilter: 'blur(10px)',
+          border: '1px solid var(--glass-border)', borderRadius: '16px',
+          padding: '3px 8px', display: 'flex', gap: '6px', boxShadow: '0 6px 20px rgba(0,0,0,0.8)', zIndex: 99999
         }}>
           {QUICK_REACTIONS.map(emoji => (
             <button
               key={emoji}
               onClick={(e) => { e.stopPropagation(); toggleMessageReaction(msg.id, emoji, playerName); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '1px' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', padding: '2px 4px', transition: 'transform 0.1s' }}
               title={`Reagir com ${emoji}`}
             >
               {emoji}
