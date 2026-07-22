@@ -41,10 +41,7 @@ try {
   webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
     signaling: [
-      'wss://dozero.onrender.com',
-      'wss://signaling.dozero.app',
-      'wss://y-webrtc-signaling-eu.herokuapp.com',
-      'wss://signaling.yjs.dev'
+      'wss://dozero.onrender.com'
     ]
   });
 } catch (error) {
