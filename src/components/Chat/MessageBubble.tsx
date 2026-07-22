@@ -1,6 +1,6 @@
 // src/components/Chat/MessageBubble.tsx
 import React, { useState } from 'react';
-import { EyeOff, User, Copy } from 'lucide-react';
+import { EyeOff, User, Copy, Smile } from 'lucide-react';
 import { toggleMessageReaction } from '../../store/chat';
 import { toast } from '../UI/Toast';
 
@@ -32,11 +32,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const autorName = msg.autor || 'Anônimo';
   const avatarUrl = msg.autor_avatar;
   const reactions: Record<string, string[]> = msg.reactions || {};
+  const [showReactions, setShowReactions] = useState(false);
+
+  const isReactionVisible = isHovered || showReactions;
 
   return (
     <div
       onMouseEnter={() => setHoveredMsgId(msg.id)}
-      onMouseLeave={() => setHoveredMsgId(null)}
+      onMouseLeave={() => { setHoveredMsgId(null); setShowReactions(false); }}
       style={{
         display: 'flex', gap: '8px', margin: '4px 0', padding: '6px 8px',
         background: isSelected ? 'rgba(168,85,247,0.2)' : msg.tipo === 'whisper' ? 'rgba(99,102,241,0.1)' : msg.tipo === 'sistema' ? 'rgba(0,0,0,0.2)' : 'transparent',
@@ -44,7 +47,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         borderRadius: '6px', cursor: isSelectMode ? 'pointer' : 'default',
         transition: 'background 0.15s', position: 'relative',
         maxWidth: '100%', boxSizing: 'border-box', overflow: 'visible',
-        zIndex: isHovered ? 999 : 1
+        zIndex: isReactionVisible ? 999 : 1
       }}
       onClick={() => {
         if (isSelectMode && msg.id) {
@@ -78,8 +81,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
              msg.tipo === 'me' ? '' : 
              <strong style={{ color: msg.autor_color || 'inherit' }}>{autorName}</strong>}
           </span>
-          <span style={{ color: 'var(--chat-text-secondary)', fontSize: '0.62rem', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          <span style={{ color: 'var(--chat-text-secondary)', fontSize: '0.62rem', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowReactions(!showReactions);
+              }} 
+              title="Reagir com emoji"
+              style={{ background: 'none', border: 'none', color: showReactions ? '#c084fc' : 'var(--chat-text-secondary)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+            >
+              <Smile size={12} />
+            </button>
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -87,7 +100,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 toast.info('Mensagem copiada!');
               }} 
               title="Copiar mensagem"
-              style={{ background: 'none', border: 'none', color: 'var(--chat-text-secondary)', cursor: 'pointer', padding: 0 }}
+              style={{ background: 'none', border: 'none', color: 'var(--chat-text-secondary)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
             >
               <Copy size={11} />
             </button>
@@ -141,8 +154,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
       </div>
 
-      {/* BARRA DE EMOJIS RÁPIDA NO HOVER */}
-      {isHovered && msg.id && !isSelectMode && (
+      {/* BARRA DE EMOJIS RÁPIDA (HOVER OU TAP) */}
+      {isReactionVisible && msg.id && !isSelectMode && (
         <div style={{
           position: 'absolute', top: '-18px', right: '8px',
           background: 'rgba(15, 23, 42, 0.98)', backdropFilter: 'blur(10px)',
@@ -152,7 +165,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {QUICK_REACTIONS.map(emoji => (
             <button
               key={emoji}
-              onClick={(e) => { e.stopPropagation(); toggleMessageReaction(msg.id, emoji, playerName); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMessageReaction(msg.id, emoji, playerName);
+                setShowReactions(false);
+              }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', padding: '2px 4px', transition: 'transform 0.1s' }}
               title={`Reagir com ${emoji}`}
             >
