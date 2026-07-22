@@ -1,5 +1,6 @@
 import * as Y from 'yjs';
 import { WebrtcProvider } from 'y-webrtc';
+import { WebsocketProvider } from 'y-websocket';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
 // The Yjs document that holds the entire shared state
@@ -14,18 +15,23 @@ const roomName = urlParams.get('room') || 'dozero-mesa-principal-v2';
 const roomPassword = urlParams.get('pass') || ''; // Se estiver vazio, não criptografa
 
 // =========================================================================
-// REAL-TIME LOCAL MULTIPLAYER (CROSS-TAB SYNC)
-// =========================================================================
-// y-webrtc already handles local cross-tab synchronization automatically via its own BroadcastChannel.
-
-
-// =========================================================================
 // OFFLINE STORAGE (INDEXEDDB)
 // =========================================================================
 export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 
 // =========================================================================
-// REAL-TIME REMOTE MULTIPLAYER (WebRTC P2P)
+// REAL-TIME CLOUD SYNC & PERSISTENCE (WebSocket Central)
+// =========================================================================
+let websocketProvider: WebsocketProvider | any = null;
+try {
+  websocketProvider = new WebsocketProvider('wss://demos.yjs.dev', roomName, doc);
+} catch (error) {
+  console.warn("WebSocket Provider falhou em iniciar", error);
+}
+export const wsProvider = websocketProvider;
+
+// =========================================================================
+// REAL-TIME REMOTE MULTIPLAYER (WebRTC P2P Fallback)
 // =========================================================================
 let webrtcProvider: WebrtcProvider | any = null;
 try {
@@ -62,7 +68,9 @@ export const state = {
   trades: doc.getMap('trades'),
   conspiracy: doc.getMap('conspiracy'),
   players: doc.getMap('players'),
-  chatConfig: doc.getMap('chatConfig')
+  chatConfig: doc.getMap('chatConfig'),
+  gmNotes: doc.getMap('gmNotes'),
+  customItems: doc.getMap('customItems')
 };
 
 export function connectProvider() {

@@ -3,8 +3,9 @@ import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { WikiEditor } from '../../Wiki/WikiEditor';
 import { saveMarkdownContent } from '../../../utils/githubApi';
 import { Plus, X, Save, FileText, Trash2 } from 'lucide-react';
-
+import { state } from '../../../store';
 import { toast } from '../../UI/Toast';
+
 interface NoteTab {
   id: string;
   title: string;
@@ -18,6 +19,9 @@ interface GMNotesWidgetProps {
 export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
   const [tabs, setTabs] = useState<NoteTab[]>(() => {
     try {
+      const shared = state.gmNotes.get('tabs') as NoteTab[];
+      if (shared && shared.length > 0) return shared;
+      
       const saved = localStorage.getItem('dozero_gm_notes');
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -32,8 +36,27 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0]?.id || '');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Inscrever para sincronização Yjs em tempo real
+  useEffect(() => {
+    const observer = () => {
+      const shared = state.gmNotes.get('tabs') as NoteTab[];
+      if (shared && Array.isArray(shared) && shared.length > 0) {
+        setTabs(shared);
+      }
+    };
+    state.gmNotes.observe(observer);
+    return () => state.gmNotes.unobserve(observer);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('dozero_gm_notes', JSON.stringify(tabs));
+    try {
+      const currentShared = JSON.stringify(state.gmNotes.get('tabs'));
+      const newLocal = JSON.stringify(tabs);
+      if (currentShared !== newLocal) {
+        state.gmNotes.set('tabs', tabs);
+      }
+    } catch (e) {}
   }, [tabs]);
 
   const activeTab = tabs.find(t => t.id === activeTabId);

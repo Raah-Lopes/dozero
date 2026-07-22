@@ -109,37 +109,6 @@ const CATALOGO_ITEMS: ItemCatalogo[] = [
   { nome: "Marca do Abismo", tipo: "maldicao", descricao: "Reduz a sanidade máxima e causa alucinações.", efeito: "penalidade_sanidade" },
   { nome: "Sangue Envenenado", tipo: "maldicao", descricao: "Sofrimento físico constante a cada rodada.", efeito: "dano_veneno" },
   { nome: "Olhar do Fracasso", tipo: "maldicao", descricao: "Todas as jogadas de ataque sofrem desvantagem.", efeito: "penalidade_ataque" },
-  { nome: "Fome Devoradora", tipo: "maldicao", descricao: "Necessidade incontrolável de comer constantemente.", efeito: "fome_dobrada" },
-
-  // OBJETOS DE CAMPANHA
-  { nome: "Chave do Portal Celestial", tipo: "objeto_campanha", descricao: "Abre fechaduras mágicas ancestrais.", efeito: "chave_portal" },
-  { nome: "Orbe Rastejante", tipo: "objeto_campanha", descricao: "Flutua e mapeia passagens ocultas na masmorra.", efeito: "revela_segredos" },
-  { nome: "Amuleto Antigo de Ametista", tipo: "objeto_campanha", descricao: "Garante proteção contra efeitos mentais.", efeito: "imunidade_mente" },
-  { nome: "Mapa Antigo do Reino", tipo: "objeto_campanha", descricao: "Delineia atalhos e rotas secretas terrestres.", efeito: "vantagem_sobrevivência" }
-];
-
-export const ArsenalMestreWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { index, refresh } = useWiki();
-  const [personagens, setPersonagens] = useState<FichaPersonagem[]>([]);
-  const [selectedChar, setSelectedChar] = useState<FichaPersonagem | null>(null);
-  const [activeTab, setActiveTab] = useState<'pools' | 'atributos' | 'catalogo'>('pools');
-  const [catalogoFilter, setCatalogoFilter] = useState<'todos' | 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha' | 'armadura'>('todos');
-
-  // Form states for creating a new char
-  const [showCreateChar, setShowCreateChar] = useState(false);
-  const [newCharNome, setNewCharNome] = useState('');
-  const [newCharStatus, setNewCharStatus] = useState<'npc' | 'inimigo'>('npc');
-  const [newCharHP, setNewCharHP] = useState(10);
-
-  const [customItems, setCustomItems] = useState<ItemCatalogo[]>(() => {
-    try {
-      const stored = localStorage.getItem('dozero_custom_items');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
   const [showCreateItem, setShowCreateItem] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemType, setNewItemType] = useState<'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha'>('arma');
