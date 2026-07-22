@@ -5,21 +5,28 @@ import { state } from '../../store';
 
 export const AIAssistantBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [pos, setPos] = useState({ x: window.innerWidth - 80, y: window.innerHeight - 80 }); // Default position
+  const [pos, setPos] = useState({ x: window.innerWidth - 75, y: window.innerHeight - 75 });
   const isDragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
   const [aiInput, setAiInput] = useState('');
   const [aiChat, setAiChat] = useState<{role: 'user' | 'ai', text: string}[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => localStorage.getItem('aiBotEnabled') !== 'false');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Contexto do Jogo
   const [tokensMap, setTokensMap] = useState<Map<string, any>>(new Map());
   const [backgroundStr, setBackgroundStr] = useState('');
 
+  // Ouvinte para evento do menu de configurações
   useEffect(() => {
-    const handler = () => setIsVisible(v => !v);
+    const handler = (e: any) => {
+      if (e?.detail?.forceState !== undefined) {
+        setIsVisible(e.detail.forceState);
+      } else {
+        setIsVisible(v => !v);
+      }
+    };
     window.addEventListener('toggle-ai-bot', handler);
     return () => window.removeEventListener('toggle-ai-bot', handler);
   }, []);
@@ -40,13 +47,27 @@ export const AIAssistantBot: React.FC = () => {
     };
   }, []);
 
-  // Define position on mount
+  const clampPos = (x: number, y: number) => {
+    const maxX = Math.max(10, window.innerWidth - 65);
+    const maxY = Math.max(10, window.innerHeight - 65);
+    return {
+      x: Math.max(10, Math.min(x, maxX)),
+      y: Math.max(10, Math.min(y, maxY))
+    };
+  };
+
+  // Define position on mount and on resize with clamping
   useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    setPos({ 
-      x: isMobile ? 20 : window.innerWidth - 420, 
-      y: window.innerHeight - 80 
-    });
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      setPos(prev => clampPos(
+        isMobile ? window.innerWidth - 65 : Math.min(prev.x, window.innerWidth - 65),
+        isMobile ? window.innerHeight - 130 : Math.min(prev.y, window.innerHeight - 65)
+      ));
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -58,7 +79,9 @@ export const AIAssistantBot: React.FC = () => {
   const onPointerMove = (e: React.PointerEvent) => {
     if (e.buttons !== 1) return;
     isDragging.current = true;
-    setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
+    const rawX = e.clientX - offset.current.x;
+    const rawY = e.clientY - offset.current.y;
+    setPos(clampPos(rawX, rawY));
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
@@ -173,9 +196,18 @@ export const AIAssistantBot: React.FC = () => {
           }}
         >
           {/* Header */}
-          <div style={{ background: 'rgba(236,72,153,0.15)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(236,72,153,0.2)' }}>
-            <Bot size={20} color="#ec4899" />
-            <h3 style={{ margin: 0, fontSize: '1rem', color: '#fbcfe8', fontFamily: 'var(--font-display)' }}>Assistente de Mestre</h3>
+          <div style={{ background: 'rgba(236,72,153,0.15)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(236,72,153,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bot size={20} color="#ec4899" />
+              <h3 style={{ margin: 0, fontSize: '1rem', color: '#fbcfe8', fontFamily: 'var(--font-display)' }}>Assistente de Mestre</h3>
+            </div>
+            <button 
+              onClick={() => setIsOpen(false)} 
+              style={{ background: 'transparent', border: 'none', color: '#fbcfe8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', borderRadius: '4px' }}
+              title="Fechar Assistente"
+            >
+              <X size={20} />
+            </button>
           </div>
 
           {/* Messages */}
