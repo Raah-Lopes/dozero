@@ -22,11 +22,14 @@ export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 // =========================================================================
 // REAL-TIME CLOUD SYNC & PERSISTENCE (WebSocket Central)
 // =========================================================================
+const customWsServer = urlParams.get('ws');
 let websocketProvider: WebsocketProvider | any = null;
-try {
-  websocketProvider = new WebsocketProvider('wss://demos.yjs.dev', roomName, doc);
-} catch (error) {
-  console.warn("WebSocket Provider falhou em iniciar", error);
+if (customWsServer) {
+  try {
+    websocketProvider = new WebsocketProvider(customWsServer, roomName, doc);
+  } catch (error) {
+    console.warn("WebSocket Provider falhou em iniciar", error);
+  }
 }
 export const wsProvider = websocketProvider;
 
