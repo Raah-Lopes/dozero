@@ -15,6 +15,24 @@ export interface GithubTreeResponse {
   tree: GithubTreeItem[];
 }
 
+export async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 10000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new Error(`Requisição excedeu o tempo limite (${timeoutMs / 1000}s)`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function initializeWikiTemplate(): Promise<void> {
   const config = getWikiConfig();
   if (!config.repoUrl) {
@@ -22,7 +40,7 @@ export async function initializeWikiTemplate(): Promise<void> {
   }
   const repoPath = config.repoUrl;
   
-  const response = await fetch('/api/wiki/init', {
+  const response = await fetchWithTimeout('/api/wiki/init', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath })
@@ -50,7 +68,7 @@ export async function fetchRepositoryTree(): Promise<GithubTreeItem[]> {
   }
 
   const url = `/api/wiki/tree?repoPath=${encodeURIComponent(repoPath)}`;
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
   
   if (!response.ok) {
     throw new Error(`Falha ao conectar no repositório local (Erro ${response.status}). Verifique se a pasta existe.`);
@@ -69,7 +87,7 @@ export async function fetchMarkdownContent(path: string): Promise<string> {
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   const url = `/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}&t=${Date.now()}`;
   
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
   
   if (!response.ok) {
     throw new Error(`Falha ao carregar arquivo local: ${response.statusText}`);
@@ -83,7 +101,7 @@ export async function openLocalFolder(path: string = ''): Promise<void> {
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
-  const response = await fetch('/api/wiki/open', {
+  const response = await fetchWithTimeout('/api/wiki/open', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath, path })
@@ -108,7 +126,7 @@ export async function saveImageToCloud(base64: string, filename: string): Promis
   }
   const config = getWikiConfig();
   const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-  const res = await fetch('/api/wiki/save-image', {
+  const res = await fetchWithTimeout('/api/wiki/save-image', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath, filename, base64 })
@@ -128,7 +146,7 @@ export async function saveMarkdownContent(path: string, content: string): Promis
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
-  const response = await fetch('/api/wiki/save', {
+  const response = await fetchWithTimeout('/api/wiki/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath, path, content })
@@ -145,7 +163,7 @@ export async function createFolder(path: string): Promise<void> {
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
-  const response = await fetch('/api/wiki/folder', {
+  const response = await fetchWithTimeout('/api/wiki/folder', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath, path })
@@ -162,7 +180,7 @@ export async function moveFileOrFolder(oldPath: string, newPath: string): Promis
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
-  const response = await fetch('/api/wiki/move', {
+  const response = await fetchWithTimeout('/api/wiki/move', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath, oldPath, newPath })
@@ -179,7 +197,7 @@ export async function deleteFileOrFolder(path: string): Promise<void> {
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
-  const response = await fetch('/api/wiki/file', {
+  const response = await fetchWithTimeout('/api/wiki/file', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath, path })
@@ -216,7 +234,7 @@ export async function pushToGithub(): Promise<void> {
   const config = getWikiConfig();
   let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
   
-  const response = await fetch('/api/wiki/push', {
+  const response = await fetchWithTimeout('/api/wiki/push', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoPath })

@@ -9,7 +9,7 @@ import { slugify, questTemplate } from '../CampaignManagerWidget';
 import type { CampaignQuest, QuestLootItem } from '../../../../store';
 import { convertImageToWebP } from '../../../../utils/imageUtils';
 
-import { toast } from '../../../UI/Toast';
+import { toast, confirmDialog } from '../../../UI/Toast';
 const STATUS_CONFIG = {
   quest: {
     active: { label: 'Ativa', color: '#38bdf8', border: 'rgba(56,189,248,0.3)', bg: 'rgba(12,74,110,0.4)' },
@@ -103,8 +103,8 @@ const addQuest = async (type: 'main' | 'side') => {
     upd({ quests: quests.map(q => q.id === questId ? { ...q, ...changes } : q) });
   };
 
-  const deleteQuest = (questId: string) => {
-    if (!selectedCampaign || !confirm('Excluir esta missão permanentemente?')) return;
+  const deleteQuest = async (questId: string) => {
+    if (!selectedCampaign || !(await confirmDialog('Excluir esta missão permanentemente?'))) return;
     const quests = selectedCampaign.quests || [];
     upd({ quests: quests.filter(q => q.id !== questId) });
   };

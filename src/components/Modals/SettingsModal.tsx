@@ -4,7 +4,7 @@ import {
   BookOpen, GitBranch, KeyRound, Check, Loader2,
   Swords, Scroll, User, Plug, Palette
 } from 'lucide-react';
-import { getWikiConfig, updateWikiConfig } from '../../store';
+import { getWikiConfig, updateWikiConfig, useUserStore } from '../../store';
 import { useRulesEngine } from '../../hooks/useRulesEngine';
 import { useTheme } from '../../hooks/useTheme';
 import { THEMES } from '../../themes';
@@ -208,7 +208,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   // ── State ──
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const { currentEngineId, setEngine, engines } = useRulesEngine();
-  const [isGM,         setIsGM]         = useState(localStorage.getItem('isGM') === 'true');
+  const { isGM, setIsGM } = useUserStore();
   const [aiEnabled,    setAiEnabled]    = useState(localStorage.getItem('aiBotEnabled') === 'true');
   const [wikiRepo,     setWikiRepo]     = useState('');
   const [wikiBranch,   setWikiBranch]   = useState('main');
@@ -220,7 +220,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
     setWikiRepo(config.repoUrl   || '');
     setWikiBranch(config.branch  || 'main');
     setWikiToken(config.token    || '');
-  }, []);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleSave = async () => {
     setSaving(true);

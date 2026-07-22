@@ -9,7 +9,7 @@ import { useRulesEngine } from '../../../hooks/useRulesEngine';
 import * as yaml from 'js-yaml';
 import { Dices, Swords, Target, Skull, ArrowRightCircle, ListOrdered, BookOpen, Bot, Send, Loader2 } from 'lucide-react';
 
-import { toast } from '../../UI/Toast';
+import { toast, confirmDialog } from '../../UI/Toast';
 const isD20 = true;
 const calcularSucessoHibrido = (r: any, b: any, c: any, d: any) => ({ grau: 'sucesso', label: 'Sucesso' });
 
@@ -864,12 +864,14 @@ ${vencedor}`, true);
       toast.info("Selecione um defensor!");
       return;
     }
-    if (!confirm(`Deseja realmente aplicar Morte Direta em ${defensor.nome}?`)) return;
+    if (!(await confirmDialog(`Deseja realmente aplicar Morte Direta em ${defensor.nome}?`))) return;
     const def = { ...defensor };
     def.pv = 0;
-    if (!def.status_efeitos.includes('Morto')) {
-      def.status_efeitos = [...def.status_efeitos, 'Morto'];
+    const statusEfeitos = Array.isArray(def.status_efeitos) ? [...def.status_efeitos] : [];
+    if (!statusEfeitos.includes('Morto')) {
+      statusEfeitos.push('Morto');
     }
+    def.status_efeitos = statusEfeitos;
     await salvarFicha(def);
     setDefensor(def);
     recarregar();

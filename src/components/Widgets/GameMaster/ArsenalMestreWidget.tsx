@@ -108,7 +108,13 @@ const CATALOGO_ITEMS: ItemCatalogo[] = [
   // MALDIÇÕES
   { nome: "Marca do Abismo", tipo: "maldicao", descricao: "Reduz a sanidade máxima e causa alucinações.", efeito: "penalidade_sanidade" },
   { nome: "Sangue Envenenado", tipo: "maldicao", descricao: "Sofrimento físico constante a cada rodada.", efeito: "dano_veneno" },
-  { nome: "Olhar do Fracasso", tipo: "maldicao", descricao: "Todas as jogadas de ataque sofrem desvantagem.", efeito: "penalidade_ataque" },
+];
+
+interface ArsenalMestreWidgetProps {
+  onClose?: () => void;
+}
+
+export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClose }) => {
   const [showCreateItem, setShowCreateItem] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemType, setNewItemType] = useState<'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha'>('arma');

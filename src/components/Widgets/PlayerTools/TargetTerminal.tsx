@@ -257,9 +257,9 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!tokenId) return;
-    if (confirm('Tem certeza que deseja deletar este personagem permanentemente?')) {
+    if (await confirmDialog('Tem certeza que deseja deletar este personagem permanentemente?')) {
       state.tokens.delete(tokenId);
       window.dispatchEvent(new CustomEvent('close-sheet', { detail: { tokenId } }));
     }
@@ -1249,8 +1249,8 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                 {!macro.isAuto && (
                   <>
-                    <button onClick={() => {
-                      if (confirm('Deseja excluir esta macro?')) {
+                    <button onClick={async () => {
+                      if (await confirmDialog('Deseja excluir esta macro?')) {
                         const updatedMacros = [...(tokenData.macros || baseMacrosMD || [])];
                         updatedMacros.splice(idx, 1);
                         if (tokenData.wikiPath) import('../../../services/wiki/syncWiki').then(s => s.syncMultipleFieldsToWiki(tokenData.wikiPath, { macros: updatedMacros }));

@@ -1,7 +1,7 @@
 // src/components/Chat/CombatLog.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { state } from '../../store';
-import { Trash2, Download, Settings, Filter, Dices, Sword, BookOpen, MessageSquare, FileText, Code } from 'lucide-react';
+import { Trash2, Download, Settings, Filter, Dices, Sword, BookOpen, MessageSquare, FileText, Code, Search, X } from 'lucide-react';
 import { toast } from '../UI/Toast';
 import { confirmDialog } from '../UI/Toast';
 
@@ -15,7 +15,14 @@ interface LogMessage {
 export const CombatLog: React.FC = () => {
   const [messages, setMessages] = useState<LogMessage[]>([]);
   const [showMenu, setShowMenu] = useState(false);
-  const [filtrosAtivos, setFiltrosAtivos] = useState<Set<string>>(new Set(['rolagens', 'combate', 'narrativo', 'sistema']));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filtrosAtivos, setFiltrosAtivos] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('dozero_combatlog_filtros');
+      if (saved) return new Set(JSON.parse(saved));
+    } catch (e) {}
+    return new Set(['rolagens', 'combate', 'narrativo', 'sistema']);
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -112,7 +119,15 @@ export const CombatLog: React.FC = () => {
 
   const mensagensFiltradas = messages.filter(msg => {
     const cat = classificarMensagem(msg.text);
-    return filtrosAtivos.has(cat);
+    if (!filtrosAtivos.has(cat)) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const div = document.createElement('div');
+      div.innerHTML = msg.text;
+      const cleanText = (div.textContent || div.innerText || '').toLowerCase();
+      return cleanText.includes(q);
+    }
+    return true;
   });
 
   const toggleFiltro = (filtro: string) => {
@@ -127,6 +142,7 @@ export const CombatLog: React.FC = () => {
       next.add(filtro);
     }
     setFiltrosAtivos(next);
+    localStorage.setItem('dozero_combatlog_filtros', JSON.stringify(Array.from(next)));
   };
 
   return (
@@ -167,6 +183,23 @@ export const CombatLog: React.FC = () => {
               </button>
             );
           })}
+        </div>
+
+        {/* Search Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '4px', padding: '2px 6px', gap: '4px', flex: '1 1 100px', minWidth: '80px', height: '26px' }}>
+          <Search size={12} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Buscar no log..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.7rem', outline: 'none', width: '100%' }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0, display: 'flex' }}>
+              <X size={12} />
+            </button>
+          )}
         </div>
 
         {/* Floating Menu Toggle */}

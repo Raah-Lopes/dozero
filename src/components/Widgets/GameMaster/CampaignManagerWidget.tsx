@@ -23,6 +23,7 @@ import {
   FileText, Award, Users, Image,  
    MinusCircle
 } from 'lucide-react';
+import { toast, confirmDialog } from '../../UI/Toast';
 import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
 import { OverviewTab } from './CampaignManager/OverviewTab';
@@ -289,8 +290,8 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
     upd({ arcs: selectedCampaign.arcs.map(a => a.id === arcId ? { ...a, ...changes } : a) });
   };
 
-  const deleteArc = (arcId: string) => {
-    if (!selectedCampaign || !confirm('Remover este arco narrativo?')) return;
+  const deleteArc = async (arcId: string) => {
+    if (!selectedCampaign || !(await confirmDialog('Remover este arco narrativo?'))) return;
     upd({ arcs: selectedCampaign.arcs.filter(a => a.id !== arcId) });
   };
 
@@ -343,9 +344,9 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
     upd({ sessions: selectedCampaign.sessions.map(s => s.id === sessId ? { ...s, ...changes } : s) });
   };
 
-  const deleteSession = (sessId: string) => {
-    if (!selectedCampaign || !confirm('Remover esta sessão?')) return;
-    upd({ sessions: selectedCampaign.sessions.filter(s => s.id !== sessId) });
+  const deleteSession = async (sessionId: string) => {
+    if (!selectedCampaign || !(await confirmDialog('Remover esta sessão?'))) return;
+    upd({ sessions: selectedCampaign.sessions.filter(s => s.id !== sessionId) });
   };
 
   const linkSessionToWiki = async (sess: CampaignSession, sessNum: number) => {
@@ -672,9 +673,9 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
 
                   {/* Delete */}
                   <button
-                    className="cm-danger-btn"
-                    onClick={() => { if (confirm(`Excluir "${selectedCampaign.name}"?`)) deleteCampaign(selectedCampaign.id); }}
-                    title="Excluir campanha"
+                    className="btn-icon theme-red"
+                    onClick={async (e) => { e.stopPropagation(); if (await confirmDialog(`Excluir "${selectedCampaign.name}"?`)) deleteCampaign(selectedCampaign.id); }}
+                    title="Excluir Campanha"
                     style={{ marginLeft: '4px' }}
                   >
                     <Trash2 size={15} />

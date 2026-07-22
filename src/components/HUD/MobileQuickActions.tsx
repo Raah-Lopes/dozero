@@ -15,7 +15,7 @@ export const MobileQuickActions: React.FC = () => {
     {
       icon: BookOpen,
       label: 'Conspiração',
-      action: () => toggleWindow('conspiracyBoard')
+      action: () => toggleWindow('mindMap')
     },
     {
       icon: ShieldAlert,

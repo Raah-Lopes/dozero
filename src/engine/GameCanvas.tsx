@@ -73,7 +73,7 @@ export const GameCanvas: React.FC = () => {
         if (localState.editingTextId) {
            import('../store').then(s => {
              s.updateMapTextProps(localState.editingTextId!, { text: textEditorInput.value });
-           });
+           }).catch(() => {});
         }
       });
 
@@ -1441,7 +1441,7 @@ export const GameCanvas: React.FC = () => {
 
           // Fecha a edição de texto ao clicar no mapa com a ferramenta de Seleção
           if (localState.editingTextId) {
-             import('../store').then(s => s.setEditingTextId(null));
+             import('../store').then(s => s.setEditingTextId(null)).catch(() => {});
           }
 
           if (e.pointerType === 'touch') {
@@ -1512,7 +1512,7 @@ export const GameCanvas: React.FC = () => {
                 });
              });
            } else {
-             import('../store').then(store => store.clearBgSelection());
+             import('../store').then(store => store.clearBgSelection()).catch(() => {});
            }
         }
       });

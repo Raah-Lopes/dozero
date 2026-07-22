@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { state, triggerClockConsequence } from '../../store';
+import { state, triggerClockConsequence, useIsGM } from '../../store';
 import type { TensionClock } from '../../store';
 import { TensionClockWidget } from '../Widgets/GameMaster/TensionClockWidget';
 
 export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }> = ({ onEditClock }) => {
   const [clocks, setClocks] = useState<TensionClock[]>([]);
-  const isGM = localStorage.getItem('isGM') === 'true';
+  const isGM = useIsGM();
 
   useEffect(() => {
     // Carrega iniciais ignorando corrompidos

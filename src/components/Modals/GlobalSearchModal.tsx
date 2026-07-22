@@ -49,7 +49,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     { name: 'Gerador de Locais', type: 'Widget', icon: LayoutGrid, action: () => { toggleWindow('locationGenerator'); onClose(); } },
     { name: 'Biblioteca de Atores / Personagens', type: 'Ferramenta', icon: User, action: () => { setShowActors(true); onClose(); } },
     { name: 'Estúdio de Inteligência Artificial (IA)', type: 'Widget', icon: LayoutGrid, action: () => { toggleWindow('aiStudio'); onClose(); } },
-    { name: 'Painel de Conspiração (MindMap)', type: 'Widget', icon: LayoutGrid, action: () => { toggleWindow('conspiracyBoard'); onClose(); } },
+    { name: 'Painel de Conspiração (MindMap)', type: 'Widget', icon: LayoutGrid, action: () => { toggleWindow('mindMap'); onClose(); } },
     { name: 'Configurações de Layout & Multi-Monitor', type: 'Ferramenta', icon: LayoutGrid, action: () => { window.dispatchEvent(new CustomEvent('open-layout-presets')); onClose(); } },
   ].filter(t => !q || t.name.toLowerCase().includes(q));
 

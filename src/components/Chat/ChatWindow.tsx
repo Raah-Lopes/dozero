@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { pushAdvancedChatMessage, ChatMessageOptions, getGMChatConfig } from '../../store/chat';
-import { state } from '../../store';
+import { state, useIsGM } from '../../store';
 import { Pin, X, Terminal } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { toast } from '../UI/Toast';
@@ -18,6 +18,7 @@ import { useChatIdentity } from './hooks/useChatIdentity';
 import { useChatState } from './hooks/useChatState';
 
 export const ChatWindow: React.FC = () => {
+  const isGM = useIsGM();
   const { playerName, setPlayerName, playerColor, setPlayerColor, clientId } = useChatIdentity();
   const { messages, chatSound, setChatSound, typingPlayers, setTypingStatus } = useChatState(clientId, playerName);
 
@@ -72,7 +73,6 @@ export const ChatWindow: React.FC = () => {
   const handleSend = () => {
     if (!input.trim()) return;
 
-    const isGM = localStorage.getItem('isGM') === 'true';
     const gmConfig = getGMChatConfig();
 
     if (!isGM) {

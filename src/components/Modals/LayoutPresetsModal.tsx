@@ -130,7 +130,7 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
       toggleWindow('playerQuickBar', true);
       toast.success('Layout "Visão do Jogador" aplicado!');
     } else if (type === 'narrative') {
-      toggleWindow('conspiracyBoard', true);
+      openWindow('mindMap');
       toggleWindow('oracle', true);
       toast.success('Layout "Modo Narrativo" aplicado!');
     }

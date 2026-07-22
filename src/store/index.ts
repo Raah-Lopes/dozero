@@ -11,4 +11,5 @@ export * from './wiki';
 export * from './world';
 export * from './mapTexts';
 export * from './props';
+export * from './user';
 export * from './useCommandRegistry';

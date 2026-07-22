@@ -145,7 +145,7 @@ export const NPCPanel: React.FC = () => {
       if (!rawMd) return;
       const parts = rawMd.split('---');
       if (parts.length < 3) {
-        alert("O arquivo não tem formato Frontmatter válido.");
+        toast.error("O arquivo não tem formato Frontmatter válido.");
         return;
       }
 
@@ -190,14 +190,14 @@ export const NPCPanel: React.FC = () => {
       }]);
     } catch (err) {
       console.error("Erro ao evocar da biblioteca:", err);
-      alert("Falha ao conjurar entidade.");
+      toast.error("Falha ao conjurar entidade.");
     }
   };
 
   // Fábrica automática de Fichas .md para tokens sem ficha linked
   const handleGenerateSheetForToken = async (token: any) => {
     if (generatorCategories.length === 0) {
-      alert("Carregando tabelas do Oráculo. Aguarde um instante...");
+      toast.info("Carregando tabelas do Oráculo. Aguarde um instante...");
       return;
     }
     
@@ -333,13 +333,13 @@ export const NPCPanel: React.FC = () => {
         isFailure: false
       }]);
 
-      alert(`✅ Ficha de "${name}" criada e vinculada com sucesso!`);
+      toast.success(`✅ Ficha de "${name}" criada e vinculada com sucesso!`);
       
       WikiIndexer.clearCache();
       window.dispatchEvent(new Event('wiki-updated'));
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar ficha gerada.");
+      toast.error("Erro ao salvar ficha gerada.");
     }
   };
 

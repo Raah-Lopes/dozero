@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, HelpCircle, Bell, BellOff, Trash2, X, Download, Shield } from 'lucide-react';
-import { state } from '../../store';
+import { state, useIsGM } from '../../store';
 import { updateGMChatConfig, getGMChatConfig, GMChatConfig } from '../../store/chat';
 import { toast } from '../UI/Toast';
 
@@ -143,7 +143,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           </button>
 
           {/* PAINEL DO MESTRE DO CHAT */}
-          {localStorage.getItem('isGM') === 'true' && (
+          {useIsGM() && (
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowGMChatMenu(!showGMChatMenu)}
