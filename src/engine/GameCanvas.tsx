@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 
 import { hexRound, euclideanDistance, pixelToHex, hexToPixel, snapToGrid } from './utils/gridUtils';
@@ -188,7 +188,7 @@ export const GameCanvas: React.FC = () => {
       });
 
       canvasEl.addEventListener('pointerdown', (e) => {
-        if (e.shiftKey && e.button === 0) {
+        if ((e.shiftKey || localState.activeTool === 'ruler') && e.button === 0) {
            isMeasuring = true;
            measureStart = getWorldPos(e.clientX, e.clientY);
            return;
@@ -214,11 +214,10 @@ export const GameCanvas: React.FC = () => {
             const pts = Array.from(activePointers.values());
             pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
             pinchStartScale = viewport.scale.x;
-          } else if (activePointers.size === 1) {
+          } else if (activePointers.size === 1 && localState.activeTool !== 'eraser') {
             isTouchPanning = true;
             touchPanStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
             longPressStart = { x: e.clientX, y: e.clientY };
-            
             longPressTimer = setTimeout(() => {
                if (activePointers.size === 1 && isTouchPanning) {
                  isTouchPanning = false;
@@ -228,14 +227,131 @@ export const GameCanvas: React.FC = () => {
                  selectionBox.clear();
                  selectionBox.visible = true;
                  clearTokenSelection();
-                 // Removed vibrate to prevent Chrome intervention warning in setTimeout
                }
             }, 500);
           }
         }
+        
+        // --- ERASER GLOBAL LISTENER ---
+        if (localState.activeTool === 'eraser' && e.button === 0) {
+            const doErase = (localPos: {x: number, y: number}) => {
+                const drawRadius = (localState.drawWidth || 4) * 3 + 10;
+                let erasedAnything = false;
+                for (const [id, d] of state.drawings.entries()) {
+                   const draw = d as any;
+                   if (draw.layerId) {
+                      const layer = state.drawingLayers.get(draw.layerId) as any;
+                      if (layer && layer.hidden) continue;
+                   }
+                   if (draw.type === 'path' || draw.type === 'pen' || draw.type === 'arrow') {
+                       if (draw.points && draw.points.length > 0) {
+                           if (e.shiftKey) {
+                               let hit = false;
+                               for (let i = 0; i < draw.points.length - 1; i++) {
+                                   const p1 = draw.points[i];
+                                   const p2 = draw.points[i+1];
+                                   const l2 = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+                                   let t = 0;
+                                   if (l2 !== 0) {
+                                       t = ((localPos.x - p1.x) * (p2.x - p1.x) + (localPos.y - p1.y) * (p2.y - p1.y)) / l2;
+                                       t = Math.max(0, Math.min(1, t));
+                                   }
+                                   const projX = p1.x + t * (p2.x - p1.x);
+                                   const projY = p1.y + t * (p2.y - p1.y);
+                                   if (Math.hypot(localPos.x - projX, localPos.y - projY) < drawRadius) {
+                                       hit = true; break;
+                                   }
+                               }
+                               if (!hit && draw.points.length === 1 && Math.hypot(localPos.x - draw.points[0].x, localPos.y - draw.points[0].y) < drawRadius) hit = true;
+                               if (hit) {
+                                   removeDrawing(id);
+                                   erasedAnything = true;
+                               }
+                           } else {
+                               let wasErased = false;
+                               let currentChunk: any[] = [];
+                               const chunks: any[][] = [];
+                               for (let i = 0; i < draw.points.length; i++) {
+                                   const p = draw.points[i];
+                                   const hitVertex = Math.hypot(localPos.x - p.x, localPos.y - p.y) <= drawRadius;
+                                   let hitSegment = false;
+                                   if (i > 0 && !hitVertex) {
+                                       const pPrev = draw.points[i-1];
+                                       const l2 = Math.pow(pPrev.x - p.x, 2) + Math.pow(pPrev.y - p.y, 2);
+                                       let t = 0;
+                                       if (l2 !== 0) {
+                                           t = ((localPos.x - pPrev.x) * (p.x - pPrev.x) + (localPos.y - pPrev.y) * (p.y - pPrev.y)) / l2;
+                                           t = Math.max(0, Math.min(1, t));
+                                       }
+                                       const projX = pPrev.x + t * (p.x - pPrev.x);
+                                       const projY = pPrev.y + t * (p.y - pPrev.y);
+                                       hitSegment = Math.hypot(localPos.x - projX, localPos.y - projY) <= drawRadius;
+                                   }
+                                   if (hitVertex || hitSegment) {
+                                       wasErased = true;
+                                       if (currentChunk.length > 0) chunks.push(currentChunk);
+                                       currentChunk = [];
+                                       if (hitSegment) currentChunk.push(p);
+                                   } else {
+                                       currentChunk.push(p);
+                                   }
+                               }
+                               if (currentChunk.length > 0) chunks.push(currentChunk);
+                               if (wasErased) {
+                                   const validChunks = chunks.filter(c => c.length > 1);
+                                   if (validChunks.length === 0) removeDrawing(id);
+                                   else {
+                                       updateDrawing(id, { points: validChunks[0] });
+                                       for (let c = 1; c < validChunks.length; c++) {
+                                           addDrawing({ id: 'draw_' + Date.now() + Math.random().toString(36).substring(2,6), type: draw.type, color: draw.color, width: draw.width, layerId: draw.layerId, zIndex: draw.zIndex, points: validChunks[c] });
+                                       }
+                                   }
+                                   erasedAnything = true;
+                               }
+                           }
+                       }
+                   } else if (draw.type === 'shape') {
+                       if (draw.points && draw.points.length >= 2) {
+                          const p1 = draw.points[0];
+                          const p2 = draw.points[draw.points.length - 1];
+                          const minX = Math.min(p1.x, p2.x); const minY = Math.min(p1.y, p2.y);
+                          const w = Math.abs(p2.x - p1.x); const h = Math.abs(p2.y - p1.y);
+                          if (localPos.x >= minX - drawRadius && localPos.x <= minX + w + drawRadius && localPos.y >= minY - drawRadius && localPos.y <= minY + h + drawRadius) {
+                             removeDrawing(id);
+                             erasedAnything = true;
+                          }
+                       }
+                   }
+                }
+                return erasedAnything;
+            };
+            const rect = canvasEl.getBoundingClientRect();
+            doErase(viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top }));
+            
+            const onEraseMove = (moveEvent: PointerEvent) => doErase(viewport.toLocal({ x: moveEvent.clientX - rect.left, y: moveEvent.clientY - rect.top }));
+            const onEraseUp = () => { window.removeEventListener('pointermove', onEraseMove); window.removeEventListener('pointerup', onEraseUp); };
+            window.addEventListener('pointermove', onEraseMove);
+            window.addEventListener('pointerup', onEraseUp);
+            return;
+        }
+
+        // Select logic moved to Pixi bgCatcher
       });
 
       const handleMainPointerMove = (e: PointerEvent) => {
+        if (localState.activeTool === 'eraser') {
+           eraserCursor.visible = true;
+           const rect = canvasEl.getBoundingClientRect();
+           const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+           const drawRadius = (localState.drawWidth || 4) * 3 + 10;
+           eraserCursor.clear();
+           eraserCursor.circle(localPos.x, localPos.y, drawRadius);
+           eraserCursor.stroke({ color: 0xef4444, width: 2 / viewport.scale.x, alpha: 0.9 });
+           eraserCursor.fill({ color: 0xef4444, alpha: 0.2 });
+        } else {
+           if (eraserCursor.visible) eraserCursor.visible = false;
+        }
+
         if (e.pointerType === 'touch' && activePointers.has(e.pointerId)) {
           activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
           
@@ -550,6 +666,12 @@ export const GameCanvas: React.FC = () => {
       });
       rulerText.visible = false;
       viewport.addChild(rulerText);
+
+      // Visual Eraser Cursor
+      const eraserCursor = new Graphics();
+      eraserCursor.eventMode = 'none';
+      eraserCursor.visible = false;
+      viewport.addChild(eraserCursor);
 
       const drawGrid = () => {
         grid.clear();
@@ -923,51 +1045,9 @@ export const GameCanvas: React.FC = () => {
             let lastClickTime = 0;
             sprite.on('pointerdown', (e) => {
                if (e.button === 0) {
-                  e.stopPropagation();
-                  const now = Date.now();
-                  if (now - lastClickTime < 300) {
-                     // Duplo clique - abre painel de interação
-                     window.dispatchEvent(new CustomEvent('open-prop-interaction', { detail: p.id }));
-                  } else {
-                     if (localState.activeTool === 'select') {
-                        if (p.isLocked) return;
-                        
-                        const selectedProps = getSelectedProps();
-                        if (!selectedProps.includes(p.id)) {
-                           if (!e.shiftKey) {
-                              clearTokenSelection();
-                              clearPropSelection();
-                           }
-                           togglePropSelection(p.id, false);
-                        }
-                        
-                        draggingTextId = `prop_${p.id}`; 
-                        const localPos = viewport.toLocal(e.global);
-                        
-                        propDragOffsets = {};
-                        tokenDragOffsets = {};
-                        propStartPositions = {};
-                        tokenStartPositions = {};
-                        
-                        getSelectedProps().forEach(selId => {
-                           const s = propSprites[selId];
-                           if (s) {
-                              s.alpha = 0.5;
-                              propDragOffsets[selId] = { x: s.x - localPos.x, y: s.y - localPos.y };
-                              propStartPositions[selId] = { x: s.x, y: s.y };
-                           }
-                        });
-                        getSelectedTokens().forEach(selId => {
-                           const s = tokenSprites[selId]?.container;
-                           if (s) {
-                              s.alpha = 0.5;
-                              tokenDragOffsets[selId] = { x: s.x - localPos.x, y: s.y - localPos.y };
-                              tokenStartPositions[selId] = { x: s.x, y: s.y };
-                           }
-                        });
-                     }
+                  if (localState.activeTool !== 'select') {
+                     // 
                   }
-                  lastClickTime = now;
                }
             });
 
@@ -1205,58 +1285,16 @@ export const GameCanvas: React.FC = () => {
             token.hitArea = new Rectangle(-30, -30, 60, 60);
 
             token.on('pointerdown', (e) => {
-              e.stopPropagation();
-
               // Right click to target
               if (e.button === 2) {
+                e.stopPropagation();
                 toggleTarget(id);
                 return;
               }
               
-              const now = Date.now();
-              if (now - lastTokenClickTime < 300) {
-                 window.dispatchEvent(new CustomEvent('token-dblclick', { detail: { tokenId: id } }));
+              if (localState.activeTool !== 'select') {
+                 // Prevent drag on pen mode etc if needed
               }
-              lastTokenClickTime = now;
-
-              const selectedTokens = getSelectedTokens();
-              if (!selectedTokens.includes(id)) {
-                if (!e.shiftKey) {
-                   clearTokenSelection();
-                   clearPropSelection();
-                }
-                toggleTokenSelection(id, false);
-              } else if (e.shiftKey) {
-                // Se já está selecionado e segurou shift, desmarca
-                toggleTokenSelection(id, false);
-              }
-
-              draggingTokenId = id;
-              isTouchPanning = false; // Prevent camera fighting token drag on mobile
-              tokenDragOffsets = {};
-              propDragOffsets = {};
-              tokenStartPositions = {};
-              propStartPositions = {};
-              
-              const localPos = viewport.toLocal(e.global);
-              
-              getSelectedTokens().forEach(selId => {
-                const selToken = tokenSprites[selId]?.container;
-                if (selToken) {
-                  selToken.alpha = 0.5;
-                  tokenDragOffsets[selId] = { x: selToken.x - localPos.x, y: selToken.y - localPos.y };
-                  tokenStartPositions[selId] = { x: selToken.x, y: selToken.y };
-                }
-              });
-              
-              getSelectedProps().forEach(selId => {
-                 const s = propSprites[selId];
-                 if (s) {
-                    s.alpha = 0.5;
-                    propDragOffsets[selId] = { x: s.x - localPos.x, y: s.y - localPos.y };
-                    propStartPositions[selId] = { x: s.x, y: s.y };
-                 }
-              });
             });
 
             // Prevent context menu on right click on tokens
@@ -1362,7 +1400,7 @@ export const GameCanvas: React.FC = () => {
         
         if (!foundLeader) return;
 
-        getSelectedTokens().forEach(selId => {
+        Object.keys(tokenDragOffsets).forEach(selId => {
           const tokenData = tokenSprites[selId];
           if (!tokenData) return;
           const token = tokenData.container;
@@ -1377,16 +1415,16 @@ export const GameCanvas: React.FC = () => {
         });
         
         import('../store/props').then(m => {
-           getSelectedProps().forEach(selId => {
+           Object.keys(propDragOffsets).forEach(selId => {
               const selProp = propSprites[selId];
               if (!selProp) return;
-              selProp.alpha = 1;
+              
               const startPos = propStartPositions[selId];
               if (startPos) {
                  selProp.x = startPos.x + deltaX;
                  selProp.y = startPos.y + deltaY;
               }
-              m.updateMapProp(selId, { x: selProp.x, y: selProp.y });
+              m.updatePropProps(selId, { x: selProp.x, y: selProp.y });
            });
         });
         
@@ -1405,7 +1443,7 @@ export const GameCanvas: React.FC = () => {
           // e.getLocalPosition(viewport) gives world coords via Pixi event system (handles devicePixelRatio correctly)
           const worldPoint = e.getLocalPosition(viewport);
 
-          getSelectedTokens().forEach(selId => {
+          Object.keys(tokenDragOffsets).forEach(selId => {
             const selToken = tokenSprites[selId]?.container;
             const offset = tokenDragOffsets[selId];
             if (selToken && offset) {
@@ -1414,7 +1452,7 @@ export const GameCanvas: React.FC = () => {
             }
           });
 
-          getSelectedProps().forEach(selId => {
+          Object.keys(propDragOffsets).forEach(selId => {
             const selProp = propSprites[selId];
             const offset = propDragOffsets[selId];
             if (selProp && offset) {
@@ -1427,8 +1465,11 @@ export const GameCanvas: React.FC = () => {
             }
           });
 
-          if (getSelectedProps().length > 0) {
+          if (Object.keys(propDragOffsets).length > 0) {
             window.dispatchEvent(new Event('prop-selection-updated'));
+          }
+          if (Object.keys(tokenDragOffsets).length > 0) {
+            window.dispatchEvent(new Event('token-selection-updated'));
           }
         }
       });
@@ -1511,218 +1552,285 @@ export const GameCanvas: React.FC = () => {
          animate();
       });
 
+      let lastCentralClickTime = 0;
+      const centralSelectHandler = (e: any) => {
+         if (localState.activeTool !== 'select') return;
+         if (e.button !== 0 && e.button !== 2) return;
+         
+         // Allow gizmo interactions to proceed natively
+         let target = e.target;
+         while (target) {
+            if (target === gizmoBox || gizmoCorners.includes(target)) return;
+            target = target.parent;
+         }
+         
+         const localPos = viewport.toLocal(e.global);
+         const now = Date.now();
+         const isDoubleClick = now - lastCentralClickTime < 300;
+         lastCentralClickTime = now;
+         const shift = e.nativeEvent?.shiftKey || e.shiftKey || false;
+         
+         if (e.button === 2) {
+             let hitTokenId: string | null = null;
+             for (const [id, tSprite] of Object.entries(tokenSprites)) {
+                 if (!tSprite || !tSprite.container) continue;
+                 const c = tSprite.container;
+                 if (Math.hypot(c.x - localPos.x, c.y - localPos.y) < 30 * c.scale.x) { hitTokenId = id; break; }
+             }
+             if (hitTokenId) toggleTarget(hitTokenId);
+             return;
+         }
+         
+         // 1. Tokens
+         let hitTokenId: string | null = null;
+         for (const [id, tSprite] of Object.entries(tokenSprites)) {
+             if (!tSprite || !tSprite.container) continue;
+             const c = tSprite.container;
+             if (Math.hypot(c.x - localPos.x, c.y - localPos.y) < 30 * c.scale.x) { hitTokenId = id; break; }
+         }
+         if (hitTokenId) {
+            e.stopPropagation();
+            if (isDoubleClick) window.dispatchEvent(new CustomEvent('token-dblclick', { detail: { tokenId: hitTokenId } }));
+            
+            // Set up instant drag!
+            draggingTokenId = hitTokenId;
+            tokenDragOffsets = {};
+            tokenStartPositions = {};
+            
+            const selectedTokens = localState.selectedTokens ? Array.from(localState.selectedTokens) : [];
+            const isAlreadySelected = selectedTokens.includes(hitTokenId);
+            
+            // If dragging a token not in current selection (and not holding shift), it becomes the only selection
+            if (!shift && !isAlreadySelected) {
+               tokenDragOffsets[hitTokenId] = { x: tokenSprites[hitTokenId].container.x - localPos.x, y: tokenSprites[hitTokenId].container.y - localPos.y };
+               tokenStartPositions[hitTokenId] = { x: tokenSprites[hitTokenId].container.x, y: tokenSprites[hitTokenId].container.y };
+            } else {
+               // Drag all currently selected tokens + the hit one
+               const toDrag = new Set([...selectedTokens, hitTokenId]);
+               toDrag.forEach(tId => {
+                  if (tokenSprites[tId]?.container) {
+                     tokenDragOffsets[tId] = { x: tokenSprites[tId].container.x - localPos.x, y: tokenSprites[tId].container.y - localPos.y };
+                     tokenStartPositions[tId] = { x: tokenSprites[tId].container.x, y: tokenSprites[tId].container.y };
+                  }
+               });
+            }
+
+            import('../store').then(s => {
+               if (!shift && !s.getSelectedTokens().includes(hitTokenId!)) {
+                  s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+               }
+               if (s.getSelectedTokens().includes(hitTokenId!) && shift) {
+                   s.toggleTokenSelection(hitTokenId!, true);
+               } else if (!s.getSelectedTokens().includes(hitTokenId!)) {
+                   s.toggleTokenSelection(hitTokenId!, shift);
+               }
+            });
+            return;
+         }
+         
+         // 2. Props
+         let hitPropId: string | null = null;
+         const propEntries = Object.entries(propSprites).reverse();
+         for (const [id, sprite] of propEntries) {
+             if (!sprite) continue;
+             const pData = state.props.get(id) as any;
+             if (pData && pData.isLocked) continue;
+             const hw = sprite.width / 2; const hh = sprite.height / 2;
+             if (localPos.x >= sprite.x - hw && localPos.x <= sprite.x + hw && localPos.y >= sprite.y - hh && localPos.y <= sprite.y + hh) { hitPropId = id; break; }
+         }
+         if (hitPropId) {
+            e.stopPropagation();
+            if (isDoubleClick) window.dispatchEvent(new CustomEvent('open-prop-interaction', { detail: hitPropId }));
+            
+            // Set up instant drag!
+            draggingTextId = 'prop_' + hitPropId;
+            propDragOffsets = {};
+            propStartPositions = {};
+            
+            const selectedProps = Array.from(localState.selectedProps || []);
+            const isAlreadySelected = selectedProps.includes(hitPropId);
+            
+            if (!shift && !isAlreadySelected) {
+               propDragOffsets[hitPropId] = { x: propSprites[hitPropId].x - localPos.x, y: propSprites[hitPropId].y - localPos.y };
+               propStartPositions[hitPropId] = { x: propSprites[hitPropId].x, y: propSprites[hitPropId].y };
+            } else {
+               const toDrag = new Set([...selectedProps, hitPropId]);
+               toDrag.forEach(pId => {
+                  if (propSprites[pId]) {
+                     propDragOffsets[pId] = { x: propSprites[pId].x - localPos.x, y: propSprites[pId].y - localPos.y };
+                     propStartPositions[pId] = { x: propSprites[pId].x, y: propSprites[pId].y };
+                  }
+               });
+            }
+
+            import('../store').then(s => {
+               if (!shift && !s.getSelectedProps().includes(hitPropId!)) {
+                  s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+               }
+               if (s.getSelectedProps().includes(hitPropId!) && shift) {
+                   s.togglePropSelection(hitPropId!, true);
+               } else if (!s.getSelectedProps().includes(hitPropId!)) {
+                   s.togglePropSelection(hitPropId!, shift);
+               }
+            });
+            return;
+         }
+         
+         // 3. Drawings
+         const radius = 20 / viewport.scale.x;
+         let hitDrawingId: string | null = null;
+         if (isDoubleClick) {
+            let hitId: string | null = null;
+            let currentText = "";
+            for (const [id, d] of state.drawings.entries()) {
+               const draw = d as any;
+               if (draw.type === 'shape' && draw.points && draw.points.length >= 2) {
+                  const p1 = draw.points[0]; const p2 = draw.points[draw.points.length - 1];
+                  const minX = Math.min(p1.x, p2.x); const minY = Math.min(p1.y, p2.y);
+                  const w = Math.abs(p2.x - p1.x); const h = Math.abs(p2.y - p1.y);
+                  if (localPos.x >= minX && localPos.x <= minX + w && localPos.y >= minY && localPos.y <= minY + h) { hitId = id; currentText = draw.text || ""; break; }
+               }
+            }
+            if (hitId) {
+               const d = state.drawings.get(hitId) as any;
+               const p1 = d.points[0]; const p2 = d.points[d.points.length - 1];
+               const minX = Math.min(p1.x, p2.x); const minY = Math.min(p1.y, p2.y);
+               const w = Math.abs(p2.x - p1.x); const h = Math.abs(p2.y - p1.y);
+               const pMin = viewport.toGlobal({x: minX, y: minY});
+               const pMax = viewport.toGlobal({x: minX + w, y: minY + h});
+               const shapeTextInput = document.createElement('textarea');
+               shapeTextInput.style.position = 'absolute';
+               shapeTextInput.style.left = pMin.x + 'px'; shapeTextInput.style.top = pMin.y + 'px';
+               shapeTextInput.style.width = (pMax.x - pMin.x) + 'px'; shapeTextInput.style.height = (pMax.y - pMin.y) + 'px';
+               shapeTextInput.style.background = 'transparent'; shapeTextInput.style.border = '1px dashed #a855f7';
+               shapeTextInput.style.outline = 'none'; shapeTextInput.style.resize = 'none';
+               shapeTextInput.style.color = '#ffffff'; shapeTextInput.style.textAlign = 'center';
+               shapeTextInput.style.fontFamily = 'Inter, sans-serif'; shapeTextInput.style.fontSize = (24 * viewport.scale.x) + 'px';
+               shapeTextInput.style.zIndex = '1000';
+               shapeTextInput.value = currentText;
+               shapeTextInput.addEventListener('input', () => updateDrawing(hitId!, { text: shapeTextInput.value }));
+               shapeTextInput.addEventListener('blur', () => { if (shapeTextInput.parentNode) shapeTextInput.parentNode.removeChild(shapeTextInput); });
+               if (canvasRef.current) { canvasRef.current.appendChild(shapeTextInput); shapeTextInput.focus(); }
+               return;
+            }
+         }
+         
+         for (const [id, d] of state.drawings.entries()) {
+            const draw = d as any;
+            if (draw.layerId) {
+               const layer = state.drawingLayers.get(draw.layerId) as any;
+               if (layer && (layer.hidden || layer.locked)) continue;
+            }
+            if (draw.hidden || draw.locked) continue;
+            let hit = false;
+            if (draw.type === 'path' || draw.type === 'pen' || draw.type === 'arrow') {
+               if (draw.points && draw.points.length > 0) {
+                  for (let i = 0; i < draw.points.length - 1; i++) {
+                    const p1 = draw.points[i]; const p2 = draw.points[i+1];
+                    const l2 = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+                    let t = 0;
+                    if (l2 !== 0) {
+                      t = ((localPos.x - p1.x) * (p2.x - p1.x) + (localPos.y - p1.y) * (p2.y - p1.y)) / l2;
+                      t = Math.max(0, Math.min(1, t));
+                    }
+                    const projX = p1.x + t * (p2.x - p1.x); const projY = p1.y + t * (p2.y - p1.y);
+                    if (Math.hypot(localPos.x - projX, localPos.y - projY) < radius) { hit = true; break; }
+                  }
+                  if (!hit && draw.points.length === 1 && Math.hypot(localPos.x - draw.points[0].x, localPos.y - draw.points[0].y) < radius) hit = true;
+               }
+            } else if (draw.type === 'shape') {
+               if (draw.points && draw.points.length >= 2) {
+                  const p1 = draw.points[0]; const p2 = draw.points[draw.points.length - 1];
+                  const minX = Math.min(p1.x, p2.x); const minY = Math.min(p1.y, p2.y);
+                  const w = Math.abs(p2.x - p1.x); const h = Math.abs(p2.y - p1.y);
+                  if (localPos.x >= minX - radius && localPos.x <= minX + w + radius && localPos.y >= minY - radius && localPos.y <= minY + h + radius) hit = true;
+               }
+            }
+            if (hit) { hitDrawingId = id; break; }
+         }
+         if (hitDrawingId) {
+            e.stopPropagation();
+            import('../store').then(s => {
+               if (!shift && !s.getSelectedDrawings().has(hitDrawingId!)) {
+                  s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+               }
+               if (s.getSelectedDrawings().has(hitDrawingId!) && shift) {
+                   s.toggleDrawingSelection(hitDrawingId!, true);
+               } else if (!s.getSelectedDrawings().has(hitDrawingId!)) {
+                   s.toggleDrawingSelection(hitDrawingId!, shift);
+               }
+            });
+            return;
+         }
+         
+         // 4. Backgrounds
+         if ((window as any).__IS_MAP_MENU_OPEN__) {
+            let hitBgId: string | null = null;
+            const bgEntries = Object.entries(bgSprites).reverse();
+            for (const [id, sprite] of bgEntries) {
+                if (!sprite) continue;
+                const bgData = state.backgrounds.get(id) as any;
+                if (bgData && bgData.locked) continue;
+                const hw = sprite.width / 2; const hh = sprite.height / 2;
+                if (localPos.x >= sprite.x - hw && localPos.x <= sprite.x + hw && localPos.y >= sprite.y - hh && localPos.y <= sprite.y + hh) { hitBgId = id; break; }
+            }
+            if (hitBgId) {
+               e.stopPropagation();
+               import('../store').then(s => {
+                  if (!shift && !s.getSelectedBgs().has(hitBgId!)) {
+                     s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+                  }
+                  if (s.getSelectedBgs().has(hitBgId!) && shift) {
+                     s.toggleBgSelection(hitBgId!, true);
+                  } else if (!s.getSelectedBgs().has(hitBgId!)) {
+                     s.toggleBgSelection(hitBgId!, shift);
+                  }
+               });
+               return;
+            }
+         }
+         
+         // 5. Nothing hit (Clear selection)
+         if (!shift) {
+            import('../store').then(s => { s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection(); });
+         }
+      };
+      
+      app.stage.addEventListener('pointerdown', centralSelectHandler, { capture: true });
+
       // Cleanup on unmountive events
       const prevTokenCleanup = (app as any)._cleanupNativeEvents;
       (app as any)._cleanupNativeEvents = () => {
         if (prevTokenCleanup) prevTokenCleanup();
+        app.stage.removeEventListener('pointerdown', centralSelectHandler, { capture: true });
         window.removeEventListener('pointermove', handleNativeMove);
         window.removeEventListener('pointerup', handleNativeUp);
         window.removeEventListener('pointercancel', handleNativeUp);
         window.removeEventListener('token-selection-updated', updateSelectionVisuals);
-        // NOTE: we skip removing locate-texts because it's harmless or we can add named func if needed.
       };
 
       const bgSprites: Record<string, Sprite> = {};
       let draggingBgId: string | null = null;
       let groupDragOffsets: Record<string, {x: number, y: number}> = {};
       
-      // Marquee Selection Logic
+      const marqueeGraphics = new Graphics();
       let isMarquee = false;
       let marqueeStart = { x: 0, y: 0 };
-      const marqueeGraphics = new Graphics();
       viewport.addChild(marqueeGraphics);
-
-      // Snap Guides
       const snapGuidesGraphics = new Graphics();
       viewport.addChild(snapGuidesGraphics);
 
-      // Background Catcher for Marquee (foolproof way to catch empty space clicks)
       const bgCatcher = new Graphics();
       bgCatcher.rect(-100000, -100000, 200000, 200000);
       bgCatcher.fill({ color: 0x000000, alpha: 0.001 });
       bgCatcher.eventMode = 'static';
       viewport.addChildAt(bgCatcher, 0);
 
-      let lastBgClickTime = 0;
       bgCatcher.on('pointerdown', (e) => {
-        const now = Date.now();
-        const isDoubleClick = now - lastBgClickTime < 300;
-        lastBgClickTime = now;
-
         if (e.button === 0) {
-          if (localState.activeTool === 'eraser') {
-              const localPos = viewport.toLocal(e.global);
-              const radius = 20 / viewport.scale.x;
-              let hitId: string | null = null;
-              
-              for (const [id, d] of state.drawings.entries()) {
-                 const draw = d as any;
-                 
-                 // If layer is hidden, you can't erase it
-                 if (draw.layerId) {
-                    const layer = state.drawingLayers.get(draw.layerId) as any;
-                    if (layer && layer.hidden) continue;
-                 }
-                 
-                 let hit = false;
-                 if (draw.type === 'path' || draw.type === 'pen' || draw.type === 'arrow') {
-                    if (draw.points && draw.points.length > 0) {
-                       for (let i = 0; i < draw.points.length - 1; i++) {
-                         const p1 = draw.points[i];
-                         const p2 = draw.points[i+1];
-                         
-                         const l2 = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
-                         let t = 0;
-                         if (l2 !== 0) {
-                           t = ((localPos.x - p1.x) * (p2.x - p1.x) + (localPos.y - p1.y) * (p2.y - p1.y)) / l2;
-                           t = Math.max(0, Math.min(1, t));
-                         }
-                         const projX = p1.x + t * (p2.x - p1.x);
-                         const projY = p1.y + t * (p2.y - p1.y);
-                         
-                         if (Math.hypot(localPos.x - projX, localPos.y - projY) < radius) {
-                           hit = true; break;
-                         }
-                       }
-                       // Se for só 1 ponto (um clique)
-                       if (!hit && draw.points.length === 1) {
-                         if (Math.hypot(localPos.x - draw.points[0].x, localPos.y - draw.points[0].y) < radius) {
-                           hit = true;
-                         }
-                       }
-                    }
-                 } else if (draw.type === 'shape') {
-                    if (draw.points && draw.points.length >= 2) {
-                       const p1 = draw.points[0];
-                       const p2 = draw.points[draw.points.length - 1];
-                       const minX = Math.min(p1.x, p2.x);
-                       const minY = Math.min(p1.y, p2.y);
-                       const w = Math.abs(p2.x - p1.x);
-                       const h = Math.abs(p2.y - p1.y);
-                       if (localPos.x >= minX - radius && localPos.x <= minX + w + radius &&
-                           localPos.y >= minY - radius && localPos.y <= minY + h + radius) {
-                          hit = true;
-                       }
-                    }
-                 }
-                 if (hit) {
-                    hitId = id;
-                    break;
-                 }
-              }
-              
-              if (hitId) {
-                 import('../store').then(s => s.removeDrawing(hitId!));
-                 e.stopPropagation();
-                 return;
-              }
-              
-              // No erasing background, so if we click empty space with eraser, just return.
-              return;
-          }
 
-          if (localState.activeTool === 'select' && isDoubleClick) {
-              const localPos = viewport.toLocal(e.global);
-              let hitId: string | null = null;
-              let currentText = "";
-              
-              for (const [id, d] of state.drawings.entries()) {
-                const draw = d as any;
-                if (draw.type === 'shape') {
-                   if (draw.points && draw.points.length >= 2) {
-                      const p1 = draw.points[0];
-                      const p2 = draw.points[draw.points.length - 1];
-                      const minX = Math.min(p1.x, p2.x);
-                      const minY = Math.min(p1.y, p2.y);
-                      const w = Math.abs(p2.x - p1.x);
-                      const h = Math.abs(p2.y - p1.y);
-                      if (localPos.x >= minX && localPos.x <= minX + w &&
-                          localPos.y >= minY && localPos.y <= minY + h) {
-                         hitId = id;
-                         currentText = draw.text || "";
-                         break;
-                      }
-                   }
-                }
-              }
-              
-              if (hitId) {
-                 const newText = window.prompt("Digite o texto dentro da forma:", currentText);
-                 if (newText !== null) {
-                    updateDrawing(hitId!, { text: newText });
-                 }
-                 e.stopPropagation();
-                 return;
-              }
-           } 
-           
-           if (localState.activeTool === 'select' && !isDoubleClick) {
-              const localPos = viewport.toLocal(e.global);
-              const radius = 20 / viewport.scale.x;
-              let hitDrawingId: string | null = null;
-              
-              for (const [id, d] of state.drawings.entries()) {
-                const draw = d as any;
-                if (draw.layerId) {
-                   const layer = state.drawingLayers.get(draw.layerId) as any;
-                   if (layer && (layer.hidden || layer.locked)) continue;
-                }
-                
-                let hit = false;
-                if (draw.type === 'path' || draw.type === 'pen' || draw.type === 'arrow') {
-                   if (draw.points && draw.points.length > 0) {
-                      for (let i = 0; i < draw.points.length - 1; i++) {
-                        const p1 = draw.points[i];
-                        const p2 = draw.points[i+1];
-                        const l2 = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
-                        let t = 0;
-                        if (l2 !== 0) {
-                          t = ((localPos.x - p1.x) * (p2.x - p1.x) + (localPos.y - p1.y) * (p2.y - p1.y)) / l2;
-                          t = Math.max(0, Math.min(1, t));
-                        }
-                        const projX = p1.x + t * (p2.x - p1.x);
-                        const projY = p1.y + t * (p2.y - p1.y);
-                        if (Math.hypot(localPos.x - projX, localPos.y - projY) < radius) {
-                          hit = true; break;
-                        }
-                      }
-                      if (!hit && draw.points.length === 1) {
-                        if (Math.hypot(localPos.x - draw.points[0].x, localPos.y - draw.points[0].y) < radius) {
-                          hit = true;
-                        }
-                      }
-                   }
-                } else if (draw.type === 'shape') {
-                   if (draw.points && draw.points.length >= 2) {
-                      const p1 = draw.points[0];
-                      const p2 = draw.points[draw.points.length - 1];
-                      const minX = Math.min(p1.x, p2.x);
-                      const minY = Math.min(p1.y, p2.y);
-                      const w = Math.abs(p2.x - p1.x);
-                      const h = Math.abs(p2.y - p1.y);
-                      if (localPos.x >= minX - radius && localPos.x <= minX + w + radius &&
-                          localPos.y >= minY - radius && localPos.y <= minY + h + radius) {
-                         hit = true;
-                      }
-                   }
-                }
-                
-                if (hit) {
-                  hitDrawingId = id;
-                  break; 
-                }
-              }
-              
-              if (hitDrawingId) {
-                 import('../store').then(s => s.toggleDrawingSelection(hitDrawingId!, e.shiftKey));
-                 e.stopPropagation();
-                 return;
-              } else {
-                 if (!e.shiftKey) import('../store').then(s => s.clearDrawingSelection());
-              }
-           }
-
-          if (localState.activeTool === 'pen' || localState.activeTool === 'shape' || localState.activeTool === 'arrow') {
+           // Pen, shape, arrow logic remains here since they track dragging in PIXI coordinate space
+           if (localState.activeTool === 'pen' || localState.activeTool === 'shape' || localState.activeTool === 'arrow') {
              e.stopPropagation();
              isDrawing = true;
              const localPos = viewport.toLocal(e.global);
@@ -1741,6 +1849,11 @@ export const GameCanvas: React.FC = () => {
           }
           if (localState.activeTool === 'text') {
              e.stopPropagation();
+             const now = Date.now();
+             if ((window as any).__lastTextTime && now - (window as any).__lastTextTime < 300) {
+                 return;
+             }
+             (window as any).__lastTextTime = now;
              
              // Se já estiver editando um texto e clicar fora, apenas fecha a edição
              if (localState.editingTextId) {
@@ -1866,37 +1979,9 @@ export const GameCanvas: React.FC = () => {
             sprite.eventMode = 'static';
             sprite.cursor = 'grab';
             
-            // Interaction logic
+            // Interaction logic (now centralized in app.stage)
             sprite.on('pointerdown', (e) => {
-              if (e.button !== 0) return; // Only left click
-              
-              if ((window as any).__IS_MAP_MENU_OPEN__) {
-                e.stopPropagation();
-                import('../store').then(s => {
-                  s.toggleBgSelection(id, e.shiftKey || e.ctrlKey);
-                });
-                
-                if (!bg.locked) {
-                  draggingBgId = id;
-                  (window as any).__IS_DRAGGING_MAP__ = true;
-                  window.dispatchEvent(new Event('bg-drag-state'));
-                  groupDragOffsets = {};
-                  const localPoint = viewport.toLocal(e.global);
-                  
-                  const isSelected = localState.selectedBgs.has(id);
-                  if (!isSelected) {
-                    groupDragOffsets[id] = { x: sprite.x - localPoint.x, y: sprite.y - localPoint.y };
-                  } else {
-                    localState.selectedBgs.forEach(selId => {
-                       const selSprite = bgSprites[selId];
-                       const selData = state.backgrounds.get(selId) as any;
-                       if (selSprite && selData && !selData.locked) {
-                          groupDragOffsets[selId] = { x: selSprite.x - localPoint.x, y: selSprite.y - localPoint.y };
-                       }
-                    });
-                  }
-                }
-              }
+               if (e.button !== 0) return;
             });
 
             bgsContainer.addChild(sprite);
@@ -1941,7 +2026,7 @@ export const GameCanvas: React.FC = () => {
         const isMapOpen = (window as any).__IS_MAP_MENU_OPEN__ === true;
         const isSelectMode = localState.activeTool === 'select';
         
-        if ((!isMapOpen || localState.selectedBgs.size === 0) && (!isSelectMode || ((!localState.selectedProps || localState.selectedProps.size === 0) && (!localState.selectedDrawings || localState.selectedDrawings.size === 0)))) {
+        if ((!isMapOpen || localState.selectedBgs.size === 0) && (!isSelectMode || ((!localState.selectedProps || localState.selectedProps.size === 0) && (!localState.selectedDrawings || localState.selectedDrawings.size === 0) && (!localState.selectedTokens || localState.selectedTokens.size === 0)))) {
           gizmoContainer.visible = false;
           return;
         }
@@ -1965,6 +2050,22 @@ export const GameCanvas: React.FC = () => {
           });
         }
         
+        if (isSelectMode && localState.selectedTokens && localState.selectedTokens.size > 0) {
+           Array.from(localState.selectedTokens).forEach((id: string) => {
+              const spriteData = tokenSprites[id];
+              if (spriteData && spriteData.container) {
+                 hasUnlocked = true;
+                 const container = spriteData.container;
+                 const hw = 30 * container.scale.x; // approx radius
+                 const hh = 30 * container.scale.y;
+                 if (container.x - hw < minX) minX = container.x - hw;
+                 if (container.y - hh < minY) minY = container.y - hh;
+                 if (container.x + hw > maxX) maxX = container.x + hw;
+                 if (container.y + hh > maxY) maxY = container.y + hh;
+              }
+           });
+        }
+        
         if (isSelectMode && localState.selectedProps && localState.selectedProps.size > 0) {
            Array.from(localState.selectedProps).forEach(id => {
               const pData = state.props.get(id) as any;
@@ -1984,25 +2085,42 @@ export const GameCanvas: React.FC = () => {
          if (isSelectMode && localState.selectedDrawings && localState.selectedDrawings.size > 0) {
             Array.from(localState.selectedDrawings).forEach(id => {
               const drawData = state.drawings.get(id) as any;
+              const sprite = drawingSprites[id];
+              const offsetX = sprite ? sprite.x : 0;
+              const offsetY = sprite ? sprite.y : 0;
               if (drawData) {
                  hasUnlocked = true;
-                 if (drawData.type === 'shape' && drawData.points && drawData.points.length >= 2) {
+                 if (drawData.type === 'image' && drawData.points && drawData.points.length > 0) {
+                    const p = drawData.points[0];
+                    const hw = (drawData.imageWidth || 400) / 2;
+                    const hh = (drawData.imageHeight || 300) / 2;
+                    const minPx = p.x - hw + offsetX;
+                    const minPy = p.y - hh + offsetY;
+                    const maxPx = p.x + hw + offsetX;
+                    const maxPy = p.y + hh + offsetY;
+                    if (minPx < minX) minX = minPx;
+                    if (minPy < minY) minY = minPy;
+                    if (maxPx > maxX) maxX = maxPx;
+                    if (maxPy > maxY) maxY = maxPy;
+                 } else if (drawData.type === 'shape' && drawData.points && drawData.points.length >= 2) {
                     const p1 = drawData.points[0];
                     const p2 = drawData.points[drawData.points.length - 1];
-                    const minPx = Math.min(p1.x, p2.x);
-                    const minPy = Math.min(p1.y, p2.y);
-                    const maxPx = Math.max(p1.x, p2.x);
-                    const maxPy = Math.max(p1.y, p2.y);
+                    const minPx = Math.min(p1.x, p2.x) + offsetX;
+                    const minPy = Math.min(p1.y, p2.y) + offsetY;
+                    const maxPx = Math.max(p1.x, p2.x) + offsetX;
+                    const maxPy = Math.max(p1.y, p2.y) + offsetY;
                     if (minPx < minX) minX = minPx;
                     if (minPy < minY) minY = minPy;
                     if (maxPx > maxX) maxX = maxPx;
                     if (maxPy > maxY) maxY = maxPy;
                  } else if (drawData.points) {
                     drawData.points.forEach((p: any) => {
-                      if (p.x < minX) minX = p.x;
-                      if (p.y < minY) minY = p.y;
-                      if (p.x > maxX) maxX = p.x;
-                      if (p.y > maxY) maxY = p.y;
+                       const px = p.x + offsetX;
+                       const py = p.y + offsetY;
+                       if (px < minX) minX = px;
+                       if (py < minY) minY = py;
+                       if (px > maxX) maxX = px;
+                       if (py > maxY) maxY = py;
                     });
                  }
               }
@@ -2017,6 +2135,9 @@ export const GameCanvas: React.FC = () => {
         gizmoContainer.visible = true;
         gizmoContainer.x = 0;
         gizmoContainer.y = 0;
+
+        const w = Math.max(1, maxX - minX);
+        const h = Math.max(1, maxY - minY);
 
         // Determine if we are in Arrow Edit Mode (only 1 arrow selected)
         let isArrowMode = false;
@@ -2041,8 +2162,102 @@ export const GameCanvas: React.FC = () => {
         } else {
            // Draw bounding box
            gizmoBox.rect(minX, minY, w, h);
+           gizmoBox.fill({ color: 0xffffff, alpha: 0.001 }); // Transparent fill for click detection
            gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
         }
+        
+        gizmoBox.eventMode = 'static';
+        gizmoBox.cursor = 'move';
+        gizmoBox.removeAllListeners();
+        gizmoBox.on('pointerdown', (e) => {
+           if (isArrowMode) return;
+           e.stopPropagation();
+           const rect = canvasEl.getBoundingClientRect();
+           const startX = e.clientX - rect.left;
+           const startY = e.clientY - rect.top;
+           
+           const originalStates: any[] = [];
+           if (isMapOpen && localState.selectedBgs.size > 0) {
+              Array.from(localState.selectedBgs).forEach(id => {
+                const bgData = state.backgrounds.get(id) as any;
+                const sprite = bgSprites[id];
+                if (sprite && bgData && !bgData.locked && !bgData.hidden) {
+                   originalStates.push({ type: 'bg', id, sprite, origX: sprite.x, origY: sprite.y });
+                }
+              });
+           }
+           if (isSelectMode && localState.selectedTokens && localState.selectedTokens.size > 0) {
+              Array.from(localState.selectedTokens).forEach(id => {
+                 const spriteData = tokenSprites[id];
+                 if (spriteData && spriteData.container) {
+                    originalStates.push({ type: 'token', id, sprite: spriteData.container, origX: spriteData.container.x, origY: spriteData.container.y });
+                 }
+              });
+           }
+           if (isSelectMode && localState.selectedProps && localState.selectedProps.size > 0) {
+              Array.from(localState.selectedProps).forEach(id => {
+                const pData = state.props.get(id) as any;
+                const sprite = propSprites[id];
+                if (sprite && pData && !pData.isLocked) {
+                   originalStates.push({ type: 'prop', id, sprite, origX: sprite.x, origY: sprite.y });
+                }
+              });
+           }
+           if (isSelectMode && localState.selectedDrawings && localState.selectedDrawings.size > 0) {
+              Array.from(localState.selectedDrawings).forEach(id => {
+                 const drawData = state.drawings.get(id) as any;
+                 const sprite = drawingSprites[id];
+                 if (drawData && drawData.points && sprite) {
+                    originalStates.push({ type: 'drawing', id, sprite, origX: sprite.x, origY: sprite.y, origPoints: drawData.points.map((p:any) => ({...p})) });
+                 }
+              });
+           }
+           
+           const onDragMove = (moveEvent: PointerEvent) => {
+              const currentX = moveEvent.clientX - rect.left;
+              const currentY = moveEvent.clientY - rect.top;
+              const dx = (currentX - startX) / viewport.scale.x;
+              const dy = (currentY - startY) / viewport.scale.y;
+              
+              originalStates.forEach(item => {
+                 if (item.type === 'bg' || item.type === 'prop' || item.type === 'drawing' || item.type === 'token') {
+                     item.sprite.x = item.origX + dx;
+                     item.sprite.y = item.origY + dy;
+                 }
+              });
+              syncGizmo();
+           };
+           
+           const onDragUp = () => {
+              window.removeEventListener('pointermove', onDragMove);
+              window.removeEventListener('pointerup', onDragUp);
+              
+              import('../store').then(s => {
+                 import('../store/props').then(m => {
+                    originalStates.forEach(item => {
+                       if (item.type === 'bg') {
+                          s.updateBackgroundProps(item.id, { x: item.sprite.x, y: item.sprite.y });
+                       } else if (item.type === 'prop') {
+                          m.updateMapProp(item.id, { x: item.sprite.x, y: item.sprite.y });
+                       } else if (item.type === 'token') {
+                          s.updateTokenPosition(item.id, item.sprite.x, item.sprite.y);
+                       } else if (item.type === 'drawing') {
+                          const dx = item.sprite.x - item.origX;
+                          const dy = item.sprite.y - item.origY;
+                          const newPoints = item.origPoints.map((p: any) => ({ x: p.x + dx, y: p.y + dy }));
+                          s.updateDrawing(item.id, { points: newPoints });
+                          item.sprite.x = item.origX; 
+                          item.sprite.y = item.origY;
+                       }
+                    });
+                 });
+              });
+              syncGizmo();
+           };
+           
+           window.addEventListener('pointermove', onDragMove);
+           window.addEventListener('pointerup', onDragUp);
+        });
 
         // Draw aesthetic corners
         const cornerSize = 8 / viewport.scale.x;
@@ -2154,7 +2369,17 @@ export const GameCanvas: React.FC = () => {
                    const drawData = state.drawings.get(id) as any;
                    const sprite = drawingSprites[id];
                    if (drawData && drawData.points && sprite) {
-                      originalStates.push({ type: 'drawing', id, sprite, origX: sprite.x, origY: sprite.y, origScale: sprite.scale.x, origPoints: drawData.points.map((p:any) => ({...p})) });
+                      originalStates.push({ 
+                         type: drawData.type === 'image' ? 'drawing-image' : 'drawing', 
+                         id, 
+                         sprite, 
+                         origX: sprite.x, 
+                         origY: sprite.y, 
+                         origScale: sprite.scale.x, 
+                         origPoints: drawData.points.map((p:any) => ({...p})),
+                         origImgWidth: drawData.imageWidth || 400,
+                         origImgHeight: drawData.imageHeight || 300
+                      });
                    }
                 });
              }
@@ -2186,6 +2411,7 @@ export const GameCanvas: React.FC = () => {
               
               gizmoBox.clear();
               gizmoBox.rect(newMinX, newMinY, newW, newH);
+              gizmoBox.fill({ color: 0xffffff, alpha: 0.001 });
               gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
               
               gizmoCorners.forEach(c => c.visible = false);
@@ -2211,6 +2437,19 @@ export const GameCanvas: React.FC = () => {
                            x: item.sprite.x,
                            y: item.sprite.y
                         });
+                     } else if (item.type === 'drawing-image') {
+                        const newPoints = item.origPoints.map((p: any) => ({
+                           x: pivotX + (p.x - pivotX) * finalScaleRatio,
+                           y: pivotY + (p.y - pivotY) * finalScaleRatio
+                        }));
+                        updateDrawing(item.id, { 
+                          points: newPoints,
+                          imageWidth: item.origImgWidth * finalScaleRatio,
+                          imageHeight: item.origImgHeight * finalScaleRatio
+                        });
+                        item.sprite.scale.set(1);
+                        item.sprite.x = 0;
+                        item.sprite.y = 0;
                      } else if (item.type === 'drawing') {
                         const newPoints = item.origPoints.map((p: any) => ({
                            x: pivotX + (p.x - pivotX) * finalScaleRatio,
@@ -2241,7 +2480,7 @@ export const GameCanvas: React.FC = () => {
         
         Object.keys(drawingSprites).forEach(id => {
           const d = drawingsState.get(id) as any;
-          let shouldRemove = !d;
+          let shouldRemove = !d || d.hidden;
           if (d && d.layerId) {
              const layer = state.drawingLayers.get(d.layerId) as any;
              if (layer && layer.hidden) shouldRemove = true;
@@ -2255,6 +2494,7 @@ export const GameCanvas: React.FC = () => {
 
         Array.from(drawingsState.entries()).forEach(([id, drawData]) => {
           const d = drawData as any;
+          if (d.hidden) return;
           if (d.layerId) {
              const layer = state.drawingLayers.get(d.layerId) as any;
              if (layer && layer.hidden) return;
@@ -2344,6 +2584,24 @@ export const GameCanvas: React.FC = () => {
                g.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
                g.stroke({ width, color, alpha: 1 });
              }
+          } else if (d.type === 'image' && d.imageUrl) {
+             const p = d.points[0];
+             const w = d.imageWidth || 400;
+             const h = d.imageHeight || 300;
+             
+             g.removeChildren().forEach((c: any) => c.destroy());
+             
+             const s = new Sprite();
+             s.anchor.set(0.5);
+             s.x = p.x;
+             s.y = p.y;
+             s.width = w;
+             s.height = h;
+             g.addChild(s);
+             
+             Assets.load(d.imageUrl).then(tex => { 
+               if (!g.destroyed) s.texture = tex; 
+             }).catch(()=>{});
           }
         });
         bgsContainer.sortChildren();
@@ -2354,6 +2612,8 @@ export const GameCanvas: React.FC = () => {
       window.addEventListener('map-menu-toggle', mapObserver);
       window.addEventListener('bg-selection-updated', syncGizmo);
       window.addEventListener('prop-selection-updated', syncGizmo);
+      window.addEventListener('drawing-selection-updated', syncGizmo);
+      window.addEventListener('token-selection-updated', syncGizmo);
       window.addEventListener('map-menu-toggle', syncGizmo);
 
       const handleFocusToken = (e: any) => {
@@ -2377,6 +2637,8 @@ export const GameCanvas: React.FC = () => {
         window.removeEventListener('map-menu-toggle', mapObserver);
         window.removeEventListener('bg-selection-updated', syncGizmo);
         window.removeEventListener('prop-selection-updated', syncGizmo);
+        window.removeEventListener('drawing-selection-updated', syncGizmo);
+        window.removeEventListener('token-selection-updated', syncGizmo);
         window.removeEventListener('map-menu-toggle', syncGizmo);
         window.removeEventListener('focus-token', handleFocusToken);
         state.props.unobserve(propsObserver);

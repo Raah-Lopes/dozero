@@ -8,7 +8,7 @@ import type { BackgroundData, MapConfig } from '../../store';
 import { 
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
-  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle
+  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 
@@ -16,17 +16,77 @@ const COLOR_PRESETS = [
   '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f8fafc'
 ];
 
+const LayerRenameInput = ({ layer, isActive, onRename }: { layer: any, isActive: boolean, onRename: (id: string, name: string) => void }) => {
+  const [name, setName] = useState(layer.name);
+  useEffect(() => { setName(layer.name); }, [layer.name]);
+  return (
+    <input
+      type="text"
+      value={name}
+      onClick={(e) => { e.stopPropagation(); import('../../store').then(s => s.setActiveDrawingLayerId(layer.id)); }}
+      onChange={(e) => setName(e.target.value)}
+      onBlur={() => { if (name !== layer.name) onRename(layer.id, name); }}
+      onKeyDown={(e) => { 
+        e.stopPropagation(); 
+        if (e.key === 'Enter') e.currentTarget.blur(); 
+      }}
+      style={{ 
+        fontSize: '13px', 
+        fontWeight: isActive ? 600 : 400, 
+        color: isActive ? '#10b981' : '#e2e8f0', 
+        flex: 1, 
+        background: 'transparent', 
+        border: 'none', 
+        outline: 'none',
+        width: '100%',
+        marginRight: '8px'
+      }}
+      title="Clique para renomear"
+    />
+  );
+};
+
+const DrawingRenameInput = ({ drawing, typeName, onRename }: { drawing: any, typeName: string, onRename: (id: string, name: string) => void }) => {
+  const [name, setName] = useState(drawing.name || typeName);
+  useEffect(() => { setName(drawing.name || typeName); }, [drawing.name, typeName]);
+  return (
+    <input
+      type="text"
+      value={name}
+      onClick={(e) => e.stopPropagation()}
+      onChange={(e) => setName(e.target.value)}
+      onBlur={() => { if (name !== (drawing.name || typeName)) onRename(drawing.id, name); }}
+      onKeyDown={(e) => { 
+        e.stopPropagation(); 
+        if (e.key === 'Enter') e.currentTarget.blur(); 
+      }}
+      style={{ 
+        background: 'transparent', 
+        border: 'none', 
+        color: drawing.hidden ? '#64748b' : '#cbd5e1', 
+        fontSize: '11px', 
+        textDecoration: drawing.hidden ? 'line-through' : 'none', 
+        outline: 'none', 
+        width: '100%' 
+      }}
+    />
+  );
+};
+
 export const GridToolbar: React.FC = () => {
   const [activeTool, setActiveToolState] = useState(localState.activeTool);
   const [drawColor, setDrawColorState] = useState(localState.drawColor);
   const [drawWidth, setDrawWidthState] = useState(localState.drawWidth);
   const [showStyleInspector, setShowStyleInspector] = useState(false);
   const [showConfigMenu, setShowConfigMenu] = useState(false);
+  const [showLayersMenu, setShowLayersMenu] = useState(window.innerWidth > 768);
+  const [isLayersMinimized, setIsLayersMinimized] = useState(false);
   const [activeConfigTab, setActiveConfigTab] = useState<'mapas' | 'grid' | 'objetos'>('mapas');
   
   const [mapConfig, setMapConfig] = useState<MapConfig>(getMapConfig());
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
   const [drawingLayers, setDrawingLayers] = useState<any[]>([]);
+  const [drawings, setDrawings] = useState<any[]>([]);
   const [activeLayerId, setActiveLayerId] = useState(localState.activeDrawingLayerId || 'default');
   const [isVisible, setIsVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -57,6 +117,9 @@ export const GridToolbar: React.FC = () => {
     
     const handleDrawingLayers = () => {
       setDrawingLayers(Array.from(state.drawingLayers.values()));
+    };
+    const handleDrawings = () => {
+      setDrawings(Array.from(state.drawings.values()));
     };
 
     const handleLocalState = () => {
@@ -89,8 +152,9 @@ export const GridToolbar: React.FC = () => {
       else if (key === 'p' || key === '2') { setActiveTool('pen'); }
       else if (key === 'r' || key === '3') { setActiveTool('shape'); }
       else if (key === 'a' || key === '4') { setActiveTool('arrow'); }
-      else if (key === 'e' || key === '5') { setActiveTool('eraser'); }
       else if (key === 't' || key === '6') { setActiveTool('text'); }
+      else if (e.ctrlKey && key === 'z') { window.dispatchEvent(new CustomEvent('canvas-undo')); }
+      else if (e.ctrlKey && key === 'y') { window.dispatchEvent(new CustomEvent('canvas-redo')); }
       else if ((e.ctrlKey && e.key === '\\') || key === 'h') {
         setIsVisible(v => !v);
       }
@@ -99,6 +163,7 @@ export const GridToolbar: React.FC = () => {
     state.mapConfig.observe(handleMapConfig);
     state.backgrounds.observe(handleBgs);
     state.drawingLayers.observe(handleDrawingLayers);
+    state.drawings.observe(handleDrawings);
     window.addEventListener('tool-changed', handleTool);
     window.addEventListener('draw-style-changed', handleStyle);
     window.addEventListener('keydown', handleKeyDown);
@@ -127,18 +192,22 @@ export const GridToolbar: React.FC = () => {
       const { base64 } = await convertImageToWebP(file, 0.8, 1024);
       const img = new Image();
       img.onload = () => {
-        addBackground({
-          id: 'bg_' + Date.now() + Math.random().toString(36).substr(2, 5),
-          name: file.name.split('.')[0],
-          imageUrl: base64,
-          x: window.innerWidth / 2,
-          y: window.innerHeight / 2,
-          width: img.naturalWidth || 400,
-          height: img.naturalHeight || 300,
-          scale: 1,
-          opacity: 1,
-          locked: false,
-          hidden: false
+        import('../../store/drawings').then(s => {
+          s.addDrawing({
+            id: 'drawing_' + Date.now() + Math.random().toString(36).substr(2, 5),
+            name: file.name.split('.')[0],
+            type: 'image',
+            imageUrl: base64,
+            points: [{ x: window.innerWidth / 2, y: window.innerHeight / 2 }],
+            imageWidth: img.naturalWidth || 400,
+            imageHeight: img.naturalHeight || 300,
+            color: '#ffffff',
+            width: 1,
+            zIndex: 100,
+            layerId: activeLayerId,
+            locked: false,
+            hidden: false
+          });
         });
       };
       img.src = base64;
@@ -219,11 +288,21 @@ export const GridToolbar: React.FC = () => {
         {/* Menu Integrado de Configurações de Cenário & Grid */}
         <button
           className={`tldraw-tool-btn ${showConfigMenu ? 'active' : ''}`}
-          onClick={() => { setShowConfigMenu(v => !v); setShowStyleInspector(false); }}
+          onClick={() => { setShowConfigMenu(v => !v); setShowStyleInspector(false); setShowLayersMenu(false); }}
           title="Configurações de Cenário, Grid & Objetos"
           style={{ background: showConfigMenu ? 'rgba(14,165,233,0.2)' : 'transparent' }}
         >
           <Settings size={18} color={showConfigMenu ? '#0ea5e9' : '#94a3b8'} />
+        </button>
+
+        {/* Camadas (Layers) dedicadas */}
+        <button
+          className={`tldraw-tool-btn ${showLayersMenu ? 'active' : ''}`}
+          onClick={() => { setShowLayersMenu(v => !v); setShowConfigMenu(false); setShowStyleInspector(false); }}
+          title="Gerenciar Camadas (Layers)"
+          style={{ background: showLayersMenu ? 'rgba(16,185,129,0.2)' : 'transparent' }}
+        >
+          <Layers size={18} color={showLayersMenu ? '#10b981' : '#94a3b8'} />
         </button>
 
         <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
@@ -297,8 +376,8 @@ export const GridToolbar: React.FC = () => {
         {/* Toggle Style Inspector */}
         <button
           className={`tldraw-tool-btn ${showStyleInspector ? 'active' : ''}`}
-          onClick={() => { setShowStyleInspector(v => !v); setShowConfigMenu(false); }}
-          title="Estilo da Linha & Cor"
+          onClick={() => { setShowStyleInspector(v => !v); setShowConfigMenu(false); setShowLayersMenu(false); }}
+          title="Estilo da Linha, Cor & Borracha"
         >
           <Palette size={18} color={drawColor} />
         </button>
@@ -444,77 +523,6 @@ export const GridToolbar: React.FC = () => {
                   ))}
                 </div>
               )}
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>CAMADAS DE DESENHO ({drawingLayers.length})</span>
-                <button
-                  onClick={() => {
-                    const name = prompt("Nome da nova camada:");
-                    if (name) {
-                       import('../../store/drawingLayers').then(s => s.addDrawingLayer({
-                          id: 'layer_' + Date.now(),
-                          name,
-                          zIndex: 100
-                       }));
-                    }
-                  }}
-                  style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', padding: '0px' }}
-                  title="Nova Camada de Desenho"
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-              
-              {drawingLayers.length === 0 ? (
-                <span style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', padding: '10px' }}>Nenhuma camada de desenho.</span>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '250px', overflowY: 'auto', paddingRight: '4px' }}>
-                  {drawingLayers.map(layer => (
-                    <div key={layer.id} 
-                         style={{ 
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                            background: activeLayerId === layer.id ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.03)', 
-                            border: activeLayerId === layer.id ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid transparent',
-                            padding: '6px 8px', borderRadius: '6px', cursor: 'pointer' 
-                         }}
-                         onClick={() => {
-                            import('../../store').then(s => s.setActiveDrawingLayerId(layer.id));
-                         }}
-                    >
-                      <span style={{ fontSize: '12px', color: activeLayerId === layer.id ? '#10b981' : '#e2e8f0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {layer.name} {activeLayerId === layer.id && "(Ativa)"}
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }} onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => {
-                             import('../../store/drawingLayers').then(s => s.updateDrawingLayer(layer.id, { hidden: !layer.hidden }));
-                          }}
-                          style={{ background: 'none', border: 'none', color: layer.hidden ? '#ef4444' : '#64748b', cursor: 'pointer', padding: '4px' }}
-                        >
-                          {layer.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
-                        <button
-                          onClick={() => {
-                             if (layer.id === 'default') {
-                                alert("Não é possível excluir a camada padrão.");
-                                return;
-                             }
-                             if (confirm(`Excluir a camada '${layer.name}' apagará todos os desenhos nela. Continuar?`)) {
-                                import('../../store/drawingLayers').then(s => s.removeDrawingLayer(layer.id));
-                                if (activeLayerId === layer.id) {
-                                   import('../../store').then(s => s.setActiveDrawingLayerId('default'));
-                                }
-                             }
-                          }}
-                          style={{ background: 'none', border: 'none', color: layer.id === 'default' ? '#475569' : '#ef4444', cursor: layer.id === 'default' ? 'not-allowed' : 'pointer', padding: '4px' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
@@ -605,6 +613,168 @@ export const GridToolbar: React.FC = () => {
         </div>
       )}
 
+      {/* NOVO PAINEL FLUTUANTE DE CAMADAS (DOCKED) */}
+      {showLayersMenu && (
+        <div style={{
+          position: 'fixed',
+          top: isMobile ? 'auto' : '80px',
+          bottom: isMobile ? '70px' : 'auto',
+          left: '16px',
+          zIndex: 99999,
+          width: isMobile ? 'calc(100vw - 32px)' : '250px',
+          background: 'rgba(15, 23, 42, 0.95)',
+          backdropFilter: 'blur(24px)',
+          border: '1px solid rgba(16, 185, 129, 0.4)',
+          borderRadius: '12px',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.8)',
+          pointerEvents: 'auto',
+          padding: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          maxHeight: isMobile && !isLayersMinimized ? '400px' : (!isLayersMinimized ? '70vh' : 'none')
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Layers size={16} /> Camadas de Desenho
+            </h3>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                onClick={() => setIsLayersMinimized(!isLayersMinimized)}
+                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#94a3b8', borderRadius: '6px', padding: '4px', cursor: 'pointer' }}
+                title={isLayersMinimized ? "Expandir" : "Minimizar"}
+              >
+                {isLayersMinimized ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+              </button>
+              {!isLayersMinimized && (
+                <button
+                  onClick={() => {
+                     import('../../store/drawingLayers').then(s => s.addDrawingLayer({
+                        id: 'layer_' + Date.now(),
+                        name: 'Nova Camada',
+                        zIndex: 100
+                     }));
+                  }}
+                  style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: '#10b981', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  <Plus size={14} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }}/> Nova
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {!isLayersMinimized && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto' }}>
+              {drawingLayers.map(layer => {
+                const layerDrawings = drawings.filter(d => (d.layerId || 'default') === layer.id);
+                return (
+                <div key={layer.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div 
+                       onClick={() => import('../../store').then(s => s.setActiveDrawingLayerId(layer.id))}
+                       style={{ 
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                          background: activeLayerId === layer.id ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)', 
+                          border: activeLayerId === layer.id ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
+                          padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
+                          transition: 'all 0.2s'
+                       }}
+                       title={activeLayerId === layer.id ? "Camada Ativa" : "Clique para tornar ativa"}
+                  >
+                    <LayerRenameInput 
+                      layer={layer} 
+                      isActive={activeLayerId === layer.id}
+                      onRename={(id, newName) => import('../../store/drawingLayers').then(s => s.updateDrawingLayer(id, { name: newName }))}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => {
+                           import('../../store/drawingLayers').then(s => s.updateDrawingLayer(layer.id, { hidden: !layer.hidden }));
+                        }}
+                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.hidden ? '#ef4444' : '#94a3b8', cursor: 'pointer', padding: '6px', transition: 'all 0.1s' }}
+                        title={layer.hidden ? "Mostrar Camada" : "Ocultar Camada"}
+                      >
+                        {layer.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                      <button
+                        onClick={() => {
+                           if (layer.id === 'default') {
+                              alert('A camada principal não pode ser excluída.');
+                              return;
+                           }
+                           if (confirm(`Excluir a camada '${layer.name}' apagará todos os desenhos nela. Continuar?`)) {
+                              import('../../store/drawingLayers').then(s => s.removeDrawingLayer(layer.id));
+                              if (activeLayerId === layer.id) {
+                                 import('../../store').then(s => s.setActiveDrawingLayerId('default'));
+                              }
+                           }
+                        }}
+                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.id === 'default' ? '#475569' : '#ef4444', cursor: layer.id === 'default' ? 'not-allowed' : 'pointer', padding: '6px' }}
+                        title="Excluir Camada"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Layer Drawings (Expanded list) */}
+                  {layerDrawings.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '12px', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '8px' }}>
+                      {layerDrawings.map((d: any) => {
+                        let Icon = Pen;
+                        let typeName = "Linha";
+                        if (d.type === 'shape') {
+                          if (d.shapeType === 'rectangle') { Icon = Square; typeName = "Retângulo"; }
+                          else if (d.shapeType === 'circle') { Icon = Circle; typeName = "Círculo"; }
+                          else if (d.shapeType === 'triangle') { Icon = Triangle; typeName = "Triângulo"; }
+                        } else if (d.type === 'arrow') {
+                          Icon = ArrowRight; typeName = "Seta";
+                        }
+                        
+                        return (
+                          <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, overflow: 'hidden' }}>
+                              <Icon size={12} color={d.color || '#94a3b8'} />
+                              <DrawingRenameInput 
+                                drawing={d} 
+                                typeName={typeName} 
+                                onRename={(id, newName) => import('../../store/drawings').then(s => s.updateDrawingProps(id, { name: newName }))} 
+                              />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              <button
+                                onClick={() => import('../../store/drawings').then(s => s.updateDrawingProps(d.id, { hidden: !d.hidden }))}
+                                style={{ background: 'transparent', border: 'none', color: d.hidden ? '#ef4444' : '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                                title={d.hidden ? "Mostrar" : "Ocultar"}
+                              >
+                                {d.hidden ? <EyeOff size={12} /> : <Eye size={12} />}
+                              </button>
+                              <button
+                                onClick={() => import('../../store/drawings').then(s => s.updateDrawingProps(d.id, { locked: !d.locked }))}
+                                style={{ background: 'transparent', border: 'none', color: d.locked ? '#f59e0b' : '#64748b', cursor: 'pointer', padding: '4px' }}
+                                title={d.locked ? "Destravar" : "Travar"}
+                              >
+                                {d.locked ? <Lock size={12} /> : <Unlock size={12} />}
+                              </button>
+                              <button
+                                onClick={() => { if (confirm("Apagar desenho?")) import('../../store/drawings').then(s => s.removeDrawing(d.id)); }}
+                                style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                                title="Excluir"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )})}
+          </div>
+          )}
+        </div>
+      )}
+
       {/* FLOATING STYLE INSPECTOR PANEL */}
       {showStyleInspector && (
         <div style={{
@@ -681,8 +851,8 @@ export const GridToolbar: React.FC = () => {
 
           {/* Stroke Width */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>TRAÇO:</span>
-            {[2, 4, 8, 12].map(w => (
+            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{activeTool === 'eraser' ? 'TAMANHO:' : 'TRAÇO:'}</span>
+            {[2, 4, 8, 12, 20].map(w => (
               <button
                 key={w}
                 onClick={() => setDrawWidth(w)}
@@ -708,7 +878,7 @@ export const GridToolbar: React.FC = () => {
       {/* BOTTOM RIGHT ZOOM & NAVIGATION CONTROLS */}
       <div style={{
         position: 'fixed',
-        bottom: '24px',
+        bottom: isMobile ? '100px' : '24px',
         right: '24px',
         zIndex: 100000,
         display: 'flex',

@@ -8,15 +8,21 @@ export interface DrawingPoint {
 export interface DrawingData {
   id: string;
   name?: string;
-  type: 'path' | 'arrow' | 'shape';
+  type: 'path' | 'arrow' | 'shape' | 'image';
   points: DrawingPoint[];
   color: string;
   width: number;
   zIndex: number;
   // For shapes
   shapeType?: 'rectangle' | 'circle' | 'triangle';
+  // For images
+  imageUrl?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   text?: string;
   layerId?: string;
+  hidden?: boolean;
+  locked?: boolean;
 }
 
 export function addDrawing(drawing: DrawingData) {

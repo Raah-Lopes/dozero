@@ -177,3 +177,7 @@ export function toggleDrawingSelection(id: string, multi: boolean = false) {
   }
   window.dispatchEvent(new Event('drawing-selection-updated'));
 }
+
+export function getSelectedDrawings() {
+  return localState.selectedDrawings;
+}

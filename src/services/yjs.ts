@@ -78,6 +78,26 @@ export const state = {
   drawingLayers: doc.getMap('drawingLayers')
 };
 
+// =========================================================================
+// UNDO / REDO MANAGER
+// =========================================================================
+export const undoManager = new Y.UndoManager([
+  state.drawings,
+  state.tokens,
+  state.props,
+  state.backgrounds,
+  state.mapTexts
+]);
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('canvas-undo', () => {
+    undoManager.undo();
+  });
+  window.addEventListener('canvas-redo', () => {
+    undoManager.redo();
+  });
+}
+
 export function connectProvider() {
   provider.connect();
 }
