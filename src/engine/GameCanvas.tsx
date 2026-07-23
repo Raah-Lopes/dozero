@@ -296,9 +296,20 @@ export const GameCanvas: React.FC = () => {
             
             currentDrawingGraphics.clear();
             if (localState.activeTool === 'pen') {
-               currentDrawingGraphics.moveTo(currentDrawingPoints[0].x, currentDrawingPoints[0].y);
-               for (let i = 1; i < currentDrawingPoints.length; i++) {
-                 currentDrawingGraphics.lineTo(currentDrawingPoints[i].x, currentDrawingPoints[i].y);
+               if (currentDrawingPoints.length < 3) {
+                  currentDrawingGraphics.moveTo(currentDrawingPoints[0].x, currentDrawingPoints[0].y);
+                  for (let i = 1; i < currentDrawingPoints.length; i++) {
+                    currentDrawingGraphics.lineTo(currentDrawingPoints[i].x, currentDrawingPoints[i].y);
+                  }
+               } else {
+                  currentDrawingGraphics.moveTo(currentDrawingPoints[0].x, currentDrawingPoints[0].y);
+                  let i = 1;
+                  for (i = 1; i < currentDrawingPoints.length - 2; i++) {
+                    const xc = (currentDrawingPoints[i].x + currentDrawingPoints[i + 1].x) / 2;
+                    const yc = (currentDrawingPoints[i].y + currentDrawingPoints[i + 1].y) / 2;
+                    currentDrawingGraphics.quadraticCurveTo(currentDrawingPoints[i].x, currentDrawingPoints[i].y, xc, yc);
+                  }
+                  currentDrawingGraphics.quadraticCurveTo(currentDrawingPoints[i].x, currentDrawingPoints[i].y, currentDrawingPoints[i + 1].x, currentDrawingPoints[i + 1].y);
                }
                currentDrawingGraphics.stroke({ width, color, alpha: 1, cap: 'round', join: 'round' });
             } else if (localState.activeTool === 'shape') {
@@ -2264,9 +2275,20 @@ export const GameCanvas: React.FC = () => {
           const width = d.width || 4;
 
           if (d.type === 'path' || d.type === 'pen') {
-            g.moveTo(d.points[0].x, d.points[0].y);
-            for (let i = 1; i < d.points.length; i++) {
-              g.lineTo(d.points[i].x, d.points[i].y);
+            if (d.points.length < 3) {
+              g.moveTo(d.points[0].x, d.points[0].y);
+              for (let i = 1; i < d.points.length; i++) {
+                g.lineTo(d.points[i].x, d.points[i].y);
+              }
+            } else {
+              g.moveTo(d.points[0].x, d.points[0].y);
+              let i = 1;
+              for (i = 1; i < d.points.length - 2; i++) {
+                const xc = (d.points[i].x + d.points[i + 1].x) / 2;
+                const yc = (d.points[i].y + d.points[i + 1].y) / 2;
+                g.quadraticCurveTo(d.points[i].x, d.points[i].y, xc, yc);
+              }
+              g.quadraticCurveTo(d.points[i].x, d.points[i].y, d.points[i + 1].x, d.points[i + 1].y);
             }
             g.stroke({ width, color, alpha: 1, cap: 'round', join: 'round' });
           } else if (d.type === 'shape') {
