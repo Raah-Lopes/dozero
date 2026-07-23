@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { 
   state, localState, setActiveTool, setDrawColor, setDrawWidth, 
-  getMapConfig, updateMapConfig, addBackground, updateBackgroundProps, removeBackground 
+  getMapConfig, updateMapConfig, addBackground, updateBackgroundProps, removeBackground,
+  removeDrawing, clearDrawingSelection, removeMapProp, clearPropSelection, clearBgSelection
 } from '../../store';
 import type { BackgroundData, MapConfig } from '../../store';
 import { 
@@ -63,10 +64,34 @@ export const GridToolbar: React.FC = () => {
     };
     window.addEventListener('active-layer-changed', handleLocalState);
 
-    // Global toggle shortcut (Ctrl+\ or H)
+    // Global keyboard shortcuts (Delete/Backspace to delete selected, V, P, R, A, E, T tool hotkeys)
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if ((e.ctrlKey && e.key === '\\') || e.key.toLowerCase() === 'h') {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement)?.isContentEditable) return;
+      
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (localState.selectedDrawings && localState.selectedDrawings.size > 0) {
+          Array.from(localState.selectedDrawings).forEach(id => removeDrawing(id));
+          clearDrawingSelection();
+        }
+        if (localState.selectedProps && localState.selectedProps.size > 0) {
+          Array.from(localState.selectedProps).forEach(id => removeMapProp(id));
+          clearPropSelection();
+        }
+        if ((window as any).__IS_MAP_MENU_OPEN__ && localState.selectedBgs && localState.selectedBgs.size > 0) {
+          Array.from(localState.selectedBgs).forEach(id => removeBackground(id));
+          clearBgSelection();
+        }
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      if (key === 'v' || key === '1') { setActiveTool('select'); }
+      else if (key === 'p' || key === '2') { setActiveTool('pen'); }
+      else if (key === 'r' || key === '3') { setActiveTool('shape'); }
+      else if (key === 'a' || key === '4') { setActiveTool('arrow'); }
+      else if (key === 'e' || key === '5') { setActiveTool('eraser'); }
+      else if (key === 't' || key === '6') { setActiveTool('text'); }
+      else if ((e.ctrlKey && e.key === '\\') || key === 'h') {
         setIsVisible(v => !v);
       }
     };
