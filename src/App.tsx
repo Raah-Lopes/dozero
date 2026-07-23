@@ -25,6 +25,7 @@ import { DiceOverlay } from './components/UI/DiceOverlay';
 import { PPROverlay } from './components/UI/PPROverlay';
 import { CombatTracker } from './components/HUD/CombatTracker';
 import { MapContextMenu } from './components/UI/MapContextMenu';
+import { GridToolbar } from './components/UI/GridToolbar';
 import { ClockConfigModal } from './components/Modals/ClockConfigModal';
 import { WidgetHubModal } from './components/Modals/WidgetHubModal';
 import { TensionClockManager } from './components/HUD/TensionClockManager';
@@ -352,6 +353,7 @@ function App() {
       <div className={`view-layer canvas-layer-container ${viewMode === 'canvas' ? 'active' : ''}`}>
         <div className="canvas-layer" id="canvas-container">
           <GameCanvas />
+          <GridToolbar />
           <MapContextMenu />
           <TextContextBar />
           <PropInteractionPanel />

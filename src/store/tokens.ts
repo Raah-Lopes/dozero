@@ -9,13 +9,38 @@ export const localState = {
   selectedBgs: new Set<string>(),
   selectedTokens: new Set<string>(),
   selectedProps: new Set<string>(),
-  activeTool: 'select' as 'select' | 'text',
+  selectedDrawings: new Set<string>(),
+  activeTool: 'select' as 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser',
+  activeShapeType: 'rectangle' as 'rectangle' | 'circle' | 'triangle',
   editingTextId: null as string | null,
+  drawColor: '#ef4444',
+  drawWidth: 4,
+  activeDrawingLayerId: 'default',
 };
 
-export function setActiveTool(tool: 'select' | 'text') {
+export function setActiveTool(tool: 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser') {
   localState.activeTool = tool;
   window.dispatchEvent(new Event('tool-changed'));
+}
+
+export function setActiveDrawingLayerId(layerId: string) {
+  localState.activeDrawingLayerId = layerId;
+  window.dispatchEvent(new Event('active-layer-changed'));
+}
+
+export function setActiveShapeType(shapeType: 'rectangle' | 'circle' | 'triangle') {
+  localState.activeShapeType = shapeType;
+  window.dispatchEvent(new Event('tool-changed'));
+}
+
+export function setDrawColor(color: string) {
+  localState.drawColor = color;
+  window.dispatchEvent(new Event('draw-style-changed'));
+}
+
+export function setDrawWidth(width: number) {
+  localState.drawWidth = width;
+  window.dispatchEvent(new Event('draw-style-changed'));
 }
 
 export function setEditingTextId(id: string | null) {
@@ -136,4 +161,19 @@ export function updateTokenPosition(tokenId: string, x: number, y: number) {
       state.tokens.set(tokenId, { ...token, x, y });
     }
   }
+}
+
+export function clearDrawingSelection() {
+  localState.selectedDrawings.clear();
+  window.dispatchEvent(new Event('drawing-selection-updated'));
+}
+
+export function toggleDrawingSelection(id: string, multi: boolean = false) {
+  if (!multi) localState.selectedDrawings.clear();
+  if (localState.selectedDrawings.has(id)) {
+    localState.selectedDrawings.delete(id);
+  } else {
+    localState.selectedDrawings.add(id);
+  }
+  window.dispatchEvent(new Event('drawing-selection-updated'));
 }

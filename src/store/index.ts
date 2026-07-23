@@ -13,3 +13,4 @@ export * from './mapTexts';
 export * from './props';
 export * from './user';
 export * from './useCommandRegistry';
+export * from './drawings';

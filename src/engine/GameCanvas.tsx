@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 
 import { hexRound, euclideanDistance, pixelToHex, hexToPixel, snapToGrid } from './utils/gridUtils';
@@ -108,6 +108,11 @@ export const GameCanvas: React.FC = () => {
       
       let isMeasuring = false;
       let measureStart = { x: 0, y: 0 };
+      
+      let isDrawing = false;
+      let currentDrawingPoints: {x: number, y: number}[] = [];
+      const currentDrawingGraphics = new Graphics();
+      const drawingSprites: Record<string, Graphics> = {};
 
       // Touch / Pinch-to-zoom
       const activePointers = new Map<number, {x: number, y: number}>();
@@ -125,6 +130,44 @@ export const GameCanvas: React.FC = () => {
         y: (clientY - viewport.y) / viewport.scale.y
       });
       
+      const handleInsertCanvasImage = (e: Event) => {
+        const { src, name } = (e as CustomEvent).detail;
+        if (!src) return;
+        const img = new Image();
+        img.onload = () => {
+          import('../store').then(s => {
+            s.addBackground({
+              id: 'bg_' + Date.now() + Math.random().toString(36).substr(2, 5),
+              name: name || 'Imagem Inserida',
+              imageUrl: src,
+              x: (window.innerWidth / 2 - viewport.x) / viewport.scale.x,
+              y: (window.innerHeight / 2 - viewport.y) / viewport.scale.y,
+              width: img.naturalWidth || 400,
+              height: img.naturalHeight || 300,
+              scale: 1,
+              opacity: 1,
+              locked: false,
+              hidden: false
+            });
+          });
+        };
+        img.src = src;
+      };
+      window.addEventListener('insert-canvas-image', handleInsertCanvasImage);
+
+      const handleCanvasZoom = (e: Event) => {
+        const delta = (e as CustomEvent).detail || 0;
+        const newScale = Math.max(0.15, Math.min(viewport.scale.x + delta, 4));
+        viewport.scale.set(newScale);
+      };
+      const handleCanvasResetView = () => {
+        viewport.scale.set(1);
+        viewport.x = window.innerWidth / 2;
+        viewport.y = window.innerHeight / 2;
+      };
+      window.addEventListener('canvas-zoom', handleCanvasZoom);
+      window.addEventListener('canvas-reset-view', handleCanvasResetView);
+
       canvasEl.addEventListener('wheel', (e) => {
         e.preventDefault();
         const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -149,6 +192,12 @@ export const GameCanvas: React.FC = () => {
            isMeasuring = true;
            measureStart = getWorldPos(e.clientX, e.clientY);
            return;
+        }
+        if (localState.activeTool === 'pan' && e.button === 0) {
+          isPanning = true;
+          panStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
+          canvasEl.style.cursor = 'grabbing';
+          return;
         }
         if (e.button === 2 || e.button === 1) { // Middle or Right click
           isPanning = true;
@@ -236,6 +285,55 @@ export const GameCanvas: React.FC = () => {
           const config = getMapConfig();
           renderRuler(rulerGraphic, rulerText, measureStart, currentPos, config.gridSize, viewport.scale.x);
         }
+        
+        if (isDrawing) {
+            const currentPos = getWorldPos(e.clientX, e.clientY);
+            currentDrawingPoints.push(currentPos);
+            
+            const colorStr = localState.drawColor || '#ef4444';
+            const color = colorStr.startsWith('#') ? parseInt(colorStr.replace('#', '0x'), 16) : parseInt(colorStr, 16);
+            const width = localState.drawWidth || 4;
+            
+            currentDrawingGraphics.clear();
+            if (localState.activeTool === 'pen') {
+               currentDrawingGraphics.moveTo(currentDrawingPoints[0].x, currentDrawingPoints[0].y);
+               for (let i = 1; i < currentDrawingPoints.length; i++) {
+                 currentDrawingGraphics.lineTo(currentDrawingPoints[i].x, currentDrawingPoints[i].y);
+               }
+               currentDrawingGraphics.stroke({ width, color, alpha: 1, cap: 'round', join: 'round' });
+            } else if (localState.activeTool === 'shape') {
+               const p1 = currentDrawingPoints[0];
+               const p2 = currentDrawingPoints[currentDrawingPoints.length - 1];
+               const minX = Math.min(p1.x, p2.x);
+               const minY = Math.min(p1.y, p2.y);
+               const w = Math.abs(p2.x - p1.x);
+               const h = Math.abs(p2.y - p1.y);
+               if (localState.activeShapeType === 'rectangle') {
+                 currentDrawingGraphics.rect(minX, minY, w, h);
+               } else if (localState.activeShapeType === 'circle') {
+                 currentDrawingGraphics.ellipse(minX + w/2, minY + h/2, w/2, h/2);
+               } else if (localState.activeShapeType === 'triangle') {
+                 currentDrawingGraphics.moveTo(minX + w/2, minY);
+                 currentDrawingGraphics.lineTo(minX + w, minY + h);
+                 currentDrawingGraphics.lineTo(minX, minY + h);
+                 currentDrawingGraphics.closePath();
+               }
+               currentDrawingGraphics.stroke({ width, color, alpha: 1 });
+            } else if (localState.activeTool === 'arrow') {
+               const p1 = currentDrawingPoints[0];
+               const p2 = currentDrawingPoints[currentDrawingPoints.length - 1];
+               currentDrawingGraphics.moveTo(p1.x, p1.y);
+               currentDrawingGraphics.lineTo(p2.x, p2.y);
+               
+               const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+               const headlen = width * 3;
+               currentDrawingGraphics.moveTo(p2.x, p2.y);
+               currentDrawingGraphics.lineTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
+               currentDrawingGraphics.moveTo(p2.x, p2.y);
+               currentDrawingGraphics.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
+               currentDrawingGraphics.stroke({ width, color, alpha: 1 });
+            }
+        }
       };
 
       window.addEventListener('pointermove', handleMainPointerMove);
@@ -260,6 +358,31 @@ export const GameCanvas: React.FC = () => {
         if (isMeasuring) {
           isMeasuring = false;
           clearRuler(rulerGraphic, rulerText);
+        }
+        
+        if (isDrawing) {
+            isDrawing = false;
+            currentDrawingGraphics.visible = false;
+            
+            if (currentDrawingPoints.length > 1) {
+                import('../store').then(s => {
+                   const maxZ = Math.max(
+                      ...Array.from(state.backgrounds.values()).map((b: any) => b.zIndex || 0),
+                      ...Array.from(state.drawings.values()).map((d: any) => d.zIndex || 0),
+                      0
+                   );
+                   s.addDrawing({
+                      id: 'draw_' + Date.now() + Math.random().toString(36).substr(2, 5),
+                      type: localState.activeTool === 'shape' ? 'shape' : (localState.activeTool as any),
+                      shapeType: localState.activeTool === 'shape' ? localState.activeShapeType : undefined,
+                      points: [...currentDrawingPoints],
+                      color: localState.drawColor || '#ef4444',
+                      width: localState.drawWidth || 4,
+                      zIndex: maxZ + 1,
+                      layerId: localState.activeDrawingLayerId || 'default'
+                   });
+                });
+            }
         }
         if (isSelecting) {
           isSelecting = false;
@@ -377,6 +500,7 @@ export const GameCanvas: React.FC = () => {
       const bgsContainer = new Container();
       bgsContainer.sortableChildren = true;
       viewport.addChild(bgsContainer);
+      bgsContainer.addChild(currentDrawingGraphics);
 
       // Gizmo Container for selected backgrounds
       const gizmoContainer = new Container();
@@ -1408,8 +1532,202 @@ export const GameCanvas: React.FC = () => {
       bgCatcher.eventMode = 'static';
       viewport.addChildAt(bgCatcher, 0);
 
+      let lastBgClickTime = 0;
       bgCatcher.on('pointerdown', (e) => {
+        const now = Date.now();
+        const isDoubleClick = now - lastBgClickTime < 300;
+        lastBgClickTime = now;
+
         if (e.button === 0) {
+          if (localState.activeTool === 'eraser') {
+              const localPos = viewport.toLocal(e.global);
+              const radius = 20 / viewport.scale.x;
+              let hitId: string | null = null;
+              
+              for (const [id, d] of state.drawings.entries()) {
+                 const draw = d as any;
+                 
+                 // If layer is hidden, you can't erase it
+                 if (draw.layerId) {
+                    const layer = state.drawingLayers.get(draw.layerId) as any;
+                    if (layer && layer.hidden) continue;
+                 }
+                 
+                 let hit = false;
+                 if (draw.type === 'path' || draw.type === 'pen' || draw.type === 'arrow') {
+                    if (draw.points && draw.points.length > 0) {
+                       for (let i = 0; i < draw.points.length - 1; i++) {
+                         const p1 = draw.points[i];
+                         const p2 = draw.points[i+1];
+                         
+                         const l2 = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+                         let t = 0;
+                         if (l2 !== 0) {
+                           t = ((localPos.x - p1.x) * (p2.x - p1.x) + (localPos.y - p1.y) * (p2.y - p1.y)) / l2;
+                           t = Math.max(0, Math.min(1, t));
+                         }
+                         const projX = p1.x + t * (p2.x - p1.x);
+                         const projY = p1.y + t * (p2.y - p1.y);
+                         
+                         if (Math.hypot(localPos.x - projX, localPos.y - projY) < radius) {
+                           hit = true; break;
+                         }
+                       }
+                       // Se for só 1 ponto (um clique)
+                       if (!hit && draw.points.length === 1) {
+                         if (Math.hypot(localPos.x - draw.points[0].x, localPos.y - draw.points[0].y) < radius) {
+                           hit = true;
+                         }
+                       }
+                    }
+                 } else if (draw.type === 'shape') {
+                    if (draw.points && draw.points.length >= 2) {
+                       const p1 = draw.points[0];
+                       const p2 = draw.points[draw.points.length - 1];
+                       const minX = Math.min(p1.x, p2.x);
+                       const minY = Math.min(p1.y, p2.y);
+                       const w = Math.abs(p2.x - p1.x);
+                       const h = Math.abs(p2.y - p1.y);
+                       if (localPos.x >= minX - radius && localPos.x <= minX + w + radius &&
+                           localPos.y >= minY - radius && localPos.y <= minY + h + radius) {
+                          hit = true;
+                       }
+                    }
+                 }
+                 if (hit) {
+                    hitId = id;
+                    break;
+                 }
+              }
+              
+              if (hitId) {
+                 import('../store').then(s => s.removeDrawing(hitId!));
+                 e.stopPropagation();
+                 return;
+              }
+              
+              // No erasing background, so if we click empty space with eraser, just return.
+              return;
+          }
+
+          if (localState.activeTool === 'select' && isDoubleClick) {
+              const localPos = viewport.toLocal(e.global);
+              let hitId: string | null = null;
+              let currentText = "";
+              
+              for (const [id, d] of state.drawings.entries()) {
+                const draw = d as any;
+                if (draw.type === 'shape') {
+                   if (draw.points && draw.points.length >= 2) {
+                      const p1 = draw.points[0];
+                      const p2 = draw.points[draw.points.length - 1];
+                      const minX = Math.min(p1.x, p2.x);
+                      const minY = Math.min(p1.y, p2.y);
+                      const w = Math.abs(p2.x - p1.x);
+                      const h = Math.abs(p2.y - p1.y);
+                      if (localPos.x >= minX && localPos.x <= minX + w &&
+                          localPos.y >= minY && localPos.y <= minY + h) {
+                         hitId = id;
+                         currentText = draw.text || "";
+                         break;
+                      }
+                   }
+                }
+              }
+              
+              if (hitId) {
+                 const newText = window.prompt("Digite o texto dentro da forma:", currentText);
+                 if (newText !== null) {
+                    updateDrawing(hitId!, { text: newText });
+                 }
+                 e.stopPropagation();
+                 return;
+              }
+           } 
+           
+           if (localState.activeTool === 'select' && !isDoubleClick) {
+              const localPos = viewport.toLocal(e.global);
+              const radius = 20 / viewport.scale.x;
+              let hitDrawingId: string | null = null;
+              
+              for (const [id, d] of state.drawings.entries()) {
+                const draw = d as any;
+                if (draw.layerId) {
+                   const layer = state.drawingLayers.get(draw.layerId) as any;
+                   if (layer && (layer.hidden || layer.locked)) continue;
+                }
+                
+                let hit = false;
+                if (draw.type === 'path' || draw.type === 'pen' || draw.type === 'arrow') {
+                   if (draw.points && draw.points.length > 0) {
+                      for (let i = 0; i < draw.points.length - 1; i++) {
+                        const p1 = draw.points[i];
+                        const p2 = draw.points[i+1];
+                        const l2 = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+                        let t = 0;
+                        if (l2 !== 0) {
+                          t = ((localPos.x - p1.x) * (p2.x - p1.x) + (localPos.y - p1.y) * (p2.y - p1.y)) / l2;
+                          t = Math.max(0, Math.min(1, t));
+                        }
+                        const projX = p1.x + t * (p2.x - p1.x);
+                        const projY = p1.y + t * (p2.y - p1.y);
+                        if (Math.hypot(localPos.x - projX, localPos.y - projY) < radius) {
+                          hit = true; break;
+                        }
+                      }
+                      if (!hit && draw.points.length === 1) {
+                        if (Math.hypot(localPos.x - draw.points[0].x, localPos.y - draw.points[0].y) < radius) {
+                          hit = true;
+                        }
+                      }
+                   }
+                } else if (draw.type === 'shape') {
+                   if (draw.points && draw.points.length >= 2) {
+                      const p1 = draw.points[0];
+                      const p2 = draw.points[draw.points.length - 1];
+                      const minX = Math.min(p1.x, p2.x);
+                      const minY = Math.min(p1.y, p2.y);
+                      const w = Math.abs(p2.x - p1.x);
+                      const h = Math.abs(p2.y - p1.y);
+                      if (localPos.x >= minX - radius && localPos.x <= minX + w + radius &&
+                          localPos.y >= minY - radius && localPos.y <= minY + h + radius) {
+                         hit = true;
+                      }
+                   }
+                }
+                
+                if (hit) {
+                  hitDrawingId = id;
+                  break; 
+                }
+              }
+              
+              if (hitDrawingId) {
+                 import('../store').then(s => s.toggleDrawingSelection(hitDrawingId!, e.shiftKey));
+                 e.stopPropagation();
+                 return;
+              } else {
+                 if (!e.shiftKey) import('../store').then(s => s.clearDrawingSelection());
+              }
+           }
+
+          if (localState.activeTool === 'pen' || localState.activeTool === 'shape' || localState.activeTool === 'arrow') {
+             e.stopPropagation();
+             isDrawing = true;
+             const localPos = viewport.toLocal(e.global);
+             currentDrawingPoints = [localPos];
+             currentDrawingGraphics.clear();
+             currentDrawingGraphics.visible = true;
+             
+             // Temporarily highest zIndex for the drawing in progress
+             const maxZ = Math.max(
+                ...Array.from(state.backgrounds.values()).map((b: any) => b.zIndex || 0),
+                ...Array.from(state.drawings.values()).map((d: any) => d.zIndex || 0),
+                0
+             );
+             currentDrawingGraphics.zIndex = maxZ + 1;
+             return;
+          }
           if (localState.activeTool === 'text') {
              e.stopPropagation();
              
@@ -1429,12 +1747,11 @@ export const GameCanvas: React.FC = () => {
                    text: 'Novo Texto',
                    x: localPos.x,
                    y: localPos.y,
-                   color: '#ffffff',
+                   color: localState.drawColor || '#ffffff',
                    backgroundColor: 'transparent',
                    fontSize: 24
                 });
                 s.setEditingTextId(newId);
-                // NOTA: não setamos mais a ferramenta para select aqui, deixamos em text
              });
              return;
           }
@@ -1598,6 +1915,7 @@ export const GameCanvas: React.FC = () => {
           bgSprites[id].visible = !bg.hidden;
           bgSprites[id].zIndex = bg.zIndex ?? 0;
         });
+        bgsContainer.sortChildren();
         syncGizmo();
       };
 
@@ -1612,7 +1930,7 @@ export const GameCanvas: React.FC = () => {
         const isMapOpen = (window as any).__IS_MAP_MENU_OPEN__ === true;
         const isSelectMode = localState.activeTool === 'select';
         
-        if ((!isMapOpen || localState.selectedBgs.size === 0) && (!isSelectMode || !localState.selectedProps || localState.selectedProps.size === 0)) {
+        if ((!isMapOpen || localState.selectedBgs.size === 0) && (!isSelectMode || ((!localState.selectedProps || localState.selectedProps.size === 0) && (!localState.selectedDrawings || localState.selectedDrawings.size === 0)))) {
           gizmoContainer.visible = false;
           return;
         }
@@ -1651,6 +1969,34 @@ export const GameCanvas: React.FC = () => {
               }
            });
         }
+         
+         if (isSelectMode && localState.selectedDrawings && localState.selectedDrawings.size > 0) {
+            Array.from(localState.selectedDrawings).forEach(id => {
+              const drawData = state.drawings.get(id) as any;
+              if (drawData) {
+                 hasUnlocked = true;
+                 if (drawData.type === 'shape' && drawData.points && drawData.points.length >= 2) {
+                    const p1 = drawData.points[0];
+                    const p2 = drawData.points[drawData.points.length - 1];
+                    const minPx = Math.min(p1.x, p2.x);
+                    const minPy = Math.min(p1.y, p2.y);
+                    const maxPx = Math.max(p1.x, p2.x);
+                    const maxPy = Math.max(p1.y, p2.y);
+                    if (minPx < minX) minX = minPx;
+                    if (minPy < minY) minY = minPy;
+                    if (maxPx > maxX) maxX = maxPx;
+                    if (maxPy > maxY) maxY = maxPy;
+                 } else if (drawData.points) {
+                    drawData.points.forEach((p: any) => {
+                      if (p.x < minX) minX = p.x;
+                      if (p.y < minY) minY = p.y;
+                      if (p.x > maxX) maxX = p.x;
+                      if (p.y > maxY) maxY = p.y;
+                    });
+                 }
+              }
+            });
+         }
 
         if (!hasUnlocked) {
           gizmoContainer.visible = false;
@@ -1661,29 +2007,66 @@ export const GameCanvas: React.FC = () => {
         gizmoContainer.x = 0;
         gizmoContainer.y = 0;
 
-        const w = maxX - minX;
-        const h = maxY - minY;
+        // Determine if we are in Arrow Edit Mode (only 1 arrow selected)
+        let isArrowMode = false;
+        let arrowData: any = null;
+        let arrowId: string | null = null;
+        
+        if (isSelectMode && localState.selectedDrawings && localState.selectedDrawings.size === 1 && localState.selectedBgs.size === 0 && (!localState.selectedProps || localState.selectedProps.size === 0)) {
+           const id = Array.from(localState.selectedDrawings)[0];
+           const d = state.drawings.get(id) as any;
+           if (d && (d.type === 'arrow' || d.type === 'pen' || d.type === 'path') && d.points && d.points.length >= 2) {
+              // We'll allow dragging endpoints for any path/arrow, very excalidraw!
+              isArrowMode = true;
+              arrowData = d;
+              arrowId = id;
+           }
+        }
 
-        // Draw bounding box
         gizmoBox.clear();
-        gizmoBox.rect(minX, minY, w, h);
-        gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
+        
+        if (isArrowMode) {
+           // Em modo seta, não desenhamos a caixa ao redor.
+        } else {
+           // Draw bounding box
+           gizmoBox.rect(minX, minY, w, h);
+           gizmoBox.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
+        }
 
         // Draw aesthetic corners
         const cornerSize = 8 / viewport.scale.x;
-        const corners = [
-          {x: minX, y: minY, cursor: 'nwse-resize'},
-          {x: maxX, y: minY, cursor: 'nesw-resize'},
-          {x: minX, y: maxY, cursor: 'nesw-resize'},
-          {x: maxX, y: maxY, cursor: 'nwse-resize'}
-        ];
+        
+        let corners: any[] = [];
+        if (isArrowMode) {
+           corners = [
+              {x: arrowData.points[0].x, y: arrowData.points[0].y, cursor: 'move', isPointIndex: 0},
+              {x: arrowData.points[arrowData.points.length-1].x, y: arrowData.points[arrowData.points.length-1].y, cursor: 'move', isPointIndex: arrowData.points.length-1}
+           ];
+           gizmoCorners[2].visible = false;
+           gizmoCorners[3].visible = false;
+        } else {
+           corners = [
+             {x: minX, y: minY, cursor: 'nwse-resize'},
+             {x: maxX, y: minY, cursor: 'nesw-resize'},
+             {x: minX, y: maxY, cursor: 'nesw-resize'},
+             {x: maxX, y: maxY, cursor: 'nwse-resize'}
+           ];
+           gizmoCorners[2].visible = true;
+           gizmoCorners[3].visible = true;
+        }
         
         corners.forEach((c, idx) => {
           const corner = gizmoCorners[idx];
           corner.clear();
-          corner.rect(c.x - cornerSize/2, c.y - cornerSize/2, cornerSize, cornerSize);
+          
+          if (isArrowMode) {
+             corner.circle(c.x, c.y, cornerSize);
+          } else {
+             corner.rect(c.x - cornerSize/2, c.y - cornerSize/2, cornerSize, cornerSize);
+          }
           corner.fill({ color: 0xffffff });
           corner.stroke({ color: 0xa855f7, width: 2 / viewport.scale.x });
+          corner.visible = true;
           
           corner.eventMode = 'static';
           corner.cursor = c.cursor;
@@ -1694,6 +2077,36 @@ export const GameCanvas: React.FC = () => {
           // Adicionar o evento de resize para todos os cantos
           corner.on('pointerdown', (e) => {
             e.stopPropagation();
+
+            if (isArrowMode) {
+               // ARROW DRAG LOGIC
+               const pointIndex = c.isPointIndex;
+               const originalPoints = arrowData.points.map((p:any)=>({...p}));
+               
+               const onArrowMove = (moveEvent: PointerEvent) => {
+                  const rect = canvasEl.getBoundingClientRect();
+                  const localPoint = viewport.toLocal({ x: moveEvent.clientX - rect.left, y: moveEvent.clientY - rect.top });
+                  
+                  const sprite = drawingSprites[arrowId!];
+                  if (sprite) {
+                     // We just update the points array in the state visually first (by bypassing Yjs for 60fps)
+                     // Actually, manipulating Graphics directly is hard, we can just update Yjs! Yjs is fast enough locally.
+                     // But to be smooth, we update Yjs.
+                     const newPoints = [...originalPoints];
+                     newPoints[pointIndex] = { x: localPoint.x, y: localPoint.y };
+                     updateDrawing(arrowId!, { points: newPoints });
+                  }
+               };
+               
+               const onArrowUp = () => {
+                  window.removeEventListener('pointermove', onArrowMove);
+                  window.removeEventListener('pointerup', onArrowUp);
+               };
+               
+               window.addEventListener('pointermove', onArrowMove);
+               window.addEventListener('pointerup', onArrowUp);
+               return;
+            }
 
             let pivotX: number, pivotY: number, dirX: number;
             if (idx === 0) { pivotX = maxX; pivotY = maxY; dirX = -1; } // Top-Left
@@ -1723,9 +2136,19 @@ export const GameCanvas: React.FC = () => {
                     originalStates.push({ type: 'prop', id, sprite, origX: sprite.x, origY: sprite.y, origDataScale: pData.scale, origScale: sprite.scale.x });
                  }
                });
-            }
+             }
+             
+             if (isSelectMode && localState.selectedDrawings && localState.selectedDrawings.size > 0) {
+                Array.from(localState.selectedDrawings).forEach(id => {
+                   const drawData = state.drawings.get(id) as any;
+                   const sprite = drawingSprites[id];
+                   if (drawData && drawData.points && sprite) {
+                      originalStates.push({ type: 'drawing', id, sprite, origX: sprite.x, origY: sprite.y, origScale: sprite.scale.x, origPoints: drawData.points.map((p:any) => ({...p})) });
+                   }
+                });
+             }
 
-            let finalScaleRatio = 1;
+             let finalScaleRatio = 1;
 
             const onScaleMove = (moveEvent: PointerEvent) => {
               const rect = canvasEl.getBoundingClientRect();
@@ -1771,12 +2194,21 @@ export const GameCanvas: React.FC = () => {
                           x: item.sprite.x,
                           y: item.sprite.y
                         });
-                     } else if (item.type === 'prop') {
+                       } else if (item.type === 'prop') {
                         m.updateMapProp(item.id, {
                            scale: item.origDataScale * finalScaleRatio,
                            x: item.sprite.x,
                            y: item.sprite.y
                         });
+                     } else if (item.type === 'drawing') {
+                        const newPoints = item.origPoints.map((p: any) => ({
+                           x: pivotX + (p.x - pivotX) * finalScaleRatio,
+                           y: pivotY + (p.y - pivotY) * finalScaleRatio
+                        }));
+                        updateDrawing(item.id, { points: newPoints });
+                        item.sprite.scale.set(1);
+                        item.sprite.x = 0;
+                        item.sprite.y = 0;
                      }
                    });
                 });
@@ -1791,6 +2223,112 @@ export const GameCanvas: React.FC = () => {
       };
 
       state.backgrounds.observe(mapObserver);
+      mapObserver();
+      
+      const drawObserver = () => {
+        const drawingsState = state.drawings;
+        
+        Object.keys(drawingSprites).forEach(id => {
+          const d = drawingsState.get(id) as any;
+          let shouldRemove = !d;
+          if (d && d.layerId) {
+             const layer = state.drawingLayers.get(d.layerId) as any;
+             if (layer && layer.hidden) shouldRemove = true;
+          }
+          if (shouldRemove) {
+            bgsContainer.removeChild(drawingSprites[id]);
+            drawingSprites[id].destroy();
+            delete drawingSprites[id];
+          }
+        });
+
+        Array.from(drawingsState.entries()).forEach(([id, drawData]) => {
+          const d = drawData as any;
+          if (d.layerId) {
+             const layer = state.drawingLayers.get(d.layerId) as any;
+             if (layer && layer.hidden) return;
+          }
+          if (!drawingSprites[id]) {
+            const g = new Graphics();
+            bgsContainer.addChild(g);
+            drawingSprites[id] = g;
+          }
+          const g = drawingSprites[id];
+          g.clear();
+          g.zIndex = d.zIndex || 0;
+          
+          if (!d.points || d.points.length === 0) return;
+          
+          const colorStr = d.color || '#ef4444';
+          const color = colorStr.startsWith('#') ? parseInt(colorStr.replace('#', '0x'), 16) : parseInt(colorStr, 16);
+          const width = d.width || 4;
+
+          if (d.type === 'path' || d.type === 'pen') {
+            g.moveTo(d.points[0].x, d.points[0].y);
+            for (let i = 1; i < d.points.length; i++) {
+              g.lineTo(d.points[i].x, d.points[i].y);
+            }
+            g.stroke({ width, color, alpha: 1, cap: 'round', join: 'round' });
+          } else if (d.type === 'shape') {
+            if (d.points.length >= 2) {
+               const p1 = d.points[0];
+               const p2 = d.points[d.points.length - 1];
+               const minX = Math.min(p1.x, p2.x);
+               const minY = Math.min(p1.y, p2.y);
+               const w = Math.abs(p2.x - p1.x);
+               const h = Math.abs(p2.y - p1.y);
+               
+               if (d.shapeType === 'circle') {
+                 g.ellipse(minX + w/2, minY + h/2, w/2, h/2);
+               } else if (d.shapeType === 'triangle') {
+                 g.moveTo(minX + w/2, minY);
+                 g.lineTo(minX + w, minY + h);
+                 g.lineTo(minX, minY + h);
+                 g.closePath();
+               } else {
+                 g.rect(minX, minY, w, h);
+               }
+               g.stroke({ width, color, alpha: 1 });
+               
+               g.removeChildren().forEach((c: any) => c.destroy());
+               if (d.text) {
+                  const textStyle = {
+                     fontFamily: 'Inter, sans-serif',
+                     fontSize: 24,
+                     fill: color,
+                     wordWrap: true,
+                     wordWrapWidth: Math.max(w - 10, 50),
+                     align: 'center'
+                  };
+                  const textObj = new Text({ text: d.text, style: textStyle as any });
+                  textObj.anchor.set(0.5);
+                  textObj.x = minX + w/2;
+                  textObj.y = minY + h/2;
+                  g.addChild(textObj);
+               }
+            }
+          } else if (d.type === 'arrow') {
+             if (d.points.length >= 2) {
+               const p1 = d.points[0];
+               const p2 = d.points[d.points.length - 1];
+               g.moveTo(p1.x, p1.y);
+               g.lineTo(p2.x, p2.y);
+               
+               const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+               const headlen = width * 3;
+               g.moveTo(p2.x, p2.y);
+               g.lineTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
+               g.moveTo(p2.x, p2.y);
+               g.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
+               g.stroke({ width, color, alpha: 1 });
+             }
+          }
+        });
+        bgsContainer.sortChildren();
+      };
+      
+      state.drawings.observe(drawObserver);
+      drawObserver();
       window.addEventListener('map-menu-toggle', mapObserver);
       window.addEventListener('bg-selection-updated', syncGizmo);
       window.addEventListener('prop-selection-updated', syncGizmo);
@@ -1813,6 +2351,7 @@ export const GameCanvas: React.FC = () => {
       // Cleanup for observers
       (app as any)._cleanupMapObservers = () => {
         state.backgrounds.unobserve(mapObserver);
+        state.drawings.unobserve(drawObserver);
         window.removeEventListener('map-menu-toggle', mapObserver);
         window.removeEventListener('bg-selection-updated', syncGizmo);
         window.removeEventListener('prop-selection-updated', syncGizmo);

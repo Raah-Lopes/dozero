@@ -73,7 +73,9 @@ export const state = {
   players: doc.getMap('players'),
   chatConfig: doc.getMap('chatConfig'),
   gmNotes: doc.getMap('gmNotes'),
-  customItems: doc.getMap('customItems')
+  customItems: doc.getMap('customItems'),
+  drawings: doc.getMap('drawings'),
+  drawingLayers: doc.getMap('drawingLayers')
 };
 
 export function connectProvider() {

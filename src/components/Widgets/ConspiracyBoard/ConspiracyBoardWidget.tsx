@@ -4,7 +4,7 @@ import {
   Type, Image as ImageIcon, Save, Trash2,
   User, MapPin, Calendar, Link as LinkIcon, Book, FileText,
   ZoomIn, ZoomOut, Maximize, Grid, Palette, FilePlus, Move,
-  FolderOpen, MousePointer2, Box
+  FolderOpen, MousePointer2, Box, Pen, ArrowUpRight, ArrowDownRight, Layers
 } from 'lucide-react';
 import { saveMarkdownContent, loadMarkdownFile, ensureWikiFolder } from '../../../utils/githubApi';
 import { pushChatMessage } from '../../../store';
@@ -16,9 +16,14 @@ interface ConspiracyBoardWidgetProps {
   onClose: () => void;
 }
 
+export interface DrawPoint {
+  x: number;
+  y: number;
+}
+
 export interface MindMapNode {
   id: string;
-  type: 'text' | 'note' | 'character' | 'location' | 'event' | 'image' | 'link' | 'wiki' | 'md' | 'zone';
+  type: 'text' | 'note' | 'character' | 'location' | 'event' | 'image' | 'link' | 'wiki' | 'md' | 'zone' | 'draw';
   x: number;
   y: number;
   width: number;
@@ -29,6 +34,9 @@ export interface MindMapNode {
   imagePath?: string;
   filePath?: string;
   links: string[];
+  points?: DrawPoint[];
+  strokeWidth?: number;
+  zIndex?: number;
 }
 
 export interface MindMapData {
@@ -62,6 +70,7 @@ const TYPE_CONFIG: Record<MindMapNode['type'], { icon: React.ElementType; color:
   wiki:      { icon: Book,      color: '#a855f7', border: '#d8b4fe' },
   md:        { icon: FilePlus,  color: '#06b6d4', border: '#67e8f9' },
   zone:      { icon: Box,       color: '#6366f1', border: '#818cf8' },
+  draw:      { icon: Pen,       color: '#ec4899', border: '#f472b6' },
 };
 
 const snapToGrid = (val: number) => Math.round(val / GRID_SIZE) * GRID_SIZE;
@@ -496,8 +505,14 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
             </svg>
 
             {/* HTML Nodes */}
-            {/* Sort zones first so they render underneath everything */}
-            {board.nodes.slice().sort((a,b) => (a.type === 'zone' ? -1 : 1) - (b.type === 'zone' ? -1 : 1)).map(node => {
+            {/* Sort zones first, then by custom zIndex */}
+            {board.nodes.slice().sort((a,b) => {
+              const zoneA = a.type === 'zone' ? -1000 : 0;
+              const zoneB = b.type === 'zone' ? -1000 : 0;
+              const zA = (a.zIndex || 0) + zoneA;
+              const zB = (b.zIndex || 0) + zoneB;
+              return zA - zB;
+            }).map(node => {
               const NodeIcon = TYPE_CONFIG[node.type].icon;
               const isImage = node.type === 'image';
               const isZone = node.type === 'zone';
@@ -534,7 +549,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
                     position: 'absolute',
                     left: node.x, top: node.y,
                     width: node.width, height: node.height,
-                    zIndex: isSelected ? 50 : (isZone ? 1 : 20),
+                    zIndex: isSelected ? 1000 : (node.zIndex !== undefined ? node.zIndex : (isZone ? 1 : 20)),
                   }}
                 >
                   <div style={{
@@ -698,6 +713,22 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
               onClick={e => e.stopPropagation()}
             >
               <div style={{ fontSize: '10px', color: 'var(--text-secondary)', padding: '4px 8px', fontWeight: 600 }}>AÇÕES DO NÓ</div>
+              <button className="cw-ctx-btn" onClick={() => {
+                const node = board.nodes.find(n => n.id === contextMenu.nodeId);
+                const maxZ = Math.max(...board.nodes.map(n => n.zIndex || 0), 0);
+                if (node) updateNode(node.id, { zIndex: maxZ + 1 });
+                setContextMenu(null);
+              }}>
+                <ArrowUpRight size={14} color="#06b6d4" /> Trazer para Frente
+              </button>
+              <button className="cw-ctx-btn" onClick={() => {
+                const node = board.nodes.find(n => n.id === contextMenu.nodeId);
+                const minZ = Math.min(...board.nodes.map(n => n.zIndex || 0), 0);
+                if (node) updateNode(node.id, { zIndex: minZ - 1 });
+                setContextMenu(null);
+              }}>
+                <ArrowDownRight size={14} color="#06b6d4" /> Enviar para Trás
+              </button>
               <button className="cw-ctx-btn" onClick={() => { deleteNode(contextMenu.nodeId); }}>
                 <Trash2 size={14} color="var(--danger)" /> Excluir Nó
               </button>
