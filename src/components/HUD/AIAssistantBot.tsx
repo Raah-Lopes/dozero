@@ -7,9 +7,17 @@ import { useIsGM } from '../../store/user';
 export const AIAssistantBot: React.FC = () => {
   const isGM = useIsGM();
   const [isOpen, setIsOpen] = useState(false);
-  const [pos, setPos] = useState({ 
-    x: window.innerWidth / 2 - 30, 
-    y: window.innerHeight / 2 - 30 
+  const [pos, setPos] = useState(() => {
+    const saved = localStorage.getItem('aiBotPos');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return { 
+      x: window.innerWidth / 2 - 30, 
+      y: window.innerHeight / 2 - 30 
+    };
   });
   const isDragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
@@ -68,14 +76,10 @@ export const AIAssistantBot: React.FC = () => {
     };
   };
 
-  // Define position on mount and on resize with clamping
+  // Clamping initial bounds after mount
   useEffect(() => {
     const handleResize = () => {
-      const isMobile = window.innerWidth <= 768;
-      setPos(prev => clampPos(
-        isMobile ? window.innerWidth - 65 : Math.min(prev.x, window.innerWidth - 65),
-        isMobile ? window.innerHeight - 130 : Math.min(prev.y, window.innerHeight - 65)
-      ));
+      setPos(prev => clampPos(prev.x, prev.y));
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -100,6 +104,8 @@ export const AIAssistantBot: React.FC = () => {
     e.currentTarget.releasePointerCapture(e.pointerId);
     if (!isDragging.current) {
       setIsOpen(!isOpen);
+    } else {
+      localStorage.setItem('aiBotPos', JSON.stringify(pos));
     }
   };
 

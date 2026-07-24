@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Dices, BookOpen, User, X, ShieldAlert } from 'lucide-react';
+import { Zap, Dices, BookOpen, User, X, ShieldAlert } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
 export const MobileQuickActions: React.FC = () => {
@@ -60,7 +60,7 @@ export const MobileQuickActions: React.FC = () => {
         aria-label="Ações Rápidas"
         title="Ações Rápidas"
       >
-        {expanded ? <X size={24} /> : <Sparkles size={24} />}
+        {expanded ? <X size={24} /> : <Zap size={24} />}
       </button>
     </div>
   );
