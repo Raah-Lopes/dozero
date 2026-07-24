@@ -556,15 +556,15 @@ export const GridToolbar: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px' }}>
                 <span style={{ fontSize: '12px', color: '#e2e8f0' }}>Névoa de Guerra (FOW)</span>
                 <button
-                  onClick={() => updateMapConfig({ enableFog: !mapConfig.enableFog })}
+                  onClick={() => updateMapConfig({ fogOfWar: !mapConfig.fogOfWar })}
                   style={{
-                    background: mapConfig.enableFog ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.05)',
-                    border: mapConfig.enableFog ? '1px solid #0ea5e9' : '1px solid transparent',
-                    color: mapConfig.enableFog ? '#0ea5e9' : '#94a3b8',
+                    background: mapConfig.fogOfWar ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.05)',
+                    border: mapConfig.fogOfWar ? '1px solid #0ea5e9' : '1px solid transparent',
+                    color: mapConfig.fogOfWar ? '#0ea5e9' : '#94a3b8',
                     borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer'
                   }}
                 >
-                  {mapConfig.enableFog ? 'Ativada' : 'Desativada'}
+                  {mapConfig.fogOfWar ? 'Ativada' : 'Desativada'}
                 </button>
               </div>
             </div>
