@@ -1347,6 +1347,9 @@ export const GameCanvas: React.FC = () => {
                   isBeingDragged = true;
                }
             }
+            if ((window as any).__IS_GIZMO_DRAGGING && localState.selectedTokens?.has(id)) {
+               isBeingDragged = true;
+            }
 
             if (!isBeingDragged) {
               const dx = t.x - tokenSprites[id].container.x;
@@ -2302,7 +2305,10 @@ export const GameCanvas: React.FC = () => {
               syncGizmo();
            };
            
+           (window as any).__IS_GIZMO_DRAGGING = true;
+           
            const onDragUp = () => {
+              (window as any).__IS_GIZMO_DRAGGING = false;
               window.removeEventListener('pointermove', onDragMove);
               window.removeEventListener('pointerup', onDragUp);
               
@@ -2958,6 +2964,9 @@ export const GameCanvas: React.FC = () => {
              if (selected.includes(id)) {
                 isBeingDragged = true;
              }
+          }
+          if ((window as any).__IS_GIZMO_DRAGGING && localState.selectedTokens?.has(id)) {
+             isBeingDragged = true;
           }
 
            if (!isBeingDragged) {
