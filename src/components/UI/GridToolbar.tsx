@@ -703,6 +703,21 @@ export const GridToolbar: React.FC = () => {
                         onRename={(id, newName) => import('../../store/drawingLayers').then(s => s.updateDrawingLayer(id, { name: newName }))}
                       />
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={e => e.stopPropagation()}>
+                        <input
+                           type="checkbox"
+                           checked={layerDrawings.length > 0 && layerDrawings.every((d: any) => selectedBatch.has(d.id))}
+                           onChange={(e) => {
+                              const newSet = new Set(selectedBatch);
+                              if (e.target.checked) {
+                                 layerDrawings.forEach((d: any) => newSet.add(d.id));
+                              } else {
+                                 layerDrawings.forEach((d: any) => newSet.delete(d.id));
+                              }
+                              setSelectedBatch(newSet);
+                           }}
+                           title="Selecionar tudo nesta camada"
+                           style={{ cursor: 'pointer', margin: 0, marginRight: '4px' }}
+                        />
                         <button
                           onClick={() => {
                              import('../../store/drawingLayers').then(s => s.updateDrawingLayer(layer.id, { hidden: !layer.hidden }));
@@ -711,6 +726,20 @@ export const GridToolbar: React.FC = () => {
                           title={layer.hidden ? "Mostrar Camada" : "Ocultar Camada"}
                         >
                           {layer.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                        <button
+                          onClick={() => {
+                             if (layerDrawings.length === 0) return;
+                             if (confirm(`Limpar todos os ${layerDrawings.length} desenhos da camada '${layer.name}'?`)) {
+                                import('../../store/drawings').then(s => {
+                                   layerDrawings.forEach((d: any) => s.removeDrawing(d.id));
+                                });
+                             }
+                          }}
+                          style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layerDrawings.length === 0 ? '#475569' : '#f59e0b', cursor: layerDrawings.length === 0 ? 'not-allowed' : 'pointer', padding: '6px', transition: 'all 0.1s' }}
+                          title="Limpar todos os desenhos da camada"
+                        >
+                          <Eraser size={14} />
                         </button>
                         <button
                           onClick={() => {
