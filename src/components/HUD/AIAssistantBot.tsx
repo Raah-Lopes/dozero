@@ -36,8 +36,13 @@ export const AIAssistantBot: React.FC = () => {
     const handler = (e: any) => {
       if (e?.detail?.forceState !== undefined) {
         setIsVisible(e.detail.forceState);
+        localStorage.setItem('aiBotEnabled', String(e.detail.forceState));
       } else {
-        setIsVisible(v => !v);
+        setIsVisible(v => {
+           const next = !v;
+           localStorage.setItem('aiBotEnabled', String(next));
+           return next;
+        });
       }
     };
     window.addEventListener('toggle-ai-bot', handler);
@@ -45,7 +50,7 @@ export const AIAssistantBot: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isGM) {
+    if (isGM && localStorage.getItem('aiBotEnabled') === null) {
       setIsVisible(true);
       localStorage.setItem('aiBotEnabled', 'true');
     }
@@ -85,6 +90,10 @@ export const AIAssistantBot: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  useEffect(() => {
+     localStorage.setItem('aiBotPos', JSON.stringify(pos));
+  }, [pos]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     isDragging.current = false;
@@ -104,8 +113,6 @@ export const AIAssistantBot: React.FC = () => {
     e.currentTarget.releasePointerCapture(e.pointerId);
     if (!isDragging.current) {
       setIsOpen(!isOpen);
-    } else {
-      localStorage.setItem('aiBotPos', JSON.stringify(pos));
     }
   };
 

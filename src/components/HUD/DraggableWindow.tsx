@@ -172,6 +172,18 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     dragCurrentPos.current = { ...pos }; // Sync ref before drag
     
+    // Cache sibling rects for performance during move
+    const cachedSiblings: DOMRect[] = [];
+    document.querySelectorAll('.draggable-window').forEach(sibling => {
+      if (sibling.id !== `window-${id}`) cachedSiblings.push(sibling.getBoundingClientRect());
+    });
+    const cachedPinned: DOMRect[] = [];
+    document.querySelectorAll('.draggable-window[data-pinned="true"]').forEach(pinned => {
+      if (pinned.id !== `window-${id}`) cachedPinned.push(pinned.getBoundingClientRect());
+    });
+    (windowRef.current as any).__cachedSiblings = cachedSiblings;
+    (windowRef.current as any).__cachedPinned = cachedPinned;
+    
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -197,12 +209,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     if (Math.abs(newY + rect.height - window.innerHeight) < snapThreshold) newY = window.innerHeight - rect.height;
 
     // 2. Snapping to other draggable windows
-    const siblings = document.querySelectorAll('.draggable-window');
-    siblings.forEach((sibling) => {
-      if (sibling.id === `window-${id}`) return; // Don't snap to self
-
-      const sRect = sibling.getBoundingClientRect();
-
+    const siblings = (windowRef.current as any).__cachedSiblings as DOMRect[] || [];
+    siblings.forEach((sRect) => {
       // Check X alignment
       // Align our left to their right
       if (Math.abs(newX - sRect.right) < snapThreshold && newY + rect.height > sRect.top && newY < sRect.bottom) newX = sRect.right;
@@ -226,11 +234,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     // 3. Collision with pinned windows
     let nextX = newX;
     let nextY = newY;
-    const pinnedWindows = document.querySelectorAll('.draggable-window[data-pinned="true"]');
-    pinnedWindows.forEach((pinned) => {
-      if (pinned.id === `window-${id}`) return;
-      const pRect = pinned.getBoundingClientRect();
-      
+    const pinnedWindows = (windowRef.current as any).__cachedPinned as DOMRect[] || [];
+    pinnedWindows.forEach((pRect) => {
       const xOverlap = (nextX < pRect.right && nextX + rect.width > pRect.left &&
                         dragCurrentPos.current.y < pRect.bottom && dragCurrentPos.current.y + rect.height > pRect.top);
       if (xOverlap) {
@@ -359,6 +364,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         backgroundColor: variant === 'default' ? 'var(--bg-secondary)' : 'transparent',
         border: (variant === 'default' && !isFullscreen) ? '1px solid var(--glass-border)' : 'none',
         borderRadius: isBubble ? '24px' : (isFullscreen ? '0px' : (variant === 'default' ? '12px' : '0')),
+        backdropFilter: isDragging ? 'none' : undefined,
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front

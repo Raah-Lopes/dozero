@@ -130,7 +130,10 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   ]);
   const [newMacroLabel, setNewMacroLabel] = useState('');
   const [showMacroEditor, setShowMacroEditor] = useState(false);
-  const [sendToChat, setSendToChat] = useState(false);
+  const [sendToChat, setSendToChat] = useState(() => {
+     const saved = localStorage.getItem('diceSendToChat');
+     return saved !== null ? saved === 'true' : true;
+  });
   const [lastResult, setLastResult] = useState<{ total: number; dice: string } | null>(null);
 
   const colors = THEMES[theme];
@@ -272,10 +275,13 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 cursor: 'pointer'
               }} />
             ))}
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', color: '#888', cursor: 'pointer', marginLeft: '0.5rem' }}>
-              <input type="checkbox" checked={sendToChat} onChange={e => setSendToChat(e.target.checked)} style={{ accentColor: colors.primary }} />
-              Chat
-            </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', color: '#888', cursor: 'pointer', marginLeft: '0.5rem' }}>
+                <input type="checkbox" checked={sendToChat} onChange={e => {
+                   setSendToChat(e.target.checked);
+                   localStorage.setItem('diceSendToChat', String(e.target.checked));
+                }} style={{ accentColor: colors.primary }} />
+                Chat
+              </label>
           </div>
         </div>
 
