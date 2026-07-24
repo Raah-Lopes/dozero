@@ -617,11 +617,11 @@ export const GridToolbar: React.FC = () => {
       {showLayersMenu && (
         <div style={{
           position: 'fixed',
-          top: isMobile ? 'auto' : '80px',
-          bottom: isMobile ? '70px' : 'auto',
+          top: isMobile ? '70px' : '80px',
+          bottom: 'auto',
           left: '16px',
           zIndex: 99999,
-          width: isMobile ? 'calc(100vw - 32px)' : '250px',
+          width: isMobile ? '280px' : '250px',
           background: 'rgba(15, 23, 42, 0.95)',
           backdropFilter: 'blur(24px)',
           border: '1px solid rgba(16, 185, 129, 0.4)',
