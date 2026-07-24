@@ -2654,28 +2654,33 @@ export const GameCanvas: React.FC = () => {
                 s = new Sprite();
                 s.anchor.set(0.5);
                 g.addChild(s);
-                Assets.load(d.imageUrl).then(tex => { 
-                  if (!g.destroyed) s.texture = tex; 
-                }).catch(()=>{});
-             } else if ((s as any)._lastUrl !== d.imageUrl) {
-                Assets.load(d.imageUrl).then(tex => { 
-                  if (!g.destroyed) s.texture = tex; 
-                }).catch(()=>{});
              }
-             (s as any)._lastUrl = d.imageUrl;
              
              s.x = p.x;
              s.y = p.y;
-             s.width = w;
-             s.height = h;
-             
-             // Apply transformations
-             s.rotation = d.rotation || 0;
-             s.scale.x = Math.abs(s.scale.x) * (d.flipX ? -1 : 1);
-             s.scale.y = Math.abs(s.scale.y) * (d.flipY ? -1 : 1);
-             s.skew.x = d.skewX || 0;
-             s.skew.y = d.skewY || 0;
              s.alpha = d.opacity !== undefined ? d.opacity : 1;
+             
+             const applyTransform = () => {
+                 s.width = w;
+                 s.height = h;
+                 s.rotation = d.rotation || 0;
+                 s.scale.x = Math.abs(s.scale.x) * (d.flipX ? -1 : 1);
+                 s.scale.y = Math.abs(s.scale.y) * (d.flipY ? -1 : 1);
+                 s.skew.x = d.skewX || 0;
+                 s.skew.y = d.skewY || 0;
+             };
+             
+             if ((s as any)._lastUrl !== d.imageUrl) {
+                (s as any)._lastUrl = d.imageUrl;
+                Assets.load(d.imageUrl).then(tex => { 
+                  if (!g.destroyed) {
+                      s.texture = tex;
+                      applyTransform();
+                  }
+                }).catch(()=>{});
+             } else if (s.texture) {
+                applyTransform();
+             }
           }
         });
         bgsContainer.sortChildren();
