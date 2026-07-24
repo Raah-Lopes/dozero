@@ -878,8 +878,8 @@ export const GridToolbar: React.FC = () => {
       {/* BOTTOM RIGHT ZOOM & NAVIGATION CONTROLS */}
       <div style={{
         position: 'fixed',
-        bottom: isMobile ? '146px' : '24px',
-        right: isMobile ? '80px' : '90px',
+        bottom: isMobile ? '100px' : '24px',
+        right: '24px',
         zIndex: 100000,
         display: 'flex',
         alignItems: 'center',
