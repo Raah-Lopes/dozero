@@ -118,9 +118,15 @@
 .fab-container {
   display: none;
   position: fixed;
-  bottom: 76px; /* Above mobile bottom nav */
+  bottom: 24px; /* Default desktop position */
   right: 16px;
   z-index: 999998;
+}
+
+@media (max-width: 768px) {
+  .fab-container {
+    bottom: 140px; /* Above drawing toolbar on mobile */
+  }
 }
 
 .fab-main {
