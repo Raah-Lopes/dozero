@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { Sparkles, Dices, BookOpen, User, X, ShieldAlert } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
-import { useUserStore } from '../../store/user';
 
 export const MobileQuickActions: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const { toggleWindow } = useWindowManager();
-  const { isGM } = useUserStore();
-
-  if (!isGM) return null;
 
   const quickActions = [
     {

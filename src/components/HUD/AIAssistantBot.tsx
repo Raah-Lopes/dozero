@@ -2,16 +2,21 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, Loader2, X, Sparkles } from 'lucide-react';
 import { generateAI } from '../../services/ai/AIProvider';
 import { state } from '../../store';
+import { useIsGM } from '../../store/user';
 
 export const AIAssistantBot: React.FC = () => {
+  const isGM = useIsGM();
   const [isOpen, setIsOpen] = useState(false);
-  const [pos, setPos] = useState({ x: window.innerWidth - 75, y: window.innerHeight - 75 });
+  const [pos, setPos] = useState({ 
+    x: window.innerWidth / 2 - 30, 
+    y: window.innerHeight / 2 - 30 
+  });
   const isDragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
   const [aiInput, setAiInput] = useState('');
   const [aiChat, setAiChat] = useState<{role: 'user' | 'ai', text: string}[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [isVisible, setIsVisible] = useState(() => localStorage.getItem('aiBotEnabled') !== 'false');
+  const [isVisible, setIsVisible] = useState(() => localStorage.getItem('aiBotEnabled') === 'true');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Contexto do Jogo
@@ -30,6 +35,13 @@ export const AIAssistantBot: React.FC = () => {
     window.addEventListener('toggle-ai-bot', handler);
     return () => window.removeEventListener('toggle-ai-bot', handler);
   }, []);
+
+  useEffect(() => {
+    if (isGM) {
+      setIsVisible(true);
+      localStorage.setItem('aiBotEnabled', 'true');
+    }
+  }, [isGM]);
 
   useEffect(() => {
     const updateTokens = () => setTokensMap(new Map(state.tokens as any));

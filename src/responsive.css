@@ -118,15 +118,14 @@
 .fab-container {
   display: none;
   position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 24px; /* Default desktop position */
   right: 16px;
   z-index: 999998;
 }
 
 @media (max-width: 768px) {
   .fab-container {
-    right: 8px; /* Slightly closer to edge on mobile */
+    bottom: 140px; /* Above drawing toolbar on mobile */
   }
 }
 
