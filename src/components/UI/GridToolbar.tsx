@@ -79,7 +79,7 @@ export const GridToolbar: React.FC = () => {
   const [drawWidth, setDrawWidthState] = useState(localState.drawWidth);
   const [showStyleInspector, setShowStyleInspector] = useState(false);
   const [showConfigMenu, setShowConfigMenu] = useState(false);
-  const [showLayersMenu, setShowLayersMenu] = useState(window.innerWidth > 768);
+  const [showLayersMenu, setShowLayersMenu] = useState(window.innerWidth > 1257);
   const [isLayersMinimized, setIsLayersMinimized] = useState(false);
   const [activeConfigTab, setActiveConfigTab] = useState<'mapas' | 'grid' | 'objetos'>('mapas');
   
@@ -90,11 +90,11 @@ export const GridToolbar: React.FC = () => {
   const [activeLayerId, setActiveLayerId] = useState(localState.activeDrawingLayerId || 'default');
   const [selectedBatch, setSelectedBatch] = useState<Set<string>>(new Set());
   const [isVisible, setIsVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1257);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => setIsMobile(window.innerWidth <= 1257);
     window.addEventListener('resize', handleResize);
 
     const handleTool = () => {
