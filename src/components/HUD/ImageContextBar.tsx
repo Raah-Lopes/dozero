@@ -33,8 +33,6 @@ export const ImageContextBar: React.FC = () => {
     };
   }, []);
 
-  if (!imageId || !image) return null;
-
   return (
     <div
       id="image-context-bar"
@@ -53,12 +51,15 @@ export const ImageContextBar: React.FC = () => {
         borderRadius: '8px',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-        pointerEvents: 'auto',
+        pointerEvents: (!imageId || !image) ? 'none' : 'auto',
+        opacity: (!imageId || !image) ? 0 : 1,
         transition: 'opacity 0.2s ease-in-out',
       }}
     >
-      <button
-        onClick={() => updateDrawing(imageId, { flipX: !image.flipX })}
+      {imageId && image && (
+        <>
+          <button
+            onClick={() => updateDrawing(imageId, { flipX: !image.flipX })}
         title="Espelhar Horizontal"
         style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}
       >
@@ -115,6 +116,8 @@ export const ImageContextBar: React.FC = () => {
       >
         <Trash2 size={18} color="#ef4444" />
       </button>
+      </>
+      )}
     </div>
   );
 };
