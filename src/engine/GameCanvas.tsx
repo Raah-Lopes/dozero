@@ -214,7 +214,7 @@ export const GameCanvas: React.FC = () => {
             const pts = Array.from(activePointers.values());
             pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
             pinchStartScale = viewport.scale.x;
-          } else if (activePointers.size === 1 && localState.activeTool !== 'eraser') {
+          } else if (activePointers.size === 1 && !['eraser', 'pen', 'shape', 'arrow', 'fog-add', 'fog-remove'].includes(localState.activeTool)) {
             isTouchPanning = true;
             touchPanStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
             longPressStart = { x: e.clientX, y: e.clientY };
@@ -2952,5 +2952,5 @@ export const GameCanvas: React.FC = () => {
     };
   }, []);
 
-  return <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none', position: 'relative' }} />;
+  return <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none', position: 'relative', touchAction: 'none' }} />;
 };
