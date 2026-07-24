@@ -500,7 +500,7 @@ export const GameCanvas: React.FC = () => {
           }
         }
 
-        if (e.button === 1 || e.button === 2) {
+        if (isPanning) {
           isPanning = false;
           canvasEl.style.cursor = 'default';
         }
@@ -2042,7 +2042,6 @@ export const GameCanvas: React.FC = () => {
         bgsContainer.sortChildren();
         syncGizmo();
       };
-
       // GIZMO LOGIC
       // Persist gizmo graphics so we don't memory leak every frame
       const gizmoBox = new Graphics();
@@ -2051,11 +2050,23 @@ export const GameCanvas: React.FC = () => {
       gizmoCorners.forEach(c => gizmoContainer.addChild(c));
 
       const syncGizmo = () => {
+         const hideMenu = () => {
+             const bar = document.getElementById('image-context-bar');
+             if (bar) {
+                bar.style.top = '-1000px';
+                if ((window as any).__LAST_SELECTED_IMAGE_ID !== null) {
+                   (window as any).__LAST_SELECTED_IMAGE_ID = null;
+                   window.dispatchEvent(new CustomEvent('image-selected', { detail: null }));
+                }
+             }
+         };
+
         const isMapOpen = (window as any).__IS_MAP_MENU_OPEN__ === true;
         const isSelectMode = localState.activeTool === 'select';
         
         if ((!isMapOpen || localState.selectedBgs.size === 0) && (!isSelectMode || ((!localState.selectedProps || localState.selectedProps.size === 0) && (!localState.selectedDrawings || localState.selectedDrawings.size === 0) && (!localState.selectedTokens || localState.selectedTokens.size === 0)))) {
           gizmoContainer.visible = false;
+          hideMenu();
           return;
         }
 
@@ -2155,17 +2166,18 @@ export const GameCanvas: React.FC = () => {
             });
          }
 
-        if (!hasUnlocked) {
-          gizmoContainer.visible = false;
-          return;
-        }
+         if (!hasUnlocked) {
+           gizmoContainer.visible = false;
+           hideMenu();
+           return;
+         }
 
-        gizmoContainer.visible = true;
-        gizmoContainer.x = 0;
-        gizmoContainer.y = 0;
+         gizmoContainer.visible = true;
+         gizmoContainer.x = 0;
+         gizmoContainer.y = 0;
 
-        const w = Math.max(1, maxX - minX);
-        const h = Math.max(1, maxY - minY);
+         const w = Math.max(1, maxX - minX);
+         const h = Math.max(1, maxY - minY);
 
         // Determine if we are in Arrow Edit Mode (only 1 arrow selected)
         let isArrowMode = false;
