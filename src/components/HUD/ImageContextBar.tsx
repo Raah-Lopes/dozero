@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { state } from '../../services/yjs';
 import { updateDrawing, removeDrawing } from '../../store/drawings';
-import { FlipHorizontal, FlipVertical, RotateCw, Lock, Unlock, Trash2, BoxSelect } from 'lucide-react';
+import { FlipHorizontal, FlipVertical, RotateCw, Lock, Unlock, Trash2, BoxSelect, Contrast } from 'lucide-react';
 
 export const ImageContextBar: React.FC = () => {
   const [imageId, setImageId] = useState<string | null>(null);
@@ -92,6 +92,19 @@ export const ImageContextBar: React.FC = () => {
         style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}
       >
         <BoxSelect size={18} color={image.skewX ? '#38bdf8' : '#e2e8f0'} />
+      </button>
+
+      <button
+        onClick={() => {
+           const op = image.opacity !== undefined ? image.opacity : 1;
+           let newOp = op - 0.25;
+           if (newOp <= 0) newOp = 1;
+           updateDrawing(imageId, { opacity: newOp });
+        }}
+        title={`Opacidade (${Math.round((image.opacity !== undefined ? image.opacity : 1) * 100)}%)`}
+        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}
+      >
+        <Contrast size={18} color={(image.opacity !== undefined && image.opacity < 1) ? '#38bdf8' : '#e2e8f0'} />
       </button>
 
       <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />

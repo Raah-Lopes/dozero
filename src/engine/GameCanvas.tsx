@@ -2648,27 +2648,34 @@ export const GameCanvas: React.FC = () => {
              const w = d.imageWidth || 400;
              const h = d.imageHeight || 300;
              
-             g.removeChildren().forEach((c: any) => c.destroy());
+             let s = g.children[0] as Sprite;
+             if (!s) {
+                g.removeChildren().forEach((c: any) => c.destroy());
+                s = new Sprite();
+                s.anchor.set(0.5);
+                g.addChild(s);
+                Assets.load(d.imageUrl).then(tex => { 
+                  if (!g.destroyed) s.texture = tex; 
+                }).catch(()=>{});
+             } else if ((s as any)._lastUrl !== d.imageUrl) {
+                Assets.load(d.imageUrl).then(tex => { 
+                  if (!g.destroyed) s.texture = tex; 
+                }).catch(()=>{});
+             }
+             (s as any)._lastUrl = d.imageUrl;
              
-             const s = new Sprite();
-             s.anchor.set(0.5);
              s.x = p.x;
              s.y = p.y;
              s.width = w;
              s.height = h;
              
              // Apply transformations
-             if (d.rotation) s.rotation = d.rotation;
-             if (d.flipX) s.scale.x *= -1;
-             if (d.flipY) s.scale.y *= -1;
-             if (d.skewX) s.skew.x = d.skewX;
-             if (d.skewY) s.skew.y = d.skewY;
-             
-             g.addChild(s);
-             
-             Assets.load(d.imageUrl).then(tex => { 
-               if (!g.destroyed) s.texture = tex; 
-             }).catch(()=>{});
+             s.rotation = d.rotation || 0;
+             s.scale.x = Math.abs(s.scale.x) * (d.flipX ? -1 : 1);
+             s.scale.y = Math.abs(s.scale.y) * (d.flipY ? -1 : 1);
+             s.skew.x = d.skewX || 0;
+             s.skew.y = d.skewY || 0;
+             s.alpha = d.opacity !== undefined ? d.opacity : 1;
           }
         });
         bgsContainer.sortChildren();
@@ -2682,6 +2689,7 @@ export const GameCanvas: React.FC = () => {
       window.addEventListener('drawing-selection-updated', syncGizmo);
       window.addEventListener('token-selection-updated', syncGizmo);
       window.addEventListener('map-menu-toggle', syncGizmo);
+      window.addEventListener('tool-changed', syncGizmo);
 
       const handleFocusToken = (e: any) => {
         const { tokenId } = e.detail;
@@ -2707,6 +2715,7 @@ export const GameCanvas: React.FC = () => {
         window.removeEventListener('drawing-selection-updated', syncGizmo);
         window.removeEventListener('token-selection-updated', syncGizmo);
         window.removeEventListener('map-menu-toggle', syncGizmo);
+        window.removeEventListener('tool-changed', syncGizmo);
         window.removeEventListener('focus-token', handleFocusToken);
         state.props.unobserve(propsObserver);
       };

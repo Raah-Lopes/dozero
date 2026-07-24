@@ -356,13 +356,10 @@ function App() {
           <GameCanvas />
           <GridToolbar />
           <MapContextMenu />
-          {/* Camada HUD (Não bloqueia cliques globais) */}
-          <div className="hud-layer" style={{ pointerEvents: 'none' }}>
-            <ImageContextBar />
-            <TextContextBar />
-            <PropInteractionPanel />
-            <AIAssistantBot />
-          </div>
+          <ImageContextBar />
+          <TextContextBar />
+          <PropInteractionPanel />
+          <AIAssistantBot />
         </div>
       </div>
 
