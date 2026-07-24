@@ -2727,6 +2727,8 @@ export const GameCanvas: React.FC = () => {
       (app as any)._cleanupMapObservers = () => {
         state.backgrounds.unobserve(mapObserver);
         state.drawings.unobserve(drawObserver);
+        state.mapConfig.unobserve(mapConfigObserver);
+        state.props.unobserve(propsObserver);
         window.removeEventListener('map-menu-toggle', mapObserver);
         window.removeEventListener('bg-selection-updated', syncGizmo);
         window.removeEventListener('prop-selection-updated', syncGizmo);
