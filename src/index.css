@@ -812,3 +812,15 @@ html[data-theme^="chronicles"] .stage-prop.selected {
   outline: 3px dashed var(--accent-primary) !important;
   outline-offset: 4px !important;
 }
+
+/* Zoom Controls Hover Effect */
+.zoom-controls-container {
+  opacity: 0.15;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.zoom-controls-container:hover,
+.zoom-controls-container:active,
+.zoom-controls-container:focus-within {
+  opacity: 1;
+}
