@@ -2070,7 +2070,19 @@ export const GameCanvas: React.FC = () => {
         const isMapOpen = (window as any).__IS_MAP_MENU_OPEN__ === true;
         const isSelectMode = localState.activeTool === 'select';
         
-        if ((!isMapOpen || localState.selectedBgs.size === 0) && (!isSelectMode || ((!localState.selectedProps || localState.selectedProps.size === 0) && (!localState.selectedDrawings || localState.selectedDrawings.size === 0) && (!localState.selectedTokens || localState.selectedTokens.size === 0)))) {
+        const hasBgs = isMapOpen && localState.selectedBgs.size > 0;
+        const hasTokens = isSelectMode && localState.selectedTokens && localState.selectedTokens.size > 0;
+        const hasProps = isSelectMode && localState.selectedProps && localState.selectedProps.size > 0;
+        const hasDrawings = isSelectMode && localState.selectedDrawings && localState.selectedDrawings.size > 0;
+
+        if (!hasBgs && !hasTokens && !hasProps && !hasDrawings) {
+          gizmoContainer.visible = false;
+          hideMenu();
+          return;
+        }
+        
+        // If ONLY tokens are selected, we don't need the purple gizmo box, as they have their own selection rings and drag handlers.
+        if (hasTokens && !hasBgs && !hasProps && !hasDrawings) {
           gizmoContainer.visible = false;
           hideMenu();
           return;
