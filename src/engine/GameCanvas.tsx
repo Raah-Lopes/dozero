@@ -136,18 +136,31 @@ export const GameCanvas: React.FC = () => {
         const img = new Image();
         img.onload = () => {
           import('../store').then(s => {
-            s.addBackground({
-              id: 'bg_' + Date.now() + Math.random().toString(36).substr(2, 5),
-              name: name || 'Imagem Inserida',
+            const activeLayerId = s.localState.activeLayerId || 'default';
+            // Find max zIndex
+            let maxZ = 0;
+            for (const d of s.state.drawings.values()) {
+              if (d.zIndex > maxZ) maxZ = d.zIndex;
+            }
+            s.addDrawing({
+              id: 'draw_' + Date.now() + Math.random().toString(36).substr(2, 5),
+              name: name || 'Imagem',
+              type: 'image',
+              points: [{ x: (window.innerWidth / 2 - viewport.x) / viewport.scale.x, y: (window.innerHeight / 2 - viewport.y) / viewport.scale.y }],
+              color: '#ffffff',
+              width: 0,
+              zIndex: maxZ + 1,
+              layerId: activeLayerId,
               imageUrl: src,
-              x: (window.innerWidth / 2 - viewport.x) / viewport.scale.x,
-              y: (window.innerHeight / 2 - viewport.y) / viewport.scale.y,
-              width: img.naturalWidth || 400,
-              height: img.naturalHeight || 300,
-              scale: 1,
-              opacity: 1,
+              imageWidth: img.naturalWidth || 400,
+              imageHeight: img.naturalHeight || 300,
               locked: false,
-              hidden: false
+              hidden: false,
+              flipX: false,
+              flipY: false,
+              rotation: 0,
+              skewX: 0,
+              skewY: 0
             });
           });
         };
@@ -320,6 +333,15 @@ export const GameCanvas: React.FC = () => {
                              removeDrawing(id);
                              erasedAnything = true;
                           }
+                       }
+                   } else if (draw.type === 'image') {
+                       const p = draw.points[0];
+                       const w = draw.imageWidth || 400;
+                       const h = draw.imageHeight || 300;
+                       const minX = p.x - w/2; const minY = p.y - h/2;
+                       if (localPos.x >= minX - drawRadius && localPos.x <= minX + w + drawRadius && localPos.y >= minY - drawRadius && localPos.y <= minY + h + drawRadius) {
+                          removeDrawing(id);
+                          erasedAnything = true;
                        }
                    }
                 }
@@ -1745,6 +1767,12 @@ export const GameCanvas: React.FC = () => {
                   const w = Math.abs(p2.x - p1.x); const h = Math.abs(p2.y - p1.y);
                   if (localPos.x >= minX - radius && localPos.x <= minX + w + radius && localPos.y >= minY - radius && localPos.y <= minY + h + radius) hit = true;
                }
+            } else if (draw.type === 'image') {
+               const p = draw.points[0];
+               const w = draw.imageWidth || 400;
+               const h = draw.imageHeight || 300;
+               const minX = p.x - w/2; const minY = p.y - h/2;
+               if (localPos.x >= minX - radius && localPos.x <= minX + w + radius && localPos.y >= minY - radius && localPos.y <= minY + h + radius) hit = true;
             }
             if (hit) { hitDrawingId = id; break; }
          }
@@ -2141,6 +2169,37 @@ export const GameCanvas: React.FC = () => {
 
         // Determine if we are in Arrow Edit Mode (only 1 arrow selected)
         let isArrowMode = false;
+        
+        const imageContextBar = document.getElementById('image-context-bar');
+        if (imageContextBar) {
+           if (isSelectMode && localState.selectedDrawings && localState.selectedDrawings.size === 1 && localState.selectedBgs.size === 0 && (!localState.selectedProps || localState.selectedProps.size === 0)) {
+              const id = Array.from(localState.selectedDrawings)[0];
+              const d = state.drawings.get(id) as any;
+              if (d && d.type === 'image') {
+                 const pMin = viewport.toGlobal({ x: minX, y: minY });
+                 const pMax = viewport.toGlobal({ x: maxX, y: maxY });
+                 imageContextBar.style.top = `${pMax.y + 10}px`;
+                 imageContextBar.style.left = `${(pMin.x + pMax.x) / 2}px`;
+                 
+                 if ((window as any).__LAST_SELECTED_IMAGE_ID !== id) {
+                    (window as any).__LAST_SELECTED_IMAGE_ID = id;
+                    window.dispatchEvent(new CustomEvent('image-selected', { detail: id }));
+                 }
+              } else {
+                 imageContextBar.style.top = '-1000px';
+                 if ((window as any).__LAST_SELECTED_IMAGE_ID !== null) {
+                    (window as any).__LAST_SELECTED_IMAGE_ID = null;
+                    window.dispatchEvent(new CustomEvent('image-selected', { detail: null }));
+                 }
+              }
+           } else {
+              imageContextBar.style.top = '-1000px';
+              if ((window as any).__LAST_SELECTED_IMAGE_ID !== null) {
+                 (window as any).__LAST_SELECTED_IMAGE_ID = null;
+                 window.dispatchEvent(new CustomEvent('image-selected', { detail: null }));
+              }
+           }
+        }
         let arrowData: any = null;
         let arrowId: string | null = null;
         
@@ -2597,6 +2656,14 @@ export const GameCanvas: React.FC = () => {
              s.y = p.y;
              s.width = w;
              s.height = h;
+             
+             // Apply transformations
+             if (d.rotation) s.rotation = d.rotation;
+             if (d.flipX) s.scale.x *= -1;
+             if (d.flipY) s.scale.y *= -1;
+             if (d.skewX) s.skew.x = d.skewX;
+             if (d.skewY) s.skew.y = d.skewY;
+             
              g.addChild(s);
              
              Assets.load(d.imageUrl).then(tex => { 

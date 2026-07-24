@@ -728,6 +728,8 @@ export const GridToolbar: React.FC = () => {
                           else if (d.shapeType === 'triangle') { Icon = Triangle; typeName = "Triângulo"; }
                         } else if (d.type === 'arrow') {
                           Icon = ArrowRight; typeName = "Seta";
+                        } else if (d.type === 'image') {
+                          Icon = ImageIcon as any; typeName = "Imagem";
                         }
                         
                         return (

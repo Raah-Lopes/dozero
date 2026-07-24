@@ -23,6 +23,12 @@ export interface DrawingData {
   layerId?: string;
   hidden?: boolean;
   locked?: boolean;
+  // Transformations for images
+  flipX?: boolean;
+  flipY?: boolean;
+  rotation?: number;
+  skewX?: number;
+  skewY?: number;
 }
 
 export function addDrawing(drawing: DrawingData) {

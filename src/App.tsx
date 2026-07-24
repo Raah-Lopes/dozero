@@ -15,6 +15,7 @@ import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal'
 import { useTheme } from './hooks/useTheme';
 import { QuestTrackerHUD } from './components/Widgets/GameMaster/QuestTrackerHUD';
 import { TextContextBar } from './components/UI/TextContextBar';
+import { ImageContextBar } from './components/HUD/ImageContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
 import { CutsceneOverlay, type CutsceneConfig } from './components/Theater/CutsceneOverlay';
@@ -355,9 +356,13 @@ function App() {
           <GameCanvas />
           <GridToolbar />
           <MapContextMenu />
-          <TextContextBar />
-          <PropInteractionPanel />
-          <AIAssistantBot />
+          {/* Camada HUD (Não bloqueia cliques globais) */}
+          <div className="hud-layer" style={{ pointerEvents: 'none' }}>
+            <ImageContextBar />
+            <TextContextBar />
+            <PropInteractionPanel />
+            <AIAssistantBot />
+          </div>
         </div>
       </div>
 
