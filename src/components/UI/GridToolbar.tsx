@@ -88,6 +88,7 @@ export const GridToolbar: React.FC = () => {
   const [drawingLayers, setDrawingLayers] = useState<any[]>([]);
   const [drawings, setDrawings] = useState<any[]>([]);
   const [activeLayerId, setActiveLayerId] = useState(localState.activeDrawingLayerId || 'default');
+  const [selectedBatch, setSelectedBatch] = useState<Set<string>>(new Set());
   const [isVisible, setIsVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -634,115 +635,142 @@ export const GridToolbar: React.FC = () => {
           gap: '12px',
           maxHeight: isMobile && !isLayersMinimized ? '400px' : (!isLayersMinimized ? '70vh' : 'none')
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '14px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Layers size={16} /> Camadas de Desenho
-            </h3>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button
-                onClick={() => setIsLayersMinimized(!isLayersMinimized)}
-                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#94a3b8', borderRadius: '6px', padding: '4px', cursor: 'pointer' }}
-                title={isLayersMinimized ? "Expandir" : "Minimizar"}
-              >
-                {isLayersMinimized ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-              </button>
-              {!isLayersMinimized && (
-                <button
-                  onClick={() => {
-                     import('../../store/drawingLayers').then(s => s.addDrawingLayer({
-                        id: 'layer_' + Date.now(),
-                        name: 'Nova Camada',
-                        zIndex: 100
-                     }));
-                  }}
-                  style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: '#10b981', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  <Plus size={14} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }}/> Nova
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {!isLayersMinimized && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto' }}>
-              {drawingLayers.map(layer => {
-                const layerDrawings = drawings.filter(d => (d.layerId || 'default') === layer.id);
-                return (
-                <div key={layer.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div 
-                       onClick={() => import('../../store').then(s => s.setActiveDrawingLayerId(layer.id))}
-                       style={{ 
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                          background: activeLayerId === layer.id ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)', 
-                          border: activeLayerId === layer.id ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
-                          padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
-                          transition: 'all 0.2s'
-                       }}
-                       title={activeLayerId === layer.id ? "Camada Ativa" : "Clique para tornar ativa"}
-                  >
-                    <LayerRenameInput 
-                      layer={layer} 
-                      isActive={activeLayerId === layer.id}
-                      onRename={(id, newName) => import('../../store/drawingLayers').then(s => s.updateDrawingLayer(id, { name: newName }))}
-                    />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => {
-                           import('../../store/drawingLayers').then(s => s.updateDrawingLayer(layer.id, { hidden: !layer.hidden }));
-                        }}
-                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.hidden ? '#ef4444' : '#94a3b8', cursor: 'pointer', padding: '6px', transition: 'all 0.1s' }}
-                        title={layer.hidden ? "Mostrar Camada" : "Ocultar Camada"}
-                      >
-                        {layer.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                      </button>
-                      <button
-                        onClick={() => {
-                           if (layer.id === 'default') {
-                              alert('A camada principal não pode ser excluída.');
-                              return;
-                           }
-                           if (confirm(`Excluir a camada '${layer.name}' apagará todos os desenhos nela. Continuar?`)) {
-                              import('../../store/drawingLayers').then(s => s.removeDrawingLayer(layer.id));
-                              if (activeLayerId === layer.id) {
-                                 import('../../store').then(s => s.setActiveDrawingLayerId('default'));
-                              }
-                           }
-                        }}
-                        style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.id === 'default' ? '#475569' : '#ef4444', cursor: layer.id === 'default' ? 'not-allowed' : 'pointer', padding: '6px' }}
-                        title="Excluir Camada"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Layer Drawings (Expanded list) */}
-                  {layerDrawings.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '12px', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '8px' }}>
-                      {layerDrawings.map((d: any) => {
-                        let Icon = Pen;
-                        let typeName = "Linha";
-                        if (d.type === 'shape') {
-                          if (d.shapeType === 'rectangle') { Icon = Square; typeName = "Retângulo"; }
-                          else if (d.shapeType === 'circle') { Icon = Circle; typeName = "Círculo"; }
-                          else if (d.shapeType === 'triangle') { Icon = Triangle; typeName = "Triângulo"; }
-                        } else if (d.type === 'arrow') {
-                          Icon = ArrowRight; typeName = "Seta";
-                        } else if (d.type === 'image') {
-                          Icon = ImageIcon as any; typeName = "Imagem";
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '14px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Layers size={16} /> Camadas de Desenho
+              </h3>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {selectedBatch.size > 0 && (
+                   <button
+                     onClick={() => {
+                        if (confirm(`Excluir ${selectedBatch.size} objetos selecionados?`)) {
+                           import('../../store/drawings').then(s => {
+                              selectedBatch.forEach(id => s.removeDrawing(id));
+                              setSelectedBatch(new Set());
+                           });
                         }
-                        
-                        return (
-                          <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, overflow: 'hidden' }}>
-                              <Icon size={12} color={d.color || '#94a3b8'} />
-                              <DrawingRenameInput 
-                                drawing={d} 
-                                typeName={typeName} 
-                                onRename={(id, newName) => import('../../store/drawings').then(s => s.updateDrawingProps(id, { name: newName }))} 
-                              />
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                     }}
+                     style={{ background: 'rgba(239, 68, 68, 0.2)', border: 'none', color: '#ef4444', borderRadius: '6px', padding: '4px 8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                     title="Excluir Selecionados"
+                   >
+                     <Trash2 size={14} /> ({selectedBatch.size})
+                   </button>
+                )}
+                <button
+                  onClick={() => setIsLayersMinimized(!isLayersMinimized)}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#94a3b8', borderRadius: '6px', padding: '4px', cursor: 'pointer' }}
+                  title={isLayersMinimized ? "Expandir" : "Minimizar"}
+                >
+                  {isLayersMinimized ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                </button>
+                {!isLayersMinimized && (
+                  <button
+                    onClick={() => {
+                       import('../../store/drawingLayers').then(s => s.addDrawingLayer({
+                          id: 'layer_' + Date.now(),
+                          name: 'Nova Camada',
+                          zIndex: 100
+                       }));
+                    }}
+                    style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: '#10b981', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    <Plus size={14} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }}/> Nova
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {!isLayersMinimized && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto' }}>
+                {drawingLayers.map(layer => {
+                  const layerDrawings = drawings.filter(d => (d.layerId || 'default') === layer.id);
+                  return (
+                  <div key={layer.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div 
+                         onClick={() => import('../../store').then(s => s.setActiveDrawingLayerId(layer.id))}
+                         style={{ 
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                            background: activeLayerId === layer.id ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)', 
+                            border: activeLayerId === layer.id ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
+                            padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
+                            transition: 'all 0.2s'
+                         }}
+                         title={activeLayerId === layer.id ? "Camada Ativa" : "Clique para tornar ativa"}
+                    >
+                      <LayerRenameInput 
+                        layer={layer} 
+                        isActive={activeLayerId === layer.id}
+                        onRename={(id, newName) => import('../../store/drawingLayers').then(s => s.updateDrawingLayer(id, { name: newName }))}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => {
+                             import('../../store/drawingLayers').then(s => s.updateDrawingLayer(layer.id, { hidden: !layer.hidden }));
+                          }}
+                          style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.hidden ? '#ef4444' : '#94a3b8', cursor: 'pointer', padding: '6px', transition: 'all 0.1s' }}
+                          title={layer.hidden ? "Mostrar Camada" : "Ocultar Camada"}
+                        >
+                          {layer.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                        <button
+                          onClick={() => {
+                             if (layer.id === 'default') {
+                                alert('A camada principal não pode ser excluída.');
+                                return;
+                             }
+                             if (confirm(`Excluir a camada '${layer.name}' apagará todos os desenhos nela. Continuar?`)) {
+                                import('../../store/drawingLayers').then(s => s.removeDrawingLayer(layer.id));
+                                if (activeLayerId === layer.id) {
+                                   import('../../store').then(s => s.setActiveDrawingLayerId('default'));
+                                }
+                             }
+                          }}
+                          style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.id === 'default' ? '#475569' : '#ef4444', cursor: layer.id === 'default' ? 'not-allowed' : 'pointer', padding: '6px' }}
+                          title="Excluir Camada"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Layer Drawings (Expanded list) */}
+                    {layerDrawings.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '12px', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '8px' }}>
+                        {layerDrawings.map((d: any) => {
+                          let Icon = Pen;
+                          let typeName = "Linha";
+                          if (d.type === 'shape') {
+                            if (d.shapeType === 'rectangle') { Icon = Square; typeName = "Retângulo"; }
+                            else if (d.shapeType === 'circle') { Icon = Circle; typeName = "Círculo"; }
+                            else if (d.shapeType === 'triangle') { Icon = Triangle; typeName = "Triângulo"; }
+                          } else if (d.type === 'arrow') {
+                            Icon = ArrowRight; typeName = "Seta";
+                          } else if (d.type === 'image') {
+                            Icon = ImageIcon as any; typeName = "Imagem";
+                          }
+                          
+                          return (
+                            <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, overflow: 'hidden' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedBatch.has(d.id)} 
+                                  onChange={(e) => {
+                                     const newSet = new Set(selectedBatch);
+                                     if (e.target.checked) newSet.add(d.id);
+                                     else newSet.delete(d.id);
+                                     setSelectedBatch(newSet);
+                                  }}
+                                  style={{ cursor: 'pointer', margin: 0, padding: 0 }}
+                                />
+                                <Icon size={12} color={d.color || '#94a3b8'} />
+                                <DrawingRenameInput 
+                                  drawing={d} 
+                                  typeName={typeName} 
+                                  onRename={(id, newName) => import('../../store/drawings').then(s => s.updateDrawingProps(id, { name: newName }))} 
+                                />
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                               <button
                                 onClick={() => import('../../store/drawings').then(s => s.updateDrawingProps(d.id, { hidden: !d.hidden }))}
                                 style={{ background: 'transparent', border: 'none', color: d.hidden ? '#ef4444' : '#94a3b8', cursor: 'pointer', padding: '4px' }}
