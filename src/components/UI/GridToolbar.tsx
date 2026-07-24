@@ -237,7 +237,7 @@ export const GridToolbar: React.FC = () => {
         style={{
           position: 'fixed',
           top: isMobile ? 'auto' : '16px',
-          bottom: isMobile ? '16px' : 'auto',
+          bottom: isMobile ? '80px' : 'auto',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 100000,
@@ -875,11 +875,12 @@ export const GridToolbar: React.FC = () => {
         </div>
       )}
 
-      {/* BOTTOM RIGHT ZOOM & NAVIGATION CONTROLS */}
+      {/* ZOOM & NAVIGATION CONTROLS */}
       <div style={{
         position: 'fixed',
-        bottom: isMobile ? '146px' : '24px',
-        right: isMobile ? '80px' : '90px',
+        bottom: isMobile ? '140px' : '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
         zIndex: 100000,
         display: 'flex',
         alignItems: 'center',
