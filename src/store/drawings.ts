@@ -10,6 +10,7 @@ export interface DrawingData {
   name?: string;
   type: 'path' | 'arrow' | 'shape' | 'image';
   points: DrawingPoint[];
+  subPaths?: DrawingPoint[][];
   color: string;
   width: number;
   zIndex: number;

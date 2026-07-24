@@ -282,42 +282,45 @@ export const GameCanvas: React.FC = () => {
                                }
                            } else {
                                let wasErased = false;
-                               let currentChunk: any[] = [];
                                const chunks: any[][] = [];
-                               for (let i = 0; i < draw.points.length; i++) {
-                                   const p = draw.points[i];
-                                   const hitVertex = Math.hypot(localPos.x - p.x, localPos.y - p.y) <= drawRadius;
-                                   let hitSegment = false;
-                                   if (i > 0 && !hitVertex) {
-                                       const pPrev = draw.points[i-1];
-                                       const l2 = Math.pow(pPrev.x - p.x, 2) + Math.pow(pPrev.y - p.y, 2);
-                                       let t = 0;
-                                       if (l2 !== 0) {
-                                           t = ((localPos.x - pPrev.x) * (p.x - pPrev.x) + (localPos.y - pPrev.y) * (p.y - pPrev.y)) / l2;
-                                           t = Math.max(0, Math.min(1, t));
+                               
+                               const pathsToCheck = draw.subPaths && draw.subPaths.length > 0 ? draw.subPaths : [draw.points];
+                               
+                               for (const path of pathsToCheck) {
+                                   let currentChunk: any[] = [];
+                                   for (let i = 0; i < path.length; i++) {
+                                       const p = path[i];
+                                       const hitVertex = Math.hypot(localPos.x - p.x, localPos.y - p.y) <= drawRadius;
+                                       let hitSegment = false;
+                                       if (i > 0 && !hitVertex) {
+                                           const pPrev = path[i-1];
+                                           const l2 = Math.pow(pPrev.x - p.x, 2) + Math.pow(pPrev.y - p.y, 2);
+                                           let t = 0;
+                                           if (l2 !== 0) {
+                                               t = ((localPos.x - pPrev.x) * (p.x - pPrev.x) + (localPos.y - pPrev.y) * (p.y - pPrev.y)) / l2;
+                                               t = Math.max(0, Math.min(1, t));
+                                           }
+                                           const projX = pPrev.x + t * (p.x - pPrev.x);
+                                           const projY = pPrev.y + t * (p.y - pPrev.y);
+                                           hitSegment = Math.hypot(localPos.x - projX, localPos.y - projY) <= drawRadius;
                                        }
-                                       const projX = pPrev.x + t * (p.x - pPrev.x);
-                                       const projY = pPrev.y + t * (p.y - pPrev.y);
-                                       hitSegment = Math.hypot(localPos.x - projX, localPos.y - projY) <= drawRadius;
+                                       if (hitVertex || hitSegment) {
+                                           wasErased = true;
+                                           if (currentChunk.length > 0) chunks.push(currentChunk);
+                                           currentChunk = [];
+                                           if (hitSegment) currentChunk.push(p);
+                                       } else {
+                                           currentChunk.push(p);
+                                       }
                                    }
-                                   if (hitVertex || hitSegment) {
-                                       wasErased = true;
-                                       if (currentChunk.length > 0) chunks.push(currentChunk);
-                                       currentChunk = [];
-                                       if (hitSegment) currentChunk.push(p);
-                                   } else {
-                                       currentChunk.push(p);
-                                   }
+                                   if (currentChunk.length > 0) chunks.push(currentChunk);
                                }
-                               if (currentChunk.length > 0) chunks.push(currentChunk);
+                               
                                if (wasErased) {
                                    const validChunks = chunks.filter(c => c.length > 1);
                                    if (validChunks.length === 0) removeDrawing(id);
                                    else {
-                                       updateDrawing(id, { points: validChunks[0] });
-                                       for (let c = 1; c < validChunks.length; c++) {
-                                           addDrawing({ id: 'draw_' + Date.now() + Math.random().toString(36).substring(2,6), type: draw.type, color: draw.color, width: draw.width, layerId: draw.layerId, zIndex: draw.zIndex, points: validChunks[c] });
-                                       }
+                                       updateDrawing(id, { points: validChunks[0], subPaths: validChunks });
                                    }
                                    erasedAnything = true;
                                }
@@ -2587,20 +2590,23 @@ export const GameCanvas: React.FC = () => {
           const width = d.width || 4;
 
           if (d.type === 'path' || d.type === 'pen') {
-            if (d.points.length < 3) {
-              g.moveTo(d.points[0].x, d.points[0].y);
-              for (let i = 1; i < d.points.length; i++) {
-                g.lineTo(d.points[i].x, d.points[i].y);
+            const paths = d.subPaths && d.subPaths.length > 0 ? d.subPaths : [d.points];
+            for (const pts of paths) {
+              if (pts.length < 3) {
+                g.moveTo(pts[0].x, pts[0].y);
+                for (let i = 1; i < pts.length; i++) {
+                  g.lineTo(pts[i].x, pts[i].y);
+                }
+              } else {
+                g.moveTo(pts[0].x, pts[0].y);
+                let i = 1;
+                for (i = 1; i < pts.length - 2; i++) {
+                  const xc = (pts[i].x + pts[i + 1].x) / 2;
+                  const yc = (pts[i].y + pts[i + 1].y) / 2;
+                  g.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+                }
+                g.quadraticCurveTo(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y);
               }
-            } else {
-              g.moveTo(d.points[0].x, d.points[0].y);
-              let i = 1;
-              for (i = 1; i < d.points.length - 2; i++) {
-                const xc = (d.points[i].x + d.points[i + 1].x) / 2;
-                const yc = (d.points[i].y + d.points[i + 1].y) / 2;
-                g.quadraticCurveTo(d.points[i].x, d.points[i].y, xc, yc);
-              }
-              g.quadraticCurveTo(d.points[i].x, d.points[i].y, d.points[i + 1].x, d.points[i + 1].y);
             }
             g.stroke({ width, color, alpha: 1, cap: 'round', join: 'round' });
           } else if (d.type === 'shape') {
@@ -2642,20 +2648,23 @@ export const GameCanvas: React.FC = () => {
                }
             }
           } else if (d.type === 'arrow') {
-             if (d.points.length >= 2) {
-               const p1 = d.points[0];
-               const p2 = d.points[d.points.length - 1];
-               g.moveTo(p1.x, p1.y);
-               g.lineTo(p2.x, p2.y);
-               
-               const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-               const headlen = width * 3;
-               g.moveTo(p2.x, p2.y);
-               g.lineTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
-               g.moveTo(p2.x, p2.y);
-               g.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
-               g.stroke({ width, color, alpha: 1 });
+             const paths = d.subPaths && d.subPaths.length > 0 ? d.subPaths : [d.points];
+             for (const pts of paths) {
+               if (pts.length >= 2) {
+                 const p1 = pts[0];
+                 const p2 = pts[pts.length - 1];
+                 g.moveTo(p1.x, p1.y);
+                 g.lineTo(p2.x, p2.y);
+                 
+                 const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                 const headlen = width * 3;
+                 g.moveTo(p2.x, p2.y);
+                 g.lineTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
+                 g.moveTo(p2.x, p2.y);
+                 g.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
+               }
              }
+             g.stroke({ width, color, alpha: 1 });
           } else if (d.type === 'image' && d.imageUrl) {
              const p = d.points[0];
              const w = d.imageWidth || 400;
