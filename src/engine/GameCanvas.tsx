@@ -2309,9 +2309,9 @@ export const GameCanvas: React.FC = () => {
                           item.sprite.y = item.origY;
                        }
                     });
+                    setTimeout(syncGizmo, 10);
                  });
               });
-              syncGizmo();
            };
            
            window.addEventListener('pointermove', onDragMove);
@@ -2501,7 +2501,7 @@ export const GameCanvas: React.FC = () => {
                            x: pivotX + (p.x - pivotX) * finalScaleRatio,
                            y: pivotY + (p.y - pivotY) * finalScaleRatio
                         }));
-                        updateDrawing(item.id, { 
+                        s.updateDrawing(item.id, { 
                           points: newPoints,
                           imageWidth: item.origImgWidth * finalScaleRatio,
                           imageHeight: item.origImgHeight * finalScaleRatio
@@ -2514,15 +2514,16 @@ export const GameCanvas: React.FC = () => {
                            x: pivotX + (p.x - pivotX) * finalScaleRatio,
                            y: pivotY + (p.y - pivotY) * finalScaleRatio
                         }));
-                        updateDrawing(item.id, { points: newPoints });
+                        s.updateDrawing(item.id, { points: newPoints });
                         item.sprite.scale.set(1);
                         item.sprite.x = 0;
                         item.sprite.y = 0;
                      }
                    });
+                   // Call syncGizmo AFTER all updates
+                   setTimeout(syncGizmo, 10);
                 });
               });
-              syncGizmo();
             };
 
             window.addEventListener('pointermove', onScaleMove);
