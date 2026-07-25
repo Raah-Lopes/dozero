@@ -578,6 +578,7 @@ function App() {
                 onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
                 onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
                 onOpenRoomManager={() => { setActiveModal('players'); }}
+                onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
                 onToggleAIBot={() => { setActiveModal('settings-ia'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
                 onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
