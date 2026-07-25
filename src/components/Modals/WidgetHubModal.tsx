@@ -35,6 +35,7 @@ interface Props {
   onOpenCutsceneDirector: () => void;
   onOpenRoomManager: () => void;
   onOpenStoryDice: () => void;
+  onOpenSSStoryDice: () => void;
 }
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
@@ -91,7 +92,8 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'worldengine', cat: 'Generators & AI', title: 'Motor de Mundo', icon: Globe, action: props.onOpenWorldEngine, theme: 'theme-indigo' },
     { id: 'entityforge', cat: 'Generators & AI', title: 'Forja de Entidades', icon: Anvil, action: props.onOpenEntityForge, theme: 'theme-red' },
     { id: 'stronghold', cat: 'Generators & AI', title: 'Fortaleza da Party', icon: Castle, action: props.onOpenStronghold, theme: 'theme-green' },
-    { id: 'storydice', cat: 'Generators & AI', title: 'Story Dice', icon: Dices, action: props.onOpenStoryDice, theme: 'theme-yellow' },
+    { id: 'storydice', cat: 'Generators & AI', title: 'Story Dice (V1)', icon: Dices, action: props.onOpenStoryDice, theme: 'theme-yellow' },
+    { id: 'ssstorydice', cat: 'Generators & AI', title: 'Story Dice (V2)', icon: Dices, action: props.onOpenSSStoryDice, theme: 'theme-pink' },
 
     // System
     { id: 'roommgr', cat: 'System', title: 'Gestor de Salas (Multiplayer)', icon: Network, action: props.onOpenRoomManager, theme: 'theme-green', shadow: '0 0 10px rgba(34,197,94,0.4)' },
