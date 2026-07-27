@@ -1,42 +1,60 @@
 import React, { useEffect, useState } from 'react';
-import { state, addBackground, removeBackground, updateBackgroundProps, localState, toggleBgSelection, clearBgSelection, getMapConfig, updateMapConfig, setActiveTool } from '../../store';
+import {
+  state,
+  addBackground,
+  removeBackground,
+  updateBackgroundProps,
+  localState as bgLocalState,
+  toggleBgSelection,
+  clearBgSelection,
+  setActiveTool,
+} from '../../store';
+import { Config, onConfigChanged, onMapConfigChanged } from '../../store/modules/configModule';
 import type { BackgroundData, MapConfig } from '../../store';
 import { ImagePlus, Trash2, Eye, EyeOff, Grid, RefreshCw, MousePointer2, Type, Search, Eraser } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(localState.selectedBgs));
-  const [mapConfig, setMapConfig] = useState<MapConfig>(getMapConfig());
-  const [activeTool, setActiveToolState] = useState(localState.activeTool);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(bgLocalState.selectedBgs));
+  
+  // ✅ NEW: Use Config module instead of direct getMapConfig
+  const [mapConfig, setMapConfig] = useState<MapConfig>(Config.getMapConfig());
+  
+  const [activeTool, setActiveToolState] = useState(bgLocalState.activeTool);
   const [activeTab, setActiveTab] = useState<'mapas' | 'grid' | 'ferramentas' | 'props'>('mapas');
   const [libraryUpdateKey, setLibraryUpdateKey] = useState(0);
 
   useEffect(() => {
+    // Background observer (unchanged)
     const observer = () => {
       const bgs = Array.from(state.backgrounds.values()) as BackgroundData[];
       setBackgrounds(bgs);
     };
 
     const selObserver = () => {
-      setSelectedIds(new Set(localState.selectedBgs));
+      setSelectedIds(new Set(bgLocalState.selectedBgs));
     };
 
-    const mapConfigObserver = () => {
-      setMapConfig(getMapConfig());
+    // ✅ NEW: Subscribe to Config changes via module
+    const handleMapConfigChange = () => {
+      setMapConfig(Config.getMapConfig());
     };
 
     const toolObserver = () => {
-      setActiveToolState(localState.activeTool);
+      setActiveToolState(bgLocalState.activeTool);
     };
 
     state.backgrounds.observe(observer);
-    state.mapConfig.observe(mapConfigObserver);
+    
+    // ✅ REFACTORED: Use Config module subscription
+    const unsubscribeConfig = onMapConfigChanged(() => handleMapConfigChange());
+    
     window.addEventListener('bg-selection-updated', selObserver);
     window.addEventListener('tool-changed', toolObserver);
     
     observer();
-    mapConfigObserver();
+    handleMapConfigChange();
     selObserver();
     toolObserver();
 
@@ -66,7 +84,8 @@ export const MapSettingsPanel: React.FC = () => {
       window.dispatchEvent(new Event('map-menu-toggle'));
       
       state.backgrounds.unobserve(observer);
-      state.mapConfig.unobserve(mapConfigObserver);
+      unsubscribeConfig(); // ✅ NEW: Clean up Config subscription
+      
       window.removeEventListener('bg-selection-updated', selObserver);
       window.removeEventListener('tool-changed', toolObserver);
       window.removeEventListener('bg-select', handleSelect);
@@ -116,7 +135,7 @@ export const MapSettingsPanel: React.FC = () => {
 
   const selectAll = () => {
     backgrounds.forEach(b => {
-      if (!localState.selectedBgs.has(b.id)) toggleBgSelection(b.id, true);
+      if (!bgLocalState.selectedBgs.has(b.id)) toggleBgSelection(b.id, true);
     });
   };
 
@@ -212,7 +231,7 @@ export const MapSettingsPanel: React.FC = () => {
               </button>
               <button
                 className="btn" onClick={clearAllTexts} title="Apagar TODOS os textos"
-                style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--danger)', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)' }}
+                style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.1)' }}
               >
                 <Eraser size={14} /> Limpar Todos
               </button>
@@ -231,8 +250,8 @@ export const MapSettingsPanel: React.FC = () => {
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Tipo Geométrico</span>
                 <select 
                   value={mapConfig.gridType} 
-                  onChange={e => updateMapConfig({ gridType: e.target.value as MapConfig['gridType'] })}
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
+                  onChange={e => Config.updateMap({ gridType: e.target.value as MapConfig['gridType'] })}
+                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width:'100%' }}
                 >
                   <option value="square">Quadrados</option>
                   <option value="hex_v">Hexágonos (Verticais)</option>
@@ -245,7 +264,8 @@ export const MapSettingsPanel: React.FC = () => {
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Tamanho ({mapConfig.gridSize}px)</span>
                 <input 
                   type="range" min="20" max="200" step="10" value={mapConfig.gridSize} 
-                  onChange={e => updateMapConfig({ gridSize: parseInt(e.target.value) })} style={{ width: '100%' }}
+                  onChange={e => Config.setGridSize(parseInt(e.target.value))}
+                  style={{ width: '100%' }}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -253,7 +273,7 @@ export const MapSettingsPanel: React.FC = () => {
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor das Linhas</span>
                   <input 
                     type="color" value={mapConfig.gridColor} 
-                    onChange={e => updateMapConfig({ gridColor: e.target.value })}
+                    onChange={e => Config.setGridColor(e.target.value)}
                     style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
                   />
                 </div>
@@ -261,7 +281,7 @@ export const MapSettingsPanel: React.FC = () => {
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor de Fundo da Mesa</span>
                   <input 
                     type="color" value={mapConfig.mapBackgroundColor || '#000000'} 
-                    onChange={e => updateMapConfig({ mapBackgroundColor: e.target.value })}
+                    onChange={e => Config.setMapBackground(e.target.value)}
                     style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
                   />
                 </div>
@@ -270,7 +290,8 @@ export const MapSettingsPanel: React.FC = () => {
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Opacidade do Grid ({Math.round(mapConfig.gridAlpha * 100)}%)</span>
                 <input 
                   type="range" min="0" max="1" step="0.1" value={mapConfig.gridAlpha} 
-                  onChange={e => updateMapConfig({ gridAlpha: parseFloat(e.target.value) })} style={{ width: '100%' }}
+                  onChange={e => Config.setGridAlpha(parseFloat(e.target.value))}
+                  style={{ width: '100%' }}
                 />
               </div>
             </div>
@@ -282,7 +303,7 @@ export const MapSettingsPanel: React.FC = () => {
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
                 <input 
                   type="checkbox" checked={mapConfig.fogOfWar || false}
-                  onChange={e => updateMapConfig({ fogOfWar: e.target.checked })}
+                  onChange={e => Config.updateFog({ enabled: e.target.checked })}
                 />
                 <strong>Ativar Fog of War</strong>
               </label>
@@ -294,8 +315,8 @@ export const MapSettingsPanel: React.FC = () => {
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Formato da Visão</span>
                       <select 
                         value={mapConfig.fowShape || 'circle'} 
-                        onChange={e => updateMapConfig({ fowShape: e.target.value as any })}
-                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width: '100%' }}
+                        onChange={e => Config.updateFog({ fowShape: e.target.value as any })}
+                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width:'100%' }}
                       >
                         <option value="circle">Círculo</option>
                         <option value="square">Quadrado</option>
@@ -306,7 +327,7 @@ export const MapSettingsPanel: React.FC = () => {
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor da Névoa</span>
                       <input 
                         type="color" value={mapConfig.fowColor || '#000000'} 
-                        onChange={e => updateMapConfig({ fowColor: e.target.value })}
+                        onChange={e => Config.updateFog({ fowColor: e.target.value })}
                         style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
                       />
                     </div>
@@ -315,13 +336,14 @@ export const MapSettingsPanel: React.FC = () => {
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Raio de Visão (Quadrados: {mapConfig.fowRadius || 6})</span>
                     <input 
                       type="range" value={mapConfig.fowRadius || 6} min="1" max="50" step="1"
-                      onChange={e => updateMapConfig({ fowRadius: Number(e.target.value) })} style={{ width: '100%' }}
+                      onChange={e => Config.updateFog({ fowRadius: Number(e.target.value) })}
+                      style={{ width: '100%' }}
                     />
                   </div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
                     <input 
                       type="checkbox" checked={mapConfig.fowHideTokens || false}
-                      onChange={e => updateMapConfig({ fowHideTokens: e.target.checked })}
+                      onChange={e => Config.updateFog({ fowHideTokens: e.target.checked })}
                     />
                     Ocultar tokens fora da visão
                   </label>
@@ -351,7 +373,7 @@ export const MapSettingsPanel: React.FC = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {selectedIds.size > 0 ? (
-              <div style={{ padding: '0.5rem', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ padding: '0.5rem', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, width: '100%' }}>
                   {selectedIds.size} Mapa(s) Selecionado(s)
                 </span>
