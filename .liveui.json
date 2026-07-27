@@ -1,7 +1,5 @@
 {
-  "inspectorOpen": true,
-  "treeOpen": false,
-  "debugEnabled": false,
-  "selectionMode": "group",
-  "responsiveWidth": null
+  "language": "pt-BR",
+  "framework": "react-vite",
+  "description": "Configuração para ferramenta LiveUI (AI-assisted UI generation)"
 }
