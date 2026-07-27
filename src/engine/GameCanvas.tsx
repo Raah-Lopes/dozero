@@ -1751,13 +1751,13 @@ export const GameCanvas: React.FC = () => {
             }
 
             import('../store').then(s => {
-               if (!shift && !s.Tokens.getSelected().includes(hitTokenId!)) {
-                  s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+               if (!shift && !Tokens.getSelected().includes(hitTokenId!)) {
+                  Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                }
-               if (s.Tokens.getSelected().includes(hitTokenId!) && shift) {
-                   s.Tokens.toggleSelected(hitTokenId!, true);
-               } else if (!s.Tokens.getSelected().includes(hitTokenId!)) {
-                   s.Tokens.toggleSelected(hitTokenId!, shift);
+               if (Tokens.getSelected().includes(hitTokenId!) && shift) {
+                   Tokens.toggleSelected(hitTokenId!, true);
+               } else if (!Tokens.getSelected().includes(hitTokenId!)) {
+                   Tokens.toggleSelected(hitTokenId!, shift);
                }
             });
             return;
@@ -1800,7 +1800,7 @@ export const GameCanvas: React.FC = () => {
 
             import('../store').then(s => {
                if (!shift && !s.getSelectedProps().includes(hitPropId!)) {
-                  s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+                  Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                }
                if (s.getSelectedProps().includes(hitPropId!) && shift) {
                    s.togglePropSelection(hitPropId!, true);
@@ -1893,7 +1893,7 @@ export const GameCanvas: React.FC = () => {
             e.stopPropagation();
             import('../store').then(s => {
                if (!shift && !s.getSelectedDrawings().has(hitDrawingId!)) {
-                  s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+                  Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                }
                if (s.getSelectedDrawings().has(hitDrawingId!) && shift) {
                    s.toggleDrawingSelection(hitDrawingId!, true);
@@ -1919,7 +1919,7 @@ export const GameCanvas: React.FC = () => {
                e.stopPropagation();
                import('../store').then(s => {
                   if (!shift && !s.getSelectedBgs().has(hitBgId!)) {
-                     s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+                     Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                   }
                   if (s.getSelectedBgs().has(hitBgId!) && shift) {
                      s.toggleBgSelection(hitBgId!, true);
@@ -1933,7 +1933,7 @@ export const GameCanvas: React.FC = () => {
          
          // 5. Nothing hit (Clear selection)
          if (!shift) {
-            import('../store').then(s => { s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection(); });
+            import('../store').then(s => { Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection(); });
          }
       };
       
@@ -2439,7 +2439,7 @@ export const GameCanvas: React.FC = () => {
                        } else if (item.type === 'prop') {
                           m.updateMapProp(item.id, { x: item.sprite.x, y: item.sprite.y });
                        } else if (item.type === 'token') {
-                          s.Tokens.update(item.id, { x: item.sprite.x, y: item.sprite.y });
+                          Tokens.update(item.id, { x: item.sprite.x, y: item.sprite.y });
                        } else if (item.type === 'drawing') {
                           const dx = item.sprite.x - item.origX;
                           const dy = item.sprite.y - item.origY;
