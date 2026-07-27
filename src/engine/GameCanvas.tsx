@@ -1123,10 +1123,11 @@ export const GameCanvas: React.FC = () => {
           g.fill(colorVal);
         } else {
           if (borderStyle === 'gradient') {
-             const gradient = new FillGradient(-size, -size, size, size);
-             gradient.addColorStop(0, 0xffffff);
-             gradient.addColorStop(1, colorVal);
-             g.stroke({ fill: gradient, width: strokeWidth, alpha: strokeAlpha });
+             // Efeito de luz simulado com strokes concêntricos
+             g.stroke({ width: strokeWidth + 8, color: colorVal, alpha: strokeAlpha * 0.1 });
+             g.stroke({ width: strokeWidth + 4, color: colorVal, alpha: strokeAlpha * 0.3 });
+             g.stroke({ width: strokeWidth + 1, color: colorVal, alpha: strokeAlpha * 0.6 });
+             g.stroke({ width: strokeWidth, color: 0xffffff, alpha: strokeAlpha });
           } else {
              g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
           }
