@@ -19,9 +19,18 @@ function getLocalIP() {
   return 'localhost'
 }
 
+import { visualizer } from 'rollup-plugin-visualizer';
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), wikiLocalApi(), youtubeLocalApi(), pollinationsProxy(), yjsWebsocketServer()],
+  plugins: [
+    react(), 
+    wikiLocalApi(), 
+    youtubeLocalApi(), 
+    pollinationsProxy(), 
+    yjsWebsocketServer(),
+    visualizer({ open: false, filename: 'stats.html' })
+  ],
   build: {
     rollupOptions: {
       output: {
@@ -51,7 +60,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./src/__tests__/setup.ts']
+    setupFiles: ['./vitest.setup.ts']
   }
 })
 // Ponytail: Forçando restart do servidor Vite para limpar o cache de import-analysis de qrcode.react
