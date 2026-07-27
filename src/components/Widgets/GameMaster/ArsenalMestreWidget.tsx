@@ -116,6 +116,26 @@ interface ArsenalMestreWidgetProps {
 
 export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClose }) => {
   const { index, refresh } = useWiki();
+  const [personagens, setPersonagens] = useState<FichaPersonagem[]>([]);
+  const [selectedChar, setSelectedChar] = useState<FichaPersonagem | null>(null);
+  const [activeTab, setActiveTab] = useState<'pools' | 'atributos' | 'catalogo'>('pools');
+  const [catalogoFilter, setCatalogoFilter] = useState<'todos' | 'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha' | 'armadura'>('todos');
+
+  // Form states for creating a new char
+  const [showCreateChar, setShowCreateChar] = useState(false);
+  const [newCharNome, setNewCharNome] = useState('');
+  const [newCharStatus, setNewCharStatus] = useState<'npc' | 'inimigo'>('npc');
+  const [newCharHP, setNewCharHP] = useState(10);
+
+  const [customItems, setCustomItems] = useState<ItemCatalogo[]>(() => {
+    try {
+      const stored = localStorage.getItem('dozero_custom_items');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [showCreateItem, setShowCreateItem] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemType, setNewItemType] = useState<'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha'>('arma');
