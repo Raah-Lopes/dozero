@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Tokens, Config, FogOfWar } from '../store/modules';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
@@ -219,8 +220,7 @@ export const GameCanvas: React.FC = () => {
              const screenFirstX = viewport.x + first.x * viewport.scale.x;
              const screenFirstY = viewport.y + first.y * viewport.scale.y;
              if (Math.hypot(e.clientX - screenFirstX, e.clientY - screenFirstY) < 15) {
-                import('../store').then(s => {
-                  s.addFogOp({
+                import('../store/modules').then(s => { s.FogOfWar.addOp({
                     id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
                     type: 'polygon',
                     mode: localState.fogMode,
@@ -273,7 +273,7 @@ export const GameCanvas: React.FC = () => {
                  selectionStart = { x: longPressStart.x - rect.left, y: longPressStart.y - rect.top };
                  selectionBox.clear();
                  selectionBox.visible = true;
-                 clearTokenSelection();
+                 Tokens.clearSelection();
                }
             }, 500);
           }
@@ -507,7 +507,7 @@ export const GameCanvas: React.FC = () => {
         }
         if (isMeasuring) {
           const currentPos = getWorldPos(e.clientX, e.clientY);
-          const config = getMapConfig();
+          const config = Config.getMapConfig();
           renderRuler(rulerGraphic, rulerText, measureStart, currentPos, config.gridSize, viewport.scale.x);
         }
         
@@ -576,8 +576,7 @@ export const GameCanvas: React.FC = () => {
       const handlePointerUp = (e: PointerEvent) => {
         if (isFogBrushing) {
           if (fogBrushPoints.length > 1) {
-            import('../store').then(s => {
-               s.addFogOp({
+            import('../store/modules').then(s => { s.FogOfWar.addOp({
                  id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
                  type: 'path',
                  mode: localState.fogMode,
@@ -585,8 +584,7 @@ export const GameCanvas: React.FC = () => {
                });
             });
           } else if (fogBrushPoints.length === 1) {
-            import('../store').then(s => {
-               s.addFogOp({
+            import('../store/modules').then(s => { s.FogOfWar.addOp({
                  id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
                  type: 'circle',
                  mode: localState.fogMode,
@@ -675,9 +673,9 @@ export const GameCanvas: React.FC = () => {
           }
           
           if (toSelectTokens.length > 0) {
-            selectTokensBulk(toSelectTokens);
+            Tokens.selectBulk(toSelectTokens);
           } else {
-            clearTokenSelection();
+            Tokens.clearSelection();
           }
           
           if (toSelectProps.length > 0) {
@@ -720,11 +718,11 @@ export const GameCanvas: React.FC = () => {
           const worldPoint = viewport.toLocal({ x: dropX, y: dropY });
           
           // Snap to grid
-          const config = getMapConfig();
+          const config = Config.getMapConfig();
           const snapped = snapToGrid(worldPoint.x, worldPoint.y, config);
           
           if (tokenId) {
-            updateTokenPosition(tokenId, snapped.x, snapped.y);
+            Tokens.update(tokenId, { x: snapped.x, y: snapped.y });
           } else if (wikiPath) {
             window.dispatchEvent(new CustomEvent('spawn-token-from-wiki', {
               detail: { wikiPath, x: snapped.x, y: snapped.y }
@@ -801,7 +799,7 @@ export const GameCanvas: React.FC = () => {
 
       const drawGrid = () => {
         grid.clear();
-        const config = getMapConfig();
+        const config = Config.getMapConfig();
         
         if (config.mapBackgroundColor && config.mapBackgroundColor !== 'transparent') {
           app.renderer.background.alpha = 1;
@@ -821,7 +819,7 @@ export const GameCanvas: React.FC = () => {
       const propHoverTexts: Record<string, Text> = {};
 
       const drawFogOfWar = () => {
-        const config = getMapConfig();
+        const config = Config.getMapConfig();
         const tokens = Array.from(state.tokens.values()) as any[];
         
         // Determinar quais tokens geram visão (apenas os que tem hasVision ativo, default true).
@@ -839,7 +837,7 @@ export const GameCanvas: React.FC = () => {
           color: config.fowColor,
           viewport: { x: viewport.x, y: viewport.y, scale: viewport.scale.x },
           visionSources: visionSources.map(t => ({ id: t.id, x: t.x, y: t.y, visionRadius: t.visionRadius })),
-          opsCount: getFogOps().length
+          opsCount: FogOfWar.getOps().length
         });
         
         if (currentHash === lastFowHash) return;
@@ -1193,7 +1191,7 @@ export const GameCanvas: React.FC = () => {
 
           const sprite = propSprites[p.id];
           const tooltip = propHoverTexts[p.id];
-          const config = getMapConfig();
+          const config = Config.getMapConfig();
           
           sprite.x = p.x;
           sprite.y = p.y;
@@ -1422,7 +1420,7 @@ export const GameCanvas: React.FC = () => {
               // Right click to target
               if (e.button === 2) {
                 e.stopPropagation();
-                toggleTarget(id);
+                Tokens.toggleTarget(id);
                 return;
               }
               
@@ -1451,7 +1449,7 @@ export const GameCanvas: React.FC = () => {
             // If not dragging, animate to new position (or just set it)
             let isBeingDragged = false;
             if (draggingTokenId) {
-               const selected = getSelectedTokens();
+               const selected = Tokens.getSelected();
                if (selected.includes(id)) {
                   isBeingDragged = true;
                }
@@ -1498,7 +1496,7 @@ export const GameCanvas: React.FC = () => {
       state.props.observe(propsObserver);
 
       const updateSelectionVisuals = () => {
-        const selected = getSelectedTokens();
+        const selected = Tokens.getSelected();
         for (const id in tokenSprites) {
           if (tokenSprites[id] && tokenSprites[id].selectionRing) {
             tokenSprites[id].selectionRing.visible = selected.includes(id);
@@ -1510,7 +1508,7 @@ export const GameCanvas: React.FC = () => {
       (app as any)._yjsObserver = syncTokens;
 
       const onDragEnd = () => {
-        const config = getMapConfig();
+        const config = Config.getMapConfig();
         let deltaX = 0; let deltaY = 0;
         let foundLeader = false;
         
@@ -1548,7 +1546,7 @@ export const GameCanvas: React.FC = () => {
              token.x = startPos.x + deltaX;
              token.y = startPos.y + deltaY;
           }
-          updateTokenPosition(selId, token.x, token.y);
+          Tokens.update(selId, { x: token.x, y: token.y });
         });
         
         import('../store/props').then(m => {
@@ -1714,7 +1712,7 @@ export const GameCanvas: React.FC = () => {
                  const c = tSprite.container;
                  if (Math.hypot(c.x - localPos.x, c.y - localPos.y) < 30 * c.scale.x) { hitTokenId = id; break; }
              }
-             if (hitTokenId) toggleTarget(hitTokenId);
+             if (hitTokenId) Tokens.toggleTarget(hitTokenId);
              return;
          }
          
@@ -1753,13 +1751,13 @@ export const GameCanvas: React.FC = () => {
             }
 
             import('../store').then(s => {
-               if (!shift && !s.getSelectedTokens().includes(hitTokenId!)) {
-                  s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+               if (!shift && !s.Tokens.getSelected().includes(hitTokenId!)) {
+                  s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                }
-               if (s.getSelectedTokens().includes(hitTokenId!) && shift) {
-                   s.toggleTokenSelection(hitTokenId!, true);
-               } else if (!s.getSelectedTokens().includes(hitTokenId!)) {
-                   s.toggleTokenSelection(hitTokenId!, shift);
+               if (s.Tokens.getSelected().includes(hitTokenId!) && shift) {
+                   s.Tokens.toggleSelected(hitTokenId!, true);
+               } else if (!s.Tokens.getSelected().includes(hitTokenId!)) {
+                   s.Tokens.toggleSelected(hitTokenId!, shift);
                }
             });
             return;
@@ -1802,7 +1800,7 @@ export const GameCanvas: React.FC = () => {
 
             import('../store').then(s => {
                if (!shift && !s.getSelectedProps().includes(hitPropId!)) {
-                  s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+                  s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                }
                if (s.getSelectedProps().includes(hitPropId!) && shift) {
                    s.togglePropSelection(hitPropId!, true);
@@ -1895,7 +1893,7 @@ export const GameCanvas: React.FC = () => {
             e.stopPropagation();
             import('../store').then(s => {
                if (!shift && !s.getSelectedDrawings().has(hitDrawingId!)) {
-                  s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+                  s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                }
                if (s.getSelectedDrawings().has(hitDrawingId!) && shift) {
                    s.toggleDrawingSelection(hitDrawingId!, true);
@@ -1921,7 +1919,7 @@ export const GameCanvas: React.FC = () => {
                e.stopPropagation();
                import('../store').then(s => {
                   if (!shift && !s.getSelectedBgs().has(hitBgId!)) {
-                     s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
+                     s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                   }
                   if (s.getSelectedBgs().has(hitBgId!) && shift) {
                      s.toggleBgSelection(hitBgId!, true);
@@ -1935,7 +1933,7 @@ export const GameCanvas: React.FC = () => {
          
          // 5. Nothing hit (Clear selection)
          if (!shift) {
-            import('../store').then(s => { s.clearTokenSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection(); });
+            import('../store').then(s => { s.Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection(); });
          }
       };
       
@@ -2031,7 +2029,7 @@ export const GameCanvas: React.FC = () => {
           if (e.pointerType === 'touch') {
              // On mobile, touching the background is reserved for panning.
              // We allow text tool above, but skip selection box to prevent conflicts.
-             if (!e.shiftKey) clearTokenSelection();
+             if (!e.shiftKey) Tokens.clearSelection();
              return;
           }
 
@@ -2045,7 +2043,7 @@ export const GameCanvas: React.FC = () => {
              selectionStart = { x: e.global.x, y: e.global.y };
              selectionBox.clear();
              selectionBox.visible = true;
-             if (!e.shiftKey) clearTokenSelection();
+             if (!e.shiftKey) Tokens.clearSelection();
           }
         }
       });
@@ -2441,7 +2439,7 @@ export const GameCanvas: React.FC = () => {
                        } else if (item.type === 'prop') {
                           m.updateMapProp(item.id, { x: item.sprite.x, y: item.sprite.y });
                        } else if (item.type === 'token') {
-                          s.updateTokenPosition(item.id, item.sprite.x, item.sprite.y);
+                          s.Tokens.update(item.id, { x: item.sprite.x, y: item.sprite.y });
                        } else if (item.type === 'drawing') {
                           const dx = item.sprite.x - item.origX;
                           const dy = item.sprite.y - item.origY;
@@ -3081,7 +3079,7 @@ export const GameCanvas: React.FC = () => {
           // LERP position if someone else moved it
           let isBeingDragged = false;
           if (draggingTokenId) {
-             const selected = getSelectedTokens();
+             const selected = Tokens.getSelected();
              if (selected.includes(id)) {
                 isBeingDragged = true;
              }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Tokens } from '../../store/modules';
 import { Swords, Trash2, ChevronRight, Play, Square, Dices, Skull, PlusCircle, Activity, Zap, Flame, Shield, Clock, Target, MessageSquare, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { state, removeCombatParticipant, nextCombatTurn, clearCombat, pushChatMessage, addConditionToParticipant, removeConditionFromParticipant, updateTokenProps } from '../../store';
 import type { CombatParticipant, CombatCondition } from '../../store';
@@ -202,7 +203,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
     const token = state.tokens.get(tokenId) as any;
     if (!token) return;
     const newHp = Math.max(0, (token.hp ?? 0) + amount);
-    updateTokenProps(tokenId, { hp: newHp });
+    Tokens.update(tokenId, { hp: newHp });
     if (token.wikiPath) await syncTokenFieldToWiki(token.wikiPath, 'hp', newHp);
   };
 

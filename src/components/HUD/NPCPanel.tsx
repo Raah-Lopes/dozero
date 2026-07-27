@@ -1,5 +1,6 @@
 // src/components/HUD/NPCPanel.tsx
 import React, { useEffect, useState, useRef } from 'react';
+import { Tokens } from '../../store/modules';
 import { state, updateTokenProps } from '../../store';
 import { useWiki } from '../../hooks/useWiki';
 import { loadMarkdownFile, saveMarkdownContent, saveImageToCloud } from '../../utils/githubApi';
@@ -344,7 +345,7 @@ export const NPCPanel: React.FC = () => {
   };
 
   const handleUpdateTokenProp = async (token: any, field: string, value: any) => {
-    updateTokenProps(token.id, { [field]: value });
+    Tokens.update(token.id, { [field]: value });
 
     const entry = wikiIndex.find(e => {
       if (token.wikiSlug && e.slug === token.wikiSlug) return true;
@@ -410,7 +411,7 @@ export const NPCPanel: React.FC = () => {
       if (!cloudUrl) return;
 
       // Só então grava a URL permanente no Yjs
-      updateTokenProps(token.id, { imageUrl: cloudUrl });
+      Tokens.update(token.id, { imageUrl: cloudUrl });
 
       const entry = wikiIndex.find(en => {
         if (token.wikiSlug && en.slug === token.wikiSlug) return true;
@@ -753,7 +754,7 @@ export const NPCPanel: React.FC = () => {
                               type="text"
                               value={t.name || ''}
                               onChange={(e) => {
-                                updateTokenProps(t.id, { name: e.target.value });
+                                Tokens.update(t.id, { name: e.target.value });
                               }}
                               onBlur={(e) => handlePropChangeEnd(t, 'name', e.target.value)}
                               style={{
@@ -792,7 +793,7 @@ export const NPCPanel: React.FC = () => {
                                 type="color"
                                 value={t.borderColor || '#06b6d4'}
                                 onChange={(e) => {
-                                  updateTokenProps(t.id, { borderColor: e.target.value });
+                                  Tokens.update(t.id, { borderColor: e.target.value });
                                 }}
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
@@ -804,7 +805,7 @@ export const NPCPanel: React.FC = () => {
                                 type="text"
                                 value={t.borderColor || '#06b6d4'}
                                 onChange={(e) => {
-                                  updateTokenProps(t.id, { borderColor: e.target.value });
+                                  Tokens.update(t.id, { borderColor: e.target.value });
                                 }}
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
@@ -831,7 +832,7 @@ export const NPCPanel: React.FC = () => {
                               step="0.1"
                               value={t.sizeScale ?? 1.0}
                               onChange={(e) => {
-                                updateTokenProps(t.id, { sizeScale: parseFloat(e.target.value) || 1.0 });
+                                Tokens.update(t.id, { sizeScale: parseFloat(e.target.value) || 1.0 });
                               }}
                               onMouseUp={(e: any) => handlePropChangeEnd(t, 'sizeScale', parseFloat(e.target.value) || 1.0)}
                               onTouchEnd={(e: any) => handlePropChangeEnd(t, 'sizeScale', parseFloat(e.target.value) || 1.0)}
@@ -1060,7 +1061,7 @@ export const NPCPanel: React.FC = () => {
                               type="text"
                               value={t.name || ''}
                               onChange={(e) => {
-                                updateTokenProps(t.id, { name: e.target.value });
+                                Tokens.update(t.id, { name: e.target.value });
                               }}
                               onBlur={(e) => handlePropChangeEnd(t, 'name', e.target.value)}
                               style={{
@@ -1099,7 +1100,7 @@ export const NPCPanel: React.FC = () => {
                                 type="color"
                                 value={t.borderColor || '#06b6d4'}
                                 onChange={(e) => {
-                                  updateTokenProps(t.id, { borderColor: e.target.value });
+                                  Tokens.update(t.id, { borderColor: e.target.value });
                                 }}
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
@@ -1111,7 +1112,7 @@ export const NPCPanel: React.FC = () => {
                                 type="text"
                                 value={t.borderColor || '#06b6d4'}
                                 onChange={(e) => {
-                                  updateTokenProps(t.id, { borderColor: e.target.value });
+                                  Tokens.update(t.id, { borderColor: e.target.value });
                                 }}
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
@@ -1138,7 +1139,7 @@ export const NPCPanel: React.FC = () => {
                               step="0.1"
                               value={t.sizeScale ?? 1.0}
                               onChange={(e) => {
-                                updateTokenProps(t.id, { sizeScale: parseFloat(e.target.value) || 1.0 });
+                                Tokens.update(t.id, { sizeScale: parseFloat(e.target.value) || 1.0 });
                               }}
                               onMouseUp={(e: any) => handlePropChangeEnd(t, 'sizeScale', parseFloat(e.target.value) || 1.0)}
                               onTouchEnd={(e: any) => handlePropChangeEnd(t, 'sizeScale', parseFloat(e.target.value) || 1.0)}
