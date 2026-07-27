@@ -63,13 +63,22 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--bg-deep);
   color: var(--text-primary);
-  /* Prevenir engasgos no mobile ao arrastar tokens */
-  touch-action: none;
-  overscroll-behavior: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#canvas-container {
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 html[data-theme="nextgen-red"] {
