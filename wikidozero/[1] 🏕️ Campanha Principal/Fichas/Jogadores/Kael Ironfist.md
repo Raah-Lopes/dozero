@@ -1,8 +1,8 @@
 ---
 nome: Kael Ironfist
-FOR: 10
-DES: 10
-CON: 10
+FOR: 21
+DES: 18
+CON: 15
 INT: 10
 SAB: 10
 CAR: 10
@@ -17,7 +17,7 @@ pv_max: 85
 xp: 240
 nivel: 4
 mana: 20
-mana_max: 30
+mana_max: 20
 armadura_legacy: 15
 defesa: 12
 velocidade: 8
@@ -67,7 +67,18 @@ magias_preparadas:
     max: 0
 poderes: []
 macros: []
+HP_max: 85
+PM_max: 20
+energia_max: 100
+vigor_max: 100
+forca: 21
+destreza: 18
+constituicao: 15
+inteligencia: 10
+sabedoria: 10
+carisma: 10
 ---
+
 # Kael Ironfist 🪓
 
 > *"Meu machado não conhece palavras. Só respostas."*
