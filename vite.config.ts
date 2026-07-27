@@ -21,6 +21,23 @@ function getLocalIP() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), wikiLocalApi(), youtubeLocalApi(), pollinationsProxy(), yjsWebsocketServer()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('pixi.js') || id.includes('@pixi')) return 'vendor-canvas';
+            if (id.includes('@google/generative-ai')) return 'vendor-ai';
+            if (id.includes('@mdxeditor')) return 'vendor-editor';
+            if (id.includes('mermaid') || id.includes('d3')) return 'vendor-charts';
+            if (id.includes('yjs')) return 'vendor-sync';
+            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
+            return 'vendor-core'; // everything else in node_modules goes here
+          }
+        }
+      }
+    }
+  },
   server: {
     host: true, // Always expose to network
     port: 5174,

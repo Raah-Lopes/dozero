@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import './App.css';
-import { Settings, Users, MessageSquare, X, Map as MapIcon, BookOpen, Swords, LayoutGrid, Library, Film, DoorOpen, Bot } from 'lucide-react';
+import { X, DoorOpen } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
 import { LivingBrain } from './components/Wiki/LivingBrain';
 import { GameCanvas } from './engine/GameCanvas';
@@ -10,15 +10,13 @@ import { SettingsModal } from './components/Modals/SettingsModal';
 import { AIAssistantBot } from './components/HUD/AIAssistantBot';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
-
-// import { ThemePickerModal } from './components/Modals/ThemePickerModal';
 import { useTheme } from './hooks/useTheme';
 import { QuestTrackerHUD } from './components/Widgets/GameMaster/QuestTrackerHUD';
 import { TextContextBar } from './components/UI/TextContextBar';
 import { ImageContextBar } from './components/HUD/ImageContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
-import { CutsceneOverlay, type CutsceneConfig } from './components/Theater/CutsceneOverlay';
+import { CutsceneOverlay } from './components/Theater/CutsceneOverlay';
 import { InviteModal } from './components/Modals/InviteModal';
 import { ClimaxOverlay } from './components/UI/ClimaxOverlay';
 import { SoftTimer } from './components/UI/SoftTimer';
@@ -37,6 +35,7 @@ import { MainToolbar } from './components/HUD/MainToolbar';
 import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps } from './store';
+import type { TensionClock } from './store';
 import { MobileBottomNav } from './components/HUD/MobileBottomNav';
 import { MobileQuickActions } from './components/HUD/MobileQuickActions';
 import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
@@ -45,12 +44,13 @@ import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
 import { Toaster, ConfirmDialog } from './components/UI/Toast';
+import { useAppEventListeners } from './hooks/useAppEventListeners';
+import { ErrorBoundary } from './components/UI/ErrorBoundary';
 
-// Trigger HMR
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
 
 function App() {
-  const [isReady, _setIsReady] = useState(true);
+  const [isReady] = useState(true);
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
@@ -71,16 +71,6 @@ function App() {
   const handleCloseCombatLog = useCallback(() => toggleWindow('combatLog'), [toggleWindow]);
   const handleCloseChatWindow = useCallback(() => toggleWindow('chatWindow'), [toggleWindow]);
 
-  const [isLayoutPresetsOpen, setIsLayoutPresetsOpen] = useState(false);
-
-  useEffect(() => {
-    const handleOpenPresets = () => setIsLayoutPresetsOpen(true);
-    window.addEventListener('open-layout-presets', handleOpenPresets);
-    return () => window.removeEventListener('open-layout-presets', handleOpenPresets);
-  }, []);
-
-
-
   const handleCloseSheet = useCallback((sheetKey: string) => {
     setOpenSheets(prev => prev.filter(id => id !== sheetKey));
   }, [setOpenSheets]);
@@ -89,216 +79,24 @@ function App() {
     setOpenWikiDocs(prev => prev.filter(doc => doc.id !== docId));
   }, [setOpenWikiDocs]);
 
-  // ===== SPLIT INTO MULTIPLE useEffects ===== //
+  // Hook centralizado para gerenciar todos os eventos da janela
+  const {
+    isLayoutPresetsOpen, setIsLayoutPresetsOpen,
+    isGlobalSearchOpen, setIsGlobalSearchOpen,
+    activeCutscene, setActiveCutscene
+  } = useAppEventListeners({
+    viewMode,
+    setViewMode,
+    setActiveModal,
+    setOpenSheets,
+    setOpenWikiDocs,
+    setEditingClockId,
+    setWikiInitialFile
+  });
 
-  useEffect(() => {
-    if (localStorage.getItem('showDesktopNav') === 'true') {
-      document.body.classList.add('show-desktop-nav');
-    }
-  }, []);
-
-  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
-
-  useEffect(() => {
-    const handleOpenSearch = () => setIsGlobalSearchOpen(true);
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsGlobalSearchOpen(prev => !prev);
-      }
-    };
-    window.addEventListener('open-global-search', handleOpenSearch);
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('open-global-search', handleOpenSearch);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  // 1. Handle wiki document opening
-  useEffect(() => {
-    const handleOpenWikiDoc = (e: Event) => {
-      const filepath = (e as CustomEvent).detail;
-      if (filepath) {
-        setOpenWikiDocs(prev => {
-          if (prev.some(doc => doc.filepath === filepath)) return prev;
-          return [...prev, { id: `doc-${Date.now()}`, filepath }];
-        });
-      }
-    };
-    window.addEventListener('open-wiki-doc', handleOpenWikiDoc);
-    return () => window.removeEventListener('open-wiki-doc', handleOpenWikiDoc);
-  }, []);
-
-  // 2. Handle view mode persistence
-  useEffect(() => {
-    localStorage.setItem('dozero_viewMode', viewMode);
-  }, [viewMode]);
-
-  // 2.5 Clean up broken old token images on load (Only on Vercel/PROD where media endpoint 404s)
-  useEffect(() => {
-    if (!import.meta.env.PROD) return;
-    
-    const sanitizeTokens = () => {
-      Array.from(state.tokens.entries()).forEach(([id, t]: [string, any]) => {
-        if (t.imageUrl && t.imageUrl.includes('/api/wiki/media')) {
-          console.log('[Sanitize] Limpando imageUrl quebrado do token:', t.name);
-          t.imageUrl = '';
-          state.tokens.set(id, t);
-        }
-      });
-    };
-    
-    sanitizeTokens();
-    const interval = setInterval(sanitizeTokens, 2000);
-    setTimeout(() => clearInterval(interval), 10000);
-  }, []);
-
-  const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
-
-  // Cutscene event listener
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const config = (e as CustomEvent<CutsceneConfig>).detail;
-      if (config) setActiveCutscene(config);
-    };
-    window.addEventListener('theater-cutscene', handler);
-    return () => window.removeEventListener('theater-cutscene', handler);
-  }, []);
-
-  // 3. Handle double-click token actions
-  useEffect(() => {
-    const handleDblClick = (e: Event) => {
-      const { tokenId } = (e as CustomEvent).detail;
-      const token = state.tokens.get(tokenId) as any;
-      
-      // Auto-open the premium wiki sheet if it exists
-      if (token && token.wikiPath) {
-        window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: token.wikiPath } }));
-      }
-
-      setOpenSheets(prev => {
-        if (prev.includes(tokenId)) return prev;
-        return [...prev, tokenId];
-      });
-    };
-    window.addEventListener('token-dblclick', handleDblClick);
-
-    const handleOpenClockConfig = () => {
-      setEditingClockId(null);
-      setActiveModal('clockConfig');
-    };
-    window.addEventListener('open-clock-config', handleOpenClockConfig);
-
-    // Auto-limpeza de Coordenadas Fantasmas
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('window_prefs_sheet-')) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach(k => localStorage.removeItem(k));
-
-    // Event listeners for wiki integration
-    const handleOpenWikiFile = (e: Event) => {
-      const path = (e as CustomEvent).detail?.path || (e as CustomEvent).detail?.filePath;
-      if (path) {
-        setWikiInitialFile(path);
-        setViewMode('wiki');
-      }
-    };
-    window.addEventListener('open-wiki-file', handleOpenWikiFile);
-
-    const handleOpenWiki = () => setViewMode('wiki');
-    window.addEventListener('open-wiki', handleOpenWiki);
-
-    const handleOpenWikiGraph = () => setViewMode('brain');
-    window.addEventListener('open-wiki-graph', handleOpenWikiGraph);
-
-    const handleOpenBrain = () => setViewMode('brain');
-    window.addEventListener('open-brain', handleOpenBrain);
-
-    const handleOpenSheetByWiki = (e: Event) => {
-      const wikiPath = (e as CustomEvent).detail;
-      if (wikiPath) {
-        setOpenSheets(prev => {
-          const key = `wiki:${wikiPath}`;
-          if (prev.includes(key)) {
-            setTimeout(() => window.dispatchEvent(new CustomEvent('bring-window-to-front', { detail: `sheet-${key}` })), 10);
-            return prev;
-          }
-          return [...prev, key];
-        });
-      }
-    };
-    window.addEventListener('open-sheet-by-wiki', handleOpenSheetByWiki);
-
-    const handleSpawnTokenFromWiki = async (e: Event) => {
-      const { wikiPath, x, y } = (e as CustomEvent).detail;
-      if (!wikiPath) return;
-      try {
-        const rawMd = await loadMarkdownFile(wikiPath);
-        if (!rawMd) return;
-        const parts = rawMd.split('---');
-        if (parts.length < 3) return;
-        const data = yaml.load(parts[1]) as any;
-
-        const tipo = String(data.tipo || '').toLowerCase();
-        const status = String(data.status || '').toLowerCase();
-        const isPlayer = ['pc', 'personagem', 'jogador'].includes(tipo) || status === 'jogador' || wikiPath.toLowerCase().includes('/jogadores/');
-
-        const tokenData = {
-          name: data.nome || data.titulo || wikiPath.split('/').pop()?.replace('.md', '') || 'Desconhecido',
-          hp: data.HP || data.pv || 100,
-          maxHp: data.HP_max || data.pv_max || data.HP || data.pv || 100,
-          mana: data.PM || data.mana || 50,
-          maxMana: data.PM_max || data.mana_max || data.PM || data.mana || 50,
-          hunger: Number(data.fome || data.Fome || 0),
-          thirst: Number(data.sede || data.Sede || 0),
-          sanity: Number(data.sanidade || data.Sanidade || 100),
-          imageUrl: data.imageUrl || data.avatar || data.imagem || '/vite.svg',
-          tokenShape: data.tokenShape || 'circle',
-          sizeScale: Number(data.sizeScale) || 1,
-          borderColor: data.borderColor || '#06b6d4',
-          showName: data.showName === true,
-          hpBarMode: data.hpBarMode || 'always',
-          isPlayer,
-          wikiSlug: wikiPath.split('/').pop()?.replace('.md', '')
-        };
-
-        const id = `token_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        state.tokens.set(id, {
-          id,
-          x,
-          y,
-          ...tokenData
-        });
-
-        const chatMsg = `⚡ <b>${tokenData.name}</b> foi conjurado(a) no mapa!`;
-        state.chat.push([{ text: chatMsg, timestamp: Date.now(), isCritical: true, isFailure: false }]);
-      } catch (err) {
-        console.error("Erro ao evocar token no drop:", err);
-      }
-    };
-    window.addEventListener('spawn-token-from-wiki', handleSpawnTokenFromWiki);
-
-    return () => {
-      window.removeEventListener('token-dblclick', handleDblClick);
-      window.removeEventListener('open-clock-config', handleOpenClockConfig);
-      window.removeEventListener('open-wiki-file', handleOpenWikiFile);
-      window.removeEventListener('open-wiki', handleOpenWiki);
-      window.removeEventListener('open-wiki-graph', handleOpenWikiGraph);
-      window.removeEventListener('open-sheet-by-wiki', handleOpenSheetByWiki);
-      window.removeEventListener('spawn-token-from-wiki', handleSpawnTokenFromWiki);
-    };
-  }, []);
-
-  // 4. Handle cleanup - separate effect with functional updates
-  useEffect(() => {
-    // No-op cleanup effect to avoid race conditions in setOpenWikiDocs/setOpenSheets
-    return;
-  }, []);
+  const toggleModal = useCallback((mode: ModalMode) => {
+    setActiveModal(activeModal === mode ? 'none' : mode);
+  }, [activeModal, setActiveModal]);
 
   if (!isReady) {
     return (
@@ -307,10 +105,6 @@ function App() {
       </div>
     );
   }
-
-  const toggleModal = useCallback((mode: ModalMode) => {
-    setActiveModal(activeModal === mode ? 'none' : mode);
-  }, [activeModal, setActiveModal]);
 
   // ===== STANDALONE WIDGET MODE (MULTI-MONITOR POP-OUT) ===== //
   if (standaloneWidget) {
@@ -326,17 +120,29 @@ function App() {
 
       {/* PÁGINA DO CÉREBRO GRÁFICO */}
       <div className={`view-layer brain-layer ${viewMode === 'brain' ? 'active' : ''}`}>
-        {viewMode === 'brain' && <LivingBrain />}
+        {viewMode === 'brain' && (
+          <ErrorBoundary componentName="Cérebro Gráfico (Brain)">
+            <LivingBrain />
+          </ErrorBoundary>
+        )}
       </div>
 
       {/* PÁGINA DEDICADA DA WIKI */}
       <div className={`view-layer wiki-layer ${viewMode === 'wiki' ? 'active' : ''}`}>
-        {viewMode === 'wiki' && <WikiViewer initialFile={wikiInitialFile} />}
+        {viewMode === 'wiki' && (
+          <ErrorBoundary componentName="WikiViewer">
+            <WikiViewer initialFile={wikiInitialFile} />
+          </ErrorBoundary>
+        )}
       </div>
 
       {/* PÁGINA DO TEATRO DA MENTE */}
       <div className={`view-layer theater-layer ${viewMode === 'theater' ? 'active' : ''}`}>
-        {viewMode === 'theater' && <TheaterView />}
+        {viewMode === 'theater' && (
+          <ErrorBoundary componentName="Teatro (TheaterView)">
+            <TheaterView />
+          </ErrorBoundary>
+        )}
       </div>
 
       {viewMode === 'wiki' && (
@@ -360,61 +166,68 @@ function App() {
       {/* PÁGINA DA MESA (HUD + MAPA) */}
       <div className={`view-layer canvas-layer-container ${viewMode === 'canvas' ? 'active' : ''}`}>
         <div className="canvas-layer" id="canvas-container">
-          <GameCanvas />
-          <GridToolbar />
-          <MapContextMenu />
-          <ImageContextBar />
-          <TextContextBar />
-          <PropInteractionPanel />
-          <AIAssistantBot />
+          <ErrorBoundary componentName="Mapa Interativo (GameCanvas)">
+            <GameCanvas />
+            <GridToolbar />
+            <MapContextMenu />
+            <ImageContextBar />
+            <TextContextBar />
+            <PropInteractionPanel />
+            <AIAssistantBot />
+          </ErrorBoundary>
         </div>
       </div>
 
-      {/* Layer 10: React HUD (moved out of canvas-layer so it works in Theater view too) */}
+      {/* Layer 10: React HUD */}
       <div className="hud-layer hud-grid">
-        <MainToolbar />
-        <QuestTrackerHUD />
+        <ErrorBoundary componentName="Interface Principal (HUD)">
+          <MainToolbar />
+          <QuestTrackerHUD />
 
-        {/* Combat Tracker Widget */}
-        {openWindows.combatTracker && (
-          <DraggableWindow
-            id="tracker"
-            title="Iniciativa"
-            initialX={window.innerWidth - 360}
-            initialY={80}
-            width={340}
-            height={500}
-            variant="default"
-            onClose={() => toggleWindow('combatTracker')}
-          >
-            <CombatTracker />
-          </DraggableWindow>
-        )}
+          {/* Combat Tracker Widget */}
+          {openWindows.combatTracker && (
+            <DraggableWindow
+              id="tracker"
+              title="Iniciativa"
+              initialX={window.innerWidth - 360}
+              initialY={80}
+              width={340}
+              height={500}
+              variant="default"
+              onClose={() => toggleWindow('combatTracker')}
+            >
+              <ErrorBoundary componentName="Combat Tracker">
+                <CombatTracker />
+              </ErrorBoundary>
+            </DraggableWindow>
+          )}
 
-        {/* Cutscene Director Widget */}
-        {openWindows.cutsceneDirector && (
-          <DraggableWindow
-            id="cutscenes"
-            title="Diretor de Cenas (Títulos)"
-            initialX={window.innerWidth / 2 - 200}
-            initialY={100}
-            width={400}
-            height={500}
-            variant="default"
-            onClose={() => toggleWindow('cutsceneDirector')}
-          >
-            <div style={{ padding: '1rem', height: '100%', overflowY: 'auto' }}>
-              <CutsceneManager />
-            </div>
-          </DraggableWindow>
-        )}
+          {/* Cutscene Director Widget */}
+          {openWindows.cutsceneDirector && (
+            <DraggableWindow
+              id="cutscenes"
+              title="Diretor de Cenas (Títulos)"
+              initialX={window.innerWidth / 2 - 200}
+              initialY={100}
+              width={400}
+              height={500}
+              variant="default"
+              onClose={() => toggleWindow('cutsceneDirector')}
+            >
+              <div style={{ padding: '1rem', height: '100%', overflowY: 'auto' }}>
+                <ErrorBoundary componentName="Cutscene Manager">
+                  <CutsceneManager />
+                </ErrorBoundary>
+              </div>
+            </DraggableWindow>
+          )}
 
           <TensionClockManager onEditClock={(id) => {
             setEditingClockId(id);
             setActiveModal('clockConfig');
           }} />
 
-          {/* Modal Layer (players, settings, chat, themes) */}
+          {/* Modal Layer */}
           {(activeModal === 'players' || activeModal.startsWith('settings') || activeModal === 'chat') && (
             <div className="hud-modal-layer">
               {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
@@ -436,7 +249,7 @@ function App() {
             </div>
           )}
 
-          {/* Clock Config Modal (Must be outside the right-aligned container because it is a DraggableWindow) */}
+          {/* Clock Config Modal */}
           {activeModal === 'clockConfig' && (
             <ClockConfigModal
               existingClock={editingClockId ? state.clocks.get(editingClockId) as TensionClock : undefined}
@@ -446,7 +259,6 @@ function App() {
               }}
               onConfirm={(config, isEdit) => {
                 if (isEdit && editingClockId) {
-                  // Atualizar relógio existente
                   const current = state.clocks.get(editingClockId) as TensionClock;
                   if (current) {
                     const now = Date.now();
@@ -462,7 +274,6 @@ function App() {
                     state.chat.push([{ text: `RELÓGIO MODIFICADO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
                   }
                 } else {
-                  // Criar novo
                   const id = 'clock_' + Date.now();
                   state.chat.push([{ text: `CRIANDO RELÓGIO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
                   addTensionClock({
@@ -482,126 +293,129 @@ function App() {
               }}
             />
           )}
+        </ErrorBoundary>
+      </div> {/* Fim da hud-layer */}
 
-        </div> {/* Fim da hud-layer */}
-
-        {/* Free-Floating Window Layer (MOVED OUTSIDE TO ALWAYS RENDER) */}
-        <>
-          {showActors && (
-            <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={handleCloseActorLibrary}>
-              <div style={{ height: '400px' }}>
-                <NPCPanel />
-              </div>
-            </DraggableWindow>
-          )}
-
-          {openSheets.map((sheetKey: string, index: number) => {
-            const isWiki = sheetKey.startsWith('wiki:');
-            const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
-            const tokenId = isWiki ? undefined : sheetKey;
-
-            return (
-              <DraggableWindow
-                key={sheetKey}
-                id={`sheet-${sheetKey}`}
-                title="Ficha do Personagem"
-                initialX={20 + (index * 40)}
-                initialY={100 + (index * 40)}
-                width={340}
-                onClose={() => handleCloseSheet(sheetKey)}
-              >
-                <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />
-              </DraggableWindow>
-            );
-          })}
-
-          {openWikiDocs.map((doc: { id: string, filepath: string }, index: number) => (
-            <FloatingDocument
-              key={doc.id}
-              id={doc.id}
-              filepath={doc.filepath}
-              initialX={window.innerWidth / 2 - 200 + (index * 30)}
-              initialY={100 + (index * 30)}
-              onClose={() => handleCloseWikiDoc(doc.id)}
-            />
-          ))}
-
-          {openWindows.combatLog && (
-            <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={handleCloseCombatLog}>
-              <CombatLog />
-            </DraggableWindow>
-          )}
-
-          {openWindows.chatWindow && (
-            <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={100} width={320} height={400} onClose={handleCloseChatWindow}>
-              <ChatWindow />
-            </DraggableWindow>
-          )}
-
-          {/* Overlays Visuais e Funcionais */}
-          <ClimaxOverlay />
-          <SoftTimer />
-          <DiceOverlay />
-          <PPROverlay />
-          <GlobalAudioSync />
-          <Toaster />
-          <ConfirmDialog />
-
-          <WidgetLayer />
-
-          {/* Barra de ações rápidas do jogador */}
-          <PlayerQuickBar playerName={localStorage.getItem('dozero_player_name') || 'Jogador'} />
-
-          {/* WidgetHubModal fora da hud-layer para evitar interferencia do canvas PixiJS */}
-          {activeModal === 'widgets' && (
-            <div className="modal-overlay" onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, pointerEvents: 'auto', padding: '20px' }}>
-              <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
-              <WidgetHubModal
-                onClose={() => setActiveModal('none')}
-                onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
-                onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
-                onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
-                onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
-                onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
-                onOpenClockConfig={() => { setEditingClockId(null); setActiveModal('clockConfig'); }}
-                onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
-                onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
-                onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
-                onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
-                onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
-                onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
-                onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
-                onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
-                onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
-                onOpenDLCManager={() => { setActiveModal('settings-modulos'); }}
-                onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
-                onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
-                onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
-                onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
-                onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
-                onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
-                onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
-                onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
-                onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
-                onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
-                onOpenRoomManager={() => { setActiveModal('players'); }}
-                onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
-                onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
-                onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
-                onToggleAIBot={() => { setActiveModal('settings-ia'); }}
-                onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
-                onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
-                onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
-              />
-              </div>
+      {/* Free-Floating Window Layer */}
+      <>
+        {showActors && (
+          <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={handleCloseActorLibrary}>
+            <div style={{ height: '400px' }}>
+              <ErrorBoundary componentName="Painel de NPCs"><NPCPanel /></ErrorBoundary>
             </div>
-          )}
-          <MobileBottomNav />
-          <MobileQuickActions />
-          <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
-          <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
-        </>
-      </div>
+          </DraggableWindow>
+        )}
+
+        {openSheets.map((sheetKey: string, index: number) => {
+          const isWiki = sheetKey.startsWith('wiki:');
+          const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
+          const tokenId = isWiki ? undefined : sheetKey;
+
+          return (
+            <DraggableWindow
+              key={sheetKey}
+              id={`sheet-${sheetKey}`}
+              title="Ficha do Personagem"
+              initialX={20 + (index * 40)}
+              initialY={100 + (index * 40)}
+              width={340}
+              onClose={() => handleCloseSheet(sheetKey)}
+            >
+              <ErrorBoundary componentName="Ficha (TargetTerminal)">
+                <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />
+              </ErrorBoundary>
+            </DraggableWindow>
+          );
+        })}
+
+        {openWikiDocs.map((doc: { id: string, filepath: string }, index: number) => (
+          <FloatingDocument
+            key={doc.id}
+            id={doc.id}
+            filepath={doc.filepath}
+            initialX={window.innerWidth / 2 - 200 + (index * 30)}
+            initialY={100 + (index * 30)}
+            onClose={() => handleCloseWikiDoc(doc.id)}
+          />
+        ))}
+
+        {openWindows.combatLog && (
+          <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={handleCloseCombatLog}>
+            <ErrorBoundary componentName="CombatLog"><CombatLog /></ErrorBoundary>
+          </DraggableWindow>
+        )}
+
+        {openWindows.chatWindow && (
+          <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={100} width={320} height={400} onClose={handleCloseChatWindow}>
+            <ErrorBoundary componentName="ChatWindow"><ChatWindow /></ErrorBoundary>
+          </DraggableWindow>
+        )}
+
+        {/* Overlays Visuais e Funcionais */}
+        <ClimaxOverlay />
+        <SoftTimer />
+        <DiceOverlay />
+        <PPROverlay />
+        <GlobalAudioSync />
+        <Toaster />
+        <ConfirmDialog />
+
+        <WidgetLayer />
+
+        <PlayerQuickBar playerName={localStorage.getItem('dozero_player_name') || 'Jogador'} />
+
+        {/* WidgetHubModal */}
+        {activeModal === 'widgets' && (
+          <div className="modal-overlay" onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, pointerEvents: 'auto', padding: '20px' }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
+              <ErrorBoundary componentName="Hub de Módulos (WidgetHubModal)">
+                <WidgetHubModal
+                  onClose={() => setActiveModal('none')}
+                  onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
+                  onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
+                  onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
+                  onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
+                  onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
+                  onOpenClockConfig={() => { setEditingClockId(null); setActiveModal('clockConfig'); }}
+                  onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
+                  onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
+                  onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
+                  onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
+                  onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
+                  onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
+                  onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
+                  onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
+                  onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
+                  onOpenDLCManager={() => { setActiveModal('settings-modulos'); }}
+                  onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
+                  onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
+                  onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
+                  onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
+                  onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
+                  onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
+                  onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
+                  onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
+                  onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
+                  onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
+                  onOpenRoomManager={() => { setActiveModal('players'); }}
+                  onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
+                  onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
+                  onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
+                  onToggleAIBot={() => { setActiveModal('settings-ia'); }}
+                  onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
+                  onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
+                  onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
+                />
+              </ErrorBoundary>
+            </div>
+          </div>
+        )}
+        <MobileBottomNav />
+        <MobileQuickActions />
+        <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
+        <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
+      </>
+    </div>
   );
 }
 
