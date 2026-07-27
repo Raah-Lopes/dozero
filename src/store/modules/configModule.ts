@@ -129,6 +129,31 @@ export const Config = {
   getAll(): GameConfig {
     const stored = state.mapConfig.get('global');
     if (stored) {
+      // Legacy config check (flat schema migration)
+      if (!('map' in stored) && !('fog' in stored)) {
+        console.warn('[Config] Migrating legacy flat config to new nested format');
+        const legacy = stored as any;
+        const migrated: GameConfig = this.getDefaults();
+        
+        // Migrate map settings
+        if (legacy.gridSize !== undefined) migrated.map.gridSize = legacy.gridSize;
+        if (legacy.gridType !== undefined) migrated.map.gridType = legacy.gridType;
+        if (legacy.gridColor !== undefined) migrated.map.gridColor = legacy.gridColor;
+        if (legacy.gridAlpha !== undefined) migrated.map.gridAlpha = legacy.gridAlpha;
+        if (legacy.mapBackgroundColor !== undefined) migrated.map.mapBackgroundColor = legacy.mapBackgroundColor;
+        
+        // Migrate fog settings
+        if (legacy.fogOfWar !== undefined) migrated.fog.enabled = legacy.fogOfWar;
+        if (legacy.fowRadius !== undefined) migrated.fog.radius = legacy.fowRadius;
+        if (legacy.fowShape !== undefined) migrated.fog.shape = legacy.fowShape;
+        if (legacy.fowColor !== undefined) migrated.fog.color = legacy.fowColor;
+        if (legacy.fowHideTokens !== undefined) migrated.fog.hideTokens = legacy.fowHideTokens;
+        
+        // Save back the migrated format
+        state.mapConfig.set('global', migrated);
+        return migrated;
+      }
+      
       return stored as GameConfig;
     }
     return this.getDefaults();
