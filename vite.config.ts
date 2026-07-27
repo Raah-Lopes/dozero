@@ -20,6 +20,7 @@ function getLocalIP() {
 }
 
 import { visualizer } from 'rollup-plugin-visualizer';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -29,7 +30,31 @@ export default defineConfig({
     youtubeLocalApi(), 
     pollinationsProxy(), 
     yjsWebsocketServer(),
-    visualizer({ open: false, filename: 'stats.html' })
+    visualizer({ open: false, filename: 'stats.html' }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      manifest: {
+        name: 'Dozero RPG Virtual Tabletop',
+        short_name: 'Dozero',
+        description: 'Plataforma colaborativa para RPG de mesa com IA',
+        theme_color: '#1a1a1a',
+        background_color: '#1a1a1a',
+        display: 'standalone',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ],
   build: {
     rollupOptions: {

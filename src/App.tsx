@@ -46,6 +46,7 @@ import { CutsceneManager } from './components/Theater/CutsceneManager';
 import { Toaster, ConfirmDialog } from './components/UI/Toast';
 import { useAppEventListeners } from './hooks/useAppEventListeners';
 import { ErrorBoundary } from './components/UI/ErrorBoundary';
+import { OfflineStatus } from './components/System/OfflineStatus';
 
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
 
@@ -113,6 +114,8 @@ function App() {
 
   return (
     <div className="app-container">
+      <OfflineStatus />
+      
       {/* ── Cutscene overlay (Global) ── */}
       {activeCutscene && (
         <CutsceneOverlay config={activeCutscene} onEnd={() => setActiveCutscene(null)} />
