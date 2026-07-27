@@ -1,4 +1,4 @@
-import { Graphics, Container, Texture, Matrix } from 'pixi.js';
+import { Graphics, Container, Texture, Matrix, BlurFilter } from 'pixi.js';
 import { getFogOps, FogGeomCircle, FogGeomSquare, FogGeomPolygon, localState } from '../../store';
 import { extractWallSegments, visibilityPolygon } from './fogVisibility';
 
@@ -76,6 +76,7 @@ export function renderFogOfWar(
      g.clear();
      g.visible = false;
      g.mask = null;
+     g.filters = null;
   });
 
   let poolIdx = 0;
@@ -110,14 +111,6 @@ export function renderFogOfWar(
 
   // 3. Token Vision via Raycasting (Dynamic Lighting)
   if (visionSources.length > 0) {
-    const tokenGfx = getGfx('erase');
-    const glowGfx = getGfx('screen');
-    const maskGfx1 = getGfx('normal');
-    const maskGfx2 = getGfx('normal');
-    
-    tokenGfx.mask = maskGfx1;
-    glowGfx.mask = maskGfx2;
-
     const segments = extractWallSegments(fogOps);
 
     visionSources.forEach(t => {
@@ -126,45 +119,22 @@ export function renderFogOfWar(
       const poly = visibilityPolygon(t.x, t.y, segments, radius);
       
       if (poly.length > 2) {
-        maskGfx1.moveTo(poly[0].x, poly[0].y);
-        maskGfx2.moveTo(poly[0].x, poly[0].y);
-        for (let i = 1; i < poly.length; i++) {
-          maskGfx1.lineTo(poly[i].x, poly[i].y);
-          maskGfx2.lineTo(poly[i].x, poly[i].y);
-        }
-        maskGfx1.lineTo(poly[0].x, poly[0].y);
-        maskGfx2.lineTo(poly[0].x, poly[0].y);
-        
-        maskGfx1.fill({ color: 0xffffff });
-        maskGfx2.fill({ color: 0xffffff });
-
         const visionStyle = (t as any).visionStyle || 'gradient';
+        const tokenGfx = getGfx('erase');
         
-        if (visionStyle === 'solid') {
-          // Sharp solid cut - use a huge rect masked by the polygon
-          tokenGfx.rect(t.x - radius, t.y - radius, radius * 2, radius * 2).fill({ color: 0xffffff });
+        if (visionStyle === 'gradient') {
+           tokenGfx.filters = [new BlurFilter({ strength: 24, quality: 3 })];
         } else {
-          // Soft gradient light
-          const matErase = new Matrix();
-          const scaleErase = (radius * 2.1) / 512;
-          const sizeErase = 512 * scaleErase;
-          const ex = t.x - sizeErase / 2;
-          const ey = t.y - sizeErase / 2;
-          matErase.scale(scaleErase, scaleErase);
-          matErase.translate(ex, ey);
-          tokenGfx.rect(ex, ey, sizeErase, sizeErase).fill({ color: 0xffffff, texture: getSharedLightMask(), matrix: matErase });
-
-          const glowTex = getSharedGlow();
-          const matGlow = new Matrix();
-          const scaleGlow = (radius * 2.4) / 512;
-          const sizeGlow = 512 * scaleGlow;
-          const gx = t.x - sizeGlow / 2;
-          const gy = t.y - sizeGlow / 2;
-          matGlow.scale(scaleGlow, scaleGlow);
-          matGlow.translate(gx, gy);
-          
-          glowGfx.rect(gx, gy, sizeGlow, sizeGlow).fill({ color: 0xffffff, texture: glowTex, matrix: matGlow });
+           tokenGfx.filters = null;
         }
+
+        tokenGfx.moveTo(poly[0].x, poly[0].y);
+        for (let i = 1; i < poly.length; i++) {
+          tokenGfx.lineTo(poly[i].x, poly[i].y);
+        }
+        tokenGfx.lineTo(poly[0].x, poly[0].y);
+        
+        tokenGfx.fill({ color: 0xffffff });
       }
     });
   }
