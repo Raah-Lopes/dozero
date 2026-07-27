@@ -119,7 +119,11 @@ export const GridToolbar: React.FC = () => {
     };
     
     const handleDrawingLayers = () => {
-      setDrawingLayers(Array.from(state.drawingLayers.values()));
+      if (state.drawingLayers) {
+        setDrawingLayers(Array.from(state.drawingLayers.values()));
+      } else {
+        setDrawingLayers([]);
+      }
     };
     const handleDrawings = () => {
       setDrawings(Array.from(state.drawings.values()));
@@ -165,7 +169,9 @@ export const GridToolbar: React.FC = () => {
 
     state.mapConfig.observe(handleMapConfig);
     state.backgrounds.observe(handleBgs);
-    state.drawingLayers.observe(handleDrawingLayers);
+    if (state.drawingLayers) {
+      state.drawingLayers.observe(handleDrawingLayers);
+    }
     state.drawings.observe(handleDrawings);
     window.addEventListener('tool-changed', handleTool);
     window.addEventListener('draw-style-changed', handleStyle);
@@ -180,7 +186,9 @@ export const GridToolbar: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       state.mapConfig.unobserve(handleMapConfig);
       state.backgrounds.unobserve(handleBgs);
-      state.drawingLayers.unobserve(handleDrawingLayers);
+      if (state.drawingLayers) {
+        state.drawingLayers.unobserve(handleDrawingLayers);
+      }
       window.removeEventListener('tool-changed', handleTool);
       window.removeEventListener('draw-style-changed', handleStyle);
       window.removeEventListener('keydown', handleKeyDown);

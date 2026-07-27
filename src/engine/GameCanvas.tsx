@@ -285,7 +285,7 @@ export const GameCanvas: React.FC = () => {
                 for (const [id, d] of state.drawings.entries()) {
                    const draw = d as any;
                    if (draw.layerId) {
-                      const layer = state.drawingLayers.get(draw.layerId) as any;
+                      const layer = state.drawingLayers?.get(draw.layerId) as any;
                       if (layer && layer.hidden) continue;
                    }
                    if (draw.type === 'path' || draw.type === 'pen' || draw.type === 'arrow') {
@@ -1852,7 +1852,7 @@ export const GameCanvas: React.FC = () => {
          for (const [id, d] of state.drawings.entries()) {
             const draw = d as any;
             if (draw.layerId) {
-               const layer = state.drawingLayers.get(draw.layerId) as any;
+               const layer = state.drawingLayers?.get(draw.layerId) as any;
                if (layer && (layer.hidden || layer.locked)) continue;
             }
             if (draw.hidden || draw.locked) continue;
@@ -2681,7 +2681,7 @@ export const GameCanvas: React.FC = () => {
           const d = drawingsState.get(id) as any;
           let shouldRemove = !d || d.hidden;
           if (d && d.layerId) {
-             const layer = state.drawingLayers.get(d.layerId) as any;
+             const layer = state.drawingLayers?.get(d.layerId) as any;
              if (layer && layer.hidden) shouldRemove = true;
           }
           if (shouldRemove) {
@@ -2695,7 +2695,7 @@ export const GameCanvas: React.FC = () => {
           const d = drawData as any;
           if (d.hidden) return;
           if (d.layerId) {
-             const layer = state.drawingLayers.get(d.layerId) as any;
+             const layer = state.drawingLayers?.get(d.layerId) as any;
              if (layer && layer.hidden) return;
           }
           if (!drawingSprites[id]) {

@@ -115,6 +115,7 @@ interface ArsenalMestreWidgetProps {
 }
 
 export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClose }) => {
+  const { index, refresh } = useWiki();
   const [showCreateItem, setShowCreateItem] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemType, setNewItemType] = useState<'arma' | 'poder' | 'pocao' | 'maldicao' | 'objeto_campanha'>('arma');
