@@ -1449,7 +1449,7 @@ export const GameCanvas: React.FC = () => {
             // If not dragging, animate to new position (or just set it)
             let isBeingDragged = false;
             if (draggingTokenId) {
-               const selected = Tokens.getSelected();
+               const selected = Tokens.getSelectedIds();
                if (selected.includes(id)) {
                   isBeingDragged = true;
                }
@@ -1496,7 +1496,7 @@ export const GameCanvas: React.FC = () => {
       state.props.observe(propsObserver);
 
       const updateSelectionVisuals = () => {
-        const selected = Tokens.getSelected();
+        const selected = Tokens.getSelectedIds();
         for (const id in tokenSprites) {
           if (tokenSprites[id] && tokenSprites[id].selectionRing) {
             tokenSprites[id].selectionRing.visible = selected.includes(id);
@@ -1751,12 +1751,12 @@ export const GameCanvas: React.FC = () => {
             }
 
             import('../store').then(s => {
-               if (!shift && !Tokens.getSelected().includes(hitTokenId!)) {
+               if (!shift && !Tokens.getSelectedIds().includes(hitTokenId!)) {
                   Tokens.clearSelection(); s.clearPropSelection(); s.clearDrawingSelection(); s.clearBgSelection();
                }
-               if (Tokens.getSelected().includes(hitTokenId!) && shift) {
+               if (Tokens.getSelectedIds().includes(hitTokenId!) && shift) {
                    Tokens.toggleSelected(hitTokenId!, true);
-               } else if (!Tokens.getSelected().includes(hitTokenId!)) {
+               } else if (!Tokens.getSelectedIds().includes(hitTokenId!)) {
                    Tokens.toggleSelected(hitTokenId!, shift);
                }
             });
@@ -3078,7 +3078,7 @@ export const GameCanvas: React.FC = () => {
           // LERP position if someone else moved it
           let isBeingDragged = false;
           if (draggingTokenId) {
-             const selected = Tokens.getSelected();
+             const selected = Tokens.getSelectedIds();
              if (selected.includes(id)) {
                 isBeingDragged = true;
              }
