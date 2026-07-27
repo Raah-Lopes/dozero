@@ -12,6 +12,7 @@ import type { ThemeDefinition } from '../../themes';
 import { DLCManagerTab } from './DLCManagerTab';
 import { MapSettingsPanel } from '../HUD/MapSettingsPanel';
 import { Bot, ToyBrick, Map } from 'lucide-react';
+import { GMPasswordModal } from '../Auth/GMPasswordModal';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -204,6 +205,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // ── State ──
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
@@ -271,7 +273,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
             </p>
           </div>
         </div>
-        <Toggle id="gm-toggle" checked={isGM} onChange={setIsGM} />
+        <Toggle id="gm-toggle" checked={isGM} onChange={(v) => {
+          if (v) {
+            setShowPasswordModal(true);
+          } else {
+            setIsGM(false);
+          }
+        }} />
       </div>
 
       {/* Rules Engine */}
@@ -704,6 +712,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
           </button>
         </div>
       </div>
+
+      <GMPasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

@@ -76,7 +76,8 @@ export const state = {
   customItems: doc.getMap('customItems'),
   drawings: doc.getMap('drawings'),
   drawingLayers: doc.getMap('drawingLayers'),
-  fogOps: doc.getMap('fogOps')
+  fogOps: doc.getMap('fogOps'),
+  roomSettings: doc.getMap('roomSettings')
 };
 
 // =========================================================================
