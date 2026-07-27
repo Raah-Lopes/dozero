@@ -10,6 +10,11 @@ export function resolveMediaUrl(mediaPath: string, repoPath: string): string {
       mediaPath = decodeURIComponent(match[1]);
     }
   }
+
+  // Se já for uma URL externa ou base64, retorna direto!
+  if (mediaPath.startsWith('http://') || mediaPath.startsWith('https://') || mediaPath.startsWith('data:')) {
+    return mediaPath;
+  }
   
   if (import.meta.env.PROD) {
     // Resolvemos do pacote bundlado pelo Vite

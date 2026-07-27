@@ -9,6 +9,7 @@ import {
 import { WikiEditor } from './WikiEditor';
 import { FrontmatterPanel } from './FrontmatterPanel';
 import { FrontmatterSheetViewer } from './FrontmatterSheetViewer';
+import { CharacterSheet } from '../UI/CharacterSheet';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { toast } from '../UI/Toast';
@@ -760,6 +761,20 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                    return null;
                  }
               })()}
+
+              {/* Gravewright-style Character Sheet Dashboard */}
+              {/hp:|pv:|for:|for(c|ç)a:|des:|destreza:|con:|constitui(c|ç)(a|ã)o:|int:|intelig(e|ê)ncia:|sab:|sabedoria:|car:|carisma:|tipo:\s*(npc|pc|jogador|monstro|personagem)/i.test(frontmatter) && (
+                <div style={{ marginBottom: '20px' }}>
+                  <CharacterSheet 
+                    rawYaml={frontmatter}
+                    onChange={(newYaml) => {
+                      setFrontmatter(newYaml);
+                      if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
+                      saveTimeoutRef.current = window.setTimeout(() => handleSave(), 500);
+                    }}
+                  />
+                </div>
+              )}
 
               <WikiEditor 
                 editorRef={editorRef}

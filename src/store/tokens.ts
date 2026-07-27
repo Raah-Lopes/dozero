@@ -10,15 +10,21 @@ export const localState = {
   selectedTokens: new Set<string>(),
   selectedProps: new Set<string>(),
   selectedDrawings: new Set<string>(),
-  activeTool: 'select' as 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser',
+  activeTool: 'select' as 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser' | 'fog_brush' | 'fog_polygon',
   activeShapeType: 'rectangle' as 'rectangle' | 'circle' | 'triangle',
   editingTextId: null as string | null,
   drawColor: '#ef4444',
   drawWidth: 4,
   activeDrawingLayerId: 'default',
+  fogMode: 'reveal' as 'reveal' | 'hide'
 };
 
-export function setActiveTool(tool: 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser') {
+export function setFogMode(mode: 'reveal' | 'hide') {
+  localState.fogMode = mode;
+  window.dispatchEvent(new Event('tool-changed'));
+}
+
+export function setActiveTool(tool: 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser' | 'fog_brush' | 'fog_polygon') {
   localState.activeTool = tool;
   window.dispatchEvent(new Event('tool-changed'));
 }

@@ -170,6 +170,13 @@ function App() {
   useEffect(() => {
     const handleDblClick = (e: Event) => {
       const { tokenId } = (e as CustomEvent).detail;
+      const token = state.tokens.get(tokenId) as any;
+      
+      // Auto-open the premium wiki sheet if it exists
+      if (token && token.wikiPath) {
+        window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: token.wikiPath } }));
+      }
+
       setOpenSheets(prev => {
         if (prev.includes(tokenId)) return prev;
         return [...prev, tokenId];
@@ -580,6 +587,7 @@ function App() {
                 onOpenRoomManager={() => { setActiveModal('players'); }}
                 onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
                 onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
+                onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
                 onToggleAIBot={() => { setActiveModal('settings-ia'); }}
                 onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
                 onOpenThemes={() => { setActiveModal('settings-aparencia'); }}

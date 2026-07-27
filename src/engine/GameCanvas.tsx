@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 
 import { hexRound, euclideanDistance, pixelToHex, hexToPixel, snapToGrid } from './utils/gridUtils';
@@ -122,6 +122,11 @@ export const GameCanvas: React.FC = () => {
       let isTouchPanning = false;
       let touchPanStart = { x: 0, y: 0 };
       
+      let isEraserActive = false;
+      let isFogBrushing = false;
+      let fogBrushPoints: { x: number, y: number }[] = [];
+      let fogPolygonPoints: {x: number, y: number}[] = [];
+      
       let longPressTimer: any = null;
       let longPressStart = { x: 0, y: 0 };
 
@@ -201,6 +206,35 @@ export const GameCanvas: React.FC = () => {
       });
 
       canvasEl.addEventListener('pointerdown', (e) => {
+        if (localState.activeTool === 'fog_brush' && e.button === 0) {
+          isFogBrushing = true;
+          const pos = getWorldPos(e.clientX, e.clientY);
+          fogBrushPoints = [pos];
+          return;
+        }
+        if (localState.activeTool === 'fog_polygon' && e.button === 0) {
+          const pos = getWorldPos(e.clientX, e.clientY);
+          if (fogPolygonPoints.length > 2) {
+             const first = fogPolygonPoints[0];
+             const screenFirstX = viewport.x + first.x * viewport.scale.x;
+             const screenFirstY = viewport.y + first.y * viewport.scale.y;
+             if (Math.hypot(e.clientX - screenFirstX, e.clientY - screenFirstY) < 15) {
+                import('../store').then(s => {
+                  s.addFogOp({
+                    id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
+                    type: 'polygon',
+                    mode: localState.fogMode,
+                    geom: { points: [...fogPolygonPoints] }
+                  });
+                  fogPolygonPoints = [];
+                });
+                return;
+             }
+          }
+          fogPolygonPoints.push(pos);
+          return;
+        }
+
         if ((e.shiftKey || localState.activeTool === 'ruler') && e.button === 0) {
            isMeasuring = true;
            measureStart = getWorldPos(e.clientX, e.clientY);
@@ -364,6 +398,16 @@ export const GameCanvas: React.FC = () => {
       });
 
       const handleMainPointerMove = (e: PointerEvent) => {
+        if (isFogBrushing) {
+          const pos = getWorldPos(e.clientX, e.clientY);
+          if (fogBrushPoints.length > 0) {
+            const last = fogBrushPoints[fogBrushPoints.length - 1];
+            if (Math.hypot(pos.x - last.x, pos.y - last.y) > 10) {
+              fogBrushPoints.push(pos);
+            }
+          }
+        }
+
         if (localState.activeTool === 'eraser') {
            eraserCursor.visible = true;
            const rect = canvasEl.getBoundingClientRect();
@@ -373,6 +417,46 @@ export const GameCanvas: React.FC = () => {
            eraserCursor.circle(localPos.x, localPos.y, drawRadius);
            eraserCursor.stroke({ color: 0xef4444, width: 2 / viewport.scale.x, alpha: 0.9 });
            eraserCursor.fill({ color: 0xef4444, alpha: 0.2 });
+        } else if (localState.activeTool === 'fog_brush') {
+           eraserCursor.visible = true;
+           const rect = canvasEl.getBoundingClientRect();
+           const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+           const drawRadius = (localState.drawWidth || 4) * 5 + 10;
+           eraserCursor.clear();
+           const color = localState.fogMode === 'reveal' ? 0x0ea5e9 : 0x475569;
+           
+           if (isFogBrushing && fogBrushPoints.length > 0) {
+             eraserCursor.moveTo(fogBrushPoints[0].x, fogBrushPoints[0].y);
+             for (let i = 1; i < fogBrushPoints.length; i++) {
+               eraserCursor.lineTo(fogBrushPoints[i].x, fogBrushPoints[i].y);
+             }
+             eraserCursor.lineTo(localPos.x, localPos.y);
+             eraserCursor.stroke({ color, width: drawRadius * 2, cap: 'round', join: 'round', alpha: 0.5 });
+           } else {
+             eraserCursor.circle(localPos.x, localPos.y, drawRadius);
+             eraserCursor.stroke({ color, width: 2 / viewport.scale.x, alpha: 0.9 });
+             eraserCursor.fill({ color, alpha: 0.2 });
+           }
+        } else if (localState.activeTool === 'fog_polygon') {
+           eraserCursor.visible = true;
+           const rect = canvasEl.getBoundingClientRect();
+           const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+           eraserCursor.clear();
+           const color = localState.fogMode === 'reveal' ? 0x0ea5e9 : 0x475569;
+           if (fogPolygonPoints.length > 0) {
+              eraserCursor.moveTo(fogPolygonPoints[0].x, fogPolygonPoints[0].y);
+              for (let i = 1; i < fogPolygonPoints.length; i++) eraserCursor.lineTo(fogPolygonPoints[i].x, fogPolygonPoints[i].y);
+              eraserCursor.lineTo(localPos.x, localPos.y);
+              eraserCursor.stroke({ color, width: 2 / viewport.scale.x, alpha: 0.9 });
+              
+              const first = fogPolygonPoints[0];
+              const screenFirstX = viewport.x + first.x * viewport.scale.x;
+              const screenFirstY = viewport.y + first.y * viewport.scale.y;
+              if (Math.hypot(e.clientX - screenFirstX, e.clientY - screenFirstY) < 15) {
+                 eraserCursor.circle(first.x, first.y, 10 / viewport.scale.x);
+                 eraserCursor.fill({ color: 0x10b981, alpha: 0.8 });
+              }
+           }
         } else {
            if (eraserCursor.visible) eraserCursor.visible = false;
         }
@@ -490,6 +574,29 @@ export const GameCanvas: React.FC = () => {
 
       window.addEventListener('pointermove', handleMainPointerMove);
       const handlePointerUp = (e: PointerEvent) => {
+        if (isFogBrushing) {
+          if (fogBrushPoints.length > 1) {
+            import('../store').then(s => {
+               s.addFogOp({
+                 id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
+                 type: 'path',
+                 mode: localState.fogMode,
+                 geom: { points: [...fogBrushPoints], width: (localState.drawWidth || 4) * 5 * 2 + 20 }
+               });
+            });
+          } else if (fogBrushPoints.length === 1) {
+            import('../store').then(s => {
+               s.addFogOp({
+                 id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
+                 type: 'circle',
+                 mode: localState.fogMode,
+                 geom: { x: fogBrushPoints[0].x, y: fogBrushPoints[0].y, r: (localState.drawWidth || 4) * 5 + 10 }
+               });
+            });
+          }
+          fogBrushPoints = [];
+          isFogBrushing = false;
+        }
         clearTimeout(longPressTimer);
         longPressTimer = null;
         
@@ -670,12 +777,6 @@ export const GameCanvas: React.FC = () => {
       const fogOverlay = new Graphics();
       fogContainer.addChild(fogOverlay);
 
-      const fogHoles = new Graphics();
-      // Em v8, pode ser 'erase' ou equivalente. Em algumas versões, é PIXI.BLEND_MODES.ERASE
-      // Usaremos 'erase' que é a string de blend mode no Pixi v8
-      fogHoles.blendMode = 'erase'; 
-      fogContainer.addChild(fogHoles);
-
       // Ruler Graphics
       const rulerGraphic = new Graphics();
       viewport.addChild(rulerGraphic);
@@ -731,12 +832,20 @@ export const GameCanvas: React.FC = () => {
            visionSources = visionSources.filter(t => localState.selectedTokens.has(t.id));
         }
 
-        const currentHash = config.fogOfWar + '_' + config.fowRadius + '_' + config.fowShape + '_' + config.fowHideTokens + '_' + viewport.x + '_' + viewport.y + '_' + viewport.scale.x + '_' + visionSources.map(t => `${Math.round(t.x)},${Math.round(t.y)}`).join('|');
+        const currentHash = JSON.stringify({
+          enabled: config.fogOfWar,
+          radius: config.fowRadius,
+          shape: config.fowShape,
+          color: config.fowColor,
+          viewport: { x: viewport.x, y: viewport.y, scale: viewport.scale.x },
+          visionSources: visionSources.map(t => ({ id: t.id, x: t.x, y: t.y, visionRadius: t.visionRadius })),
+          opsCount: getFogOps().length
+        });
         
         if (currentHash === lastFowHash) return;
         lastFowHash = currentHash;
 
-        renderFogOfWar(fogContainer, fogOverlay, fogHoles, config, viewport, visionSources);
+        renderFogOfWar(fogContainer, fogOverlay, config, viewport, visionSources);
         
         if (config.fogOfWar) {
 

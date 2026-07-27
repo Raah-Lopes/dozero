@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { 
-  state, localState, setActiveTool, setDrawColor, setDrawWidth, 
+  state, localState, setActiveTool, setDrawColor, setDrawWidth, setFogMode,
   getMapConfig, updateMapConfig, addBackground, updateBackgroundProps, removeBackground,
-  removeDrawing, clearDrawingSelection, removeMapProp, clearPropSelection, clearBgSelection
+  removeDrawing, clearDrawingSelection, removeMapProp, clearPropSelection, clearBgSelection, clearFogOps
 } from '../../store';
 import type { BackgroundData, MapConfig } from '../../store';
 import { 
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
-  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown
+  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 
@@ -75,6 +75,7 @@ const DrawingRenameInput = ({ drawing, typeName, onRename }: { drawing: any, typ
 
 export const GridToolbar: React.FC = () => {
   const [activeTool, setActiveToolState] = useState(localState.activeTool);
+  const [fogMode, setFogModeState] = useState(localState.fogMode);
   const [drawColor, setDrawColorState] = useState(localState.drawColor);
   const [drawWidth, setDrawWidthState] = useState(localState.drawWidth);
   const [showStyleInspector, setShowStyleInspector] = useState(false);
@@ -99,6 +100,7 @@ export const GridToolbar: React.FC = () => {
 
     const handleTool = () => {
       setActiveToolState(localState.activeTool);
+      setFogModeState(localState.fogMode);
       if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
         setShowStyleInspector(true);
       }
@@ -218,7 +220,7 @@ export const GridToolbar: React.FC = () => {
     e.target.value = '';
   };
 
-  const tools = [
+  let tools = [
     { id: 'select', label: 'Selecionar / Mover (1)', icon: MousePointer2 },
     { id: 'pan', label: 'Mão (Navegar / Espaço) (2)', icon: Hand },
     { id: 'pen', label: 'Desenho Livre (Caneta) (3)', icon: Pen },
@@ -227,7 +229,12 @@ export const GridToolbar: React.FC = () => {
     { id: 'text', label: 'Inserir Texto (6)', icon: Type },
     { id: 'ruler', label: 'Régua de Medição (7)', icon: Ruler },
     { id: 'eraser', label: 'Borracha Mágica (8)', icon: Eraser },
-  ] as const;
+  ] as any[];
+
+  if (mapConfig.fogOfWar) {
+    tools.push({ id: 'fog_brush', label: 'Pincel de Névoa (Revelar/Esconder)', icon: CloudFog });
+    tools.push({ id: 'fog_polygon', label: 'Polígono de Névoa', icon: Hexagon });
+  }
 
   // Render minimized trigger when hidden
   if (!isVisible) {
@@ -369,19 +376,61 @@ export const GridToolbar: React.FC = () => {
         <input
           type="file"
           ref={fileInputRef}
-          accept="image/*"
+          accept=".png,.jpg,.jpeg,.webp,.gif,.svg,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
           style={{ display: 'none' }}
           onChange={handleImageUpload}
         />
 
         {/* Toggle Style Inspector */}
-        <button
-          className={`tldraw-tool-btn ${showStyleInspector ? 'active' : ''}`}
-          onClick={() => { setShowStyleInspector(v => !v); setShowConfigMenu(false); setShowLayersMenu(false); }}
-          title="Estilo da Linha, Cor & Borracha"
-        >
-          <Palette size={18} color={drawColor} />
-        </button>
+        {!activeTool.startsWith('fog_') && (
+          <button
+            className={`tldraw-tool-btn ${showStyleInspector ? 'active' : ''}`}
+            onClick={() => { setShowStyleInspector(v => !v); setShowConfigMenu(false); setShowLayersMenu(false); }}
+            title="Estilo da Linha, Cor & Borracha"
+          >
+            <Palette size={18} color={drawColor} />
+          </button>
+        )}
+
+        {/* Fog Mode Toggles */}
+        {activeTool.startsWith('fog_') && (
+          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '2px' }}>
+            <button
+              onClick={() => setFogMode('reveal')}
+              title="Revelar Névoa"
+              style={{
+                background: fogMode === 'reveal' ? 'var(--accent-primary, #0ea5e9)' : 'transparent',
+                color: fogMode === 'reveal' ? '#ffffff' : '#94a3b8',
+                border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
+              }}
+            >
+              Revelar
+            </button>
+            <button
+              onClick={() => setFogMode('hide')}
+              title="Esconder Névoa"
+              style={{
+                background: fogMode === 'hide' ? '#475569' : 'transparent',
+                color: fogMode === 'hide' ? '#ffffff' : '#94a3b8',
+                border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
+              }}
+            >
+              Esconder
+            </button>
+            <button
+              onClick={() => { if (confirm("Apagar todos os desenhos da névoa de guerra?")) clearFogOps(); }}
+              title="Resetar Máscara"
+              style={{
+                background: 'transparent',
+                color: '#ef4444',
+                border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', padding: '4px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer',
+                marginLeft: '4px'
+              }}
+            >
+              Resetar
+            </button>
+          </div>
+        )}
 
         {/* Ocultar Barra Button */}
         <button

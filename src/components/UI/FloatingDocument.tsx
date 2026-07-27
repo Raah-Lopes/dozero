@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { DraggableWindow } from '../HUD/DraggableWindow';
-import { loadMarkdownFile } from '../../utils/githubApi';
+import { loadMarkdownFile, saveMarkdownContent } from '../../utils/githubApi';
+import { CharacterSheet } from './CharacterSheet';
 import { Check, Copy } from 'lucide-react';
 
 interface FloatingDocumentProps {
@@ -97,6 +98,7 @@ const Blockquote = ({ node, children, ...props }: any) => {
 
 export const FloatingDocument: React.FC<FloatingDocumentProps> = React.memo(({ id, filepath, initialX, initialY, onClose }) => {
   const [content, setContent] = useState<string>('');
+  const [frontmatter, setFrontmatter] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -109,11 +111,14 @@ export const FloatingDocument: React.FC<FloatingDocumentProps> = React.memo(({ i
         if (lines[0]?.trim() === '---') {
           const fim = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
           if (fim !== -1) {
+            setFrontmatter(lines.slice(1, fim).join('\n'));
             setContent(lines.slice(fim + 1).join('\n'));
           } else {
+            setFrontmatter('');
             setContent(text);
           }
         } else {
+          setFrontmatter('');
           setContent(text);
         }
       } else {
@@ -159,6 +164,20 @@ export const FloatingDocument: React.FC<FloatingDocumentProps> = React.memo(({ i
                 Expandir
               </button>
             </div>
+            
+            {/hp:|pv:|for:|for(c|ç)a:|des:|destreza:|con:|constitui(c|ç)(a|ã)o:|int:|intelig(e|ê)ncia:|sab:|sabedoria:|car:|carisma:|tipo:\s*(npc|pc|jogador|monstro|personagem)/i.test(frontmatter) && (
+              <div style={{ marginBottom: '20px' }}>
+                <CharacterSheet 
+                  rawYaml={frontmatter} 
+                  onChange={(newYaml) => {
+                    setFrontmatter(newYaml);
+                    const finalContent = `---\n${newYaml}\n---\n${content}`;
+                    saveMarkdownContent(filepath, finalContent).catch(e => console.error("Error saving character sheet", e));
+                  }} 
+                />
+              </div>
+            )}
+
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{

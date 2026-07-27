@@ -57,13 +57,13 @@ PM_max: 99
 usos_cura_atual: 3
 saqueado: false
 energia_max: 100
-sanidade_max: .nan
-fome: .nan
-fome_max: .nan
-sede: .nan
-sede_max: .nan
-cansaco: .nan
-cansaco_max: .nan
+sanidade_max: null
+fome: null
+fome_max: null
+sede: null
+sede_max: null
+cansaco: null
+cansaco_max: null
 defesa: 0
 riquezas: 0
 armas:
@@ -131,6 +131,8 @@ magias_preparadas:
     max: 0
 macros: []
 avatar: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
+des: 11
+
 ---
 
 

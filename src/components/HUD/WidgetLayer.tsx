@@ -30,6 +30,7 @@ const ConspiracyBoardWidget = React.lazy(() => import('../Widgets/ConspiracyBoar
 const GMNotesWidget = React.lazy(() => import('../Widgets/GameMaster/GMNotesWidget').then(m => ({ default: m.GMNotesWidget })));
 const StoryDiceWidget = React.lazy(() => import('../Widgets/Generators/StoryDiceWidget').then(m => ({ default: m.StoryDiceWidget })));
 const SSStoryDiceWidget = React.lazy(() => import('../Widgets/Generators/SSStoryDiceWidget').then(m => ({ default: m.StoryDiceWidget })));
+const StoryBilderDeckWidget = React.lazy(() => import('../Widgets/Generators/StoryBilderDeckWidget').then(m => ({ default: m.StoryBilderDeckWidget })));
 
 const FallbackLoader = () => (
   <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15,23,42,0.9)', padding: '20px', borderRadius: '12px', color: '#fff', zIndex: 9999 }}>
@@ -83,6 +84,7 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.tradeShop && <TradeShopWidget onClose={() => closeWindow('tradeShop')} />}
           {openWindows.playerManager && <PlayerManagerWidget onClose={() => closeWindow('playerManager')} />}
           {openWindows.systemAuditor && <AuditorWidget onClose={() => closeWindow('systemAuditor')} />}
+          {openWindows.storyBilderDeck && <StoryBilderDeckWidget onClose={() => closeWindow('storyBilderDeck')} />}
           {openWindows.mindMap && <ConspiracyBoardWidget onClose={() => closeWindow('mindMap')} />}
           {openWindows.gmNotes && <GMNotesWidget onClose={() => closeWindow('gmNotes')} />}
           {openWindows.storyDice && <StoryDiceWidget onClose={() => closeWindow('storyDice')} />}

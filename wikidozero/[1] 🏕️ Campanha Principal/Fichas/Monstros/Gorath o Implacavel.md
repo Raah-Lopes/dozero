@@ -1,8 +1,8 @@
 ---
 nome: Gorath o Implacável
-FOR: 10
-DES: 10
-CON: 10
+FOR: 25
+DES: 19
+CON: 14
 INT: 10
 SAB: 10
 CAR: 10
@@ -17,7 +17,7 @@ pv_max: 120
 xp: 0
 nivel: 6
 mana: 100
-mana_max: 0
+mana_max: 100
 armadura_legacy: 10
 defesa: 8
 velocidade: 6
@@ -37,7 +37,7 @@ usos_cura_atual: 3
 XP: 0
 energia: 100
 sanidade: 100
-energia_max: .nan
+energia_max: 100
 sanidade_max: .nan
 fome: .nan
 fome_max: .nan
@@ -77,7 +77,19 @@ magias_preparadas:
     current: 0
     max: 0
 macros: []
+titulo: Gorath o Implacável
+title: Gorath o Implacável
+vigor_max: 100
+forca: 25
+destreza: 19
+constituicao: 14
+inteligencia: 10
+sabedoria: 10
+carisma: 10
 ---
+
+
+
 # Gorath o Implacável ☠️
 
 > *"Não há gloría na derrota. Há apenas cinzas."*

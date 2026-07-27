@@ -36,6 +36,7 @@ interface Props {
   onOpenRoomManager: () => void;
   onOpenStoryDice: () => void;
   onOpenSSStoryDice: () => void;
+  onOpenStoryBilderDeck: () => void;
 }
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
@@ -94,6 +95,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     { id: 'stronghold', cat: 'Generators & AI', title: 'Fortaleza da Party', icon: Castle, action: props.onOpenStronghold, theme: 'theme-green' },
     { id: 'storydice', cat: 'Generators & AI', title: 'Story Dice (V1)', icon: Dices, action: props.onOpenStoryDice, theme: 'theme-yellow' },
     { id: 'ssstorydice', cat: 'Generators & AI', title: 'Story Dice (V2)', icon: Dices, action: props.onOpenSSStoryDice, theme: 'theme-pink' },
+    { id: 'storybilderdeck', cat: 'Generators & AI', title: 'Story Bilder Deck', icon: Sparkles, action: props.onOpenStoryBilderDeck, theme: 'theme-purple' },
 
     // System
     { id: 'roommgr', cat: 'System', title: 'Gestor de Salas (Multiplayer)', icon: Network, action: props.onOpenRoomManager, theme: 'theme-green', shadow: '0 0 10px rgba(34,197,94,0.4)' },

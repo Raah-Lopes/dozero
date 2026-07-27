@@ -75,7 +75,8 @@ export const state = {
   gmNotes: doc.getMap('gmNotes'),
   customItems: doc.getMap('customItems'),
   drawings: doc.getMap('drawings'),
-  drawingLayers: doc.getMap('drawingLayers')
+  drawingLayers: doc.getMap('drawingLayers'),
+  fogOps: doc.getMap('fogOps')
 };
 
 // =========================================================================
@@ -86,7 +87,8 @@ export const undoManager = new Y.UndoManager([
   state.tokens,
   state.props,
   state.backgrounds,
-  state.mapTexts
+  state.mapTexts,
+  state.fogOps
 ]);
 
 if (typeof window !== 'undefined') {

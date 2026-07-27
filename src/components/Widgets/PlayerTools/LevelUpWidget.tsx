@@ -16,22 +16,41 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
 
   useEffect(() => {
     if (tokenData) {
+      console.log('[LevelUpWidget] TokenData Raw:', tokenData);
+      const getAttr = (keys: string[], fallback = 10) => {
+        for (const k of keys) {
+          if (tokenData[k] !== undefined && tokenData[k] !== null && tokenData[k] !== '') {
+            let valStr = String(tokenData[k]).trim();
+            // Tenta achar o primeiro número na string (ex: "18 (mod +4)")
+            const match = valStr.match(/^-?\d+/);
+            const v = match ? parseInt(match[0], 10) : NaN;
+            
+            if (!isNaN(v) && v !== 0) {
+              console.log(`[LevelUpWidget] Found ${k} = ${v} from original "${tokenData[k]}"`);
+              return v;
+            }
+          }
+        }
+        console.log(`[LevelUpWidget] Falling back for keys ${keys.join(', ')} to ${fallback}`);
+        return fallback;
+      };
+
       setLocalData({
-        nivel: Number(tokenData.nivel) || 1,
-        hp: Number(tokenData.maxHp || tokenData.pv_max || tokenData.hp) || 20,
-        pm: Number(tokenData.pm_max || tokenData.mana_max || tokenData.pm || tokenData.mana) || 10,
-        vigor: Number(tokenData.vigor_max || tokenData.energia_max || tokenData.vigor || tokenData.energia) || 10,
-        FOR: Number(tokenData.FOR ?? tokenData.forca) || 10,
-        DES: Number(tokenData.DES ?? tokenData.destreza) || 10,
-        CON: Number(tokenData.CON ?? tokenData.constituicao) || 10,
-        INT: Number(tokenData.INT ?? tokenData.inteligencia) || 10,
-        SAB: Number(tokenData.SAB ?? tokenData.sabedoria) || 10,
-        CAR: Number(tokenData.CAR ?? tokenData.carisma) || 10,
-        Acrobacia: Number(tokenData.Acrobacia) || 0,
-        Atletismo: Number(tokenData.Atletismo) || 0,
-        Furtividade: Number(tokenData.Furtividade) || 0,
-        Medicina: Number(tokenData.Medicina) || 0,
-        Percepcao: Number(tokenData.Percepcao) || 0,
+        nivel: getAttr(['nivel', 'Nível', 'level'], 1),
+        hp: getAttr(['maxHp', 'pv_max', 'hp', 'HP', 'PV'], 20),
+        pm: getAttr(['pm_max', 'mana_max', 'pm', 'mana', 'PM', 'Mana'], 10),
+        vigor: getAttr(['vigor_max', 'energia_max', 'vigor', 'energia', 'Vigor', 'Energia'], 10),
+        FOR: getAttr(['forca', 'FOR', 'Força'], 10),
+        DES: getAttr(['destreza', 'DES', 'Destreza'], 10),
+        CON: getAttr(['constituicao', 'CON', 'Constituição', 'Constituicao'], 10),
+        INT: getAttr(['inteligencia', 'INT', 'Inteligência', 'Inteligencia'], 10),
+        SAB: getAttr(['sabedoria', 'SAB', 'Sabedoria'], 10),
+        CAR: getAttr(['carisma', 'CAR', 'Carisma'], 10),
+        Acrobacia: getAttr(['Acrobacia'], 0),
+        Atletismo: getAttr(['Atletismo'], 0),
+        Furtividade: getAttr(['Furtividade'], 0),
+        Medicina: getAttr(['Medicina'], 0),
+        Percepcao: getAttr(['Percepcao', 'Percepção'], 0),
       });
     }
   }, [tokenData, isOpen]);

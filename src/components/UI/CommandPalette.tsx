@@ -145,6 +145,7 @@ export const CommandPalette: React.FC = () => {
     { id: 'gen_world', title: 'Motor de Mundo', icon: <Globe size={16} />, category: 'Generators', onSelect: () => runCommand('gen_world', () => openWindow('worldEngine')) },
     { id: 'gen_entity', title: 'Forja de Entidades', icon: <Anvil size={16} />, category: 'Generators', onSelect: () => runCommand('gen_entity', () => openWindow('entityForge')) },
     { id: 'gen_stronghold', title: 'Fortaleza da Party', icon: <Castle size={16} />, category: 'Generators', onSelect: () => runCommand('gen_stronghold', () => openWindow('stronghold')) },
+    { id: 'gen_story_bilder_deck', title: 'Story Bilder Deck', icon: <Sparkles size={16} />, category: 'Generators', onSelect: () => runCommand('gen_story_bilder_deck', () => openWindow('storyBilderDeck')) },
 
     // System
     { id: 'sys_audio', title: 'Audio Director', icon: <Sparkles size={16} />, category: 'System', onSelect: () => runCommand('sys_audio', () => openWindow('audioDirector')) },

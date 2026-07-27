@@ -271,7 +271,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </div>
 
           {/* UPLOAD IMAGEM */}
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".png,.jpg,.jpeg,.webp,.gif,.svg,image/png,image/jpeg,image/webp,image/gif,image/svg+xml" style={{ display: 'none' }} />
           <button
             onClick={() => fileInputRef.current?.click()}
             title="Enviar Imagem"
