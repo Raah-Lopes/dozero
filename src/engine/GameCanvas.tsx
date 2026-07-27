@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Tokens, Config, FogOfWar } from '../store/modules';
-import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture } from 'pixi.js';
+import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture, FillGradient } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 
@@ -213,6 +213,31 @@ export const GameCanvas: React.FC = () => {
            measureStart = getWorldPos(e.clientX, e.clientY);
            return;
         }
+        if (localState.activeTool === 'fog_brush' && e.button === 0) {
+           isFogBrushing = true;
+           fogBrushPoints = [getWorldPos(e.clientX, e.clientY)];
+           return;
+        }
+        if (localState.activeTool === 'fog_polygon' && e.button === 0) {
+           const pos = getWorldPos(e.clientX, e.clientY);
+           if (fogPolygonPoints.length > 2) {
+              const first = fogPolygonPoints[0];
+              const dist = Math.hypot(pos.x - first.x, pos.y - first.y);
+              if (dist < 15 / viewport.scale.x) {
+                 FogOfWar.addOp({
+                   id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
+                   type: 'polygon',
+                   mode: localState.fogMode,
+                   geom: { points: [...fogPolygonPoints] }
+                 });
+                 fogPolygonPoints = [];
+                 return;
+              }
+           }
+           fogPolygonPoints.push(pos);
+           return;
+        }
+        
         if (localState.activeTool === 'pan' && e.button === 0) {
           isPanning = true;
           panStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
@@ -234,7 +259,7 @@ export const GameCanvas: React.FC = () => {
             const pts = Array.from(activePointers.values());
             pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
             pinchStartScale = viewport.scale.x;
-          } else if (activePointers.size === 1 && !['eraser', 'pen', 'shape', 'arrow', 'fog-add', 'fog-remove'].includes(localState.activeTool)) {
+          } else if (activePointers.size === 1 && !['eraser', 'pen', 'shape', 'arrow', 'fog-add', 'fog-remove', 'fog_brush', 'fog_polygon'].includes(localState.activeTool)) {
             isTouchPanning = true;
             touchPanStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
             longPressStart = { x: e.clientX, y: e.clientY };
@@ -549,20 +574,18 @@ export const GameCanvas: React.FC = () => {
       const handlePointerUp = (e: PointerEvent) => {
         if (isFogBrushing) {
           if (fogBrushPoints.length > 1) {
-            import('../store/modules').then(s => { s.FogOfWar.addOp({
-                 id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
-                 type: 'path',
-                 mode: localState.fogMode,
-                 geom: { points: [...fogBrushPoints], width: (localState.drawWidth || 4) * 5 * 2 + 20 }
-               });
+            FogOfWar.addOp({
+              id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
+              type: 'path',
+              mode: localState.fogMode,
+              geom: { points: [...fogBrushPoints], width: (localState.drawWidth || 4) * 5 * 2 + 20 }
             });
           } else if (fogBrushPoints.length === 1) {
-            import('../store/modules').then(s => { s.FogOfWar.addOp({
-                 id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
-                 type: 'circle',
-                 mode: localState.fogMode,
-                 geom: { x: fogBrushPoints[0].x, y: fogBrushPoints[0].y, r: (localState.drawWidth || 4) * 5 + 10 }
-               });
+            FogOfWar.addOp({
+              id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
+              type: 'circle',
+              mode: localState.fogMode,
+              geom: { x: fogBrushPoints[0].x, y: fogBrushPoints[0].y, r: (localState.drawWidth || 4) * 5 + 10 }
             });
           }
           fogBrushPoints = [];
@@ -1075,7 +1098,8 @@ export const GameCanvas: React.FC = () => {
         isFill: boolean,
         colorVal: number,
         strokeWidth: number = 0,
-        strokeAlpha: number = 1
+        strokeAlpha: number = 1,
+        borderStyle: string = 'solid'
       ) => {
         g.clear();
         if (shape === 'hexagon') {
@@ -1098,7 +1122,14 @@ export const GameCanvas: React.FC = () => {
         if (isFill) {
           g.fill(colorVal);
         } else {
-          g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
+          if (borderStyle === 'gradient') {
+             const gradient = new FillGradient(-size, -size, size, size);
+             gradient.addColorStop(0, 0xffffff);
+             gradient.addColorStop(1, colorVal);
+             g.stroke({ texture: gradient, width: strokeWidth, alpha: strokeAlpha });
+          } else {
+             g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
+          }
         }
       };
 
@@ -1212,8 +1243,9 @@ export const GameCanvas: React.FC = () => {
           const hpBarMode = t.hpBarMode || 'always';
           const showName = t.showName || false;
           const activeConditions = t.status_efeitos || [];
+          const borderStyle = t.borderStyle || 'solid';
 
-          const visualHash = `${shape}_${t.borderColor || ''}_${t.imageUrl || ''}_${scale}_${showName}_${hpBarMode}_${t.name || ''}_${activeConditions.join(',')}`;
+          const visualHash = `${shape}_${t.borderColor || ''}_${borderStyle}_${t.imageUrl || ''}_${scale}_${showName}_${hpBarMode}_${t.name || ''}_${activeConditions.join(',')}`;
 
           // If visual state changed, destroy and recreate
           if (tokenSprites[id] && tokenSprites[id].visualHash !== visualHash) {
@@ -1228,11 +1260,11 @@ export const GameCanvas: React.FC = () => {
             // Base background and border
             const tokenBorder = new Graphics();
             drawTokenShape(tokenBorder, shape, 26, true, 0x020617);
-            drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9);
+            drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9, borderStyle);
             if (shape === 'standee') {
               tokenBorder.ellipse(0, 26 * 1.3, 26 * 0.9, 26 * 0.2);
               tokenBorder.fill(0x020617);
-              tokenBorder.stroke({ width: 3, color: borderCol, alpha: 0.9 });
+              drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9, borderStyle);
             }
             token.addChild(tokenBorder);
 
@@ -1945,37 +1977,6 @@ export const GameCanvas: React.FC = () => {
 
       bgCatcher.on('pointerdown', (e) => {
         if (e.button === 0) {
-
-           // Fog brush
-           if (localState.activeTool === 'fog_brush') {
-             e.stopPropagation();
-             isFogBrushing = true;
-             fogBrushPoints = [viewport.toLocal(e.global)];
-             return;
-           }
-
-           // Fog polygon
-           if (localState.activeTool === 'fog_polygon') {
-             e.stopPropagation();
-             const pos = viewport.toLocal(e.global);
-             if (fogPolygonPoints.length > 2) {
-                const first = fogPolygonPoints[0];
-                const dist = Math.hypot(pos.x - first.x, pos.y - first.y);
-                if (dist < 15 / viewport.scale.x) {
-                   import('../store/modules').then(s => { s.FogOfWar.addOp({
-                       id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
-                       type: 'polygon',
-                       mode: localState.fogMode,
-                       geom: { points: [...fogPolygonPoints] }
-                     });
-                     fogPolygonPoints = [];
-                   });
-                   return;
-                }
-             }
-             fogPolygonPoints.push(pos);
-             return;
-           }
 
            // Pen, shape, arrow logic remains here since they track dragging in PIXI coordinate space
            if (localState.activeTool === 'pen' || localState.activeTool === 'shape' || localState.activeTool === 'arrow') {

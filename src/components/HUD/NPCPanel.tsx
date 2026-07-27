@@ -824,9 +824,21 @@ export const NPCPanel: React.FC = () => {
                                 style={{
                                   background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
                                   borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.65rem',
-                                  width: '100%', fontFamily: 'monospace'
+                                  width: '50px', fontFamily: 'monospace'
                                 }}
                               />
+                              <select
+                                value={t.borderStyle || 'solid'}
+                                onChange={(e) => Tokens.update(t.id, { borderStyle: e.target.value })}
+                                style={{
+                                  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                  borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 2px', fontSize: '0.65rem',
+                                  flex: 1, outline: 'none', cursor: 'pointer'
+                                }}
+                              >
+                                <option value="solid">Sólida</option>
+                                <option value="gradient">Luz (Gradiente)</option>
+                              </select>
                             </div>
                           </div>
                         </div>
@@ -1182,9 +1194,21 @@ export const NPCPanel: React.FC = () => {
                                 style={{
                                   background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
                                   borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.65rem',
-                                  width: '100%', fontFamily: 'monospace'
+                                  width: '50px', fontFamily: 'monospace'
                                 }}
                               />
+                              <select
+                                value={t.borderStyle || 'solid'}
+                                onChange={(e) => Tokens.update(t.id, { borderStyle: e.target.value })}
+                                style={{
+                                  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                  borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 2px', fontSize: '0.65rem',
+                                  flex: 1, outline: 'none', cursor: 'pointer'
+                                }}
+                              >
+                                <option value="solid">Sólida</option>
+                                <option value="gradient">Luz (Gradiente)</option>
+                              </select>
                             </div>
                           </div>
                         </div>
