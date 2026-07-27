@@ -347,19 +347,22 @@ export const StoryBilderDeckWidget = ({ onClose }: Props) => {
         .sbd-cards-container {
           display: flex;
           flex-direction: row;
+          flex-wrap: wrap;
           align-items: center;
           justify-content: center;
-          padding: 24px 16px;
+          padding: 16px;
           gap: 12px;
           flex: 1;
-          overflow: hidden; /* No scrolling */
+          overflow-y: auto;
+          align-content: center;
         }
 
         /* 3D FLIP CARD */
         .sbd-card-scene {
           perspective: 1200px;
-          flex: 0 1 240px; /* Grow up to 240px, shrink to fit container */
-          min-width: 110px;
+          flex: 1 1 calc(33.333% - 12px);
+          max-width: 180px;
+          min-width: 90px;
           aspect-ratio: 2/3.1;
           container-type: inline-size;
         }
