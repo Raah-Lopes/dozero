@@ -2871,7 +2871,6 @@ export const GameCanvas: React.FC = () => {
         window.removeEventListener('map-menu-toggle', syncGizmo);
         window.removeEventListener('tool-changed', syncGizmo);
         window.removeEventListener('focus-token', handleFocusToken);
-        state.props.unobserve(propsObserver);
       };
 
       // Add Native Window Dragging for Backgrounds (so they don't get stuck)
