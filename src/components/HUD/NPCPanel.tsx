@@ -20,6 +20,19 @@ import { confirmDialog } from '../UI/Toast';
 
 const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
 
+const CONDITIONS = [
+  { id: 'burning',    label: '🔥', title: 'Queimando',    color: '#f97316' },
+  { id: 'poisoned',  label: '☠',  title: 'Envenenado',   color: '#22c55e' },
+  { id: 'frozen',    label: '❄',  title: 'Congelado',    color: '#38bdf8' },
+  { id: 'stunned',   label: '😵', title: 'Atordoado',    color: '#a855f7' },
+  { id: 'frightened',label: '👁', title: 'Assustado',    color: '#eab308' },
+  { id: 'bleeding',  label: '🩸', title: 'Sangrando',    color: '#ef4444' },
+  { id: 'inspired',  label: '⭐', title: 'Inspirado',    color: 'var(--warning)' },
+  { id: 'invisible', label: '👻', title: 'Invisível',    color: 'var(--text-secondary)' },
+  { id: 'shielded',  label: '🛡', title: 'Protegido',    color: '#3b82f6' },
+  { id: 'weakened',  label: '💀', title: 'Enfraquecido', color: '#6b7280' },
+];
+
 export const NPCPanel: React.FC = () => {
   const [tokens, setTokens] = useState<any[]>([]);
   const [activePanelTab, setActivePanelTab] = useState<'board' | 'library'>('board');
@@ -867,8 +880,59 @@ export const NPCPanel: React.FC = () => {
                               onChange={(e) => handleUpdateTokenProp(t, 'showName', e.target.checked)}
                               style={{ accentColor: 'var(--accent-primary)' }}
                             />
-                            <span>Exibir Tag de Nome</span>
+                            <span>Tag Nome</span>
                           </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                            <input
+                              type="checkbox"
+                              checked={t.inCombat !== false}
+                              onChange={(e) => handleUpdateTokenProp(t, 'inCombat', e.target.checked)}
+                              style={{ accentColor: 'var(--accent-primary)' }}
+                            />
+                            <span>Ativo Iniciativa</span>
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                            <input
+                              type="checkbox"
+                              checked={t.hasVision === true}
+                              onChange={(e) => {
+                                handleUpdateTokenProp(t, 'hasVision', e.target.checked);
+                                if (e.target.checked && !t.visionRadius) handleUpdateTokenProp(t, 'visionRadius', 200);
+                              }}
+                              style={{ accentColor: 'var(--accent-primary)' }}
+                            />
+                            <span>Visão (Névoa)</span>
+                          </label>
+                        </div>
+                        
+                        {/* Status/Conditions */}
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                          <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Condições</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {CONDITIONS.map(cond => {
+                              const isActive = (t.status_efeitos || []).includes(cond.id);
+                              return (
+                                <button
+                                  key={cond.id}
+                                  title={cond.title}
+                                  onClick={(e) => { e.stopPropagation(); Tokens.toggleEffect(t.id, cond.id); }}
+                                  style={{
+                                    background: isActive ? cond.color : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${isActive ? cond.color : 'var(--glass-border)'}`,
+                                    borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem',
+                                    color: isActive ? '#000' : 'var(--text-secondary)',
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px'
+                                  }}
+                                >
+                                  {cond.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Close Button */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
                           <button
                             onClick={() => setExpandedTokenId(null)}
                             style={{
@@ -1174,8 +1238,59 @@ export const NPCPanel: React.FC = () => {
                               onChange={(e) => handleUpdateTokenProp(t, 'showName', e.target.checked)}
                               style={{ accentColor: 'var(--accent-primary)' }}
                             />
-                            <span>Exibir Tag de Nome</span>
+                            <span>Tag Nome</span>
                           </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                            <input
+                              type="checkbox"
+                              checked={t.inCombat !== false}
+                              onChange={(e) => handleUpdateTokenProp(t, 'inCombat', e.target.checked)}
+                              style={{ accentColor: 'var(--accent-primary)' }}
+                            />
+                            <span>Ativo Iniciativa</span>
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                            <input
+                              type="checkbox"
+                              checked={t.hasVision === true}
+                              onChange={(e) => {
+                                handleUpdateTokenProp(t, 'hasVision', e.target.checked);
+                                if (e.target.checked && !t.visionRadius) handleUpdateTokenProp(t, 'visionRadius', 200);
+                              }}
+                              style={{ accentColor: 'var(--accent-primary)' }}
+                            />
+                            <span>Visão (Névoa)</span>
+                          </label>
+                        </div>
+                        
+                        {/* Status/Conditions */}
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                          <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Condições</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {CONDITIONS.map(cond => {
+                              const isActive = (t.status_efeitos || []).includes(cond.id);
+                              return (
+                                <button
+                                  key={cond.id}
+                                  title={cond.title}
+                                  onClick={(e) => { e.stopPropagation(); Tokens.toggleEffect(t.id, cond.id); }}
+                                  style={{
+                                    background: isActive ? cond.color : 'rgba(255,255,255,0.05)',
+                                    border: `1px solid ${isActive ? cond.color : 'var(--glass-border)'}`,
+                                    borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem',
+                                    color: isActive ? '#000' : 'var(--text-secondary)',
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px'
+                                  }}
+                                >
+                                  {cond.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Close Button */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
                           <button
                             onClick={() => setExpandedTokenId(null)}
                             style={{

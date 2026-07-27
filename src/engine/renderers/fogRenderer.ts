@@ -64,6 +64,8 @@ export function renderFogOfWar(
     fogContainer.visible = false;
     return;
   }
+  
+  fogContainer.visible = true;
 
   // 1. Reset and manage pool
   const pool = (fogContainer as any).fogPool || [];
@@ -165,28 +167,39 @@ export function renderFogOfWar(
   fogOps.forEach(op => {
     const isReveal = op.mode === 'reveal';
     const g = getGfx(isReveal ? 'erase' : 'normal');
+    let gmGfx = null;
+    if (localState.isGM) {
+       gmGfx = getGfx('normal'); // Separate graphics object for GM lines so it doesn't use erase blend mode
+    }
 
     if (op.type === 'circle') {
       const geom = op.geom as FogGeomCircle;
       g.circle(geom.x, geom.y, geom.r);
+      if (gmGfx) gmGfx.circle(geom.x, geom.y, geom.r);
     } else if (op.type === 'square') {
       const geom = op.geom as FogGeomSquare;
       g.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
+      if (gmGfx) gmGfx.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
     } else if (op.type === 'polygon') {
       const geom = op.geom as FogGeomPolygon;
       if (geom.points && geom.points.length > 2) {
         g.moveTo(geom.points[0].x, geom.points[0].y);
+        if (gmGfx) gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
         for (let i = 1; i < geom.points.length; i++) {
           g.lineTo(geom.points[i].x, geom.points[i].y);
+          if (gmGfx) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
         }
         g.lineTo(geom.points[0].x, geom.points[0].y);
+        if (gmGfx) gmGfx.lineTo(geom.points[0].x, geom.points[0].y);
       }
     } else if (op.type === 'path') {
       const geom = op.geom as any;
       if (geom.points && geom.points.length > 1) {
         g.moveTo(geom.points[0].x, geom.points[0].y);
+        if (gmGfx) gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
         for (let i = 1; i < geom.points.length; i++) {
           g.lineTo(geom.points[i].x, geom.points[i].y);
+          if (gmGfx) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
         }
       }
     }
@@ -197,12 +210,19 @@ export function renderFogOfWar(
       } else {
         g.fill({ color: 0xffffff, alpha: 1 });
       }
+      if (gmGfx) {
+         if (op.type === 'path') {
+            gmGfx.stroke({ color: 0x475569, alpha: 0.8, width: 2, cap: 'round', join: 'round' });
+         } else {
+            gmGfx.stroke({ width: 2, color: 0x475569, alpha: 0.8 });
+         }
+      }
     } else {
-      if (localState.isGM) {
+      if (gmGfx) {
         if (op.type === 'path') {
-          g.stroke({ color: 0xef4444, alpha: 0.6, width: 2, cap: 'round', join: 'round' });
+          gmGfx.stroke({ color: 0x475569, alpha: 0.8, width: 2, cap: 'round', join: 'round' });
         } else {
-          g.stroke({ width: 2, color: 0xef4444, alpha: 0.6 });
+          gmGfx.stroke({ width: 2, color: 0x475569, alpha: 0.8 });
         }
       }
     }

@@ -4,6 +4,8 @@ import { X, DoorOpen } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
 import { LivingBrain } from './components/Wiki/LivingBrain';
 import { GameCanvas } from './engine/GameCanvas';
+import { GMToolbar } from './components/HUD/GMToolbar';
+import { TokenContextHUD } from './components/HUD/TokenContextHUD';
 import { CombatLog } from './components/Chat/CombatLog';
 import { ChatWindow } from './components/Chat/ChatWindow';
 import { SettingsModal } from './components/Modals/SettingsModal';
@@ -172,6 +174,8 @@ function App() {
           <ErrorBoundary componentName="Mapa Interativo (GameCanvas)">
             <GameCanvas />
             <GridToolbar />
+            <GMToolbar />
+            <TokenContextHUD />
             <MapContextMenu />
             <ImageContextBar />
             <TextContextBar />

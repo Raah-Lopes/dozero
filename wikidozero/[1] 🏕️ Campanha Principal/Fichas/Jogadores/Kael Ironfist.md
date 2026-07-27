@@ -77,7 +77,29 @@ constituicao: 15
 inteligencia: 10
 sabedoria: 10
 carisma: 10
+hasVision: false
+showName: false
+inCombat: true
+visionRadius: 200
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Kael Ironfist 🪓
 

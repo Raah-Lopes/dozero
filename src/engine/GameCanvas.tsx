@@ -207,33 +207,6 @@ export const GameCanvas: React.FC = () => {
       });
 
       canvasEl.addEventListener('pointerdown', (e) => {
-        if (localState.activeTool === 'fog_brush' && e.button === 0) {
-          isFogBrushing = true;
-          const pos = getWorldPos(e.clientX, e.clientY);
-          fogBrushPoints = [pos];
-          return;
-        }
-        if (localState.activeTool === 'fog_polygon' && e.button === 0) {
-          const pos = getWorldPos(e.clientX, e.clientY);
-          if (fogPolygonPoints.length > 2) {
-             const first = fogPolygonPoints[0];
-             const screenFirstX = viewport.x + first.x * viewport.scale.x;
-             const screenFirstY = viewport.y + first.y * viewport.scale.y;
-             if (Math.hypot(e.clientX - screenFirstX, e.clientY - screenFirstY) < 15) {
-                import('../store/modules').then(s => { s.FogOfWar.addOp({
-                    id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
-                    type: 'polygon',
-                    mode: localState.fogMode,
-                    geom: { points: [...fogPolygonPoints] }
-                  });
-                  fogPolygonPoints = [];
-                });
-                return;
-             }
-          }
-          fogPolygonPoints.push(pos);
-          return;
-        }
 
         if ((e.shiftKey || localState.activeTool === 'ruler') && e.button === 0) {
            isMeasuring = true;
@@ -1727,27 +1700,30 @@ export const GameCanvas: React.FC = () => {
             e.stopPropagation();
             if (isDoubleClick) window.dispatchEvent(new CustomEvent('token-dblclick', { detail: { tokenId: hitTokenId } }));
             
-            // Set up instant drag!
-            draggingTokenId = hitTokenId;
-            tokenDragOffsets = {};
-            tokenStartPositions = {};
-            
-            const selectedTokens = localState.selectedTokens ? Array.from(localState.selectedTokens) : [];
-            const isAlreadySelected = selectedTokens.includes(hitTokenId);
-            
-            // If dragging a token not in current selection (and not holding shift), it becomes the only selection
-            if (!shift && !isAlreadySelected) {
-               tokenDragOffsets[hitTokenId] = { x: tokenSprites[hitTokenId].container.x - localPos.x, y: tokenSprites[hitTokenId].container.y - localPos.y };
-               tokenStartPositions[hitTokenId] = { x: tokenSprites[hitTokenId].container.x, y: tokenSprites[hitTokenId].container.y };
-            } else {
-               // Drag all currently selected tokens + the hit one
-               const toDrag = new Set([...selectedTokens, hitTokenId]);
-               toDrag.forEach(tId => {
-                  if (tokenSprites[tId]?.container) {
-                     tokenDragOffsets[tId] = { x: tokenSprites[tId].container.x - localPos.x, y: tokenSprites[tId].container.y - localPos.y };
-                     tokenStartPositions[tId] = { x: tokenSprites[tId].container.x, y: tokenSprites[tId].container.y };
-                  }
-               });
+            // Set up instant drag if not locked
+            const tData = state.tokens.get(hitTokenId) as any;
+            if (!tData || !tData.locked) {
+               draggingTokenId = hitTokenId;
+               tokenDragOffsets = {};
+               tokenStartPositions = {};
+               
+               const selectedTokens = localState.selectedTokens ? Array.from(localState.selectedTokens) : [];
+               const isAlreadySelected = selectedTokens.includes(hitTokenId);
+               
+               // If dragging a token not in current selection (and not holding shift), it becomes the only selection
+               if (!shift && !isAlreadySelected) {
+                  tokenDragOffsets[hitTokenId] = { x: tokenSprites[hitTokenId].container.x - localPos.x, y: tokenSprites[hitTokenId].container.y - localPos.y };
+                  tokenStartPositions[hitTokenId] = { x: tokenSprites[hitTokenId].container.x, y: tokenSprites[hitTokenId].container.y };
+               } else {
+                  // Drag all currently selected tokens + the hit one
+                  const toDrag = new Set([...selectedTokens, hitTokenId]);
+                  toDrag.forEach(tId => {
+                     if (tokenSprites[tId]?.container) {
+                        tokenDragOffsets[tId] = { x: tokenSprites[tId].container.x - localPos.x, y: tokenSprites[tId].container.y - localPos.y };
+                        tokenStartPositions[tId] = { x: tokenSprites[tId].container.x, y: tokenSprites[tId].container.y };
+                     }
+                  });
+               }
             }
 
             import('../store').then(s => {
@@ -1969,6 +1945,37 @@ export const GameCanvas: React.FC = () => {
 
       bgCatcher.on('pointerdown', (e) => {
         if (e.button === 0) {
+
+           // Fog brush
+           if (localState.activeTool === 'fog_brush') {
+             e.stopPropagation();
+             isFogBrushing = true;
+             fogBrushPoints = [viewport.toLocal(e.global)];
+             return;
+           }
+
+           // Fog polygon
+           if (localState.activeTool === 'fog_polygon') {
+             e.stopPropagation();
+             const pos = viewport.toLocal(e.global);
+             if (fogPolygonPoints.length > 2) {
+                const first = fogPolygonPoints[0];
+                const dist = Math.hypot(pos.x - first.x, pos.y - first.y);
+                if (dist < 15 / viewport.scale.x) {
+                   import('../store/modules').then(s => { s.FogOfWar.addOp({
+                       id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7),
+                       type: 'polygon',
+                       mode: localState.fogMode,
+                       geom: { points: [...fogPolygonPoints] }
+                     });
+                     fogPolygonPoints = [];
+                   });
+                   return;
+                }
+             }
+             fogPolygonPoints.push(pos);
+             return;
+           }
 
            // Pen, shape, arrow logic remains here since they track dragging in PIXI coordinate space
            if (localState.activeTool === 'pen' || localState.activeTool === 'shape' || localState.activeTool === 'arrow') {

@@ -223,7 +223,8 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
   };
 
   const handleRollAll = () => {
-    const tokens = Array.from(state.tokens.values() as Iterable<any>);
+    const tokens = Array.from(state.tokens.values() as Iterable<any>)
+      .filter(t => t.inCombat !== false && t.x > -1000);
     if (tokens.length === 0) return;
     const newP: CombatParticipant[] = tokens.map(t => ({
       tokenId: t.id, name: t.name || 'Desconhecido', initiative: Math.floor(Math.random() * 20) + 1, imageUrl: t.imageUrl,
@@ -231,7 +232,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
     newP.sort((a, b) => b.initiative - a.initiative);
     state.combat.set('participants', newP);
     state.combat.set('turnIndex', 0);
-    pushChatMessage(`<b>Iniciativa Automática</b> rolada para ${tokens.length} personagens!`, false, false);
+    pushChatMessage(`<b>Iniciativa Automática</b> rolada para ${tokens.length} combatentes!`, false, false);
   };
 
   const sendUrgency = (msg: string) => pushChatMessage(msg, true, false);

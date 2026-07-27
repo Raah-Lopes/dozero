@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain';
 export type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
+export type InteractionTool = 'CURSOR' | 'FOG' | 'RULER' | 'MEASURE';
 
 interface WindowManagerState {
   // Generic openWindows (e.g. combatLog, etc)
@@ -16,6 +17,9 @@ interface WindowManagerState {
   setViewMode: (mode: ViewMode) => void;
   activeModal: ModalMode;
   setActiveModal: (modal: ModalMode) => void;
+
+  activeTool: InteractionTool;
+  setActiveTool: (tool: InteractionTool) => void;
 
   // Toggle panels
   showActors: boolean;
@@ -75,6 +79,9 @@ export const useWindowManager = create<WindowManagerState>((set) => ({
 
   activeModal: 'none',
   setActiveModal: (modal) => set({ activeModal: modal }),
+
+  activeTool: 'CURSOR',
+  setActiveTool: (tool) => set({ activeTool: tool }),
 
   showActors: false,
   setShowActors: (show) => set({ showActors: show }),

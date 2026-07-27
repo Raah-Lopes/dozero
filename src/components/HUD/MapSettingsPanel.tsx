@@ -306,61 +306,6 @@ export const MapSettingsPanel: React.FC = () => {
             </div>
           </details>
 
-          <details className="glass-accordion">
-            <summary><div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><EyeOff size={16} /> Névoa de Guerra (FOW)</div></summary>
-            <div className="accordion-content">
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
-                <input 
-                  type="checkbox" checked={fogConfig.enabled}
-                  onChange={e => Config.updateFog({ enabled: e.target.checked })}
-                />
-                <strong>Ativar Fog of War</strong>
-              </label>
-              
-              {fogConfig.enabled && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '4px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Formato da Visão</span>
-                      <select 
-                        value={fogConfig.shape} 
-                        onChange={e => Config.updateFog({ shape: e.target.value as any })}
-                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width:'100%' }}
-                      >
-                        <option value="circle">Círculo</option>
-                        <option value="square">Quadrado</option>
-                        <option value="hexagon">Hexágono</option>
-                      </select>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor da Névoa</span>
-                      <input 
-                        type="color" value={fogConfig.color || '#000000'} 
-                        onChange={e => Config.updateFog({ color: e.target.value })}
-                        style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
-                      />
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Raio de Visão (Quadrados: {fogConfig.radius})</span>
-                    <input 
-                      type="range" value={fogConfig.radius} min="1" max="50" step="1"
-                      onChange={e => Config.updateFog({ radius: Number(e.target.value) })}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                    <input 
-                      type="checkbox" checked={fogConfig.hideTokens}
-                      onChange={e => Config.updateFog({ hideTokens: e.target.checked })}
-                    />
-                    Ocultar tokens fora da visão
-                  </label>
-                </div>
-              )}
-            </div>
-          </details>
-
         </div>
       )}
 
