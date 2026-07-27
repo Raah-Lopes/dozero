@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { wikiLocalApi } from './vite-plugins/wiki-api'
@@ -46,6 +47,11 @@ export default defineConfig({
   },
   define: {
     'import.meta.env.VITE_LOCAL_IP': JSON.stringify(getLocalIP())
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/__tests__/setup.ts']
   }
 })
 // Ponytail: Forçando restart do servidor Vite para limpar o cache de import-analysis de qrcode.react
