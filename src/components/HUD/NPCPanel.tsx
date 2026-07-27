@@ -915,6 +915,20 @@ export const NPCPanel: React.FC = () => {
                             />
                             <span>Visão (Névoa)</span>
                           </label>
+                          {t.hasVision && (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                              <span>Raio(px):</span>
+                              <input
+                                type="number"
+                                value={t.visionRadius || 200}
+                                onChange={(e) => handleUpdateTokenProp(t, 'visionRadius', parseInt(e.target.value) || 200)}
+                                style={{
+                                  width: '40px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                  borderRadius: '4px', color: 'white', padding: '1px 2px', fontSize: '0.65rem'
+                                }}
+                              />
+                            </label>
+                          )}
                         </div>
                         
                         {/* Status/Conditions */}
@@ -1285,6 +1299,20 @@ export const NPCPanel: React.FC = () => {
                             />
                             <span>Visão (Névoa)</span>
                           </label>
+                          {t.hasVision && (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                              <span>Raio(px):</span>
+                              <input
+                                type="number"
+                                value={t.visionRadius || 200}
+                                onChange={(e) => handleUpdateTokenProp(t, 'visionRadius', parseInt(e.target.value) || 200)}
+                                style={{
+                                  width: '40px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                  borderRadius: '4px', color: 'white', padding: '1px 2px', fontSize: '0.65rem'
+                                }}
+                              />
+                            </label>
+                          )}
                         </div>
                         
                         {/* Status/Conditions */}
