@@ -3,18 +3,18 @@ import { pixelToHex, hexToPixel } from '../utils/gridUtils';
 
 export function renderGrid(grid: Graphics, config: any) {
   grid.clear();
-  if (config.gridType === 'none' || config.gridAlpha <= 0) return;
+  if (config.map.gridType === 'none' || config.map.gridAlpha <= 0) return;
 
   let colorNum = 0x00f3ff;
-  if (config.gridColor && config.gridColor.startsWith('#')) {
-    colorNum = parseInt(config.gridColor.replace('#', '0x'), 16);
+  if (config.map.gridColor && config.map.gridColor.startsWith('#')) {
+    colorNum = parseInt(config.map.gridColor.replace('#', '0x'), 16);
   }
 
-  const size = config.gridSize || 50;
+  const size = config.map.gridSize || 50;
   const range = 2500; // Limits grid to 5000x5000 bounds to prevent WebGL buffer overflow
 
-  if (config.gridType === 'square') {
-    grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.gridAlpha });
+  if (config.map.gridType === 'square') {
+    grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.map.gridAlpha });
     for (let i = -range; i < range; i += size) {
       grid.moveTo(i, -range);
       grid.lineTo(i, range);
@@ -24,17 +24,17 @@ export function renderGrid(grid: Graphics, config: any) {
       grid.lineTo(range, j);
     }
     grid.stroke();
-  } else if (config.gridType === 'dots_square') {
+  } else if (config.map.gridType === 'dots_square') {
     const radius = Math.max(2, size * 0.05);
     for (let i = -range; i < range; i += size) {
       for (let j = -range; j < range; j += size) {
         grid.rect(i - radius, j - radius, radius * 2, radius * 2);
       }
     }
-    grid.fill({ color: colorNum, alpha: config.gridAlpha });
-  } else if (config.gridType === 'hex_v' || config.gridType === 'hex_h') {
-    grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.gridAlpha });
-    const type = config.gridType;
+    grid.fill({ color: colorNum, alpha: config.map.gridAlpha });
+  } else if (config.map.gridType === 'hex_v' || config.map.gridType === 'hex_h') {
+    grid.setStrokeStyle({ width: 1, color: colorNum, alpha: config.map.gridAlpha });
+    const type = config.map.gridType;
     const stepX = (type === 'hex_v') ? size * Math.sqrt(3) : size * 1.5;
     const stepY = (type === 'hex_v') ? size * 1.5 : size * Math.sqrt(3);
 
@@ -59,7 +59,7 @@ export function renderGrid(grid: Graphics, config: any) {
       }
     }
     grid.stroke();
-  } else if (config.gridType === 'dots_hex') {
+  } else if (config.map.gridType === 'dots_hex') {
     const radius = Math.max(2, size * 0.05);
     const stepX = size * Math.sqrt(3);
     const stepY = size * 1.5;
@@ -75,6 +75,6 @@ export function renderGrid(grid: Graphics, config: any) {
         grid.rect(center.x - radius, center.y - radius, radius * 2, radius * 2);
       }
     }
-    grid.fill({ color: colorNum, alpha: config.gridAlpha });
+    grid.fill({ color: colorNum, alpha: config.map.gridAlpha });
   }
 }

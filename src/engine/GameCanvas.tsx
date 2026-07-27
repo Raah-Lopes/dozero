@@ -507,8 +507,8 @@ export const GameCanvas: React.FC = () => {
         }
         if (isMeasuring) {
           const currentPos = getWorldPos(e.clientX, e.clientY);
-          const config = Config.getMapConfig();
-          renderRuler(rulerGraphic, rulerText, measureStart, currentPos, config.gridSize, viewport.scale.x);
+          const config = Config.getAll();
+          renderRuler(rulerGraphic, rulerText, measureStart, currentPos, config.map.gridSize, viewport.scale.x);
         }
         
         if (isDrawing) {
@@ -718,7 +718,7 @@ export const GameCanvas: React.FC = () => {
           const worldPoint = viewport.toLocal({ x: dropX, y: dropY });
           
           // Snap to grid
-          const config = Config.getMapConfig();
+          const config = Config.getAll();
           const snapped = snapToGrid(worldPoint.x, worldPoint.y, config);
           
           if (tokenId) {
@@ -799,12 +799,12 @@ export const GameCanvas: React.FC = () => {
 
       const drawGrid = () => {
         grid.clear();
-        const config = Config.getMapConfig();
+        const config = Config.getAll();
         
-        if (config.mapBackgroundColor && config.mapBackgroundColor !== 'transparent') {
+        if (config.map.mapBackgroundColor && config.map.mapBackgroundColor !== 'transparent') {
           app.renderer.background.alpha = 1;
-          app.renderer.background.color = config.mapBackgroundColor.startsWith('#') 
-            ? parseInt(config.mapBackgroundColor.replace('#', '0x'), 16) 
+          app.renderer.background.color = config.map.mapBackgroundColor.startsWith('#') 
+            ? parseInt(config.map.mapBackgroundColor.replace('#', '0x'), 16) 
             : 0x000000;
         } else {
           app.renderer.background.alpha = 0;
@@ -819,22 +819,22 @@ export const GameCanvas: React.FC = () => {
       const propHoverTexts: Record<string, Text> = {};
 
       const drawFogOfWar = () => {
-        const config = Config.getMapConfig();
+        const config = Config.getAll();
         const tokens = Array.from(state.tokens.values()) as any[];
         
         // Determinar quais tokens geram visão (apenas os que tem hasVision ativo, default true).
         // Se fowHideTokens estiver ativo e houver tokens selecionados, a visão é gerada APENAS pelos tokens selecionados (Player View).
         // Assim, os monstros deselecionados não geram buracos na névoa e podem ser escondidos.
         let visionSources = tokens.filter(t => t.hasVision !== false);
-        if (config.fowHideTokens && localState.selectedTokens && localState.selectedTokens.size > 0) {
+        if (config.fog.hideTokens && localState.selectedTokens && localState.selectedTokens.size > 0) {
            visionSources = visionSources.filter(t => localState.selectedTokens.has(t.id));
         }
 
         const currentHash = JSON.stringify({
-          enabled: config.fogOfWar,
-          radius: config.fowRadius,
-          shape: config.fowShape,
-          color: config.fowColor,
+          enabled: config.fog.enabled,
+          radius: config.fog.radius,
+          shape: config.fog.shape,
+          color: config.fog.color,
           viewport: { x: viewport.x, y: viewport.y, scale: viewport.scale.x },
           visionSources: visionSources.map(t => ({ id: t.id, x: t.x, y: t.y, visionRadius: t.visionRadius })),
           opsCount: FogOfWar.getOps().length
@@ -845,10 +845,10 @@ export const GameCanvas: React.FC = () => {
 
         renderFogOfWar(fogContainer, fogOverlay, config, viewport, visionSources);
         
-        if (config.fogOfWar) {
+        if (config.fog.enabled) {
 
           // Hide tokens if requested
-          if (config.fowHideTokens) {
+          if (config.fog.hideTokens) {
             Object.entries(tokenSprites).forEach(([id, spriteRecord]) => {
               const t = state.tokens.get(id) as any;
               if (!t) return;
@@ -862,13 +862,13 @@ export const GameCanvas: React.FC = () => {
               // Checar se o token t está dentro do buraco de visão de ALGUMA visionSource
               let isVisible = false;
               for (const src of visionSources) {
-                const radius = src.visionRadius || ((config.fowRadius || 6) * config.gridSize);
+                const radius = src.visionRadius || ((config.fog.radius || 6) * config.map.gridSize);
                 const dx = Math.abs(t.x - src.x);
                 const dy = Math.abs(t.y - src.y);
                 
-                if (config.fowShape === 'square') {
+                if (config.fog.shape === 'square') {
                   if (dx <= radius && dy <= radius) isVisible = true;
-                } else if (config.fowShape === 'hexagon') {
+                } else if (config.fog.shape === 'hexagon') {
                   // Aproximação hexagonal simples
                   if (euclideanDistance(t.x, t.y, src.x, src.y) <= radius * 1.1) isVisible = true;
                 } else {
@@ -892,13 +892,13 @@ export const GameCanvas: React.FC = () => {
               
               let isVisible = false;
               for (const src of visionSources) {
-                const radius = src.visionRadius || ((config.fowRadius || 6) * config.gridSize);
+                const radius = src.visionRadius || ((config.fog.radius || 6) * config.map.gridSize);
                 const dx = Math.abs(p.x - src.x);
                 const dy = Math.abs(p.y - src.y);
                 
-                if (config.fowShape === 'square') {
+                if (config.fog.shape === 'square') {
                   if (dx <= radius && dy <= radius) isVisible = true;
-                } else if (config.fowShape === 'hexagon') {
+                } else if (config.fog.shape === 'hexagon') {
                   if (euclideanDistance(p.x, p.y, src.x, src.y) <= radius * 1.1) isVisible = true;
                 } else {
                   if (euclideanDistance(p.x, p.y, src.x, src.y) <= radius) isVisible = true;
@@ -1191,14 +1191,14 @@ export const GameCanvas: React.FC = () => {
 
           const sprite = propSprites[p.id];
           const tooltip = propHoverTexts[p.id];
-          const config = Config.getMapConfig();
+          const config = Config.getAll();
           
           sprite.x = p.x;
           sprite.y = p.y;
           
           if (sprite.texture && sprite.texture.width > 1) {
              const maxDim = Math.max(sprite.texture.width, sprite.texture.height);
-             const baseScale = config.gridSize / maxDim;
+             const baseScale = config.map.gridSize / maxDim;
              sprite.scale.set(baseScale * p.scale);
           } else {
              sprite.scale.set(p.scale);
@@ -1508,7 +1508,7 @@ export const GameCanvas: React.FC = () => {
       (app as any)._yjsObserver = syncTokens;
 
       const onDragEnd = () => {
-        const config = Config.getMapConfig();
+        const config = Config.getAll();
         let deltaX = 0; let deltaY = 0;
         let foundLeader = false;
         

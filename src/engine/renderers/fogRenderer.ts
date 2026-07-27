@@ -60,7 +60,7 @@ export function renderFogOfWar(
   viewport: { x: number; y: number; scale: { x: number; y: number } },
   visionSources: any[]
 ) {
-  if (!config.fogOfWar) {
+  if (!config.fog.enabled) {
     fogContainer.visible = false;
     return;
   }
@@ -99,8 +99,8 @@ export function renderFogOfWar(
 
   fogOverlay.rect(wl, wt, ww, wh);
   let fowColor = 0x000000;
-  if (config.fowColor && config.fowColor.startsWith('#')) {
-    fowColor = parseInt(config.fowColor.replace('#', '0x'), 16);
+  if (config.fog.color && config.fog.color.startsWith('#')) {
+    fowColor = parseInt(config.fog.color.replace('#', '0x'), 16);
   }
   fogOverlay.fill({ color: fowColor, alpha: 0.82 });
 
@@ -119,7 +119,7 @@ export function renderFogOfWar(
     const segments = extractWallSegments(fogOps);
 
     visionSources.forEach(t => {
-      const radius = t.visionRadius || ((config.fowRadius || 6) * config.gridSize);
+      const radius = t.visionRadius || ((config.fog.radius || 6) * config.map.gridSize);
       
       const poly = visibilityPolygon(t.x, t.y, segments, radius);
       
