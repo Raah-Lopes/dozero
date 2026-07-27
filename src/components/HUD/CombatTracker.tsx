@@ -22,6 +22,128 @@ const PROMPT_MACROS = [
   { label: '✨ Magia', template: 'Faíscas arcanas crepitam no ar... {next}, você sente a energia.' },
 ];
 
+const CombatParticipantRow = React.memo(({ p, index, isActive, turnIndex, isGM, tokensMap, massAttackMode, massAttackSelected, toggleMassSelect, addingConditionTo, setAddingConditionTo, hitMinion, toggleMinion, toggleAction, removeConditionFromParticipant, removeCombatParticipant, adjustHP, addConditionToParticipant }: any) => {
+  const isCurrentTurn = isActive && index === turnIndex;
+  const isNextTurn = isActive && ((index === turnIndex + 1) || (turnIndex === tokensMap.size - 1 && index === 0)); // Simplified
+  const hasPlayed = isActive && index < turnIndex;
+  const isMinion = p.minionMaxHits !== undefined;
+  const isMassSelected = massAttackSelected.includes(p.tokenId);
+
+  return (
+    <div onClick={massAttackMode ? () => toggleMassSelect(p.tokenId) : undefined}
+      style={{
+        display: 'flex', alignItems: 'center', padding: '0.75rem',
+        background: isMassSelected ? 'rgba(239,68,68,0.2)' : isCurrentTurn ? 'rgba(251,191,36,0.15)' : isNextTurn ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${isMassSelected ? 'rgba(239,68,68,0.5)' : isCurrentTurn ? 'rgba(251,191,36,0.5)' : isNextTurn ? 'rgba(59,130,246,0.3)' : 'var(--glass-border)'}`,
+        borderRadius: '12px', gap: '1rem', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
+        opacity: hasPlayed ? 0.5 : 1, transform: isCurrentTurn ? 'scale(1.02)' : 'scale(1)',
+        boxShadow: isCurrentTurn ? '0 0 20px rgba(251,191,36,0.2)' : isNextTurn ? '0 0 12px rgba(59,130,246,0.15)' : 'none',
+        position: 'relative', overflow: 'hidden', cursor: massAttackMode ? 'pointer' : 'default',
+      }}
+    >
+      {isCurrentTurn && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }} />}
+      {isNextTurn && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6', animation: 'pprPulse 1.5s ease-in-out infinite' }} />}
+
+      <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `2px solid ${isCurrentTurn ? '#fbbf24' : isNextTurn ? '#3b82f6' : 'var(--text-secondary)'}`, boxShadow: isNextTurn ? '0 0 10px rgba(59,130,246,0.4)' : 'none' }}>
+        <img loading="lazy" decoding="async" src={p.imageUrl || '/vite.svg'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+      
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ fontWeight: 'bold', color: isCurrentTurn ? '#fbbf24' : isNextTurn ? '#60a5fa' : 'white', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {p.name}
+            {isNextTurn && <span style={{ fontSize: '0.65rem', marginLeft: '6px', color: 'var(--mana)', fontWeight: 600 }}>EM ESPERA</span>}
+          </span>
+          <span style={{ fontWeight: '900', fontSize: '1.2rem', color: isCurrentTurn ? '#fbbf24' : 'var(--text-primary)', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{p.initiative}</span>
+        </div>
+
+        {isMinion ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>LACAIO</span>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              {Array.from({ length: p.minionMaxHits! }).map((_, i) => (
+                <div key={i} style={{ width: '14px', height: '14px', borderRadius: '50%', background: i < (p.minionHits ?? 0) ? '#ef4444' : 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: i < (p.minionHits ?? 0) ? '0 0 6px rgba(239,68,68,0.5)' : 'none', transition: 'all 0.3s' }} />
+              ))}
+            </div>
+            {isGM && (p.minionHits ?? 0) > 0 && (
+              <button onClick={() => hitMinion(p.tokenId)} style={{ background: 'rgba(239,68,68,0.3)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', padding: '1px 6px', fontSize: '9px', cursor: 'pointer', fontWeight: 'bold' }}>HIT!</button>
+            )}
+          </div>
+        ) : tokensMap.has(p.tokenId) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 'bold' }}>HP: {tokensMap.get(p.tokenId).hp ?? 0}/{tokensMap.get(p.tokenId).maxHp ?? 1}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--mana)', fontWeight: 'bold' }}>PM: {tokensMap.get(p.tokenId).mana ?? 0}/{tokensMap.get(p.tokenId).maxMana ?? 0}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>🛡️ {tokensMap.get(p.tokenId).defesa ?? 0}</span>
+            <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }} onClick={(e) => { e.stopPropagation(); toggleAction(p.tokenId, p.actionsRemaining ?? 3); }} title="Economia de 3 Ações">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} style={{
+                  width: '12px', height: '12px', transform: 'rotate(45deg)', cursor: 'pointer',
+                  background: i < (p.actionsRemaining ?? 3) ? '#f59e0b' : 'rgba(255,255,255,0.1)',
+                  border: `1px solid ${i < (p.actionsRemaining ?? 3) ? '#fbbf24' : 'rgba(255,255,255,0.2)'}`,
+                  boxShadow: i < (p.actionsRemaining ?? 3) ? '0 0 5px rgba(245,158,11,0.5)' : 'none',
+                  transition: 'all 0.2s'
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isGM && !isMinion && tokensMap.has(p.tokenId) && (
+          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+            <button onClick={() => adjustHP(p.tokenId, -5)} style={{ background: 'rgba(239,68,68,0.2)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-5 HP</button>
+            <button onClick={() => adjustHP(p.tokenId, -1)} style={{ background: 'rgba(239,68,68,0.2)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-1 HP</button>
+            <button onClick={() => adjustHP(p.tokenId, 1)} style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+1 HP</button>
+            <button onClick={() => adjustHP(p.tokenId, 5)} style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+5 HP</button>
+          </div>
+        )}
+        
+        {p.conditions && p.conditions.length > 0 && (
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+            {p.conditions.map((c: any) => (
+              <div key={c.id} style={{ fontSize: '0.7rem', background: c.type === 'damage' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: c.type === 'damage' ? '#fca5a5' : '#6ee7b7', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', border: c.type === 'damage' ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)' }}>
+                {c.type === 'damage' ? '🩸' : '💚'} {c.name} ({c.durationTurns}t)
+                {isGM && <button onClick={() => removeConditionFromParticipant(p.tokenId, c.id)} style={{ background: 'transparent', border: 'none', color: 'inherit', padding: 0, marginLeft: '2px', cursor: 'pointer' }}>×</button>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isGM && !massAttackMode && (
+          <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+            <button onClick={() => removeCombatParticipant(p.tokenId)} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Skull size={10} /> Matar</button>
+            <button onClick={() => { if ((window as any).rollLootForNPC) (window as any).rollLootForNPC(p.name, 'Nv 3'); else toast.info('Abra o Gerador de NPCs!'); }} style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--warning)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>💰 Loot</button>
+            <button onClick={() => setAddingConditionTo(addingConditionTo === p.tokenId ? null : p.tokenId)} style={{ background: addingConditionTo === p.tokenId ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.3)', color: 'var(--accent-primary)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><PlusCircle size={10} /> Status</button>
+            <button onClick={() => toggleMinion(p.tokenId)} style={{ background: isMinion ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.05)', border: `1px solid ${isMinion ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.1)'}`, color: isMinion ? '#fcd34d' : '#94a3b8', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Target size={10} /> {isMinion ? 'Normal' : 'Lacaio'}</button>
+          </div>
+        )}
+
+        {addingConditionTo === p.tokenId && (
+          <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
+            <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', marginBottom: '4px', fontWeight: 'bold' }}>Novo Status</div>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Sangramento', durationTurns: 3, type: 'damage', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>🩸 Sangramento (3t/5d)</button>
+              <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Veneno', durationTurns: 5, type: 'damage', value: 2 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(16,185,129,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>☠️ Veneno (5t/2d)</button>
+              <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Regeneração', durationTurns: 3, type: 'heal', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(59,130,246,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>💚 Regeneração (3t/5c)</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.p === nextProps.p &&
+    prevProps.index === nextProps.index &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.turnIndex === nextProps.turnIndex &&
+    prevProps.isGM === nextProps.isGM &&
+    prevProps.massAttackMode === nextProps.massAttackMode &&
+    prevProps.massAttackSelected.includes(prevProps.p.tokenId) === nextProps.massAttackSelected.includes(nextProps.p.tokenId) &&
+    prevProps.addingConditionTo === nextProps.addingConditionTo &&
+    prevProps.tokensMap.get(prevProps.p.tokenId) === nextProps.tokensMap.get(nextProps.p.tokenId)
+  );
+});
+
 export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => {
   const [participants, setParticipants] = useState<CombatParticipant[]>([]);
   const [turnIndex, setTurnIndex] = useState(0);
@@ -190,115 +312,29 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
             )}
           </div>
         ) : (
-          participants.map((p, index) => {
-            const isCurrentTurn = isActive && index === turnIndex;
-            const isNextTurn = isActive && ((index === turnIndex + 1) || (turnIndex === participants.length - 1 && index === 0));
-            const hasPlayed = isActive && index < turnIndex;
-            const isMinion = p.minionMaxHits !== undefined;
-            const isMassSelected = massAttackSelected.includes(p.tokenId);
-
-            return (
-              <div key={p.tokenId} onClick={massAttackMode ? () => toggleMassSelect(p.tokenId) : undefined}
-                style={{
-                  display: 'flex', alignItems: 'center', padding: '0.75rem',
-                  background: isMassSelected ? 'rgba(239,68,68,0.2)' : isCurrentTurn ? 'rgba(251,191,36,0.15)' : isNextTurn ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${isMassSelected ? 'rgba(239,68,68,0.5)' : isCurrentTurn ? 'rgba(251,191,36,0.5)' : isNextTurn ? 'rgba(59,130,246,0.3)' : 'var(--glass-border)'}`,
-                  borderRadius: '12px', gap: '1rem', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
-                  opacity: hasPlayed ? 0.5 : 1, transform: isCurrentTurn ? 'scale(1.02)' : 'scale(1)',
-                  boxShadow: isCurrentTurn ? '0 0 20px rgba(251,191,36,0.2)' : isNextTurn ? '0 0 12px rgba(59,130,246,0.15)' : 'none',
-                  position: 'relative', overflow: 'hidden', cursor: massAttackMode ? 'pointer' : 'default',
-                }}
-              >
-                {isCurrentTurn && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }} />}
-                {isNextTurn && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6', animation: 'pprPulse 1.5s ease-in-out infinite' }} />}
-
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `2px solid ${isCurrentTurn ? '#fbbf24' : isNextTurn ? '#3b82f6' : 'var(--text-secondary)'}`, boxShadow: isNextTurn ? '0 0 10px rgba(59,130,246,0.4)' : 'none' }}>
-                  <img loading="lazy" decoding="async" src={p.imageUrl || '/vite.svg'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontWeight: 'bold', color: isCurrentTurn ? '#fbbf24' : isNextTurn ? '#60a5fa' : 'white', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {p.name}
-                      {isNextTurn && <span style={{ fontSize: '0.65rem', marginLeft: '6px', color: 'var(--mana)', fontWeight: 600 }}>EM ESPERA</span>}
-                    </span>
-                    <span style={{ fontWeight: '900', fontSize: '1.2rem', color: isCurrentTurn ? '#fbbf24' : 'var(--text-primary)', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{p.initiative}</span>
-                  </div>
-
-                  {isMinion ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>LACAIO</span>
-                      <div style={{ display: 'flex', gap: '3px' }}>
-                        {Array.from({ length: p.minionMaxHits! }).map((_, i) => (
-                          <div key={i} style={{ width: '14px', height: '14px', borderRadius: '50%', background: i < (p.minionHits ?? 0) ? '#ef4444' : 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: i < (p.minionHits ?? 0) ? '0 0 6px rgba(239,68,68,0.5)' : 'none', transition: 'all 0.3s' }} />
-                        ))}
-                      </div>
-                      {isGM && (p.minionHits ?? 0) > 0 && (
-                        <button onClick={() => hitMinion(p.tokenId)} style={{ background: 'rgba(239,68,68,0.3)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', padding: '1px 6px', fontSize: '9px', cursor: 'pointer', fontWeight: 'bold' }}>HIT!</button>
-                      )}
-                    </div>
-                  ) : tokensMap.has(p.tokenId) && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 'bold' }}>HP: {tokensMap.get(p.tokenId).hp ?? 0}/{tokensMap.get(p.tokenId).maxHp ?? 1}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--mana)', fontWeight: 'bold' }}>PM: {tokensMap.get(p.tokenId).mana ?? 0}/{tokensMap.get(p.tokenId).maxMana ?? 0}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>🛡️ {tokensMap.get(p.tokenId).defesa ?? 0}</span>
-                      <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }} onClick={(e) => { e.stopPropagation(); toggleAction(p.tokenId, p.actionsRemaining ?? 3); }} title="Economia de 3 Ações">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <div key={i} style={{
-                            width: '12px', height: '12px', transform: 'rotate(45deg)', cursor: 'pointer',
-                            background: i < (p.actionsRemaining ?? 3) ? '#f59e0b' : 'rgba(255,255,255,0.1)',
-                            border: `1px solid ${i < (p.actionsRemaining ?? 3) ? '#fbbf24' : 'rgba(255,255,255,0.2)'}`,
-                            boxShadow: i < (p.actionsRemaining ?? 3) ? '0 0 5px rgba(245,158,11,0.5)' : 'none',
-                            transition: 'all 0.2s'
-                          }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {isGM && !isMinion && tokensMap.has(p.tokenId) && (
-                    <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                      <button onClick={() => adjustHP(p.tokenId, -5)} style={{ background: 'rgba(239,68,68,0.2)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-5 HP</button>
-                      <button onClick={() => adjustHP(p.tokenId, -1)} style={{ background: 'rgba(239,68,68,0.2)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>-1 HP</button>
-                      <button onClick={() => adjustHP(p.tokenId, 1)} style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+1 HP</button>
-                      <button onClick={() => adjustHP(p.tokenId, 5)} style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: 'pointer' }}>+5 HP</button>
-                    </div>
-                  )}
-                  
-                  {p.conditions && p.conditions.length > 0 && (
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
-                      {p.conditions.map(c => (
-                        <div key={c.id} style={{ fontSize: '0.7rem', background: c.type === 'damage' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: c.type === 'damage' ? '#fca5a5' : '#6ee7b7', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', border: c.type === 'damage' ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)' }}>
-                          {c.type === 'damage' ? '🩸' : '💚'} {c.name} ({c.durationTurns}t)
-                          {isGM && <button onClick={() => removeConditionFromParticipant(p.tokenId, c.id)} style={{ background: 'transparent', border: 'none', color: 'inherit', padding: 0, marginLeft: '2px', cursor: 'pointer' }}>×</button>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {isGM && !massAttackMode && (
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      <button onClick={() => removeCombatParticipant(p.tokenId)} style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Skull size={10} /> Matar</button>
-                      <button onClick={() => { if ((window as any).rollLootForNPC) (window as any).rollLootForNPC(p.name, 'Nv 3'); else toast.info('Abra o Gerador de NPCs!'); }} style={{ background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.3)', color: 'var(--warning)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>💰 Loot</button>
-                      <button onClick={() => setAddingConditionTo(addingConditionTo === p.tokenId ? null : p.tokenId)} style={{ background: addingConditionTo === p.tokenId ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.3)', color: 'var(--accent-primary)', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><PlusCircle size={10} /> Status</button>
-                      <button onClick={() => toggleMinion(p.tokenId)} style={{ background: isMinion ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.05)', border: `1px solid ${isMinion ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.1)'}`, color: isMinion ? '#fcd34d' : '#94a3b8', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Target size={10} /> {isMinion ? 'Normal' : 'Lacaio'}</button>
-                    </div>
-                  )}
-
-                  {addingConditionTo === p.tokenId && (
-                    <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', marginBottom: '4px', fontWeight: 'bold' }}>Novo Status</div>
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Sangramento', durationTurns: 3, type: 'damage', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>🩸 Sangramento (3t/5d)</button>
-                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Veneno', durationTurns: 5, type: 'damage', value: 2 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(16,185,129,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>☠️ Veneno (5t/2d)</button>
-                        <button onClick={() => { addConditionToParticipant(p.tokenId, { id: Date.now().toString(), name: 'Regeneração', durationTurns: 3, type: 'heal', value: 5 }); setAddingConditionTo(null); }} style={{ fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(59,130,246,0.3)', color: 'var(--text-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>💚 Regeneração (3t/5c)</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          participants.map((p, index) => (
+            <CombatParticipantRow
+              key={p.tokenId}
+              p={p}
+              index={index}
+              isActive={isActive}
+              turnIndex={turnIndex}
+              isGM={isGM}
+              tokensMap={tokensMap}
+              massAttackMode={massAttackMode}
+              massAttackSelected={massAttackSelected}
+              toggleMassSelect={toggleMassSelect}
+              addingConditionTo={addingConditionTo}
+              setAddingConditionTo={setAddingConditionTo}
+              hitMinion={hitMinion}
+              toggleMinion={toggleMinion}
+              toggleAction={toggleAction}
+              removeConditionFromParticipant={removeConditionFromParticipant}
+              removeCombatParticipant={removeCombatParticipant}
+              adjustHP={adjustHP}
+              addConditionToParticipant={addConditionToParticipant}
+            />
+          ))
         )}
       </div>
 

@@ -3,6 +3,7 @@ import yaml from 'js-yaml';
 import { state } from '../store';
 import { loadMarkdownFile } from '../utils/githubApi';
 import type { CutsceneConfig } from '../components/Theater/CutsceneOverlay';
+import { useYjsCleanup } from './useYjsCleanup';
 
 interface UseAppEventListenersProps {
   viewMode: string;
@@ -26,6 +27,8 @@ export const useAppEventListeners = ({
   const [isLayoutPresetsOpen, setIsLayoutPresetsOpen] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
+
+  useYjsCleanup();
 
   // 1. Layout Presets & Global Search & Shortcuts
   useEffect(() => {
