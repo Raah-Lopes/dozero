@@ -832,7 +832,7 @@ export const GameCanvas: React.FC = () => {
           shape: config.fog.shape,
           color: config.fog.color,
           viewport: { x: viewport.x, y: viewport.y, scale: viewport.scale.x },
-          visionSources: visionSources.map(t => ({ id: t.id, x: t.x, y: t.y, visionRadius: t.visionRadius })),
+          visionSources: visionSources.map(t => ({ id: t.id, x: t.x, y: t.y, visionRadius: t.visionRadius, visionStyle: t.visionStyle })),
           opsCount: FogOfWar.getOps().length
         });
         
@@ -1098,8 +1098,7 @@ export const GameCanvas: React.FC = () => {
         isFill: boolean,
         colorVal: number,
         strokeWidth: number = 0,
-        strokeAlpha: number = 1,
-        borderStyle: string = 'solid'
+        strokeAlpha: number = 1
       ) => {
         g.clear();
         if (shape === 'hexagon') {
@@ -1122,15 +1121,7 @@ export const GameCanvas: React.FC = () => {
         if (isFill) {
           g.fill(colorVal);
         } else {
-          if (borderStyle === 'gradient') {
-             // Efeito de luz simulado com strokes concêntricos
-             g.stroke({ width: strokeWidth + 8, color: colorVal, alpha: strokeAlpha * 0.1 });
-             g.stroke({ width: strokeWidth + 4, color: colorVal, alpha: strokeAlpha * 0.3 });
-             g.stroke({ width: strokeWidth + 1, color: colorVal, alpha: strokeAlpha * 0.6 });
-             g.stroke({ width: strokeWidth, color: 0xffffff, alpha: strokeAlpha });
-          } else {
-             g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
-          }
+          g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
         }
       };
 
@@ -1244,9 +1235,8 @@ export const GameCanvas: React.FC = () => {
           const hpBarMode = t.hpBarMode || 'always';
           const showName = t.showName || false;
           const activeConditions = t.status_efeitos || [];
-          const borderStyle = t.borderStyle || 'solid';
 
-          const visualHash = `${shape}_${t.borderColor || ''}_${borderStyle}_${t.imageUrl || ''}_${scale}_${showName}_${hpBarMode}_${t.name || ''}_${activeConditions.join(',')}`;
+          const visualHash = `${shape}_${t.borderColor || ''}_${t.imageUrl || ''}_${scale}_${showName}_${hpBarMode}_${t.name || ''}_${activeConditions.join(',')}`;
 
           // If visual state changed, destroy and recreate
           if (tokenSprites[id] && tokenSprites[id].visualHash !== visualHash) {
@@ -1261,11 +1251,11 @@ export const GameCanvas: React.FC = () => {
             // Base background and border
             const tokenBorder = new Graphics();
             drawTokenShape(tokenBorder, shape, 26, true, 0x020617);
-            drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9, borderStyle);
+            drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9);
             if (shape === 'standee') {
               tokenBorder.ellipse(0, 26 * 1.3, 26 * 0.9, 26 * 0.2);
               tokenBorder.fill(0x020617);
-              drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9, borderStyle);
+              drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9);
             }
             token.addChild(tokenBorder);
 

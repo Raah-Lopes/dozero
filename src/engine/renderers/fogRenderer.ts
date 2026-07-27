@@ -138,25 +138,33 @@ export function renderFogOfWar(
         maskGfx1.fill({ color: 0xffffff });
         maskGfx2.fill({ color: 0xffffff });
 
-        const matErase = new Matrix();
-        const scaleErase = (radius * 2.1) / 512;
-        const sizeErase = 512 * scaleErase;
-        const ex = t.x - sizeErase / 2;
-        const ey = t.y - sizeErase / 2;
-        matErase.scale(scaleErase, scaleErase);
-        matErase.translate(ex, ey);
-        tokenGfx.rect(ex, ey, sizeErase, sizeErase).fill({ color: 0xffffff, texture: getSharedLightMask(), matrix: matErase });
-
-        const glowTex = getSharedGlow();
-        const matGlow = new Matrix();
-        const scaleGlow = (radius * 2.4) / 512;
-        const sizeGlow = 512 * scaleGlow;
-        const gx = t.x - sizeGlow / 2;
-        const gy = t.y - sizeGlow / 2;
-        matGlow.scale(scaleGlow, scaleGlow);
-        matGlow.translate(gx, gy);
+        const visionStyle = (t as any).visionStyle || 'gradient';
         
-        glowGfx.rect(gx, gy, sizeGlow, sizeGlow).fill({ color: 0xffffff, texture: glowTex, matrix: matGlow });
+        if (visionStyle === 'solid') {
+          // Sharp solid cut - use a huge rect masked by the polygon
+          tokenGfx.rect(t.x - radius, t.y - radius, radius * 2, radius * 2).fill({ color: 0xffffff });
+        } else {
+          // Soft gradient light
+          const matErase = new Matrix();
+          const scaleErase = (radius * 2.1) / 512;
+          const sizeErase = 512 * scaleErase;
+          const ex = t.x - sizeErase / 2;
+          const ey = t.y - sizeErase / 2;
+          matErase.scale(scaleErase, scaleErase);
+          matErase.translate(ex, ey);
+          tokenGfx.rect(ex, ey, sizeErase, sizeErase).fill({ color: 0xffffff, texture: getSharedLightMask(), matrix: matErase });
+
+          const glowTex = getSharedGlow();
+          const matGlow = new Matrix();
+          const scaleGlow = (radius * 2.4) / 512;
+          const sizeGlow = 512 * scaleGlow;
+          const gx = t.x - sizeGlow / 2;
+          const gy = t.y - sizeGlow / 2;
+          matGlow.scale(scaleGlow, scaleGlow);
+          matGlow.translate(gx, gy);
+          
+          glowGfx.rect(gx, gy, sizeGlow, sizeGlow).fill({ color: 0xffffff, texture: glowTex, matrix: matGlow });
+        }
       }
     });
   }
