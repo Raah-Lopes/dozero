@@ -1,7 +1,7 @@
 import PocketBase from 'pocketbase';
 
-// The URL of the PocketBase backend. Defaults to localhost if not set in .env
-export const PB_URL = import.meta.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
+// The URL of the PocketBase backend.
+export const PB_URL = import.meta.env.VITE_POCKETBASE_URL || 'https://dozero.pockethost.io';
 
 // Global singleton PocketBase client
 export const pb = new PocketBase(PB_URL);
