@@ -1126,7 +1126,7 @@ export const GameCanvas: React.FC = () => {
              const gradient = new FillGradient(-size, -size, size, size);
              gradient.addColorStop(0, 0xffffff);
              gradient.addColorStop(1, colorVal);
-             g.stroke({ texture: gradient, width: strokeWidth, alpha: strokeAlpha });
+             g.stroke({ fill: gradient, width: strokeWidth, alpha: strokeAlpha });
           } else {
              g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
           }
