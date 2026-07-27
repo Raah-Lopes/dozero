@@ -17,8 +17,12 @@ if (import.meta.env.PROD) {
 // No Vercel, intercepta as chamadas locais da API para ler os arquivos .md bundlados
 setupWikiInterceptor();
 
+import { AuthProvider } from './contexts/AuthContext';
+
 createRoot(document.getElementById('root')!).render(
-  <App />
+  <AuthProvider>
+    <App />
+  </AuthProvider>
 )
 
 reportWebVitals();

@@ -47,6 +47,8 @@ import { Toaster, ConfirmDialog } from './components/UI/Toast';
 import { useAppEventListeners } from './hooks/useAppEventListeners';
 import { ErrorBoundary } from './components/UI/ErrorBoundary';
 import { OfflineStatus } from './components/System/OfflineStatus';
+import { useAuth } from './contexts/AuthContext';
+import { AuthModal } from './components/Auth/AuthModal';
 
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
 
@@ -55,6 +57,7 @@ function App() {
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
+  const { isLoggedIn } = useAuth();
 
   const {
     openWindows, toggleWindow,
@@ -103,6 +106,14 @@ function App() {
     return (
       <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <h1 className="text-gradient animate-fade-in">Loading VTT Ecosystem...</h1>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn && !standaloneWidget) {
+    return (
+      <div className="app-container bg-[url('/bg-dark-wood.jpg')] bg-cover bg-center">
+        <AuthModal onSuccess={() => {}} />
       </div>
     );
   }
