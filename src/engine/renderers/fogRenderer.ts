@@ -196,12 +196,26 @@ export function renderFogOfWar(
          }
       }
     } else {
-      // 'hide' ops re-darken the area: fill/stroke with fog color on the normal-blend graphics
-      if (op.type === 'path') {
-        g.stroke({ color: fowColor, width: (op.geom as any).width || 20, cap: 'round', join: 'round', alpha: 1 });
-      } else {
-        g.fill({ color: fowColor, alpha: 1 });
+      // 'hide' ops act purely as invisible walls that block light. 
+      // They do NOT paint explicit black areas on top of tokens (so tokens inside them can illuminate them).
+      // However, we draw a very faint stroke on the erase layer so players see a subtle outline of the wall.
+      const maskGfx = getGfx('erase');
+      if (op.type === 'circle') {
+        const geom = op.geom as FogGeomCircle;
+        maskGfx.circle(geom.x, geom.y, geom.r);
+      } else if (op.type === 'square') {
+        const geom = op.geom as FogGeomSquare;
+        maskGfx.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
+      } else if (op.type === 'polygon' || op.type === 'path') {
+        const geom = op.geom as any;
+        if (geom.points && geom.points.length > 0) {
+          maskGfx.moveTo(geom.points[0].x, geom.points[0].y);
+          for (let i = 1; i < geom.points.length; i++) maskGfx.lineTo(geom.points[i].x, geom.points[i].y);
+          if (op.type === 'polygon') maskGfx.lineTo(geom.points[0].x, geom.points[0].y);
+        }
       }
+      maskGfx.stroke({ color: 0xffffff, width: 2, alpha: 0.15 });
+
       if (gmGfx) {
         if (op.type === 'path') {
           gmGfx.stroke({ color: 0x475569, alpha: 0.8, width: 2, cap: 'round', join: 'round' });

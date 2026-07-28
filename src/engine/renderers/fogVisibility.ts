@@ -28,6 +28,8 @@ export function extractWallSegments(fogOps: any[]): Segment[] {
   const segs: Segment[] = [];
   
   for (const op of fogOps) {
+    if (op.mode !== 'hide') continue;
+
     if (op.type === 'square') {
       const geom = op.geom as FogGeomSquare;
       segs.push(...rectSegments(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h));
@@ -40,7 +42,7 @@ export function extractWallSegments(fogOps: any[]): Segment[] {
           segs.push({ a: { x: p1.x, y: p1.y }, b: { x: p2.x, y: p2.y } });
         }
       }
-    } else if (op.type === 'path' && op.mode === 'hide') {
+    } else if (op.type === 'path') {
       const geom = op.geom as any;
       if (geom.points && geom.points.length > 1) {
         for (let i = 0; i < geom.points.length - 1; i++) {
@@ -48,6 +50,17 @@ export function extractWallSegments(fogOps: any[]): Segment[] {
           const p2 = geom.points[i + 1];
           segs.push({ a: { x: p1.x, y: p1.y }, b: { x: p2.x, y: p2.y } });
         }
+      }
+    } else if (op.type === 'circle') {
+      const geom = op.geom as any;
+      const segments = 16;
+      for (let i = 0; i < segments; i++) {
+        const a1 = (i / segments) * Math.PI * 2;
+        const a2 = ((i + 1) / segments) * Math.PI * 2;
+        segs.push({
+          a: { x: geom.x + Math.cos(a1) * geom.r, y: geom.y + Math.sin(a1) * geom.r },
+          b: { x: geom.x + Math.cos(a2) * geom.r, y: geom.y + Math.sin(a2) * geom.r }
+        });
       }
     }
   }

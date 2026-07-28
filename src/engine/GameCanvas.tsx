@@ -127,6 +127,10 @@ export const GameCanvas: React.FC = () => {
       let isFogBrushing = false;
       let fogBrushPoints: { x: number, y: number }[] = [];
       let fogPolygonPoints: {x: number, y: number}[] = [];
+      // ponytail: drag-based fog shapes share a single start point
+      let fogShapeDragStart: { x: number, y: number } | null = null;
+      let isFogLassoing = false;
+      let fogLassoPoints: { x: number, y: number }[] = [];
       
       let longPressTimer: any = null;
       let longPressStart = { x: 0, y: 0 };
@@ -237,6 +241,16 @@ export const GameCanvas: React.FC = () => {
            fogPolygonPoints.push(pos);
            return;
         }
+        // ponytail: drag-based fog shapes (rect, circle, triangle)
+        if (['fog_rect', 'fog_circle', 'fog_triangle'].includes(localState.activeTool) && e.button === 0) {
+           fogShapeDragStart = getWorldPos(e.clientX, e.clientY);
+           return;
+        }
+        if (localState.activeTool === 'fog_lasso' && e.button === 0) {
+           isFogLassoing = true;
+           fogLassoPoints = [getWorldPos(e.clientX, e.clientY)];
+           return;
+        }
         
         if (localState.activeTool === 'pan' && e.button === 0) {
           isPanning = true;
@@ -259,7 +273,7 @@ export const GameCanvas: React.FC = () => {
             const pts = Array.from(activePointers.values());
             pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
             pinchStartScale = viewport.scale.x;
-          } else if (activePointers.size === 1 && !['eraser', 'pen', 'shape', 'arrow', 'fog-add', 'fog-remove', 'fog_brush', 'fog_polygon'].includes(localState.activeTool)) {
+          } else if (activePointers.size === 1 && !['eraser', 'pen', 'shape', 'arrow', 'fog-add', 'fog-remove', 'fog_brush', 'fog_polygon', 'fog_rect', 'fog_circle', 'fog_triangle', 'fog_lasso'].includes(localState.activeTool)) {
             isTouchPanning = true;
             touchPanStart = { x: e.clientX - viewport.x, y: e.clientY - viewport.y };
             longPressStart = { x: e.clientX, y: e.clientY };
@@ -455,6 +469,51 @@ export const GameCanvas: React.FC = () => {
                  eraserCursor.fill({ color: 0x10b981, alpha: 0.8 });
               }
            }
+        } else if (['fog_rect', 'fog_circle', 'fog_triangle'].includes(localState.activeTool)) {
+           eraserCursor.visible = true;
+           const rect = canvasEl.getBoundingClientRect();
+           const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+           eraserCursor.clear();
+           const color = localState.fogMode === 'reveal' ? 0x0ea5e9 : 0x475569;
+           if (fogShapeDragStart) {
+             const s = fogShapeDragStart;
+             if (localState.activeTool === 'fog_rect') {
+               const x = Math.min(s.x, localPos.x), y = Math.min(s.y, localPos.y);
+               const w = Math.abs(localPos.x - s.x), h = Math.abs(localPos.y - s.y);
+               eraserCursor.rect(x, y, w, h);
+             } else if (localState.activeTool === 'fog_circle') {
+               const cx = (s.x + localPos.x) / 2, cy = (s.y + localPos.y) / 2;
+               const r = Math.hypot(localPos.x - s.x, localPos.y - s.y) / 2;
+               eraserCursor.circle(cx, cy, r);
+             } else if (localState.activeTool === 'fog_triangle') {
+               const cx = (s.x + localPos.x) / 2;
+               eraserCursor.moveTo(cx, s.y);
+               eraserCursor.lineTo(localPos.x, localPos.y);
+               eraserCursor.lineTo(s.x, localPos.y);
+               eraserCursor.lineTo(cx, s.y);
+             }
+             eraserCursor.stroke({ color, width: 2 / viewport.scale.x, alpha: 0.9 });
+             eraserCursor.fill({ color, alpha: 0.15 });
+           } else {
+             eraserCursor.circle(localPos.x, localPos.y, 6 / viewport.scale.x);
+             eraserCursor.fill({ color, alpha: 0.5 });
+           }
+        } else if (localState.activeTool === 'fog_lasso') {
+           eraserCursor.visible = true;
+           const rect = canvasEl.getBoundingClientRect();
+           const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+           eraserCursor.clear();
+           const color = localState.fogMode === 'reveal' ? 0x0ea5e9 : 0x475569;
+           if (fogLassoPoints.length > 0) {
+             eraserCursor.moveTo(fogLassoPoints[0].x, fogLassoPoints[0].y);
+             for (let i = 1; i < fogLassoPoints.length; i++) eraserCursor.lineTo(fogLassoPoints[i].x, fogLassoPoints[i].y);
+             eraserCursor.lineTo(localPos.x, localPos.y);
+             eraserCursor.stroke({ color, width: 2 / viewport.scale.x, alpha: 0.9 });
+             eraserCursor.fill({ color, alpha: 0.1 });
+           } else {
+             eraserCursor.circle(localPos.x, localPos.y, 6 / viewport.scale.x);
+             eraserCursor.fill({ color, alpha: 0.5 });
+           }
         } else {
            if (eraserCursor.visible) eraserCursor.visible = false;
         }
@@ -590,6 +649,32 @@ export const GameCanvas: React.FC = () => {
           }
           fogBrushPoints = [];
           isFogBrushing = false;
+        }
+        // ponytail: drag-based fog shapes commit on mouseup
+        if (fogShapeDragStart && ['fog_rect', 'fog_circle', 'fog_triangle'].includes(localState.activeTool)) {
+          const end = getWorldPos(e.clientX, e.clientY);
+          const s = fogShapeDragStart;
+          const dx = end.x - s.x, dy = end.y - s.y;
+          if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+            const id = 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7);
+            if (localState.activeTool === 'fog_rect') {
+              FogOfWar.addOp({ id, type: 'square', mode: localState.fogMode, geom: { x: (s.x + end.x) / 2, y: (s.y + end.y) / 2, w: Math.abs(dx), h: Math.abs(dy) } });
+            } else if (localState.activeTool === 'fog_circle') {
+              const r = Math.hypot(dx, dy) / 2;
+              FogOfWar.addOp({ id, type: 'circle', mode: localState.fogMode, geom: { x: (s.x + end.x) / 2, y: (s.y + end.y) / 2, r } });
+            } else if (localState.activeTool === 'fog_triangle') {
+              const cx = (s.x + end.x) / 2;
+              FogOfWar.addOp({ id, type: 'polygon', mode: localState.fogMode, geom: { points: [{ x: cx, y: s.y }, { x: end.x, y: end.y }, { x: s.x, y: end.y }] } });
+            }
+          }
+          fogShapeDragStart = null;
+        }
+        if (isFogLassoing) {
+          if (fogLassoPoints.length > 2) {
+            FogOfWar.addOp({ id: 'fog_' + Date.now() + Math.random().toString(36).substring(2, 7), type: 'polygon', mode: localState.fogMode, geom: { points: [...fogLassoPoints] } });
+          }
+          fogLassoPoints = [];
+          isFogLassoing = false;
         }
         clearTimeout(longPressTimer);
         longPressTimer = null;

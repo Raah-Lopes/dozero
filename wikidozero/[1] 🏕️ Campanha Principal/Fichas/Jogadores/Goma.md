@@ -98,7 +98,7 @@ title: Goma
 tokenShape: circle
 borderColor: '#5c5c5c'
 showName: true
-sizeScale: 1.4
+sizeScale: 0.5
 hpBarMode: always
 ativo: false
 mana_max: 99
@@ -132,8 +132,12 @@ magias_preparadas:
 macros: []
 avatar: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
 des: 11
-
+visionRadius: 45
 ---
+
+
+
+
 
 
 

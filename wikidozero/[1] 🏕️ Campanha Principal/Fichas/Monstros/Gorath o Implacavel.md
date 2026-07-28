@@ -86,7 +86,87 @@ constituicao: 14
 inteligencia: 10
 sabedoria: 10
 carisma: 10
+sizeScale: 0.5
+visionRadius: 50
+hasVision: true
+inCombat: false
+hpBarMode: hidden
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

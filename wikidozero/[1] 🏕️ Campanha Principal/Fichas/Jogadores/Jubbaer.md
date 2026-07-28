@@ -157,7 +157,43 @@ constituicao: 20
 inteligencia: 10
 sabedoria: 10
 carisma: 10
+visionRadius: 119
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw } from 'lucide-react';
+import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
@@ -10,11 +10,12 @@ export function GMToolbar() {
   const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors } = useWindowManager();
   const [fogConfig, setFogConfig] = React.useState<FogConfig>(Config.getFogConfig());
   const [fogMode, setFogMode] = React.useState<'reveal' | 'hide'>('reveal');
-  const [fogShape, setFogShape] = React.useState<'brush' | 'polygon'>('brush');
+  const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso'>('brush');
   
   React.useEffect(() => {
     if (activeTool === 'FOG') {
-      setGlobalActiveTool(fogShape === 'brush' ? 'fog_brush' : 'fog_polygon');
+      const toolMap: Record<string, string> = { brush: 'fog_brush', polygon: 'fog_polygon', rect: 'fog_rect', circle: 'fog_circle', triangle: 'fog_triangle', lasso: 'fog_lasso' };
+      setGlobalActiveTool((toolMap[fogShape] || 'fog_brush') as any);
       setGlobalFogMode(fogMode);
     } else if (activeTool === 'RULER') {
       setGlobalActiveTool('ruler');
@@ -138,6 +139,34 @@ export function GMToolbar() {
             active={fogShape === 'polygon'} 
             onClick={() => setFogShape('polygon')} 
             tooltip="Polígono"
+            small
+          />
+          <ToolButton 
+            icon={<Square size={18} />} 
+            active={fogShape === 'rect'} 
+            onClick={() => setFogShape('rect')} 
+            tooltip="Retângulo"
+            small
+          />
+          <ToolButton 
+            icon={<Circle size={18} />} 
+            active={fogShape === 'circle'} 
+            onClick={() => setFogShape('circle')} 
+            tooltip="Círculo"
+            small
+          />
+          <ToolButton 
+            icon={<Triangle size={18} />} 
+            active={fogShape === 'triangle'} 
+            onClick={() => setFogShape('triangle')} 
+            tooltip="Triângulo"
+            small
+          />
+          <ToolButton 
+            icon={<Lasso size={18} />} 
+            active={fogShape === 'lasso'} 
+            onClick={() => setFogShape('lasso')} 
+            tooltip="Laço (Livre)"
             small
           />
           <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
