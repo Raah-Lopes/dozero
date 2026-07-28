@@ -10,7 +10,7 @@ export const localState = {
   selectedTokens: new Set<string>(),
   selectedProps: new Set<string>(),
   selectedDrawings: new Set<string>(),
-  activeTool: 'select' as 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser' | 'fog_brush' | 'fog_polygon' | 'fog_rect' | 'fog_circle' | 'fog_triangle' | 'fog_lasso',
+  activeTool: 'select' as 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser' | 'fog_brush' | 'fog_polygon' | 'fog_rect' | 'fog_circle' | 'fog_triangle' | 'fog_lasso' | 'fog_erase',
   activeShapeType: 'rectangle' as 'rectangle' | 'circle' | 'triangle',
   editingTextId: null as string | null,
   drawColor: '#ef4444',
@@ -24,7 +24,7 @@ export function setFogMode(mode: 'reveal' | 'hide') {
   window.dispatchEvent(new Event('tool-changed'));
 }
 
-export function setActiveTool(tool: 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser' | 'fog_brush' | 'fog_polygon' | 'fog_rect' | 'fog_circle' | 'fog_triangle' | 'fog_lasso') {
+export function setActiveTool(tool: 'select' | 'pan' | 'pen' | 'shape' | 'text' | 'arrow' | 'ruler' | 'eraser' | 'fog_brush' | 'fog_polygon' | 'fog_rect' | 'fog_circle' | 'fog_triangle' | 'fog_lasso' | 'fog_erase') {
   localState.activeTool = tool;
   window.dispatchEvent(new Event('tool-changed'));
 }

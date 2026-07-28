@@ -251,6 +251,40 @@ export const GameCanvas: React.FC = () => {
            fogLassoPoints = [getWorldPos(e.clientX, e.clientY)];
            return;
         }
+        if (localState.activeTool === 'fog_erase' && e.button === 0) {
+           const pos = getWorldPos(e.clientX, e.clientY);
+           const ops = FogOfWar.getOps();
+           for (let i = ops.length - 1; i >= 0; i--) {
+             const op = ops[i];
+             let hit = false;
+             if (op.type === 'circle') {
+               const g = op.geom as any;
+               hit = Math.hypot(pos.x - g.x, pos.y - g.y) <= g.r;
+             } else if (op.type === 'square') {
+               const g = op.geom as any;
+               hit = pos.x >= g.x - g.w/2 && pos.x <= g.x + g.w/2 && pos.y >= g.y - g.h/2 && pos.y <= g.y + g.h/2;
+             } else if (op.type === 'polygon' || op.type === 'path') {
+               const g = op.geom as any;
+               let inside = false;
+               const pts = g.points;
+               if (pts && pts.length > 2) {
+                 for (let j = 0, k = pts.length - 1; j < pts.length; k = j++) {
+                   const xi = pts[j].x, yi = pts[j].y;
+                   const xj = pts[k].x, yj = pts[k].y;
+                   const intersect = ((yi > pos.y) !== (yj > pos.y))
+                        && (pos.x < (xj - xi) * (pos.y - yi) / (yj - yi) + xi);
+                   if (intersect) inside = !inside;
+                 }
+               }
+               hit = inside;
+             }
+             if (hit) {
+               FogOfWar.removeOp(op.id);
+               return;
+             }
+           }
+           return;
+        }
         
         if (localState.activeTool === 'pan' && e.button === 0) {
           isPanning = true;
@@ -508,6 +542,7 @@ export const GameCanvas: React.FC = () => {
              eraserCursor.moveTo(fogLassoPoints[0].x, fogLassoPoints[0].y);
              for (let i = 1; i < fogLassoPoints.length; i++) eraserCursor.lineTo(fogLassoPoints[i].x, fogLassoPoints[i].y);
              eraserCursor.lineTo(localPos.x, localPos.y);
+             eraserCursor.lineTo(fogLassoPoints[0].x, fogLassoPoints[0].y);
              eraserCursor.stroke({ color, width: 2 / viewport.scale.x, alpha: 0.9 });
              eraserCursor.fill({ color, alpha: 0.1 });
            } else {

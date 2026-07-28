@@ -1,5 +1,5 @@
 import React from 'react';
-import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso } from 'lucide-react';
+import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
@@ -10,11 +10,11 @@ export function GMToolbar() {
   const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors } = useWindowManager();
   const [fogConfig, setFogConfig] = React.useState<FogConfig>(Config.getFogConfig());
   const [fogMode, setFogMode] = React.useState<'reveal' | 'hide'>('reveal');
-  const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso'>('brush');
+  const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso' | 'eraser'>('brush');
   
   React.useEffect(() => {
     if (activeTool === 'FOG') {
-      const toolMap: Record<string, string> = { brush: 'fog_brush', polygon: 'fog_polygon', rect: 'fog_rect', circle: 'fog_circle', triangle: 'fog_triangle', lasso: 'fog_lasso' };
+      const toolMap: Record<string, string> = { brush: 'fog_brush', polygon: 'fog_polygon', rect: 'fog_rect', circle: 'fog_circle', triangle: 'fog_triangle', lasso: 'fog_lasso', eraser: 'fog_erase' };
       setGlobalActiveTool((toolMap[fogShape] || 'fog_brush') as any);
       setGlobalFogMode(fogMode);
     } else if (activeTool === 'RULER') {
@@ -167,6 +167,13 @@ export function GMToolbar() {
             active={fogShape === 'lasso'} 
             onClick={() => setFogShape('lasso')} 
             tooltip="Laço (Livre)"
+            small
+          />
+          <ToolButton 
+            icon={<Eraser size={18} />} 
+            active={fogShape === 'eraser'} 
+            onClick={() => setFogShape('eraser')} 
+            tooltip="Remover Forma (Clique)"
             small
           />
           <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
