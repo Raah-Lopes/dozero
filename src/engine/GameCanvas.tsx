@@ -453,6 +453,16 @@ export const GameCanvas: React.FC = () => {
             }
           }
         }
+        
+        if (isFogLassoing) {
+          const pos = getWorldPos(e.clientX, e.clientY);
+          if (fogLassoPoints.length > 0) {
+            const last = fogLassoPoints[fogLassoPoints.length - 1];
+            if (Math.hypot(pos.x - last.x, pos.y - last.y) > 8) {
+              fogLassoPoints.push(pos);
+            }
+          }
+        }
 
         if (localState.activeTool === 'eraser') {
            eraserCursor.visible = true;
