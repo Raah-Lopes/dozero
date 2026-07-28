@@ -2,6 +2,7 @@ import React from 'react';
 import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
+import { FogOfWar } from '../../store/modules/fogModule';
 import { setActiveTool as setGlobalActiveTool, setFogMode as setGlobalFogMode, localState } from '../../store';
 import type { FogConfig } from '../../store/modules/configModule';
 
@@ -48,7 +49,7 @@ export function GMToolbar() {
         style={{
         position: 'absolute',
         left: '1rem',
-        top: '50%',
+        top: window.innerWidth <= 1257 ? '35%' : '50%',
         transform: 'translateY(-50%)',
         display: 'flex',
         flexDirection: 'column',
@@ -60,6 +61,8 @@ export function GMToolbar() {
         borderRadius: '16px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
         zIndex: 50,
+        maxHeight: '60vh',
+        overflowY: 'auto',
       }}>
         <ToolButton 
           icon={<MousePointer2 size={20} />} 
@@ -141,7 +144,7 @@ export function GMToolbar() {
           <ToolButton 
             icon={<RefreshCcw size={18} />} 
             active={false} 
-            onClick={() => window.dispatchEvent(new Event('fog-reset'))} 
+            onClick={() => FogOfWar.clear()} 
             tooltip="Resetar FOG"
             small
           />

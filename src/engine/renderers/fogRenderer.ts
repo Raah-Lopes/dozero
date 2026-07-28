@@ -196,6 +196,12 @@ export function renderFogOfWar(
          }
       }
     } else {
+      // 'hide' ops re-darken the area: fill/stroke with fog color on the normal-blend graphics
+      if (op.type === 'path') {
+        g.stroke({ color: fowColor, width: (op.geom as any).width || 20, cap: 'round', join: 'round', alpha: 1 });
+      } else {
+        g.fill({ color: fowColor, alpha: 1 });
+      }
       if (gmGfx) {
         if (op.type === 'path') {
           gmGfx.stroke({ color: 0x475569, alpha: 0.8, width: 2, cap: 'round', join: 'round' });

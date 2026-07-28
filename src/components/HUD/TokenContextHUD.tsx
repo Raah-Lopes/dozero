@@ -61,19 +61,21 @@ export function TokenContextHUD() {
       className="token-context-hud"
       style={{
         position: 'absolute',
-        bottom: '5.5rem',
+        bottom: window.innerWidth <= 768 ? '8rem' : '5.5rem',
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
         alignItems: 'center',
-        gap: '1rem',
+        gap: window.innerWidth <= 768 ? '0.5rem' : '1rem',
         background: 'rgba(15, 23, 42, 0.75)',
       backdropFilter: 'blur(16px)',
       border: '1px solid rgba(255,255,255,0.15)',
-      padding: '0.75rem 1.5rem',
+      padding: window.innerWidth <= 768 ? '0.5rem 0.75rem' : '0.75rem 1.5rem',
       borderRadius: '24px',
       boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
       zIndex: 100,
+      maxWidth: '95vw',
+      overflowX: 'auto',
       animation: 'slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
     }}>
       {/* Avatar & Name */}

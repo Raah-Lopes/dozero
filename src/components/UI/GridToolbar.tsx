@@ -999,7 +999,7 @@ export const GridToolbar: React.FC = () => {
         bottom: isMobile ? '200px' : '90px',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 100000,
+        zIndex: 90,
         display: 'flex',
         alignItems: 'center',
         gap: '4px',
