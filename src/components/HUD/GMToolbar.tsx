@@ -8,9 +8,9 @@ import type { FogConfig } from '../../store/modules/configModule';
 
 export function GMToolbar() {
   const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors } = useWindowManager();
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 1257);
   React.useEffect(() => {
-    const h = () => setIsMobile(window.innerWidth <= 768);
+    const h = () => setIsMobile(window.innerWidth <= 1257);
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);

@@ -148,6 +148,7 @@ export const MobileQuickActions: React.FC = () => {
         className="fab-container" 
         style={{
           zIndex: expanded ? 99999 : 9999,
+          touchAction: 'none',
           ...(fabPos.x !== null ? { left: fabPos.x, right: 'auto', bottom: 'auto', top: fabPos.y } : {})
         }}
         onPointerDown={handlePointerDown}
