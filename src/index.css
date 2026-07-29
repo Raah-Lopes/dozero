@@ -61,7 +61,7 @@ body {
   margin: 0;
   overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: var(--bg-deep);
+  background-color: var(--bg-primary);
   color: var(--text-primary);
   user-select: none;
   -webkit-user-select: none;
