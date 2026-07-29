@@ -8,9 +8,9 @@ import type { FogConfig } from '../../store/modules/configModule';
 
 export function GMToolbar() {
   const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors } = useWindowManager();
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 1257);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
   React.useEffect(() => {
-    const h = () => setIsMobile(window.innerWidth <= 1257);
+    const h = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);
@@ -79,11 +79,11 @@ export function GMToolbar() {
     
     const flyoutStyle: React.CSSProperties = {
       position: 'absolute',
-      [isMobile ? 'bottom' : 'left']: isMobile ? 'calc(100% + 12px)' : 'calc(100% + 12px)',
-      [isMobile ? 'left' : 'top']: isMobile ? '50%' : '50%',
-      transform: isMobile ? 'translateX(-50%)' : 'translateY(-50%)',
+      left: 'calc(100% + 12px)',
+      top: '50%',
+      transform: 'translateY(-50%)',
       display: 'flex',
-      flexDirection: isMobile ? 'row' : 'column',
+      flexDirection: 'column',
       gap: '4px',
       padding: '4px',
       background: 'rgba(20, 20, 25, 0.95)',
@@ -93,7 +93,7 @@ export function GMToolbar() {
       boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
       opacity: isOpen ? 1 : 0,
       pointerEvents: isOpen ? 'auto' : 'none',
-      transformOrigin: isMobile ? 'bottom center' : 'left center',
+      transformOrigin: 'left center',
       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
       zIndex: 100
     };
@@ -127,7 +127,7 @@ export function GMToolbar() {
 
   const groupStyle: React.CSSProperties = {
     display: 'flex',
-    flexDirection: isMobile ? 'row' : 'column',
+    flexDirection: 'column',
     gap: '4px',
     padding: '4px',
     background: 'rgba(0,0,0,0.15)',
@@ -145,13 +145,13 @@ export function GMToolbar() {
     <div 
       className="gm-toolbar"
       style={{
-      position: isMobile ? 'fixed' : 'absolute',
-      left: isMobile ? '50%' : '1rem',
-      top: isMobile ? 'auto' : '50%',
-      bottom: isMobile ? '1rem' : 'auto',
-      transform: isMobile ? 'translateX(-50%)' : 'translateY(-50%)',
+      position: 'absolute',
+      left: '1rem',
+      top: '50%',
+      bottom: 'auto',
+      transform: 'translateY(-50%)',
       display: 'flex',
-      flexDirection: isMobile ? 'row' : 'column',
+      flexDirection: 'column',
       gap: '0.5rem',
       background: 'rgba(15, 23, 42, 0.65)',
       backdropFilter: 'blur(12px)',
@@ -160,8 +160,8 @@ export function GMToolbar() {
       borderRadius: '16px',
       boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
       zIndex: 50,
-      maxHeight: isMobile ? 'auto' : 'calc(100vh - 40px)',
-      maxWidth: isMobile ? 'calc(100vw - 24px)' : 'auto',
+      maxHeight: 'calc(100vh - 40px)',
+      maxWidth: 'auto',
       overflowX: 'visible',
       overflowY: 'visible',
     }}>

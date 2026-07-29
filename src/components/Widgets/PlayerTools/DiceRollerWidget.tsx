@@ -10,7 +10,7 @@ type DiceTheme = 'purple' | 'crimson' | 'gold';
 interface RollResult {
   id: string;
   dice: string;
-  rolls: number[];
+  rolls: { die: DieType, result: number }[];
   modifier: number;
   total: number;
   timestamp: number;
@@ -19,8 +19,7 @@ interface RollResult {
 interface DiceMacro {
   id: string;
   label: string;
-  quantity: number;
-  die: DieType;
+  pool: Partial<Record<DieType, number>>;
   modifier: number;
 }
 
@@ -116,17 +115,16 @@ const AnimatedDie: React.FC<{ sides: DieType; value: number; rolling: boolean; t
 // ─── Widget Principal ──────────────────────────────────────────────────────
 export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { currentEngine } = useRulesEngine();
-  const [selectedDie, setSelectedDie] = useState<DieType>(currentEngine.defaultDie);
-  const [quantity, setQuantity] = useState(1);
+  const [dicePool, setDicePool] = useState<Partial<Record<DieType, number>>>({ [currentEngine.defaultDie]: 1 });
   const [modifier, setModifier] = useState(0);
   const [rolling, setRolling] = useState(false);
-  const [currentRolls, setCurrentRolls] = useState<number[]>([]);
+  const [currentRolls, setCurrentRolls] = useState<{ die: DieType, result: number }[]>([]);
   const [history, setHistory] = useState<RollResult[]>([]);
   const [theme, setTheme] = useState<DiceTheme>('purple');
   const [macros, setMacros] = useState<DiceMacro[]>([
-    { id: 'atk', label: '⚔️ Ataque', quantity: 1, die: 20, modifier: 3 },
-    { id: 'dmg', label: '🗡️ Dano', quantity: 2, die: 6, modifier: 0 },
-    { id: 'ini', label: '⚡ Iniciativa', quantity: 1, die: 20, modifier: 2 },
+    { id: 'atk', label: '⚔️ Ataque', pool: { 20: 1 }, modifier: 3 },
+    { id: 'dmg', label: '🗡️ Dano', pool: { 6: 2 }, modifier: 0 },
+    { id: 'ini', label: '⚡ Iniciativa', pool: { 20: 1 }, modifier: 2 },
   ]);
   const [newMacroLabel, setNewMacroLabel] = useState('');
   const [showMacroEditor, setShowMacroEditor] = useState(false);
@@ -150,7 +148,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedDie, quantity, modifier]);
+  }, [dicePool, modifier]);
 
   useEffect(() => {
     const handleRulesChange = (e: Event) => {
@@ -166,27 +164,54 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
   }, []);
 
   useEffect(() => {
-    setSelectedDie(currentEngine.defaultDie);
+    setDicePool({ [currentEngine.defaultDie]: 1 });
   }, [currentEngine.defaultDie]);
 
 
-  const handleRoll = useCallback((overrideQty?: number, overrideDie?: DieType, overrideMod?: number) => {
+  const handleRoll = useCallback((override?: { pool: Partial<Record<DieType, number>>, mod: number }) => {
     if (rolling) return;
-    const qty = overrideQty ?? quantity;
-    const die = overrideDie ?? selectedDie;
-    const mod = overrideMod ?? modifier;
-
+    
+    let activePool = dicePool;
+    let mod = modifier;
+    
+    if (override) {
+      activePool = override.pool;
+      mod = override.mod;
+    }
+    
+    const poolEntries = Object.entries(activePool) as [string, number][];
     setRolling(true);
-    setCurrentRolls(Array.from({ length: qty }, () => 0));
+    
+    // Preparar estado inicial para animação
+    const tempRolls: { die: DieType, result: number }[] = [];
+    poolEntries.forEach(([dStr, qty]) => {
+      const die = parseInt(dStr) as DieType;
+      for (let i = 0; i < qty; i++) {
+        tempRolls.push({ die, result: 0 });
+      }
+    });
+    setCurrentRolls(tempRolls);
 
     setTimeout(() => {
-      const results = Array.from({ length: qty }, () => rollDie(die));
-      const total = results.reduce((a, b) => a + b, 0) + mod;
+      const results: { die: DieType, result: number }[] = [];
+      let sum = 0;
+      
+      poolEntries.forEach(([dStr, qty]) => {
+        const die = parseInt(dStr) as DieType;
+        for (let i = 0; i < qty; i++) {
+          const r = rollDie(die);
+          results.push({ die, result: r });
+          sum += r;
+        }
+      });
+      
+      const total = sum + mod;
       setCurrentRolls(results);
       setRolling(false);
 
       const rollId = Math.random().toString(36).slice(2);
-      const diceStr = `${qty}d${die}${mod !== 0 ? (mod > 0 ? `+${mod}` : mod) : ''}`;
+      const diceParts = poolEntries.map(([d, q]) => `${q}d${d}`);
+      const diceStr = diceParts.join(' + ') + (mod !== 0 ? (mod > 0 ? ` + ${mod}` : ` - ${Math.abs(mod)}`) : '');
       const newResult: RollResult = {
         id: rollId, dice: diceStr, rolls: results, modifier: mod, total, timestamp: Date.now()
       };
@@ -198,26 +223,25 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         detail: { id: rollId, title: diceStr, result: total, type: 'utility' }
       }));
 
-      // Notifica TargetTerminal e outros componentes sobre o resultado — integração de dados físicos
       window.dispatchEvent(new CustomEvent('dice-result-ready', {
-        detail: { total, dice: diceStr, rolls: results, modifier: mod }
+        detail: { total, dice: diceStr, rolls: results.map(r => r.result), modifier: mod } // Keep mapped for backward compatibility if needed
       }));
 
       // Chat
       if (sendToChat) {
-        const rollsStr = results.map(r => `[${r}]`).join(' + ');
+        const rollsStr = results.map(r => `[${r.result}]`).join(' + ');
         const modStr = mod !== 0 ? ` ${mod > 0 ? '+' : ''}${mod}` : '';
         pushChatMessage(`🎲 **${diceStr}** → ${rollsStr}${modStr} = **${total}**`);
       }
     }, 600);
-  }, [rolling, quantity, selectedDie, modifier, sendToChat]);
+  }, [rolling, dicePool, modifier, sendToChat]);
 
   const addMacro = () => {
     if (!newMacroLabel.trim()) return;
     setMacros(prev => [...prev, {
       id: Math.random().toString(36).slice(2),
       label: newMacroLabel.trim(),
-      quantity, die: selectedDie, modifier
+      pool: { ...dicePool }, modifier
     }]);
     setNewMacroLabel('');
     setShowMacroEditor(false);
@@ -225,7 +249,32 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
 
   const removeMacro = (id: string) => setMacros(prev => prev.filter(m => m.id !== id));
 
-  const totalResult = currentRolls.reduce((a, b) => a + b, 0) + modifier;
+  const totalResult = currentRolls.reduce((a, b) => a + b.result, 0) + modifier;
+  const poolEntries = Object.entries(dicePool) as [string, number][];
+  const diceParts = poolEntries.map(([dStr, qty]) => `${qty}d${dStr}`);
+  const diceExpression = diceParts.join(' + ') + (modifier !== 0 ? (modifier > 0 ? ` + ${modifier}` : ` - ${Math.abs(modifier)}`) : '');
+
+  const handleDieClick = (d: DieType) => {
+    setDicePool(prev => {
+      const currentQty = prev[d] || 0;
+      return { ...prev, [d]: currentQty + 1 };
+    });
+  };
+
+  const handleDieRemove = (e: React.MouseEvent, d: DieType) => {
+    e.preventDefault();
+    setDicePool(prev => {
+      const currentQty = prev[d] || 0;
+      if (currentQty <= 1) {
+        const newPool = { ...prev };
+        delete newPool[d];
+        return newPool;
+      }
+      return { ...prev, [d]: currentQty - 1 };
+    });
+  };
+
+  const clearPool = () => setDicePool({});
 
   return (
     <DraggableWindow
@@ -287,36 +336,50 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
 
         {/* SELETOR DE DADOS */}
         <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid #1a1a2e` }}>
-          <div style={{ fontSize: '0.65rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Tipo de Dado</div>
-          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-            {allDice.map(d => (
-              <button key={d} className="die-btn" onClick={() => setSelectedDie(d)} style={{
-                background: selectedDie === d ? `linear-gradient(135deg, ${colors.primary}40, ${colors.primary}20)` : 'rgba(255,255,255,0.03)',
-                border: `1.5px solid ${selectedDie === d ? colors.primary : '#2a2a3e'}`,
-                borderRadius: '8px',
-                padding: '0.4rem',
-                cursor: 'pointer',
-                color: selectedDie === d ? colors.text : '#666',
-                boxShadow: selectedDie === d ? `0 0 10px ${colors.glow}` : 'none',
-              }}>
-                <DieIcon sides={d} size={28} color={selectedDie === d ? colors.primary : '#444'} />
-                <div style={{ fontSize: '0.55rem', textAlign: 'center', marginTop: '2px', fontWeight: 700 }}>D{d}</div>
+          <div style={{ fontSize: '0.65rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Adicionar Dados à Pilha</span>
+            {poolEntries.length > 0 && (
+              <button onClick={clearPool} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '0.65rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                Limpar Pilha
               </button>
-            ))}
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {allDice.map(d => {
+              const qty = dicePool[d] || 0;
+              return (
+                <button key={d} className="die-btn" 
+                  onClick={() => handleDieClick(d)}
+                  onContextMenu={(e) => handleDieRemove(e, d)}
+                  style={{
+                    position: 'relative',
+                    background: qty > 0 ? `linear-gradient(135deg, ${colors.primary}40, ${colors.primary}20)` : 'rgba(255,255,255,0.03)',
+                    border: `1.5px solid ${qty > 0 ? colors.primary : '#2a2a3e'}`,
+                    borderRadius: '8px',
+                    padding: '0.4rem',
+                    cursor: 'pointer',
+                    color: qty > 0 ? colors.text : '#666',
+                    boxShadow: qty > 0 ? `0 0 10px ${colors.glow}` : 'none',
+                  }}>
+                  {qty > 0 && (
+                    <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: colors.primary, color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                      {qty}
+                    </div>
+                  )}
+                  <DieIcon sides={d} size={28} color={qty > 0 ? colors.primary : '#444'} />
+                  <div style={{ fontSize: '0.55rem', textAlign: 'center', marginTop: '2px', fontWeight: 700 }}>D{d}</div>
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: '0.55rem', color: '#555', textAlign: 'center', marginTop: '0.5rem' }}>
+            Clique para adicionar • Botão direito para remover
           </div>
         </div>
 
-        {/* QUANTIDADE + MODIFICADOR */}
-        <div style={{ padding: '0.6rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid #1a1a2e' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Quantidade</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button onClick={() => setQuantity(q => Math.max(1, q - 1))} style={{ background: '#1a1a2e', border: `1px solid #2a2a3e`, color: '#aaa', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: colors.text, minWidth: '2ch', textAlign: 'center' }}>{quantity}</span>
-              <button onClick={() => setQuantity(q => Math.min(20, q + 1))} style={{ background: '#1a1a2e', border: `1px solid #2a2a3e`, color: '#aaa', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-            </div>
-          </div>
-          <div style={{ flex: 1 }}>
+        {/* MODIFICADOR E EXPRESSÃO */}
+        <div style={{ padding: '0.6rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid #1a1a2e', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
             <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Modificador</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button onClick={() => setModifier(m => m - 1)} style={{ background: '#1a1a2e', border: `1px solid #2a2a3e`, color: '#aaa', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
@@ -326,10 +389,10 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
               <button onClick={() => setModifier(m => m + 1)} style={{ background: '#1a1a2e', border: `1px solid #2a2a3e`, color: '#aaa', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
             </div>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Expressão</div>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Expressão Total</div>
             <span style={{ fontSize: '0.9rem', fontWeight: 700, color: colors.text }}>
-              {quantity}d{selectedDie}{modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}
+              {diceExpression || 'Vazio'}
             </span>
           </div>
         </div>
@@ -368,28 +431,28 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
           <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #1a1a2e', background: `linear-gradient(180deg, ${colors.primary}08, transparent)` }}>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '0.5rem' }}>
               {currentRolls.map((v, i) => (
-                <AnimatedDie key={i} sides={selectedDie} value={v} rolling={rolling} theme={theme} delay={i * 50} />
+                <AnimatedDie key={i} sides={v.die} value={v.result} rolling={rolling} theme={theme} delay={i * 50} />
               ))}
             </div>
             {!rolling && (
               <div 
-                className={`holo-box ${(selectedDie === 20 && currentRolls[0] === 20) ? 'holo-critical' : ''}`}
+                className={`holo-box ${currentRolls.some(r => r.die === 20 && r.result === 20) ? 'holo-critical' : ''}`}
                 style={{ textAlign: 'center', padding: '15px', marginTop: '10px' }}
               >
-                {(selectedDie === 20 && currentRolls[0] === 20) && (
+                {currentRolls.some(r => r.die === 20 && r.result === 20) && (
                    <div className="text-gold" style={{ fontSize: '1.2rem', marginBottom: '5px' }}>CRÍTICO! Z.E.R.O.</div>
                 )}
                 {modifier !== 0 && (
                   <div style={{ fontSize: '0.7rem', color: '#666', marginBottom: '0.2rem' }}>
-                    {currentRolls.join(' + ')}{modifier !== 0 ? ` ${modifier > 0 ? '+' : ''}${modifier}` : ''}
+                    {currentRolls.map(r => r.result).join(' + ')}{modifier !== 0 ? ` ${modifier > 0 ? '+' : ''}${modifier}` : ''}
                   </div>
                 )}
                 <div style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', textShadow: `0 0 20px ${colors.primary}, 0 0 40px ${colors.glow}`, lineHeight: 1 }}>
                   {totalResult}
                 </div>
-                {quantity > 1 && (
+                {currentRolls.length > 1 && (
                   <div style={{ fontSize: '0.65rem', color: '#555', marginTop: '0.2rem' }}>
-                    individual: {currentRolls.map((r, i) => <span key={i} style={{ color: colors.text, marginLeft: '4px' }}>{r}</span>)}
+                    individual: {currentRolls.map((r, i) => <span key={i} style={{ color: colors.text, marginLeft: '4px' }}>{r.result}</span>)}
                   </div>
                 )}
                 {/* Painel de Aplicação — integração de dados físicos com fichas */}
@@ -402,7 +465,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   ].map(({ label, color, event }) => (
                     <button
                       key={event}
-                      onClick={() => window.dispatchEvent(new CustomEvent(event, { detail: { value: totalResult, dice: `${quantity}d${selectedDie}${modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}` } }))}
+                      onClick={() => window.dispatchEvent(new CustomEvent(event, { detail: { value: totalResult, dice: diceExpression } }))}
                       style={{
                         padding: '3px 10px', background: `${color}20`, border: `1px solid ${color}60`,
                         color, borderRadius: '20px', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer'
@@ -428,7 +491,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
           {showMacroEditor && (
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <input
-                placeholder={`Nome (${quantity}d${selectedDie}${modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''})`}
+                placeholder={`Nome (${diceExpression || 'Macro'})`}
                 value={newMacroLabel}
                 onChange={e => setNewMacroLabel(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addMacro()}
@@ -442,7 +505,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
               <div key={macro.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                 <button
                   className="macro-chip"
-                  onClick={() => handleRoll(macro.quantity, macro.die, macro.modifier)}
+                  onClick={() => handleRoll({ pool: macro.pool, mod: macro.modifier })}
                   style={{
                     background: `${colors.primary}15`,
                     border: `1px solid ${colors.primary}40`,
@@ -454,7 +517,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                     fontWeight: 600,
                     transition: 'all 0.15s',
                   }}
-                  title={`${macro.quantity}d${macro.die}${macro.modifier !== 0 ? (macro.modifier > 0 ? `+${macro.modifier}` : macro.modifier) : ''}`}
+                  title={Object.entries(macro.pool).map(([d, q]) => `${q}d${d}`).join(' + ') + (macro.modifier !== 0 ? (macro.modifier > 0 ? `+${macro.modifier}` : macro.modifier) : '')}
                 >
                   {macro.label}
                 </button>
