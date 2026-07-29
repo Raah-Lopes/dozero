@@ -1,9 +1,9 @@
 import React from 'react';
-import { LayoutGrid, BookOpen, MessageSquare, Dices, Grid } from 'lucide-react';
+import { LayoutGrid, BookOpen, MessageSquare, Dices, Grid, CloudFog, Ruler } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
 export const MobileBottomNav: React.FC = () => {
-  const { viewMode, setViewMode, toggleWindow, openWindows, activeModal, setActiveModal } = useWindowManager();
+  const { viewMode, setViewMode, toggleWindow, openWindows, activeModal, setActiveModal, activeTool, setActiveTool } = useWindowManager();
 
   const isChatOpen = !!openWindows['chatWindow'];
   const isDiceOpen = !!openWindows['diceRoller'];
@@ -18,6 +18,20 @@ export const MobileBottomNav: React.FC = () => {
         setViewMode('canvas');
         if (activeModal !== 'none') setActiveModal('none');
       }
+    },
+    {
+      id: 'fog',
+      icon: CloudFog,
+      label: 'Fog',
+      active: activeTool === 'FOG',
+      action: () => setActiveTool(activeTool === 'FOG' ? 'CURSOR' : 'FOG')
+    },
+    {
+      id: 'ruler',
+      icon: Ruler,
+      label: 'Régua',
+      active: activeTool === 'RULER',
+      action: () => setActiveTool(activeTool === 'RULER' ? 'CURSOR' : 'RULER')
     },
     {
       id: 'wiki',

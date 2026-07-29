@@ -12,10 +12,6 @@ import {
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 
-const COLOR_PRESETS = [
-  '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f8fafc'
-];
-
 const LayerRenameInput = ({ layer, isActive, onRename }: { layer: any, isActive: boolean, onRename: (id: string, name: string) => void }) => {
   const [name, setName] = useState(layer.name);
   useEffect(() => { setName(layer.name); }, [layer.name]);
@@ -103,8 +99,14 @@ export const GridToolbar: React.FC = () => {
       setFogModeState(localState.fogMode);
       if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
         setShowStyleInspector(true);
+      } else {
+        setShowStyleInspector(false);
       }
     };
+    const handleToggleConfig = () => { setShowConfigMenu(v => !v); setShowStyleInspector(false); setShowLayersMenu(false); };
+    const handleToggleLayers = () => { setShowLayersMenu(v => !v); setShowConfigMenu(false); setShowStyleInspector(false); };
+    const handleImageUploadTrigger = () => fileInputRef.current?.click();
+
     const handleStyle = () => {
       setDrawColorState(localState.drawColor);
       setDrawWidthState(localState.drawWidth);
@@ -176,6 +178,9 @@ export const GridToolbar: React.FC = () => {
     window.addEventListener('tool-changed', handleTool);
     window.addEventListener('draw-style-changed', handleStyle);
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('toggle-config-menu', handleToggleConfig);
+    window.addEventListener('toggle-layers-menu', handleToggleLayers);
+    window.addEventListener('trigger-image-upload', handleImageUploadTrigger);
 
     handleMapConfig();
     handleBgs();
@@ -193,6 +198,9 @@ export const GridToolbar: React.FC = () => {
       window.removeEventListener('draw-style-changed', handleStyle);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('active-layer-changed', handleLocalState);
+      window.removeEventListener('toggle-config-menu', handleToggleConfig);
+      window.removeEventListener('toggle-layers-menu', handleToggleLayers);
+      window.removeEventListener('trigger-image-upload', handleImageUploadTrigger);
     };
   }, []);
 
@@ -280,175 +288,13 @@ export const GridToolbar: React.FC = () => {
 
   return (
     <>
-      {/* TOP CENTRALIZED TOOLBAR DOCK (Style Excalidraw / tldraw - Integrated Ecosystem) */}
-      <div style={{
-        position: 'fixed',
-        top: isMobile ? 'auto' : '16px',
-        bottom: isMobile ? '70px' : 'auto',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 100000,
-        display: 'flex',
-        alignItems: 'center',
-        gap: isMobile ? '2px' : '6px',
-        padding: isMobile ? '4px 8px' : '6px 12px',
-        background: 'rgba(15, 23, 42, 0.92)',
-        backdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: isMobile ? '16px' : '20px',
-        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.75)',
-        pointerEvents: 'auto',
-        maxWidth: '96vw',
-        overflowX: 'auto'
-      }}>
-        {/* Menu Integrado de Configurações de Cenário & Grid */}
-        <button
-          className={`tldraw-tool-btn ${showConfigMenu ? 'active' : ''}`}
-          onClick={() => { setShowConfigMenu(v => !v); setShowStyleInspector(false); setShowLayersMenu(false); }}
-          title="Configurações de Cenário, Grid & Objetos"
-          style={{ background: showConfigMenu ? 'rgba(14,165,233,0.2)' : 'transparent' }}
-        >
-          <Settings size={18} color={showConfigMenu ? '#0ea5e9' : '#94a3b8'} />
-        </button>
-
-        {/* Camadas (Layers) dedicadas */}
-        <button
-          className={`tldraw-tool-btn ${showLayersMenu ? 'active' : ''}`}
-          onClick={() => { setShowLayersMenu(v => !v); setShowConfigMenu(false); setShowStyleInspector(false); }}
-          title="Gerenciar Camadas (Layers)"
-          style={{ background: showLayersMenu ? 'rgba(16,185,129,0.2)' : 'transparent' }}
-        >
-          <Layers size={18} color={showLayersMenu ? '#10b981' : '#94a3b8'} />
-        </button>
-
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
-
-        {/* Undo / Redo */}
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new CustomEvent('canvas-undo'))}
-          title="Desfazer (Ctrl+Z)"
-        >
-          <Undo2 size={16} color="#94a3b8" />
-        </button>
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new CustomEvent('canvas-redo'))}
-          title="Refazer (Ctrl+Y)"
-        >
-          <Redo2 size={16} color="#94a3b8" />
-        </button>
-
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
-
-        {/* Tools list */}
-        {tools.map(tool => {
-          const Icon = tool.icon;
-          const isActive = activeTool === tool.id;
-          return (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(tool.id as any)}
-              title={tool.label}
-              style={{
-                background: isActive ? 'var(--accent-primary, #0ea5e9)' : 'transparent',
-                color: isActive ? '#ffffff' : '#94a3b8',
-                border: 'none',
-                borderRadius: '10px',
-                width: isMobile ? '32px' : '36px',
-                height: isMobile ? '32px' : '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                boxShadow: isActive ? '0 0 16px rgba(14, 165, 233, 0.4)' : 'none',
-                flexShrink: 0
-              }}
-            >
-              <Icon size={isMobile ? 16 : 18} />
-            </button>
-          );
-        })}
-
-        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
-
-        {/* Inserir Imagem Solta */}
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => fileInputRef.current?.click()}
-          title="Adicionar Novo Mapa ou Imagem na Tela"
-        >
-          <ImageIcon size={18} color="#06b6d4" />
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          accept=".png,.jpg,.jpeg,.webp,.gif,.svg,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-          style={{ display: 'none' }}
-          onChange={handleImageUpload}
-        />
-
-        {/* Toggle Style Inspector */}
-        {!activeTool.startsWith('fog_') && (
-          <button
-            className={`tldraw-tool-btn ${showStyleInspector ? 'active' : ''}`}
-            onClick={() => { setShowStyleInspector(v => !v); setShowConfigMenu(false); setShowLayersMenu(false); }}
-            title="Estilo da Linha, Cor & Borracha"
-          >
-            <Palette size={18} color={drawColor} />
-          </button>
-        )}
-
-        {/* Fog Mode Toggles */}
-        {activeTool.startsWith('fog_') && (
-          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '2px' }}>
-            <button
-              onClick={() => setFogMode('reveal')}
-              title="Revelar Névoa"
-              style={{
-                background: fogMode === 'reveal' ? 'var(--accent-primary, #0ea5e9)' : 'transparent',
-                color: fogMode === 'reveal' ? '#ffffff' : '#94a3b8',
-                border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
-              }}
-            >
-              Revelar
-            </button>
-            <button
-              onClick={() => setFogMode('hide')}
-              title="Esconder Névoa"
-              style={{
-                background: fogMode === 'hide' ? '#475569' : 'transparent',
-                color: fogMode === 'hide' ? '#ffffff' : '#94a3b8',
-                border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer'
-              }}
-            >
-              Esconder
-            </button>
-            <button
-              onClick={() => { if (confirm("Apagar todos os desenhos da névoa de guerra?")) clearFogOps(); }}
-              title="Resetar Máscara"
-              style={{
-                background: 'transparent',
-                color: '#ef4444',
-                border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', padding: '4px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer',
-                marginLeft: '4px'
-              }}
-            >
-              Resetar
-            </button>
-          </div>
-        )}
-
-        {/* Ocultar Barra Button */}
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => setIsVisible(false)}
-          title="Ocultar Ferramentas (Atalho: H)"
-        >
-          <EyeOff size={16} color="#64748b" />
-        </button>
-      </div>
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".png,.jpg,.jpeg,.webp,.gif,.svg,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+        style={{ display: 'none' }}
+        onChange={handleImageUpload}
+      />
 
       {/* FLOATING INTEGRATED CONFIG MENU (Mapas, Grid & FOW, Objetos) */}
       {showConfigMenu && (
@@ -916,28 +762,11 @@ export const GridToolbar: React.FC = () => {
           {/* Color presets */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>COR:</span>
-            {COLOR_PRESETS.map(c => (
-              <button
-                key={c}
-                onClick={() => setDrawColor(c)}
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: c,
-                  border: drawColor === c ? '2px solid #ffffff' : 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
-                  transition: 'transform 0.1s',
-                  flexShrink: 0
-                }}
-              />
-            ))}
             <input
               type="color"
               value={drawColor}
               onChange={e => setDrawColor(e.target.value)}
-              style={{ width: '24px', height: '24px', border: 'none', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+              style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
             />
           </div>
 
@@ -968,25 +797,10 @@ export const GridToolbar: React.FC = () => {
           {/* Stroke Width */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{activeTool === 'eraser' ? 'TAMANHO:' : 'TRAÇO:'}</span>
-            {[2, 4, 8, 12, 20].map(w => (
-              <button
-                key={w}
-                onClick={() => setDrawWidth(w)}
-                style={{
-                  background: drawWidth === w ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.05)',
-                  border: drawWidth === w ? '1px solid #0ea5e9' : '1px solid transparent',
-                  color: drawWidth === w ? '#0ea5e9' : '#94a3b8',
-                  borderRadius: '6px',
-                  padding: '3px 8px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  flexShrink: 0
-                }}
-              >
-                {w}px
-              </button>
-            ))}
+            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+              <input type="range" min="1" max="50" value={drawWidth} onChange={(e) => setDrawWidth(Number(e.target.value))} />
+              <span style={{color: '#94a3b8', fontSize: '12px', minWidth: '30px'}}>{drawWidth}px</span>
+            </div>
           </div>
         </div>
       )}
@@ -996,7 +810,7 @@ export const GridToolbar: React.FC = () => {
         className="zoom-controls-container"
         style={{
         position: 'fixed',
-        bottom: isMobile ? '200px' : '90px',
+        bottom: isMobile ? '140px' : '1.5rem',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 90,

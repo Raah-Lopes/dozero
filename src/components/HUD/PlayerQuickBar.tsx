@@ -5,6 +5,7 @@ import {
   Activity, Zap
 } from 'lucide-react';
 import { pushAdvancedChatMessage } from '../../store/chat';
+import { useWindowManager } from '../../hooks/useWindowManager';
 import { state } from '../../services/yjs';
 import { toast } from '../UI/Toast';
 import { syncTokenFieldToWiki, syncMultipleFieldsToWiki } from '../../services/wiki/syncWiki';
@@ -153,7 +154,18 @@ interface Props {
 }
 
 export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
-  const [open, setOpen] = useState(false);
+  const { openWindows, toggleWindow, closeWindow } = useWindowManager();
+  const [open, setOpen] = useState(!!openWindows['playerQuickBar']);
+  
+  useEffect(() => {
+    setOpen(!!openWindows['playerQuickBar']);
+  }, [openWindows['playerQuickBar']]);
+
+  const toggleOpen = () => {
+    if (open) closeWindow('playerQuickBar');
+    else toggleWindow('playerQuickBar', true);
+  };
+
   const [tab, setTab] = useState<Tab>('combat');
   const [bonus, setBonus] = useState(0);
   const [lastResults, setLastResults] = useState<{ label: string; val: number; damage?: number; isDamage?: boolean }[]>([]);
@@ -322,6 +334,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
       return `${prev} ${val}`;
     });
   };
+
+  const isMobile = window.innerWidth <= 768;
 
   return (
     <div style={{
@@ -631,8 +645,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
       {/* Botão de abrir/fechar a barra lateral */}
       <button
-        onClick={() => setOpen(o => !o)}
-        title={open ? 'Fechar barra rápida' : 'Abrir barra de ações do jogador'}
+        onClick={toggleOpen}
+        title="Abrir barra de ações do jogador"
         style={{
           width: '28px',
           height: '72px',

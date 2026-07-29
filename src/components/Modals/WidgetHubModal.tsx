@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, Anvil, Castle, Shield, Bot, Coins, FileText, Palette, Video, Star } from 'lucide-react';
+import { Search, X, Star } from 'lucide-react';
+import { WIDGET_REGISTRY } from '../../constants/widgetRegistry';
 
 interface Props {
   onClose: () => void;
@@ -60,51 +61,62 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
       localStorage.setItem('dozero_hub_favorites', JSON.stringify(next));
       return next;
     });
+    // Dispatch outside the state updater to avoid React render phase warnings
+    setTimeout(() => {
+      window.dispatchEvent(new Event('dozero_favorites_updated'));
+    }, 0);
   };
 
-  const widgets = [
-    // Game Master
-    { id: 'ai', cat: 'Game Master', title: 'Estúdio IA do Mestre', icon: Bot, action: props.onOpenAIStudio, theme: 'theme-purple', shadow: '0 0 10px rgba(168,85,247,0.4)' },
-    { id: 'arsenal', cat: 'Game Master', title: 'Arsenal do Mestre', icon: Shield, action: props.onOpenArsenalMestre, theme: 'theme-amber' },
-    { id: 'campaign', cat: 'Game Master', title: 'Gestor de Campanhas', icon: BookOpen, action: props.onOpenCampaignManager, theme: 'theme-indigo' },
-    { id: 'gmnotes', cat: 'Game Master', title: 'Bloco de Notas', icon: FileText, action: props.onOpenGMNotes, theme: 'theme-green', shadow: '0 0 10px rgba(34,197,94,0.4)' },
-    { id: 'players', cat: 'Game Master', title: 'Identidades (Jogadores)', icon: Users, action: props.onOpenPlayerManager, theme: 'theme-pink' },
-    { id: 'encounter', cat: 'Game Master', title: 'Forja de Encontros', icon: Skull, action: props.onOpenEncounterGenerator, theme: 'theme-orange' },
-    { id: 'tracker', cat: 'Game Master', title: 'Iniciativa (Combate)', icon: Swords, action: props.onOpenTracker, theme: 'theme-red' },
-    { id: 'clock', cat: 'Game Master', title: 'Relógio de Tensão', icon: Timer, action: props.onOpenClockConfig, theme: 'theme-amber' },
-    { id: 'chronos', cat: 'Game Master', title: 'Motor Chronos', icon: Sun, action: props.onOpenChronos, theme: 'theme-yellow' },
-    { id: 'mapsettings', cat: 'Game Master', title: 'Visual da Mesa (Cenário)', icon: Map, action: props.onOpenMapSettings, theme: 'theme-blue' },
-    { id: 'actors', cat: 'Game Master', title: 'Biblioteca de Atores', icon: Users, action: props.onOpenActorLibrary, theme: 'theme-amber' },
-    { id: 'cutscene', cat: 'Game Master', title: 'Diretor de Cenas (Títulos)', icon: Video, action: props.onOpenCutsceneDirector, theme: 'theme-pink' },
-
-    // Player Tools
-    { id: 'diceroller', cat: 'Player Tools', title: 'Rolador de Dados', icon: Dices, action: props.onOpenDiceRoller, theme: 'theme-yellow' },
-    { id: 'autodice', cat: 'Player Tools', title: 'Dados Automáticos', icon: Dices, action: props.onOpenAutomatedDice, theme: 'theme-red' },
-    { id: 'roster', cat: 'Player Tools', title: 'Lista de Personagens', icon: Users, action: props.onOpenCharacterRoster, theme: 'theme-green' },
-    { id: 'mindmap', cat: 'Player Tools', title: 'Painel de Conspiração', icon: Network, action: props.onOpenMindMap, theme: 'theme-pink' },
-    { id: 'webframe', cat: 'Player Tools', title: 'Navegador Integrado', icon: Globe, action: props.onOpenWebFrame, theme: 'theme-pink' },
-    { id: 'tradeshop', cat: 'Player Tools', title: 'Sistema Comercial & Lojas', icon: Coins, action: props.onOpenTradeShop, theme: 'theme-amber', shadow: '0 0 10px rgba(245,158,11,0.3)' },
-
-    // Generators & AI
-    { id: 'npcgen', cat: 'Generators & AI', title: 'Forja de NPCs', icon: UserPlus, action: props.onOpenNPCGenerator, theme: 'theme-green' },
-    { id: 'locgen', cat: 'Generators & AI', title: 'Forja de Mundos', icon: Map, action: props.onOpenLocationGenerator, theme: 'theme-blue' },
-    { id: 'oraclev2', cat: 'Generators & AI', title: 'Mega Oráculo', icon: Eye, action: props.onOpenOracleV2, theme: 'theme-purple' },
-    { id: 'lore', cat: 'Generators & AI', title: 'Máquina de Lores', icon: Sparkles, action: props.onOpenLoreMachine, theme: 'theme-purple' },
-    { id: 'worldengine', cat: 'Generators & AI', title: 'Motor de Mundo', icon: Globe, action: props.onOpenWorldEngine, theme: 'theme-indigo' },
-    { id: 'entityforge', cat: 'Generators & AI', title: 'Forja de Entidades', icon: Anvil, action: props.onOpenEntityForge, theme: 'theme-red' },
-    { id: 'stronghold', cat: 'Generators & AI', title: 'Fortaleza da Party', icon: Castle, action: props.onOpenStronghold, theme: 'theme-green' },
-    { id: 'storydice', cat: 'Generators & AI', title: 'Story Dice (V1)', icon: Dices, action: props.onOpenStoryDice, theme: 'theme-yellow' },
-    { id: 'ssstorydice', cat: 'Generators & AI', title: 'Story Dice (V2)', icon: Dices, action: props.onOpenSSStoryDice, theme: 'theme-pink' },
-    { id: 'storybilderdeck', cat: 'Generators & AI', title: 'Story Bilder Deck', icon: Sparkles, action: props.onOpenStoryBilderDeck, theme: 'theme-purple' },
-
-    // System
-    { id: 'roommgr', cat: 'System', title: 'Gestor de Salas (Multiplayer)', icon: Network, action: props.onOpenRoomManager, theme: 'theme-green', shadow: '0 0 10px rgba(34,197,94,0.4)' },
-    { id: 'themes', cat: 'System', title: 'Temas Visuais (Aparência)', icon: Palette, action: props.onOpenThemes, theme: 'theme-pink', shadow: '0 0 10px rgba(236,72,153,0.4)' },
-    { id: 'audiodir', cat: 'System', title: 'Audio Director', icon: Sparkles, action: props.onOpenAudioDirector, theme: 'theme-blue' },
-    { id: 'dlc', cat: 'System', title: 'Gerenciador de Complementos', icon: ToyBrick, action: props.onOpenDLCManager, theme: 'theme-orange' },
-    { id: 'auditor', cat: 'System', title: 'Auditor de Sistema (Linter)', icon: Shield, action: props.onOpenSystemAuditor, theme: 'theme-red' },
-    { id: 'aibot', cat: 'System', title: 'Robô Assistente IA', icon: Bot, action: props.onToggleAIBot, theme: 'theme-pink' },
-  ];
+  const widgets = WIDGET_REGISTRY.map(w => {
+    let actionFn = () => {};
+    // Bind the actions dynamically based on props or internal use
+    if (w.actionType === 'toggleWindow' || w.actionType === 'setActiveModal' || w.actionType === 'setShowActors') {
+      // Find the corresponding prop from props based on actionPayload if needed, 
+      // but since WidgetHubModal receives explicit props, let's map them.
+      // Actually, we can just use the provided props to avoid breaking existing Modal logic:
+      const propMap: Record<string, () => void> = {
+        'aiStudio': props.onOpenAIStudio,
+        'arsenalMestre': props.onOpenArsenalMestre,
+        'campaignManager': props.onOpenCampaignManager,
+        'gmNotes': props.onOpenGMNotes,
+        'playerManager': props.onOpenPlayerManager,
+        'encounterGenerator': props.onOpenEncounterGenerator,
+        'combatTracker': props.onOpenTracker,
+        'clockConfig': props.onOpenClockConfig,
+        'chronos': props.onOpenChronos,
+        'settings-cenario': props.onOpenMapSettings,
+        'true': props.onOpenActorLibrary,
+        'cutsceneDirector': props.onOpenCutsceneDirector,
+        'diceRoller': props.onOpenDiceRoller,
+        'automatedDice': props.onOpenAutomatedDice,
+        'characterRoster': props.onOpenCharacterRoster,
+        'mindMap': props.onOpenMindMap,
+        'webFrame': props.onOpenWebFrame,
+        'tradeShop': props.onOpenTradeShop,
+        'npcGenerator': props.onOpenNPCGenerator,
+        'locationGenerator': props.onOpenLocationGenerator,
+        'oracle': props.onOpenOracleV2,
+        'loreMachine': props.onOpenLoreMachine,
+        'worldEngine': props.onOpenWorldEngine,
+        'entityForge': props.onOpenEntityForge,
+        'stronghold': props.onOpenStronghold,
+        'storyDice': props.onOpenStoryDice,
+        'ssStoryDice': props.onOpenSSStoryDice,
+        'storyBilderDeck': props.onOpenStoryBilderDeck,
+        'players': props.onOpenRoomManager,
+        'settings-aparencia': props.onOpenThemes,
+        'audioDirector': props.onOpenAudioDirector,
+        'settings-modulos': props.onOpenDLCManager,
+        'systemAuditor': props.onOpenSystemAuditor,
+        'settings-ia': props.onToggleAIBot,
+        'playerQuickBar': () => {}, // Handled directly if needed, but not really part of old Hub, so we mock it.
+      };
+      
+      actionFn = propMap[w.actionPayload] || (() => {});
+    }
+    
+    return { ...w, action: actionFn };
+  });
 
   const categories = ['Game Master', 'Player Tools', 'Generators & AI', 'System'];
   

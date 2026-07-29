@@ -326,3 +326,24 @@ body.show-desktop-nav .fab-container {
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: var(--radius-sm);
 }
+
+/* Ultra-small screens */
+@media (max-width: 480px) {
+  .mobile-bottom-nav {
+    height: 56px;
+  }
+  .mobile-bottom-nav .nav-item {
+    gap: 2px;
+  }
+  .mobile-bottom-nav .nav-label {
+    font-size: 9px;
+  }
+  .token-context-hud {
+    padding: 0.4rem 0.6rem !important;
+    gap: 0.35rem !important;
+    border-radius: 16px !important;
+  }
+  .fab-container {
+    bottom: 100px !important;
+  }
+}

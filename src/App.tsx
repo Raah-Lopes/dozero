@@ -197,7 +197,7 @@ function App() {
               id="tracker"
               title="Iniciativa"
               initialX={window.innerWidth - 360}
-              initialY={80}
+              initialY={160}
               width={340}
               height={500}
               variant="default"
@@ -215,7 +215,7 @@ function App() {
               id="cutscenes"
               title="Diretor de Cenas (Títulos)"
               initialX={window.innerWidth / 2 - 200}
-              initialY={100}
+              initialY={180}
               width={400}
               height={500}
               variant="default"
@@ -306,7 +306,7 @@ function App() {
       {/* Free-Floating Window Layer */}
       <>
         {showActors && (
-          <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={100} width={300} onClose={handleCloseActorLibrary}>
+          <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={160} width={300} onClose={handleCloseActorLibrary}>
             <div style={{ height: '400px' }}>
               <ErrorBoundary componentName="Painel de NPCs"><NPCPanel /></ErrorBoundary>
             </div>
@@ -347,13 +347,13 @@ function App() {
         ))}
 
         {openWindows.combatLog && (
-          <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={100} width={320} height={400} onClose={handleCloseCombatLog}>
+          <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={160} width={320} height={400} onClose={handleCloseCombatLog}>
             <ErrorBoundary componentName="CombatLog"><CombatLog /></ErrorBoundary>
           </DraggableWindow>
         )}
 
         {openWindows.chatWindow && (
-          <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={100} width={320} height={400} onClose={handleCloseChatWindow}>
+          <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={160} width={320} height={400} onClose={handleCloseChatWindow}>
             <ErrorBoundary componentName="ChatWindow"><ChatWindow /></ErrorBoundary>
           </DraggableWindow>
         )}

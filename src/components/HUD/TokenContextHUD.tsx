@@ -61,7 +61,7 @@ export function TokenContextHUD() {
       className="token-context-hud"
       style={{
         position: 'absolute',
-        bottom: window.innerWidth <= 768 ? '8rem' : '5.5rem',
+        bottom: window.innerWidth <= 768 ? '10rem' : '7.5rem',
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
