@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { state } from '../../../services/yjs';
-import { User, Shield, Activity, Edit2, Palette } from 'lucide-react';
+import { User, Shield, Activity, Edit2, Palette, Trash2 } from 'lucide-react';
 
 export const PlayerManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [players, setPlayers] = useState<any[]>([]);
@@ -98,6 +98,17 @@ export const PlayerManagerWidget: React.FC<{ onClose: () => void }> = ({ onClose
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}
                   >
                     <Edit2 size={16} />
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (confirm(`Remover ${p.name} da lista de jogadores?`)) {
+                        state.players.delete(p.id);
+                      }
+                    }}
+                    title="Excluir Jogador"
+                    style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', marginLeft: '4px' }}
+                  >
+                    <Trash2 size={16} />
                   </button>
                 </>
               )}

@@ -135,7 +135,9 @@ magias_preparadas:
     current: 0
     max: 0
 registro_aventura: ''
+visionRadius: 200
 ---
+
 
 
 :::info

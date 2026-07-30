@@ -102,7 +102,36 @@ export const LivingBrain: React.FC = () => {
       
       setData({ nodes, links: json.links });
     } catch (err) {
-      console.error(err);
+      console.warn("Wiki API indisponível (provável Vercel). Gerando grafo vivo da Campanha...");
+      try {
+        const { state } = await import('../../services/yjs');
+        const fallbackNodes: NodeData[] = [];
+        const fallbackLinks: LinkData[] = [];
+        
+        fallbackNodes.push({ id: 'campaign', name: 'Mesa DoZero', group: 'root', path: '', avatar: null, val: 30, depth: 0 });
+        
+        const factions = state.world?.get('factions') as any[] || [];
+        factions.forEach(f => {
+          fallbackNodes.push({ id: `faction_${f.id}`, name: f.name, group: 'faction', path: '', avatar: null, val: 20, depth: 1 });
+          fallbackLinks.push({ source: 'campaign', target: `faction_${f.id}` });
+        });
+
+        const tokens = Array.from(state.tokens.values() as Iterable<any>);
+        tokens.forEach(t => {
+          fallbackNodes.push({ id: `token_${t.id}`, name: t.name || 'Desconhecido', group: 'token', path: '', avatar: t.avatar || null, val: 15, depth: 2 });
+          // Link to faction if any, else root
+          if (t.factionId && factions.find(f => f.id === t.factionId)) {
+            fallbackLinks.push({ source: `faction_${t.factionId}`, target: `token_${t.id}` });
+          } else {
+            fallbackLinks.push({ source: 'campaign', target: `token_${t.id}` });
+          }
+        });
+
+        setData({ nodes: fallbackNodes, links: fallbackLinks });
+      } catch (fallbackErr) {
+        console.error("Erro no fallback do grafo:", fallbackErr);
+        setData({ nodes: [], links: [] });
+      }
     }
   };
 
