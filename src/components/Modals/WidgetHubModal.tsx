@@ -38,6 +38,7 @@ interface Props {
   onOpenStoryDice: () => void;
   onOpenSSStoryDice: () => void;
   onOpenStoryBilderDeck: () => void;
+  onOpenPlayerQuickBar: () => void;
 }
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
@@ -109,7 +110,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
         'settings-modulos': props.onOpenDLCManager,
         'systemAuditor': props.onOpenSystemAuditor,
         'settings-ia': props.onToggleAIBot,
-        'playerQuickBar': () => {}, // Handled directly if needed, but not really part of old Hub, so we mock it.
+        'playerQuickBar': props.onOpenPlayerQuickBar,
       };
       
       actionFn = propMap[w.actionPayload] || (() => {});

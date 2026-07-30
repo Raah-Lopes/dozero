@@ -294,17 +294,16 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     onClick={(e) => handleAvatarClick(p.caminhoArquivo, e)}
                     title="Clique para alterar a imagem"
                   >
-                    {p.avatar ? (
+                    <div style={{ width: '64px', height: '64px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${getStatusColor(p.status).replace('0.2', '0.8')}` }}>
+                      {getStatusIcon(p.status)}
+                    </div>
+                    {p.avatar && (
                       <img loading="lazy" decoding="async" 
-                        src={p.avatar} 
+                        src={resolveImageUrl(p.avatar)} 
                         alt={p.nome} 
-                        style={{ width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover', border: `2px solid ${getStatusColor(p.status).replace('0.2', '0.8')}` }} 
+                        style={{ position: 'absolute', top: 0, left: 0, width: '64px', height: '64px', borderRadius: '8px', objectFit: 'cover', border: `2px solid ${getStatusColor(p.status).replace('0.2', '0.8')}` }} 
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
-                    ) : (
-                      <div style={{ width: '64px', height: '64px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${getStatusColor(p.status).replace('0.2', '0.8')}` }}>
-                        {getStatusIcon(p.status)}
-                      </div>
                     )}
                     {/* Camera upload overlay on hover */}
                     <div style={{

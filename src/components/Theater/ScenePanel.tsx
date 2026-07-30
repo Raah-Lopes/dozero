@@ -9,6 +9,7 @@ import { generateAI } from '../../services/ai/AIProvider';
 import { QuestLog } from './QuestLog';
 import { exportSceneAsMarkdown } from './sceneExport';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { saveImageToCloud } from '../../utils/githubApi';
 import { GlassAccordion } from '../UI/GlassAccordion';
 
 import { toast } from '../UI/Toast';
@@ -79,8 +80,11 @@ export const ScenePanel: React.FC = () => {
   const handleAssetImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const { base64 } = await convertImageToWebP(file, 0.75, 512);
-    setAssetUrl(base64);
+    const { base64 } = await convertImageToWebP(file, 0.9, 1920);
+    const cloudUrl = await saveImageToCloud(base64, `asset_${Date.now()}.webp`);
+    if (cloudUrl) {
+      setAssetUrl(cloudUrl);
+    }
   };
 
   const handleSaveAsset = () => {
@@ -210,8 +214,11 @@ export const ScenePanel: React.FC = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const { base64 } = await convertImageToWebP(file, 0.75, 512);
-    patchCurrentScene({ imageUrl: base64 });
+    const { base64 } = await convertImageToWebP(file, 0.9, 1920);
+    const cloudUrl = await saveImageToCloud(base64, `scene_bg_${Date.now()}.webp`);
+    if (cloudUrl) {
+      patchCurrentScene({ imageUrl: cloudUrl });
+    }
   };
 
   

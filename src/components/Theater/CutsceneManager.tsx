@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Play, Pencil, Trash2, Plus, Check, X, Clock } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { saveImageToCloud } from '../../utils/githubApi';
 import { saveCutscene, updateCutscene, deleteCutscene } from '../../store';
 import type { SavedCutscene } from '../../store';
 
@@ -93,8 +94,11 @@ const CutsceneEditor: React.FC<EditorProps> = ({ initial, onSave, onCancel }) =>
             onChange={async e => {
               const file = e.target.files?.[0];
               if (!file) return;
-              const { base64 } = await convertImageToWebP(file, 0.8, 1024);
-              setImageUrl(base64);
+              const { base64 } = await convertImageToWebP(file, 0.9, 1920);
+              const cloudUrl = await saveImageToCloud(base64, `cutscene_${Date.now()}.webp`);
+              if (cloudUrl) {
+                setImageUrl(cloudUrl);
+              }
               e.target.value = '';
             }}
           />

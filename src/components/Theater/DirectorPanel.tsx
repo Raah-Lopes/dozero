@@ -19,6 +19,7 @@ import { PropsPanel } from './PropsPanel';
 import { importSceneFromMarkdown } from './sceneExport';
 import { GlassAccordion } from '../UI/GlassAccordion';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { saveImageToCloud } from '../../utils/githubApi';
 
 import { toast } from '../UI/Toast';
 type DrawerTab = 'ambiente' | 'personagens' | 'mecanicas' | 'narrativa';
@@ -322,9 +323,12 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                         onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file || !currentScene) return;
-                          const { base64 } = await convertImageToWebP(file, 0.8, 1024);
-                          const newAsset = { id: `bg_${Date.now()}`, title: 'Fundo Local', url: base64, type: 'location' as const };
-                          patchCurrentScene({ assets: [...(currentScene.assets ?? []), newAsset] });
+                          const { base64 } = await convertImageToWebP(file, 0.9, 1920);
+                          const cloudUrl = await saveImageToCloud(base64, `bg_local_${Date.now()}.webp`);
+                          if (cloudUrl) {
+                            const newAsset = { id: `bg_${Date.now()}`, title: 'Fundo Local', url: cloudUrl, type: 'location' as const };
+                            patchCurrentScene({ assets: [...(currentScene.assets ?? []), newAsset] });
+                          }
                           e.target.value = '';
                         }}
                       />

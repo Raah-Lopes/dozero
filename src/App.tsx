@@ -408,6 +408,7 @@ function App() {
                   onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
                   onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
                   onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
+                  onOpenPlayerQuickBar={() => { toggleWindow('playerQuickBar'); setActiveModal('none'); }}
                   onToggleAIBot={() => { setActiveModal('settings-ia'); }}
                   onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
                   onOpenThemes={() => { setActiveModal('settings-aparencia'); }}

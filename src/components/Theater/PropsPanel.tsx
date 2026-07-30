@@ -3,6 +3,7 @@ import { useSceneState } from './hooks/useSceneState';
 import { Type, Image as ImageIcon, Trash2, ArrowUp, ArrowDown, Settings } from 'lucide-react';
 import { GlassAccordion } from '../UI/GlassAccordion';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { saveImageToCloud } from '../../utils/githubApi';
 
 export const PropsPanel: React.FC = () => {
   const { currentScene, patchCurrentScene } = useSceneState();
@@ -34,7 +35,12 @@ export const PropsPanel: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const { base64 } = await convertImageToWebP(file, 0.75, 512);
+    const { base64 } = await convertImageToWebP(file, 0.9, 1024);
+    
+    // Instead of base64 which freezes Yjs, save to cloud and use URL
+    const cloudUrl = await saveImageToCloud(base64, `prop_${Date.now()}.webp`);
+    if (!cloudUrl) return;
+
     const img = new Image();
     img.onload = () => {
       let w = Math.min(img.width, 200);
@@ -42,7 +48,7 @@ export const PropsPanel: React.FC = () => {
       const newProp = {
         id: `prop_${Date.now()}`,
         type: 'image' as const,
-        url: base64,
+        url: cloudUrl,
         label: file.name,
         x: 200 + Math.random() * 50,
         y: 200 + Math.random() * 50,
@@ -52,7 +58,7 @@ export const PropsPanel: React.FC = () => {
       };
       patchCurrentScene({ props: [...props, newProp] });
     };
-    img.src = base64;
+    img.src = base64; // Using base64 to measure dimensions quickly
     e.target.value = '';
   };
 
