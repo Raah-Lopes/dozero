@@ -132,8 +132,11 @@ magias_preparadas:
 macros: []
 avatar: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
 des: 11
-visionRadius: 45
+visionRadius: 200
 ---
+
+
+
 
 
 

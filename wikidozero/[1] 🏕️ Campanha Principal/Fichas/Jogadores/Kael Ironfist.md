@@ -81,7 +81,10 @@ hasVision: false
 showName: false
 inCombat: true
 visionRadius: 200
+Ouro: 0
+riquezas: 0
 ---
+
 
 
 

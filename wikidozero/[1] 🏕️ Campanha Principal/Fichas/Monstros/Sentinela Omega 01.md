@@ -1,7 +1,5 @@
 ---
 inventario:
-  - nome: Pente de Topete Cromado
-    desc: Um pente extremamente brilhante e ostentoso, usado constantemente para tentar manter seu topete exagerado no lugar. Reflete a luz de forma um tanto irritante.
   - nome: Pistola de Plasma Desgastada (Modo Atordoante)
     desc: Sua antiga arma de exterminador, agora configurada para um modo não-letal de atordoamento. Embora enferrujada e com arranhões, ainda emite um zumbido ameaçador e um brilho azulado característico de sua origem.
   - nome: Caderneta de Observações Curiosas
@@ -141,7 +139,10 @@ xp: 0
 classe: ''
 borderColor: '#858200'
 hasVision: true
+Ouro: 5
 ---
+
+
 
 
 
