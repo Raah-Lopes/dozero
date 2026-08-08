@@ -5,7 +5,7 @@ import {
     CheckCircle, Network, Film, Crown, Swords, Timer, Clock, ScrollText, 
     Notebook, Shield, Crosshair, Users, ShoppingBag, TrendingUp, MessageCircle, 
     ServerOff, WifiOff, ShieldCheck, Code, ChevronDown, X, RotateCw, Info, 
-    Rocket, FileText, Github, MessageSquare, BookOpen 
+    Rocket, FileText, MessageSquare, BookOpen 
 } from 'lucide-react';
 import './LandingPage.css';
 
@@ -13,6 +13,15 @@ export function LandingPage() {
     const navigate = useNavigate();
     const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
     const [isLauncherModalOpen, setIsLauncherModalOpen] = useState(false);
+    const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+    const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+        e.preventDefault();
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
     
     // Inject Tailwind CDN only when Landing Page is active
     useEffect(() => {
@@ -104,12 +113,9 @@ export function LandingPage() {
                     </a>
                     
                     <div className="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-700">
-                        <a href="#mascote" className="hover:text-amber-600 transition-colors flex items-center gap-1.5"><Bot className="w-4 h-4 text-amber-600" /> Zye AI</a>
-                        <a href="#modos" className="hover:text-amber-600 transition-colors">Modos de Jogo</a>
-                        <a href="#ia" className="hover:text-amber-600 transition-colors">Arsenal de IA</a>
-                        <a href="#widgets" className="hover:text-amber-600 transition-colors">18+ Widgets</a>
-                        <a href="#arquitetura" className="hover:text-amber-600 transition-colors">P2P Tech</a>
-                        <a href="#faq" className="hover:text-amber-600 transition-colors">FAQ</a>
+                        <a href="#mascote" onClick={(e) => scrollToSection(e, 'mascote')} className="text-slate-600 hover:text-amber-500 font-semibold transition-colors flex items-center gap-1.5"><Bot className="w-4 h-4 text-amber-600" /> Zye AI</a>
+                        <a href="#modos" onClick={(e) => scrollToSection(e, 'modos')} className="text-slate-600 hover:text-amber-500 font-semibold transition-colors">Modos</a>
+                        <a href="#faq" onClick={(e) => scrollToSection(e, 'faq')} className="text-slate-600 hover:text-amber-500 font-semibold transition-colors">FAQ</a>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -370,12 +376,262 @@ export function LandingPage() {
                 </div>
             </section>
 
+            {/* SECTION: 18+ MODULAR WIDGETS ARSENAL */}
+            <section id="widgets" className="py-20 bg-slate-900 text-white relative z-10 sketch-border mx-4 md:mx-12 mb-20 shadow-2xl overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <div className="inline-block px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-xs font-bold mb-3 border border-amber-400/30">
+                            🧩 Janelas Flutuantes & Layouts Arrastáveis
+                        </div>
+                        <h2 className="text-4xl sm:text-5xl sketch-font font-bold text-amber-300 mb-4">O Arsenal Modular Dozero</h2>
+                        <p className="text-slate-300 text-base">Monte sua própria interface de jogo arrastando, redimensionando e ocultando widgets. Mais de 18 módulos construídos para potencializar o Mestre e os Jogadores.</p>
+                    </div>
+
+                    <div className="grid lg:grid-cols-2 gap-12">
+                        {/* Game Master Arsenal */}
+                        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl">
+                            <div className="flex items-center justify-between border-b border-slate-700 pb-4 mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center font-bold">
+                                        <Crown className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl sketch-font font-bold text-white">Ferramentas do Game Master</h3>
+                                        <span className="text-xs text-amber-400 font-mono">9 Widgets Exclusivos do Mestre</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-amber-400/50 transition-colors">
+                                    <Sparkles className="w-6 h-6 text-amber-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">AI Studio</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Gerador de NPCs, loot e locais</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-amber-400/50 transition-colors">
+                                    <Swords className="w-6 h-6 text-red-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Encounter Builder</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Calculador de ND e encontros</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-amber-400/50 transition-colors">
+                                    <Timer className="w-6 h-6 text-orange-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Tension Clock</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Relógios estilo PBTA/Blades</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-amber-400/50 transition-colors">
+                                    <Clock className="w-6 h-6 text-blue-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Chronos Time</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Controle de clima e calendário</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-amber-400/50 transition-colors">
+                                    <ScrollText className="w-6 h-6 text-emerald-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Quest Tracker</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Gerenciador de missões ativas</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-amber-400/50 transition-colors">
+                                    <Notebook className="w-6 h-6 text-purple-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">GM Notes</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Bloco de notas privado</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Player Tools Arsenal */}
+                        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl">
+                            <div className="flex items-center justify-between border-b border-slate-700 pb-4 mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-bold">
+                                        <Shield className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl sketch-font font-bold text-white">Ferramentas dos Jogadores</h3>
+                                        <span className="text-xs text-indigo-300 font-mono">9 Módulos de Ação Tática</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-indigo-400/50 transition-colors">
+                                    <Dices className="w-6 h-6 text-indigo-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Automated Dice</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Rolagens com fórmulas complexas</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-indigo-400/50 transition-colors">
+                                    <Crosshair className="w-6 h-6 text-red-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Target Terminal</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Seleção tática de alvos e dano</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-indigo-400/50 transition-colors">
+                                    <Users className="w-6 h-6 text-amber-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Char Roster</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Fichas e grupo de heróis</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-indigo-400/50 transition-colors">
+                                    <ShoppingBag className="w-6 h-6 text-emerald-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Trade Shop</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Loja de itens e comércio</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-indigo-400/50 transition-colors">
+                                    <TrendingUp className="w-6 h-6 text-cyan-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Level Up Panel</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Sistema de evolução</p>
+                                </div>
+                                <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 hover:border-indigo-400/50 transition-colors">
+                                    <MessageCircle className="w-6 h-6 text-purple-400 mb-2" />
+                                    <h4 className="font-bold text-xs text-white">Combat Log & Chat</h4>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Histórico completo de rolagens</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION: CHARACTER STUDY & ART SHOWCASE */}
+            <section className="py-16 relative z-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-slate-200">
+                        <div className="grid lg:grid-cols-12 gap-8 items-center">
+                            <div className="lg:col-span-6">
+                                <div className="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold mb-3">
+                                    🎨 Fidelidade de Design & Ilustração
+                                </div>
+                                <h2 className="text-4xl sketch-font font-bold text-slate-900 mb-4">Expressão e Identidade dos seus Personagens</h2>
+                                <p className="text-slate-600 text-base leading-relaxed mb-6">
+                                    O Dozero VTT foi projetado respeitando o conceito de guias de estilo e expressão de personagens de RPG. Exiba ilustrações em alta definição, retratos dinâmicos e fichas integradas que ganham vida durante as partidas.
+                                </p>
+                                <div className="flex gap-4">
+                                    <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex-1">
+                                        <h4 className="font-bold text-xs text-slate-800">Avatares em Camadas</h4>
+                                        <p className="text-[11px] text-slate-500">Suporte a transparência PNG e WebP</p>
+                                    </div>
+                                    <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex-1">
+                                        <h4 className="font-bold text-xs text-slate-800">Status Visual</h4>
+                                        <p className="text-[11px] text-slate-500">Indicadores de vida, mana e condições</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="lg:col-span-6">
+                                <img src="/assets/character_guide.png" alt="Guia de Estudo de Personagem RPG" className="w-full h-auto rounded-2xl sketch-border shadow-xl hover:scale-102 transition-transform duration-300" onError={(e) => { (e.target as HTMLImageElement).src = '/assets/zero_golem_2k.jpg' }} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION: P2P DECENTRALIZED ARCHITECTURE */}
+            <section id="arquitetura" className="py-20 relative z-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <h2 className="text-4xl sm:text-5xl sketch-font font-bold text-slate-900 mb-4">Por que a Arquitetura P2P Muda Tudo?</h2>
+                        <p className="text-slate-600 text-base">Chega de dependência de servidores centrais lentos, mensalidades abusivas e perdas de dados quando o serviço sai do ar.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="glass-panel p-6 rounded-2xl text-center border border-slate-200 hover:-translate-y-1 transition-transform">
+                            <div className="w-14 h-14 mx-auto bg-cyan-100 text-cyan-600 rounded-2xl flex items-center justify-center mb-4 transform rotate-3">
+                                <ServerOff className="w-7 h-7" />
+                            </div>
+                            <h4 className="font-bold text-slate-900 text-lg mb-2">Sem Servidor Central</h4>
+                            <p className="text-slate-600 text-xs leading-relaxed">Conexão direta WebRTC com CRDT (Yjs). Sua máquina transmite diretamente para seus jogadores com zero latência.</p>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-2xl text-center border border-slate-200 hover:-translate-y-1 transition-transform">
+                            <div className="w-14 h-14 mx-auto bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-4 transform -rotate-3">
+                                <WifiOff className="w-7 h-7" />
+                            </div>
+                            <h4 className="font-bold text-slate-900 text-lg mb-2">100% Offline-First</h4>
+                            <p className="text-slate-600 text-xs leading-relaxed">Todos os mapas e campanhas são salvos localmente via IndexedDB. Continue preparando suas sessões sem precisar de internet.</p>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-2xl text-center border border-slate-200 hover:-translate-y-1 transition-transform">
+                            <div className="w-14 h-14 mx-auto bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 transform rotate-6">
+                                <ShieldCheck className="w-7 h-7" />
+                            </div>
+                            <h4 className="font-bold text-slate-900 text-lg mb-2">Privacidade Total</h4>
+                            <p className="text-slate-600 text-xs leading-relaxed">Seus dados e histórias não ficam armazenados na nuvem de terceiros. Você é o único dono do seu conteúdo.</p>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-2xl text-center border border-slate-200 hover:-translate-y-1 transition-transform">
+                            <div className="w-14 h-14 mx-auto bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-4 transform -rotate-6">
+                                <Code className="w-7 h-7" />
+                            </div>
+                            <h4 className="font-bold text-slate-900 text-lg mb-2">Open Source & Extensível</h4>
+                            <p className="text-slate-600 text-xs leading-relaxed">Desenvolvido em React + Vite + TypeScript. Crie facilmente novos sistemas de regras e widgets customizados.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION: FAQ ACCORDION */}
+            <section id="faq" className="py-16 relative z-10">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-4xl sketch-font font-bold text-slate-900 mb-3">Perguntas Frequentes</h2>
+                        <p className="text-slate-600 text-sm">Tudo o que você precisa saber para começar no Dozero VTT.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        {[
+                            { q: "O Dozero VTT é realmente gratuito?", a: "Sim! Por ser uma aplicação Web descentralizada sem servidores centrais pesados, você pode rodá-la localmente ou via web gratuitamente." },
+                            { q: "Como meus jogadores entram na minha mesa?", a: "O Mestre gera um link de convite P2P único. Os jogadores simplesmente abrem o link no navegador e conectam-se diretamente à sala WebRTC." },
+                            { q: "Preciso pagar pelas chaves de IA (Gemini / Pollinations)?", a: "Não! O Google Gemini disponibiliza cotas gratuitas generosas de API Key, e o Pollinations AI e Google TTS são integrados sem custos adicionais." },
+                            { q: "Funciona em dispositivos mobile e tablets?", a: "Sim! A interface possui barra de navegação adaptativa para mobile e modals em tela cheia para rolagem de dados em celulares." }
+                        ].map((faq, index) => (
+                            <div key={index} className="glass-panel rounded-2xl p-5 border border-slate-200">
+                                <button className="w-full text-left font-bold text-slate-900 flex justify-between items-center" onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}>
+                                    <span>{faq.q}</span>
+                                    <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform ${openFaqIndex === index ? 'rotate-180' : ''}`} />
+                                </button>
+                                {openFaqIndex === index && (
+                                    <div className="mt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-200 pt-3">
+                                        {faq.a}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* CTA SECTION */}
             <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 text-center">
                 <button onClick={() => setIsLauncherModalOpen(true)} className="px-10 py-5 bg-amber-400 text-slate-900 text-2xl sketch-font font-bold sketch-border hover:bg-amber-300 transition-all hover:scale-105 transform shadow-2xl flex items-center gap-2 mx-auto">
                     <Rocket className="w-6 h-6" /> Iniciar Campanha (v0.1.0)
                 </button>
             </div>
+
+            {/* FOOTER */}
+            <footer className="glass mt-12 border-t border-slate-200 relative z-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="flex items-center gap-3">
+                        <img src="/assets/logo.webp" alt="Dozero VTT Logo" className="h-9 w-auto object-contain rounded" />
+                        <span className="text-xs text-slate-500 font-medium ml-2">© 2026 • RPG Descentralizado</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600 font-semibold">
+                        <a href="https://github.com/Raah-Lopes/dozero/blob/main/KICKOFF_REPORT_diff.md" target="_blank" rel="noopener noreferrer" className="hover:text-amber-600 transition-colors flex items-center gap-1">
+                            <FileText className="w-4 h-4" /> Kickoff Report
+                        </a>
+                        <a href="#mascote" onClick={(e) => scrollToSection(e, 'mascote')} className="hover:text-amber-600 transition-colors">Zye AI</a>
+                        <a href="#modos" onClick={(e) => scrollToSection(e, 'modos')} className="hover:text-amber-600 transition-colors">Modos</a>
+                        <a href="#widgets" onClick={(e) => scrollToSection(e, 'widgets')} className="hover:text-amber-600 transition-colors">Widgets</a>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <a href="https://github.com/Raah-Lopes/dozero" target="_blank" rel="noopener noreferrer" className="p-2.5 glass rounded-xl hover:bg-white transition-all border border-slate-300 text-slate-700 hover:text-slate-900" title="GitHub">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                            </svg>
+                        </a>
+                        <a href="#" className="p-2.5 glass rounded-xl hover:bg-white transition-all border border-slate-300 text-slate-700 hover:text-indigo-600" title="Discord">
+                            <MessageSquare className="w-5 h-5" />
+                        </a>
+                        <a href="#" className="p-2.5 glass rounded-xl hover:bg-white transition-all border border-slate-300 text-slate-700 hover:text-amber-600" title="Manual">
+                            <BookOpen className="w-5 h-5" />
+                        </a>
+                    </div>
+                </div>
+            </footer>
 
             {/* MODALS */}
             {isDiceModalOpen && (
