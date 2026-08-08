@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { 
     Bot, Dices, Play, Sparkles, MapPin, Box, Layers, Map as MapIcon, 
     CheckCircle, Network, Film, Crown, Swords, Timer, Clock, ScrollText, 
@@ -11,7 +10,6 @@ import './LandingPage.css';
 import './landing-tailwind.css';
 
 export function LandingPage() {
-    const navigate = useNavigate();
     const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
     const [isLauncherModalOpen, setIsLauncherModalOpen] = useState(false);
     const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -75,7 +73,7 @@ export function LandingPage() {
 
     const handleLaunchRoom = () => {
         // Redireciona para o VTT
-        navigate('/vtt');
+        window.location.href = '/vtt.html';
     };
 
     return (

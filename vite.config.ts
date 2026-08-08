@@ -61,6 +61,10 @@ export default defineConfig({
   ],
   build: {
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        vtt: 'vtt.html'
+      },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
