@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload
+  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload, LogOut
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
@@ -67,7 +67,8 @@ export function MainToolbar() {
     { id: 'chat', label: 'Chat P2P (Mensagens)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('chatWindow'), isActive: openWindows.chatWindow, colorClass: 'theme-blue' },
     { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },
     ...(isLocalhost ? [{ id: 'sync', label: isSyncing ? 'Sincronizando...' : 'Sincronizar Nuvem (Vercel)', icon: <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />, action: handleSyncCloud, isActive: false, colorClass: 'theme-green' }] : []),
-    { id: 'settings', label: 'Configurações do Sistema', icon: <Settings size={20} />, action: () => toggleModal('settings'), isActive: activeModal === 'settings', colorClass: 'theme-slate' }
+    { id: 'settings', label: 'Configurações do Sistema', icon: <Settings size={20} />, action: () => toggleModal('settings'), isActive: activeModal === 'settings', colorClass: 'theme-slate' },
+    { id: 'exit', label: 'Sair (Voltar ao Início)', icon: <LogOut size={20} />, action: () => window.location.href = '/', isActive: false, colorClass: 'theme-red' }
   ];
 
   const filteredTools = tools.filter(t => t.label.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -180,6 +181,10 @@ export function MainToolbar() {
           )}
           <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações do Sistema" aria-label="Abrir Configurações do Sistema">
             <Settings size={20} />
+          </button>
+          <div style={{ width: '1px', background: 'var(--glass-border)', margin: '0 4px' }}></div>
+          <button className="btn-icon theme-red" onClick={() => window.location.href = '/'} title="Sair (Voltar ao Início)" aria-label="Sair da Mesa">
+            <LogOut size={20} />
           </button>
         </div>
       </div>
