@@ -8,6 +8,7 @@ import {
     Rocket, FileText, MessageSquare, BookOpen 
 } from 'lucide-react';
 import './LandingPage.css';
+import './landing-tailwind.css';
 
 export function LandingPage() {
     const navigate = useNavigate();
@@ -22,24 +23,6 @@ export function LandingPage() {
             element.scrollIntoView({ behavior: 'smooth' });
         }
     };
-    
-    // Inject Tailwind CDN only when Landing Page is active
-    useEffect(() => {
-        // Set configuration globally before the script loads
-        (window as any).tailwind = (window as any).tailwind || {};
-        (window as any).tailwind.config = {
-            corePlugins: {
-                preflight: false,
-            }
-        };
-
-        if (!document.getElementById('tailwind-cdn-script')) {
-            const cdnScript = document.createElement('script');
-            cdnScript.id = 'tailwind-cdn-script';
-            cdnScript.src = 'https://cdn.tailwindcss.com';
-            document.head.appendChild(cdnScript);
-        }
-    }, []);
     
     // Dice state
     const [heroDiceResult, setHeroDiceResult] = useState<number>(19);
