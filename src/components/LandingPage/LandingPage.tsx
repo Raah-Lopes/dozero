@@ -14,6 +14,22 @@ export function LandingPage() {
     const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
     const [isLauncherModalOpen, setIsLauncherModalOpen] = useState(false);
     
+    // Inject Tailwind CDN only when Landing Page is active
+    useEffect(() => {
+        if (!document.getElementById('tailwind-config-script')) {
+            const configScript = document.createElement('script');
+            configScript.id = 'tailwind-config-script';
+            configScript.innerHTML = `tailwind.config = { corePlugins: { preflight: false } }`;
+            document.head.appendChild(configScript);
+        }
+        if (!document.getElementById('tailwind-cdn-script')) {
+            const cdnScript = document.createElement('script');
+            cdnScript.id = 'tailwind-cdn-script';
+            cdnScript.src = 'https://cdn.tailwindcss.com';
+            document.head.appendChild(cdnScript);
+        }
+    }, []);
+    
     // Dice state
     const [heroDiceResult, setHeroDiceResult] = useState<number>(19);
     const [heroDiceAnim, setHeroDiceAnim] = useState(false);
