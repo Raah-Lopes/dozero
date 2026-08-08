@@ -16,12 +16,14 @@ export function LandingPage() {
     
     // Inject Tailwind CDN only when Landing Page is active
     useEffect(() => {
-        if (!document.getElementById('tailwind-config-script')) {
-            const configScript = document.createElement('script');
-            configScript.id = 'tailwind-config-script';
-            configScript.innerHTML = `tailwind.config = { corePlugins: { preflight: false } }`;
-            document.head.appendChild(configScript);
-        }
+        // Set configuration globally before the script loads
+        (window as any).tailwind = (window as any).tailwind || {};
+        (window as any).tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        };
+
         if (!document.getElementById('tailwind-cdn-script')) {
             const cdnScript = document.createElement('script');
             cdnScript.id = 'tailwind-cdn-script';
