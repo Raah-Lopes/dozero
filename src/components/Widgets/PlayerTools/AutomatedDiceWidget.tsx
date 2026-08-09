@@ -962,7 +962,8 @@ ${vencedor}`, true);
                 PM: Math.floor(ficha.mana),
                 energia: Math.floor(ficha.energia),
                 sanidade: Math.floor(ficha.sanidade),
-                status_efeitos: ficha.status_efeitos
+                status_efeitos: ficha.status_efeitos,
+                ouro: ficha.ouro
               });
             }
           }

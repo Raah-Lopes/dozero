@@ -8,24 +8,14 @@ status: vivo
 ativo: true
 ancestralidade: Slime Biotecnológico
 heranca: Núcleo Aberrante Espacial
-biografia: >-
-  Nascido em uma câmara de contenção da mega-corporação Aethel-Corp, Drougtot é
-  a fusão grotesca entre nanobots de infestação biológica e o lodo primordial
-  colhido de um meteoro abissal. Desenvolveu consciência própria após absorver
-  um bio-deck corporativo e escapou para os esgotos enevoados da megalópole,
-  onde ouve os sussurros de ecossistemas mutantes e entidades de além-estrelas.
+biografia: Nascido em uma câmara de contenção da mega-corporação Aethel-Corp, Drougtot é a fusão grotesca entre nanobots de infestação biológica e o lodo primordial colhido de um meteoro abissal. Desenvolveu consciência própria após absorver um bio-deck corporativo e escapou para os esgotos enevoados da megalópole, onde ouve os sussurros de ecossistemas mutantes e entidades de além-estrelas.
 classe: Druida Bio-Hacker (Círculo da Biocorrupção)
 alinhamento: Neutro
 genero: Fluido
 nome_jogador: Mestre
 xp: 1200
-registro_aventura: >-
-  Infiltrou-se nos galpões da Aethel-Corp e infectou os servidores de bio-dados
-  com mofo sintético consciente.
-anotacoes: >-
-  Visco constante com odor de ozônio e carcaça queimada. Quando sua sanidade
-  cai, visões de um oceano negro com olhos vermelhos distorcem sua percepção
-  visual.
+registro_aventura: Infiltrou-se nos galpões da Aethel-Corp e infectou os servidores de bio-dados com mofo sintético consciente.
+anotacoes: Visco constante com odor de ozônio e carcaça queimada. Quando sua sanidade cai, visões de um oceano negro com olhos vermelhos distorcem sua percepção visual.
 imagens: []
 magias:
   - 'Hack: Bio-Corrosão Cáustica (Truque)'
@@ -70,9 +60,7 @@ ficha_personagem:
   pontos_vida:
     maximo: 43
     atuais: 43
-    anotacoes: >-
-      Sanidade Limiar: 14/20 (Suscetível a alucinações de geometria
-      não-euclidiana)
+    anotacoes: 'Sanidade Limiar: 14/20 (Suscetível a alucinações de geometria não-euclidiana)'
   velocidade_metros: 7.5
   pericias:
     acrobatismo: 2
@@ -158,7 +146,11 @@ maldicoes: []
 objetos_campanha: []
 Ouro: 0
 XP: 1200
+po: 356
 ---
+
+
+
 
 
 

@@ -54,7 +54,7 @@ export function GMToolbar() {
       setGlobalFogMode(fogMode);
     } else if (activeTool === 'RULER') {
       setGlobalActiveTool('ruler');
-    } else if (['pen', 'shape', 'arrow', 'text', 'eraser'].includes(activeTool as string)) {
+    } else if (['pan', 'pen', 'shape', 'arrow', 'text', 'eraser'].includes(activeTool as string)) {
       setGlobalActiveTool(activeTool as any);
     } else {
       setGlobalActiveTool('select');

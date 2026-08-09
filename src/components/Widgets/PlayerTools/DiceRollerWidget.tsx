@@ -286,6 +286,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
       height={600}
       onClose={onClose}
       variant="glass"
+      dragAnywhere={false}
     >
       <style>{`
         @keyframes diceRoll {
@@ -312,7 +313,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
       <div className="panel-neon-red" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         
         {/* HEADER: Tema */}
-        <div style={{ padding: '0.6rem 1rem', background: 'linear-gradient(135deg, #13101f, #0a0a14)', borderBottom: `1px solid ${colors.primary}30`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="drag-handle" style={{ padding: '0.6rem 1rem', background: 'linear-gradient(135deg, #13101f, #0a0a14)', borderBottom: `1px solid ${colors.primary}30`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="text-gold" style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>🎲 Rolador DOZERO</span>
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
             <span style={{ fontSize: '0.65rem', color: '#666' }}>Tema:</span>

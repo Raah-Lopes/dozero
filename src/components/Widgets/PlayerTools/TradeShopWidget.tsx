@@ -30,7 +30,7 @@ interface TradeProposal {
 
 export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => {
   const { personagens, recarregar } = usePersonagens(false);
-  const [activeTab, setActiveTab] = useState<'doar' | 'trocar' | 'loja'>('doar');
+  const [activeTab, setActiveTab] = useState<'doar' | 'trocar' | 'loja' | 'pagar'>('doar');
 
   // Seletores de personagens
   const [senderPath, setSenderPath] = useState<string>('');
@@ -46,6 +46,10 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
   const [tradeDemandGold, setTradeDemandGold] = useState<number>(0);
   const [tradeOfferItems, setTradeOfferItems] = useState<string[]>([]);
   const [tradeDemandItems, setTradeDemandItems] = useState<string[]>([]);
+
+  // Estados de Pagamento Rápido
+  const [payAmount, setPayAmount] = useState<number>(0);
+  const [payReason, setPayReason] = useState<string>('');
   const [incomingTrades, setIncomingTrades] = useState<TradeProposal[]>([]);
 
   // Estados de Loja
@@ -168,6 +172,17 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     await salvarFichaFisica(sender.caminhoArquivo, updatedSender);
     await salvarFichaFisica(receiver.caminhoArquivo, updatedReceiver);
     
+    // Sincronizar moedas com tokens do tabuleiro
+    for (const [id, t] of Array.from(state.tokens.entries())) {
+      const token = t as any;
+      if (token.caminhoArquivo === sender.caminhoArquivo) {
+        state.tokens.set(id, { ...token, ouro: updatedSender.ouro });
+      }
+      if (token.caminhoArquivo === receiver.caminhoArquivo) {
+        state.tokens.set(id, { ...token, ouro: updatedReceiver.ouro });
+      }
+    }
+    
     // Mapeamento e mensagem no chat
     let desc = `💰 **${sender.nome}** doou recursos para **${receiver.nome}**:<br/>`;
     if (donateGold > 0) desc += `• **${donateGold} moedas de ouro**<br/>`;
@@ -258,15 +273,29 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     }
 
     // Salvar novos inventários e dinheiro
+    const sOuroFinal = pSender.ouro - trade.senderGold + trade.receiverGold;
+    const rOuroFinal = pReceiver.ouro - trade.receiverGold + trade.senderGold;
+
     await salvarFichaFisica(trade.senderPath, {
-      ouro: pSender.ouro - trade.senderGold + trade.receiverGold,
+      ouro: sOuroFinal,
       inventario: senderInv
     });
 
     await salvarFichaFisica(trade.receiverPath, {
-      ouro: pReceiver.ouro - trade.receiverGold + trade.senderGold,
+      ouro: rOuroFinal,
       inventario: receiverInv
     });
+
+    // Sincronizar moedas com tokens do tabuleiro
+    for (const [id, t] of Array.from(state.tokens.entries())) {
+      const token = t as any;
+      if (token.caminhoArquivo === trade.senderPath) {
+        state.tokens.set(id, { ...token, ouro: sOuroFinal });
+      }
+      if (token.caminhoArquivo === trade.receiverPath) {
+        state.tokens.set(id, { ...token, ouro: rOuroFinal });
+      }
+    }
 
     // Finalizar no Yjs
     state.trades.set(trade.id, {
@@ -358,6 +387,17 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     await salvarFichaFisica(sender.caminhoArquivo, updatedComprador);
     await salvarFichaFisica(merchantNpc.caminhoArquivo, updatedMercador);
 
+    // Sincronizar moedas com tokens do tabuleiro
+    for (const [id, t] of Array.from(state.tokens.entries())) {
+      const token = t as any;
+      if (token.caminhoArquivo === sender.caminhoArquivo) {
+        state.tokens.set(id, { ...token, ouro: updatedComprador.ouro });
+      }
+      if (token.caminhoArquivo === merchantNpc.caminhoArquivo) {
+        state.tokens.set(id, { ...token, ouro: updatedMercador.ouro });
+      }
+    }
+
     pushChatMessage(`🛒 **${sender.nome}** comprou **1x ${itemLoja.nome}** de **${merchantNpc.nome}** por **${itemLoja.custo} PO**!`, false, false);
     recarregar();
   };
@@ -407,7 +447,47 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
       loja: { itens: updatedItensLoja }
     });
 
-    pushChatMessage(`💰 **${sender.nome}** vendeu **${itemName}** para o mercador **${merchantNpc.nome}** por **${sellPrice} PO**!`, false, false);
+    // Sincronizar moedas com tokens do tabuleiro
+    for (const [id, t] of Array.from(state.tokens.entries())) {
+      const token = t as any;
+      if (token.caminhoArquivo === sender.caminhoArquivo) {
+        state.tokens.set(id, { ...token, ouro: updatedComprador.ouro, po: updatedComprador.ouro });
+      }
+      if (token.caminhoArquivo === merchantNpc.caminhoArquivo) {
+        state.tokens.set(id, { ...token, ouro: npco, po: npco });
+      }
+    }
+
+    pushChatMessage(`💰 **${sender.nome}** vendeu **1x ${itemName}** para **${merchantNpc.nome}** por **${sellPrice} PO**!`, true, false);
+    recarregar();
+  };
+
+  // PAGAMENTO RÁPIDO
+  const handlePagarRapido = async () => {
+    if (!sender) return;
+    if (payAmount <= 0) {
+      toast.warn("Insira um valor válido.");
+      return;
+    }
+    if (sender.ouro < payAmount) {
+      toast.warn("Você não possui ouro suficiente.");
+      return;
+    }
+
+    const updatedOuro = sender.ouro - payAmount;
+    await salvarFichaFisica(sender.caminhoArquivo, { ouro: updatedOuro });
+    
+    for (const [id, t] of Array.from(state.tokens.entries())) {
+      const token = t as any;
+      if (token.caminhoArquivo === sender.caminhoArquivo) {
+        state.tokens.set(id, { ...token, ouro: updatedOuro, po: updatedOuro });
+      }
+    }
+
+    pushChatMessage(`💸 **${sender.nome}** pagou **${payAmount} PO**. ${payReason ? `Motivo: ${payReason}` : ''}`, false, false);
+    setPayAmount(0);
+    setPayReason('');
+    toast.success(`Pago ${payAmount} PO com sucesso!`);
     recarregar();
   };
 
@@ -460,6 +540,9 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
           <button style={getStyleTab('loja')} onClick={() => setActiveTab('loja')}>
             <Store size={15} /> Lojas de NPCs
           </button>
+          <button style={getStyleTab('pagar')} onClick={() => setActiveTab('pagar')}>
+            <Coins size={15} /> Pagar
+          </button>
         </div>
 
         {/* CONTROLLER: Seleção dos Envolvidos */}
@@ -479,9 +562,9 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
             </select>
           </div>
           
-          {activeTab !== 'loja' ? (
+          {activeTab !== 'loja' && activeTab !== 'pagar' && (
             <div>
-              <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Alvo (Destinatário):</label>
+              <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Recebedor da Doação/Troca:</label>
               <select 
                 value={receiverPath} 
                 onChange={e => setReceiverPath(e.target.value)}
@@ -494,7 +577,8 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                 ))}
               </select>
             </div>
-          ) : (
+          )}
+          {activeTab === 'loja' && (
             <div>
               <label style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>NPC Mercador:</label>
               <select 
@@ -834,8 +918,44 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
             </div>
           )}
 
-        </div>
+          {/* TAB 4: PAGAR RÁPIDO */}
+          {activeTab === 'pagar' && sender && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: '#100f1c', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f87171' }}>Despesas, Tavernas e Subornos</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Deduza o ouro diretamente da sua ficha sem precisar de um recebedor para interpretar gastos na cidade.</span>
+                
+                <label style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Valor a Pagar (PO):</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 8px' }}>
+                  <Coins size={16} color="#f87171" />
+                  <input 
+                    type="number" 
+                    value={payAmount}
+                    onChange={e => setPayAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                    style={{ border: 'none', background: 'transparent', width: '100%', color: '#fff', outline: 'none' }}
+                  />
+                </div>
 
+                <label style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Motivo (Opcional):</label>
+                <input 
+                  type="text" 
+                  value={payReason}
+                  onChange={e => setPayReason(e.target.value)}
+                  placeholder="Ex: Pernoite na taverna, Gorjeta..."
+                  style={{ border: '1px solid rgba(255,255,255,0.1)', background: '#12111d', color: '#fff', padding: '0.5rem', borderRadius: '6px', outline: 'none' }}
+                />
+
+                <button 
+                  onClick={handlePagarRapido}
+                  style={{ background: '#ef4444', border: 'none', color: '#fff', fontWeight: 'bold', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <Coins size={16} /> Pagar {payAmount > 0 ? `${payAmount} PO` : ''}
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     </DraggableWindow>
   );

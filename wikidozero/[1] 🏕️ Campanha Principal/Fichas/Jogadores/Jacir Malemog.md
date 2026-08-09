@@ -140,6 +140,8 @@ visionRadius: 200
 
 
 
+
+
 :::info
 Interpretação e Lore
 

@@ -206,15 +206,21 @@ function isFichaEntry(e: any): boolean {
 
   if (path.includes('_modelo')) return false;
 
-  return (
+  const hasFichaTags = (
     ['pc', 'npc', 'monstro', 'personagem', 'jogador', 'inimigo', 'criatura'].includes(tipo) ||
     ['jogador', 'npc', 'inimigo', 'hostil'].includes(status) ||
-    tags.includes('personagem') || tags.includes('npc') || tags.includes('monstro') || tags.includes('inimigo') || tags.includes('pc') ||
-    path.includes('/fichas/') ||
-    path.includes('/personagens/') ||
-    path.includes('/npcs/') ||
-    path.includes('/bestiario/')
+    tags.includes('personagem') || tags.includes('npc') || tags.includes('monstro') || tags.includes('inimigo') || tags.includes('pc')
   );
+
+  const hasStats = (
+    e.metadata?.pv !== undefined || 
+    e.metadata?.HP !== undefined || 
+    e.metadata?.nivel !== undefined || 
+    e.metadata?.Nivel !== undefined ||
+    e.metadata?.ficha_personagem !== undefined
+  );
+
+  return hasFichaTags || hasStats;
 }
 
 /**

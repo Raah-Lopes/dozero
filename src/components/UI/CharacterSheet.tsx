@@ -145,6 +145,12 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ rawYaml, onChang
   const attrSab = getAttr('sab');
   const attrCar = getAttr('car');
 
+  const getOuro = () => getField(['Ouro'], getField(['ouro'], getField(['Ouro_recompensa'], 0)));
+  const updateOuro = (val: number) => {
+    if (data.tipo === 'Monstro' || data.Tipo === 'Monstro') updateField(['Ouro_recompensa'], val);
+    else updateField(['Ouro'], val);
+  };
+
   const calcMod = (score: number) => Math.floor((Number(score) - 10) / 2);
   const formatMod = (mod: number) => mod >= 0 ? `+${mod}` : `${mod}`;
 
@@ -180,6 +186,10 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ rawYaml, onChang
             <div className="actor-info-item">
               Raça
               <input type="text" value={raca} onChange={(e) => updateField(['raca'], e.target.value)} style={{ width: '80px' }} />
+            </div>
+            <div className="actor-info-item" style={{ color: '#fbbf24' }}>
+              💰 Ouro
+              <input type="number" value={getOuro()} onChange={(e) => updateOuro(Number(e.target.value))} style={{ width: '70px', color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.3)', fontWeight: 'bold' }} />
             </div>
           </div>
           

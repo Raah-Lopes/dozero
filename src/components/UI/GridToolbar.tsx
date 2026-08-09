@@ -76,8 +76,8 @@ export const GridToolbar: React.FC = () => {
   const [drawWidth, setDrawWidthState] = useState(localState.drawWidth);
   const [showStyleInspector, setShowStyleInspector] = useState(false);
   const [showConfigMenu, setShowConfigMenu] = useState(false);
-  const [showLayersMenu, setShowLayersMenu] = useState(window.innerWidth > 1257);
-  const [isLayersMinimized, setIsLayersMinimized] = useState(false);
+  const [showLayersMenu, setShowLayersMenu] = useState(false);
+  const [isLayersMinimized, setIsLayersMinimized] = useState(true);
   const [activeConfigTab, setActiveConfigTab] = useState<'mapas' | 'grid' | 'objetos'>('mapas');
   
   const [mapConfig, setMapConfig] = useState<MapConfig>(getMapConfig());
@@ -99,12 +99,14 @@ export const GridToolbar: React.FC = () => {
       setFogModeState(localState.fogMode);
       if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
         setShowStyleInspector(true);
+        setShowLayersMenu(true);
       } else {
         setShowStyleInspector(false);
+        setShowLayersMenu(false);
       }
     };
     const handleToggleConfig = () => { setShowConfigMenu(v => !v); setShowStyleInspector(false); setShowLayersMenu(false); };
-    const handleToggleLayers = () => { setShowLayersMenu(v => !v); setShowConfigMenu(false); setShowStyleInspector(false); };
+    const handleToggleLayers = () => { setShowLayersMenu(v => { if (!v) setIsLayersMinimized(false); return !v; }); setShowConfigMenu(false); setShowStyleInspector(false); };
     const handleImageUploadTrigger = () => fileInputRef.current?.click();
 
     const handleStyle = () => {

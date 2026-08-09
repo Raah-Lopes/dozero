@@ -39,6 +39,7 @@ export const NPCPanel: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'players' | 'enemies'>('all');
+  const [showOnlyLinked, setShowOnlyLinked] = useState(true);
   const [generatorCategories, setGeneratorCategories] = useState<any[]>([]);
 
   const { index: wikiIndex, isLoading: isWikiLoading } = useWiki();
@@ -447,13 +448,20 @@ export const NPCPanel: React.FC = () => {
   const filteredTokens = tokens.filter(t => {
     const matchesSearch = (t.name || '').toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (filterType === 'players') {
-      return matchesSearch && t.isPlayer === true;
+    let isMatch = matchesSearch;
+    if (filterType === 'players') isMatch = matchesSearch && t.isPlayer === true;
+    if (filterType === 'enemies') isMatch = matchesSearch && t.isPlayer !== true;
+
+    if (isMatch && showOnlyLinked) {
+      const hasLinkedSheet = wikiIndex.some(e => {
+        if (t.wikiSlug && e.slug === t.wikiSlug) return true;
+        const nameRaw = (t.name || '').trim().toLowerCase();
+        return (e.metadata?.titulo || '').toLowerCase().trim() === nameRaw || e.slug.toLowerCase().trim() === nameRaw;
+      });
+      return hasLinkedSheet;
     }
-    if (filterType === 'enemies') {
-      return matchesSearch && t.isPlayer !== true;
-    }
-    return matchesSearch;
+    
+    return isMatch;
   });
 
   // Filter wiki files matching characters
@@ -540,7 +548,7 @@ export const NPCPanel: React.FC = () => {
         {/* Categories (Board Tab only) */}
         {activePanelTab === 'board' && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-            <div style={{ display: 'flex', gap: '2px' }}>
+            <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
               {(['all', 'players', 'enemies'] as const).map(type => (
                 <button
                   key={type}
@@ -556,6 +564,16 @@ export const NPCPanel: React.FC = () => {
                   {type === 'all' ? 'Todos' : type === 'players' ? 'PCs' : 'Monstros/NPCs'}
                 </button>
               ))}
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px', fontSize: '0.65rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  checked={showOnlyLinked} 
+                  onChange={e => setShowOnlyLinked(e.target.checked)} 
+                  style={{ cursor: 'pointer', margin: 0 }}
+                />
+                Fichas Normais
+              </label>
             </div>
 
             <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>

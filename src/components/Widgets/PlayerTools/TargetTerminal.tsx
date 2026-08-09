@@ -1703,6 +1703,65 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     );
   };
 
+  const handleLoot = async () => {
+    const goldToDistribute = tokenData.po ?? 0;
+    if (goldToDistribute <= 0) {
+      toast.warn("Não há ouro para saquear.");
+      return;
+    }
+
+    const players = index.filter(e => {
+      const status = e.metadata?.status;
+      const tipo = e.metadata?.tipo;
+      const isChar = status === 'jogador' || tipo === 'pc' || tipo === 'Personagem' || (e.metadata?.tags && e.metadata.tags.includes('personagem'));
+      const isAlive = (e.metadata?.hp ?? e.metadata?.pv ?? e.metadata?.HP ?? 10) > 0;
+      const isAtivo = e.metadata?.ativo !== false;
+      return isChar && isAlive && isAtivo;
+    });
+
+    if (players.length === 0) {
+      pushChatMessage(`Nenhum jogador ativo para receber o saque!`, false, true);
+      return;
+    }
+
+    const share = Math.floor(goldToDistribute / players.length);
+    if (share <= 0) {
+      toast.warn("O ouro é insuficiente para dividir entre a party.");
+      return;
+    }
+
+    // Update players
+    for (const p of players) {
+      const currentGold = parseInt(p.metadata?.po ?? p.metadata?.ouro ?? p.metadata?.Ouro ?? 0) || 0;
+      await syncTokenFieldToWiki(p.path, 'po', currentGold + share);
+      
+      for (const [id, t] of Array.from(state.tokens.entries())) {
+        const tok = t as any;
+        if (tok.caminhoArquivo === p.path) {
+          state.tokens.set(id, { ...tok, po: currentGold + share, ouro: currentGold + share });
+        }
+      }
+    }
+
+    // Update monster
+    const monsterPath = tokenId ? tokenData.caminhoArquivo || wikiEntry?.path : wikiPath;
+    if (monsterPath) {
+      await syncTokenFieldToWiki(monsterPath, 'po', 0);
+      await syncTokenFieldToWiki(monsterPath, 'saqueado', true);
+      
+      if (tokenId) {
+         const t = state.tokens.get(tokenId) as any;
+         if (t) state.tokens.set(tokenId, { ...t, po: 0, ouro: 0, saqueado: true });
+      }
+    }
+
+    pushChatMessage(`💰 **A party saqueou ${goldToDistribute} PO** de ${tokenData.name || tokenData.titulo || 'o alvo'}! (${share} PO para cada)`, false, false);
+    
+    handlePropChange('po', 0);
+    handlePropChange('saqueado', true);
+    toast.success("Ouro distribuído para a party!");
+  };
+
   const renderFichaTab = () => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -2082,6 +2141,21 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
                <input type="number" value={tokenData.po ?? 0} onChange={e => handlePropChange('po', parseInt(e.target.value) || 0)} onBlur={async (e) => { const val = parseInt(e.target.value) || 0; const path = tokenId ? wikiEntry?.path : wikiPath; if (path) { await syncTokenFieldToWiki(path, 'po', val); } }} style={{ width: '35px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(234, 179, 8, 0.5)', color: '#fde047', padding: 0, fontWeight: 'bold', fontSize: '0.75rem', textAlign: 'center' }} title="Peças de Ouro (PO)" />
             ) : (
                <span style={{ color: '#fde047', fontWeight: 'bold', fontSize: '0.75rem' }} title="Peças de Ouro">{tokenData.po ?? 0}</span>
+            )}
+            
+            {/* Loot Button */}
+            {tokenData.po > 0 && tokenData.hp <= 0 && (tokenData.tipo === 'inimigo' || tokenData.status === 'inimigo' || tokenData.tipo?.toLowerCase() === 'monstro' || tokenData.status === 'npc') && !tokenData.saqueado && (
+              <button 
+                onClick={handleLoot}
+                title="Saquear e distribuir para a Party"
+                style={{
+                  background: 'rgba(234, 179, 8, 0.2)', border: '1px solid rgba(234, 179, 8, 0.4)',
+                  color: '#fde047', borderRadius: '4px', padding: '1px 6px', fontSize: '0.65rem',
+                  fontWeight: 'bold', cursor: 'pointer', marginLeft: '4px', textTransform: 'uppercase'
+                }}
+              >
+                Saquear
+              </button>
             )}
           </div>
         </div>

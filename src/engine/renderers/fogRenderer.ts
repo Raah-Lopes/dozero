@@ -53,6 +53,8 @@ function getSharedLightMask(): Texture {
   return sharedLightMaskTex;
 }
 
+import { useUserStore } from '../../store/user';
+
 export function renderFogOfWar(
   fogContainer: Container,
   fogOverlay: Graphics,
@@ -64,6 +66,8 @@ export function renderFogOfWar(
     fogContainer.visible = false;
     return;
   }
+  
+  const isGM = useUserStore.getState().isGM;
   
   fogContainer.visible = true;
 
@@ -105,7 +109,8 @@ export function renderFogOfWar(
   if (config.fog.color && config.fog.color.startsWith('#')) {
     fowColor = parseInt(config.fog.color.replace('#', '0x'), 16);
   }
-  fogOverlay.fill({ color: fowColor, alpha: 0.82 });
+  const fogAlpha = isGM ? 0.82 : 1.0;
+  fogOverlay.fill({ color: fowColor, alpha: fogAlpha });
 
   const fogOps = getFogOps();
 
@@ -146,7 +151,7 @@ export function renderFogOfWar(
     const isReveal = op.mode === 'reveal';
     const g = getGfx(isReveal ? 'erase' : 'normal');
     let gmGfx = null;
-    if (localState.isGM) {
+    if (isGM) {
        gmGfx = getGfx('normal'); // Separate graphics object for GM lines so it doesn't use erase blend mode
     }
 

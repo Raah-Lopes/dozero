@@ -163,11 +163,14 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       }
     }
 
+    if (!windowRef.current) return;
+    const windowRect = windowRef.current.getBoundingClientRect();
+    
     setIsDragging(true);
     bringToFront();
     dragOffset.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: e.clientX - windowRect.left,
+      y: e.clientY - windowRect.top
     };
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     dragCurrentPos.current = { ...pos }; // Sync ref before drag
@@ -183,8 +186,12 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     });
     (windowRef.current as any).__cachedSiblings = cachedSiblings;
     (windowRef.current as any).__cachedPinned = cachedPinned;
-    
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) return;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (err) {
+      console.warn('Pointer capture failed:', err);
+    }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -344,7 +351,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     <div
       id={`window-${id}`}
       ref={windowRef}
-      className={`draggable-window-container ${isMinimized ? 'minimized' : ''} ${variant === 'glass' ? 'glass-panel' : ''}`}
+      className={`draggable-window-container ${isMinimized ? 'minimized' : ''} ${variant === 'glass' ? 'glass-panel' : ''} ${isDragging ? 'is-dragging' : ''}`}
       data-pinned={isPinned}
       style={{
         position: isPopout ? 'relative' : (isFullscreen ? 'fixed' : 'absolute'),
@@ -361,10 +368,9 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         overflow: 'visible',
         minWidth: (variant === 'default' || variant === 'glass') ? (isBubble ? '48px' : '250px') : 'auto',
         minHeight: ((variant === 'default' || variant === 'glass') && !isBubble) ? '100px' : (isBubble ? '48px' : 'auto'),
-        backgroundColor: variant === 'default' ? 'var(--bg-secondary)' : 'transparent',
+        backgroundColor: variant === 'default' ? 'var(--bg-secondary)' : (variant === 'bare' ? 'transparent' : undefined),
         border: (variant === 'default' && !isFullscreen) ? '1px solid var(--glass-border)' : 'none',
         borderRadius: isBubble ? '24px' : (isFullscreen ? '0px' : (variant === 'default' ? '12px' : '0')),
-        backdropFilter: isDragging ? 'none' : undefined,
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front

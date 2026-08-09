@@ -893,8 +893,17 @@ export const GameCanvas: React.FC = () => {
       const grid = new Graphics();
       viewport.addChild(grid);
 
+      let tokensContainer = new Container();
+      tokensContainer.zIndex = 100;
+      viewport.addChild(tokensContainer);
+
+      let textsContainer = new Container();
+      textsContainer.zIndex = 110;
+      viewport.addChild(textsContainer);
+
       // Fog of War Overlay System
       const fogContainer = new Container();
+      fogContainer.zIndex = 500;
       fogContainer.filters = [new AlphaFilter({ alpha: 1 })]; // Forces it to render to an offscreen texture, allowing ERASE blend mode to work safely
       viewport.addChild(fogContainer);
 
@@ -952,8 +961,12 @@ export const GameCanvas: React.FC = () => {
         // Se fowHideTokens estiver ativo e houver tokens selecionados, a visão é gerada APENAS pelos tokens selecionados (Player View).
         // Assim, os monstros deselecionados não geram buracos na névoa e podem ser escondidos.
         let visionSources = tokens.filter(t => t.hasVision !== false);
-        if (config.fog.hideTokens && localState.selectedTokens && localState.selectedTokens.size > 0) {
+        if (localState.selectedTokens && localState.selectedTokens.size > 0) {
+           // Se houver seleção, apenas os tokens selecionados geram visão (útil pro GM testar visão de NPC)
            visionSources = visionSources.filter(t => localState.selectedTokens.has(t.id));
+        } else {
+           // Por padrão, apenas personagens dos jogadores geram visão
+           visionSources = visionSources.filter(t => t.isPlayer);
         }
 
         const currentHash = JSON.stringify({
@@ -1069,12 +1082,8 @@ export const GameCanvas: React.FC = () => {
       
       let propDragOffsets: Record<string, {x: number, y: number}> = {};
       let propStartPositions: Record<string, {x: number, y: number}> = {};
-      let tokensContainer = new Container();
-      viewport.addChild(tokensContainer);
 
       // Grid Texts Container
-      let textsContainer = new Container();
-      viewport.addChild(textsContainer);
       const textSprites: Record<string, Container> = {};
       let draggingTextId: string | null = null;
       let textDragOffset = {x: 0, y: 0};
@@ -2158,6 +2167,11 @@ export const GameCanvas: React.FC = () => {
           if (e.pointerType === 'touch') {
              // On mobile, touching the background is reserved for panning.
              // We allow text tool above, but skip selection box to prevent conflicts.
+             if (!e.shiftKey) Tokens.clearSelection();
+             return;
+          }
+
+          if (localState.activeTool === 'pan') {
              if (!e.shiftKey) Tokens.clearSelection();
              return;
           }
