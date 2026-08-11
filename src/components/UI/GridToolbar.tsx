@@ -8,7 +8,7 @@ import type { BackgroundData, MapConfig } from '../../store';
 import { 
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
-  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon
+  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 
@@ -251,7 +251,7 @@ export const GridToolbar: React.FC = () => {
 
   if (mapConfig.fogOfWar) {
     tools.push({ id: 'fog_brush', label: 'Pincel de Névoa (Revelar/Esconder)', icon: CloudFog });
-    tools.push({ id: 'fog_polygon', label: 'Polígono de Névoa', icon: Hexagon });
+    tools.push({ id: 'fog_polygon', label: 'Polígono de Névoa', icon: Hexagon, Target, Scan });
   }
 
   // Render minimized trigger when hidden
@@ -812,7 +812,7 @@ export const GridToolbar: React.FC = () => {
         className="zoom-controls-container"
         style={{
         position: 'fixed',
-        bottom: isMobile ? '140px' : '1.5rem',
+        bottom: isMobile ? '140px' : '6.5rem',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 90,
@@ -836,8 +836,29 @@ export const GridToolbar: React.FC = () => {
         </button>
         <button
           className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new CustomEvent('canvas-reset-view'))}
-          title="Resetar Câmera / Enquadrar"
+          onClick={() => window.dispatchEvent(new Event('canvas-center-map'))}
+          title="Centralizar Mapa Base"
+        >
+          <MapIcon size={16} color="#94a3b8" />
+        </button>
+        <button
+          className="tldraw-tool-btn"
+          onClick={() => window.dispatchEvent(new Event('canvas-focus-selected'))}
+          title="Focar nos Tokens Selecionados"
+        >
+          <Target size={16} color="#94a3b8" />
+        </button>
+        <button
+          className="tldraw-tool-btn"
+          onClick={() => window.dispatchEvent(new Event('canvas-fit-all'))}
+          title="Enquadrar Todos os Itens"
+        >
+          <Scan size={16} color="#94a3b8" />
+        </button>
+        <button
+          className="tldraw-tool-btn"
+          onClick={() => window.dispatchEvent(new Event('canvas-reset-view'))}
+          title="Resetar Câmera"
         >
           <Maximize2 size={16} color="#94a3b8" />
         </button>

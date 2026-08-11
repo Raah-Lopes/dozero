@@ -188,8 +188,76 @@ export const GameCanvas: React.FC = () => {
         viewport.x = window.innerWidth / 2;
         viewport.y = window.innerHeight / 2;
       };
+
+      const handleCanvasCenterMap = () => {
+        const bgEntries = Object.values(bgSprites);
+        if (bgEntries.length > 0) {
+          const mainBg = bgEntries[0];
+          viewport.x = window.innerWidth / 2 - mainBg.x * viewport.scale.x;
+          viewport.y = window.innerHeight / 2 - mainBg.y * viewport.scale.x;
+        } else {
+          handleCanvasResetView();
+        }
+      };
+
+      const handleCanvasFocusSelected = () => {
+        const selected = Tokens.getSelectedIds();
+        if (selected.length === 0) {
+          toast.error("Nenhum token selecionado para focar.");
+          return;
+        }
+        let sumX = 0, sumY = 0, count = 0;
+        selected.forEach(id => {
+          const ts = tokenSprites[id];
+          if (ts && ts.container) {
+            sumX += ts.container.x;
+            sumY += ts.container.y;
+            count++;
+          }
+        });
+        if (count > 0) {
+          const centerX = sumX / count;
+          const centerY = sumY / count;
+          viewport.x = window.innerWidth / 2 - centerX * viewport.scale.x;
+          viewport.y = window.innerHeight / 2 - centerY * viewport.scale.x;
+        }
+      };
+
+      const handleCanvasFitAll = () => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let hasItems = false;
+        const addPoint = (x: number, y: number) => {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+          hasItems = true;
+        };
+        Object.values(tokenSprites).forEach(ts => {
+           if (ts.container) addPoint(ts.container.x, ts.container.y);
+        });
+        if (hasItems) {
+          const centerX = (minX + maxX) / 2;
+          const centerY = (minY + maxY) / 2;
+          const width = maxX - minX + 400;
+          const height = maxY - minY + 400;
+          const scaleX = window.innerWidth / width;
+          const scaleY = window.innerHeight / height;
+          let newScale = Math.min(scaleX, scaleY, 2);
+          if (newScale < 0.1) newScale = 0.1;
+          viewport.scale.set(newScale);
+          viewport.x = window.innerWidth / 2 - centerX * newScale;
+          viewport.y = window.innerHeight / 2 - centerY * newScale;
+        } else {
+          handleCanvasResetView();
+        }
+      };
+
       window.addEventListener('canvas-zoom', handleCanvasZoom);
       window.addEventListener('canvas-reset-view', handleCanvasResetView);
+      window.addEventListener('canvas-center-map', handleCanvasCenterMap);
+      window.addEventListener('canvas-focus-selected', handleCanvasFocusSelected);
+      window.addEventListener('canvas-fit-all', handleCanvasFitAll);
 
       canvasEl.addEventListener('wheel', (e) => {
         e.preventDefault();
