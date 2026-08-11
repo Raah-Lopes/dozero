@@ -138,6 +138,7 @@ export const GridToolbar: React.FC = () => {
   const [selectedBatch, setSelectedBatch] = useState<Set<string>>(new Set());
   const [isVisible, setIsVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1257);
+  const [showDrawTools, setShowDrawTools] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -150,6 +151,7 @@ export const GridToolbar: React.FC = () => {
       if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
         setShowStyleInspector(true);
         setShowLayersMenu(true);
+        setShowDrawTools(true);
       } else {
         setShowStyleInspector(false);
         setShowLayersMenu(false);
@@ -913,8 +915,43 @@ export const GridToolbar: React.FC = () => {
         boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
         pointerEvents: 'auto'
       }}>
-        {/* Drawing Tools */}
-        {tools.map(tool => {
+        {/* Drawing Tools Toggle */}
+        <Tooltip label={showDrawTools ? 'Fechar Desenho' : 'Ferramentas de Desenho'} description="Caneta, formas, texto e mais" shortcut="P">
+          <button
+            className={`tldraw-tool-btn${showDrawTools || !['select','pan'].includes(activeTool) ? ' active' : ''}`}
+            onClick={() => setShowDrawTools(v => !v)}
+          >
+            <Pen size={18} color={showDrawTools || !['select','pan'].includes(activeTool) ? C.accent : C.textSec} />
+          </button>
+        </Tooltip>
+
+        {/* Drawing Tools (collapsible) */}
+        {showDrawTools && (
+          <>
+            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
+            {tools.filter(t => t.id !== 'select' && t.id !== 'pan').map(tool => {
+              const Icon = tool.icon;
+              const meta = TOOL_META[tool.id] || { label: tool.id, desc: '' };
+              const isActive = activeTool === tool.id;
+              return (
+                <Tooltip key={tool.id} label={meta.label} description={meta.desc} shortcut={meta.shortcut} position="top">
+                  <button
+                    className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
+                    onClick={() => setActiveTool(tool.id as any)}
+                  >
+                    <Icon size={18} color={isActive ? C.accent : C.textSec} />
+                  </button>
+                </Tooltip>
+              );
+            })}
+          </>
+        )}
+
+        {/* Divider */}
+        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
+
+        {/* Select & Pan (always visible) */}
+        {tools.filter(t => t.id === 'select' || t.id === 'pan').map(tool => {
           const Icon = tool.icon;
           const meta = TOOL_META[tool.id] || { label: tool.id, desc: '' };
           const isActive = activeTool === tool.id;
@@ -930,7 +967,7 @@ export const GridToolbar: React.FC = () => {
           );
         })}
 
-        {/* Divider between tools and navigation */}
+        {/* Divider */}
         <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
 
         {/* Navigation/Zoom Controls */}
