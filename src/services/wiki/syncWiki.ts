@@ -1,5 +1,6 @@
 import { loadMarkdownFile, saveMarkdownContent } from '../../utils/githubApi';
 import * as yaml from 'js-yaml';
+import { state, updateTokenProps } from '../../store';
 
 /**
  * Sincroniza um atributo numérico (HP, PM, maxHp, maxMana) de um token com seu arquivo Markdown no Obsidian.
@@ -86,3 +87,39 @@ export async function syncMultipleFieldsToWiki(wikiPath: string, updates: Record
     return false;
   }
 }
+
+/**
+ * Disparado quando um arquivo markdown é salvo/atualizado pela CharacterSheet.
+ * Lê o novo YAML e varre todos os tokens no jogo que pertencem a esse arquivo,
+ * atualizando HP, Mana e Ouro diretamente no estado em tempo real.
+ */
+export function syncFileToBoardTokens(wikiPath: string, yamlData: any) {
+  if (!yamlData) return;
+
+  const newHp = yamlData.pontos_vida?.atuais ?? yamlData.pv ?? yamlData.HP ?? yamlData.hp;
+  const newMaxHp = yamlData.pontos_vida?.maximo ?? yamlData.pv_max ?? yamlData.HP_max ?? yamlData.maxHp;
+  const newMana = yamlData.PM ?? yamlData.mana;
+  const newMaxMana = yamlData.PM_max ?? yamlData.mana_max ?? yamlData.maxMana;
+  const newOuro = yamlData.Ouro ?? yamlData.ouro ?? yamlData.po ?? yamlData.Ouro_recompensa ?? 0;
+  
+  const tokenPropsToUpdate: any = {};
+  if (newHp !== undefined) tokenPropsToUpdate.hp = Number(newHp);
+  if (newMaxHp !== undefined) tokenPropsToUpdate.maxHp = Number(newMaxHp);
+  if (newMana !== undefined) tokenPropsToUpdate.mana = Number(newMana);
+  if (newMaxMana !== undefined) tokenPropsToUpdate.maxMana = Number(newMaxMana);
+  if (newOuro !== undefined) {
+    tokenPropsToUpdate.ouro = Number(newOuro);
+    tokenPropsToUpdate.po = Number(newOuro); // backwards compatibility in DOZERO
+  }
+  
+  if (Object.keys(tokenPropsToUpdate).length === 0) return;
+
+  // Atualizar todos os tokens em campo que apontam para este arquivo
+  for (const [id, token] of Array.from(state.tokens.entries())) {
+    const t = token as any;
+    if (t.caminhoArquivo === wikiPath || t.wikiPath === wikiPath) {
+      updateTokenProps(id, tokenPropsToUpdate);
+    }
+  }
+}
+

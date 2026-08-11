@@ -61,6 +61,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
   const sender = personagens.find(p => p.caminhoArquivo === senderPath);
   const receiver = personagens.find(p => p.caminhoArquivo === receiverPath);
   const merchantNpc = personagens.find(p => p.caminhoArquivo === selectedNpcMerchantPath);
+  const [, forceUpdate] = useState(0);
 
   // Autoset inicial
   useEffect(() => {
@@ -169,6 +170,9 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
       inventario: receiverInv
     };
 
+    if(sender) { sender.ouro = updatedSender.ouro; sender.riquezas = updatedSender.riquezas; sender.inventario = updatedSender.inventario; }
+    if(receiver) { receiver.ouro = updatedReceiver.ouro; receiver.riquezas = updatedReceiver.riquezas; receiver.inventario = updatedReceiver.inventario; }
+    forceUpdate(p => p+1);
     await salvarFichaFisica(sender.caminhoArquivo, updatedSender);
     await salvarFichaFisica(receiver.caminhoArquivo, updatedReceiver);
     
@@ -176,10 +180,10 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     for (const [id, t] of Array.from(state.tokens.entries())) {
       const token = t as any;
       if (token.caminhoArquivo === sender.caminhoArquivo) {
-        state.tokens.set(id, { ...token, ouro: updatedSender.ouro });
+        state.tokens.set(id, { ...token, ouro: updatedSender.ouro, po: updatedSender.ouro });
       }
       if (token.caminhoArquivo === receiver.caminhoArquivo) {
-        state.tokens.set(id, { ...token, ouro: updatedReceiver.ouro });
+        state.tokens.set(id, { ...token, ouro: updatedReceiver.ouro, po: updatedReceiver.ouro });
       }
     }
     
@@ -276,6 +280,9 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     const sOuroFinal = pSender.ouro - trade.senderGold + trade.receiverGold;
     const rOuroFinal = pReceiver.ouro - trade.receiverGold + trade.senderGold;
 
+    if(pSender) { pSender.ouro = sOuroFinal; pSender.inventario = senderInv; }
+    if(pReceiver) { pReceiver.ouro = rOuroFinal; pReceiver.inventario = receiverInv; }
+    forceUpdate(p => p+1);
     await salvarFichaFisica(trade.senderPath, {
       ouro: sOuroFinal,
       inventario: senderInv
@@ -290,10 +297,10 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     for (const [id, t] of Array.from(state.tokens.entries())) {
       const token = t as any;
       if (token.caminhoArquivo === trade.senderPath) {
-        state.tokens.set(id, { ...token, ouro: sOuroFinal });
+        state.tokens.set(id, { ...token, ouro: sOuroFinal, po: sOuroFinal });
       }
       if (token.caminhoArquivo === trade.receiverPath) {
-        state.tokens.set(id, { ...token, ouro: rOuroFinal });
+        state.tokens.set(id, { ...token, ouro: rOuroFinal, po: rOuroFinal });
       }
     }
 
@@ -384,6 +391,12 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
       loja: { itens: updatedItensLoja }
     };
 
+    if(sender) { sender.ouro = updatedComprador.ouro; sender.inventario = updatedComprador.inventario; }
+    if(merchantNpc) { merchantNpc.ouro = updatedMercador.ouro; merchantNpc.loja = updatedMercador.loja; }
+    forceUpdate(p => p+1);
+    if(sender) { sender.ouro = updatedComprador.ouro; sender.inventario = updatedComprador.inventario; }
+    if(merchantNpc) { merchantNpc.ouro = npco; merchantNpc.loja = { itens: updatedItensLoja }; }
+    forceUpdate(p => p+1);
     await salvarFichaFisica(sender.caminhoArquivo, updatedComprador);
     await salvarFichaFisica(merchantNpc.caminhoArquivo, updatedMercador);
 
@@ -391,10 +404,10 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     for (const [id, t] of Array.from(state.tokens.entries())) {
       const token = t as any;
       if (token.caminhoArquivo === sender.caminhoArquivo) {
-        state.tokens.set(id, { ...token, ouro: updatedComprador.ouro });
+        state.tokens.set(id, { ...token, ouro: updatedComprador.ouro, po: updatedComprador.ouro });
       }
       if (token.caminhoArquivo === merchantNpc.caminhoArquivo) {
-        state.tokens.set(id, { ...token, ouro: updatedMercador.ouro });
+        state.tokens.set(id, { ...token, ouro: updatedMercador.ouro, po: updatedMercador.ouro });
       }
     }
 
@@ -475,7 +488,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     }
 
     const updatedOuro = sender.ouro - payAmount;
-    await salvarFichaFisica(sender.caminhoArquivo, { ouro: updatedOuro });
+    if(sender) { sender.ouro = updatedOuro; } forceUpdate(p => p+1); await salvarFichaFisica(sender.caminhoArquivo, { ouro: updatedOuro });
     
     for (const [id, t] of Array.from(state.tokens.entries())) {
       const token = t as any;

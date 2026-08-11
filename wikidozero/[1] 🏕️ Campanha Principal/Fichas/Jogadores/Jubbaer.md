@@ -8,10 +8,6 @@ inventario:
     descricao: Um escudo simples feito de madeira, usado para defender Jubbaer em combate.
     equipado: false
     efeito: defesa_2
-  - nome: Bola de Fogo
-    tipo: poder
-    efeito: dano_4d6
-    descricao: Causa dano de fogo em área a múltiplos alvos.
   - nome: Chave do Portal Celestial
     tipo: objeto_campanha
     efeito: chave_portal
@@ -158,7 +154,12 @@ inteligencia: 10
 sabedoria: 10
 carisma: 10
 visionRadius: 119
+Ouro: 5
 ---
+
+
+
+
 
 
 

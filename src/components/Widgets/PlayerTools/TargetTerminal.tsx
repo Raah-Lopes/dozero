@@ -2142,6 +2142,13 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             ) : (
                <span style={{ color: '#fde047', fontWeight: 'bold', fontSize: '0.75rem' }} title="Peças de Ouro">{tokenData.po ?? 0}</span>
             )}
+
+            <span style={{ fontSize: '0.65rem', color: '#cbd5e1', marginLeft: '6px' }}>💎</span>
+            {isGM ? (
+               <input type="number" value={tokenData.gemas_astrais ?? 0} onChange={e => handlePropChange('gemas_astrais', parseInt(e.target.value) || 0)} onBlur={async (e) => { const val = parseInt(e.target.value) || 0; const path = tokenId ? wikiEntry?.path : wikiPath; if (path) { await syncTokenFieldToWiki(path, 'gemas_astrais', val); } }} style={{ width: '35px', background: 'transparent', border: 'none', borderBottom: '1px dashed rgba(192, 132, 252, 0.5)', color: '#c084fc', padding: 0, fontWeight: 'bold', fontSize: '0.75rem', textAlign: 'center' }} title="Gemas Astrais" />
+            ) : (
+               <span style={{ color: '#c084fc', fontWeight: 'bold', fontSize: '0.75rem' }} title="Gemas Astrais">{tokenData.gemas_astrais ?? 0}</span>
+            )}
             
             {/* Loot Button */}
             {tokenData.po > 0 && tokenData.hp <= 0 && (tokenData.tipo === 'inimigo' || tokenData.status === 'inimigo' || tokenData.tipo?.toLowerCase() === 'monstro' || tokenData.status === 'npc') && !tokenData.saqueado && (

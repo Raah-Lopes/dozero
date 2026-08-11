@@ -12,6 +12,8 @@ import { FrontmatterSheetViewer } from './FrontmatterSheetViewer';
 import { CharacterSheet } from '../UI/CharacterSheet';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
+import { syncFileToBoardTokens } from '../../services/wiki/syncWiki';
+import * as yaml from 'js-yaml';
 import { toast } from '../UI/Toast';
 import './wiki.css';
 
@@ -769,6 +771,14 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                     rawYaml={frontmatter}
                     onChange={(newYaml) => {
                       setFrontmatter(newYaml);
+                      
+                      try {
+                        const parsedYaml = yaml.load(newYaml);
+                        syncFileToBoardTokens(activeFile, parsedYaml);
+                      } catch (e) {
+                        console.error("Error parsing yaml for token sync", e);
+                      }
+
                       if (saveTimeoutRef.current) window.clearTimeout(saveTimeoutRef.current);
                       saveTimeoutRef.current = window.setTimeout(() => handleSave(), 500);
                     }}

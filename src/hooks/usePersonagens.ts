@@ -198,7 +198,7 @@ function mapearEntidade(e: any): FichaPersonagem {
   };
 }
 
-function isFichaEntry(e: any): boolean {
+export function isFichaEntry(e: any): boolean {
   const tipo = String(e.metadata?.tipo || '').toLowerCase().trim();
   const status = String(e.metadata?.status || '').toLowerCase().trim();
   const path = e.path.toLowerCase();

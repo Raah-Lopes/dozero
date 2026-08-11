@@ -43,14 +43,13 @@ inventario:
     quantidade: 1
     descricao: Converte mana em barreira física temporária.
     equipado: false
-pv: 1
-HP: 1
+pv: 100
+HP: 100
 energia: 100
 mana: 100
 PM: 99
 sanidade: 100
-status_efeitos:
-  - Morto
+status_efeitos: []
 HP_max: 100
 pv_max: 100
 PM_max: 99
@@ -65,7 +64,7 @@ sede_max: null
 cansaco: null
 cansaco_max: null
 defesa: 0
-riquezas: 0
+riquezas: 3216
 armas:
   - nome: Arco Curto de Caça
     tipo: equipamento
@@ -100,7 +99,7 @@ borderColor: '#5c5c5c'
 showName: true
 sizeScale: 0.5
 hpBarMode: always
-ativo: false
+ativo: true
 mana_max: 99
 vigor_max: 100
 forca: 19
@@ -136,8 +135,45 @@ visionRadius: 200
 hasVision: false
 inCombat: true
 status: npc
-Ouro: 30
+Ouro: 292
+Riquezas: 3200
+ouro: 297
+loja:
+  itens:
+    - nome: Bola de Fogo
+      custo: 10
+      quantidade: 1
+      descricao: Causa dano de fogo em área a múltiplos alvos.
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

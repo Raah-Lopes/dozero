@@ -4,6 +4,8 @@ import remarkGfm from 'remark-gfm';
 import { DraggableWindow } from '../HUD/DraggableWindow';
 import { loadMarkdownFile, saveMarkdownContent } from '../../utils/githubApi';
 import { CharacterSheet } from './CharacterSheet';
+import { syncFileToBoardTokens } from '../../services/wiki/syncWiki';
+import * as yaml from 'js-yaml';
 import { Check, Copy } from 'lucide-react';
 
 interface FloatingDocumentProps {
@@ -173,6 +175,13 @@ export const FloatingDocument: React.FC<FloatingDocumentProps> = React.memo(({ i
                     setFrontmatter(newYaml);
                     const finalContent = `---\n${newYaml}\n---\n${content}`;
                     saveMarkdownContent(filepath, finalContent).catch(e => console.error("Error saving character sheet", e));
+                    
+                    try {
+                      const parsedYaml = yaml.load(newYaml);
+                      syncFileToBoardTokens(filepath, parsedYaml);
+                    } catch (e) {
+                      console.error("Error parsing yaml for token sync", e);
+                    }
                   }} 
                 />
               </div>

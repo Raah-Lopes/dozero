@@ -191,6 +191,10 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ rawYaml, onChang
               💰 Ouro
               <input type="number" value={getOuro()} onChange={(e) => updateOuro(Number(e.target.value))} style={{ width: '70px', color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.3)', fontWeight: 'bold' }} />
             </div>
+            <div className="actor-info-item" style={{ color: '#c084fc' }}>
+              💎 Gemas Astrais
+              <input type="number" value={getField(['gemas_astrais'], 0)} onChange={(e) => updateField(['gemas_astrais'], Number(e.target.value))} style={{ width: '70px', color: '#c084fc', borderColor: 'rgba(192, 132, 252, 0.3)', fontWeight: 'bold' }} />
+            </div>
           </div>
           
           <div className="actor-header-stats">

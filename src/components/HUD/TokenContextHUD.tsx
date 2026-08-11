@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { state } from '../../store';
+import { state, toggleTarget, localState } from '../../store';
 import { Tokens } from '../../store/modules/tokenModule';
-import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus } from 'lucide-react';
+import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus, Crosshair } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
 export function TokenContextHUD() {
   const { setShowActors } = useWindowManager();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [tokenData, setTokenData] = useState<any | null>(null);
+  const [isTargeted, setIsTargeted] = useState(false);
 
   useEffect(() => {
     const handleSelection = () => {
@@ -15,13 +16,21 @@ export function TokenContextHUD() {
       setSelectedIds(ids);
       if (ids.length === 1) {
         setTokenData(state.tokens.get(ids[0]));
+        setIsTargeted(localState.targets.has(ids[0]));
       } else {
         setTokenData(null);
+        setIsTargeted(false);
       }
+    };
+    
+    const handleTargetUpdate = () => {
+      const ids = Tokens.getSelectedIds();
+      if (ids.length === 1) setIsTargeted(localState.targets.has(ids[0]));
     };
     
     // Listen for selection changes
     window.addEventListener('token-selection-updated', handleSelection);
+    window.addEventListener('targets-updated', handleTargetUpdate);
     
     // Subscribe to specific token changes if selected
     const tokenObserver = (event: any) => {
@@ -37,6 +46,7 @@ export function TokenContextHUD() {
 
     return () => {
       window.removeEventListener('token-selection-updated', handleSelection);
+      window.removeEventListener('targets-updated', handleTargetUpdate);
       state.tokens.unobserve(tokenObserver);
     };
   }, []);
@@ -119,6 +129,10 @@ export function TokenContextHUD() {
       <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }} />
 
       {/* Actions */}
+      <button onClick={() => toggleTarget(tokenData.id)} title={isTargeted ? "Remover Alvo" : "Colocar como Alvo"} style={{ ...actionButtonStyle, background: isTargeted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.05)', border: isTargeted ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
+        <Crosshair size={18} color={isTargeted ? "#ef4444" : "rgba(255,255,255,0.7)"} />
+      </button>
+
       <button onClick={toggleLock} title={tokenData.locked ? "Destravar" : "Travar"} style={actionButtonStyle}>
         {tokenData.locked ? <Lock size={18} color="#f59e0b" /> : <Unlock size={18} color="rgba(255,255,255,0.7)" />}
       </button>

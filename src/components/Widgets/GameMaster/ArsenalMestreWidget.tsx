@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { useWiki } from '../../../hooks/useWiki';
+import { isFichaEntry } from '../../../hooks/usePersonagens';
 import { saveMarkdownContent, loadMarkdownFile } from '../../../utils/githubApi';
 import { pushChatMessage } from '../../../store';
 import * as yaml from 'js-yaml';
@@ -224,17 +225,7 @@ export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClos
   const carregarPersonagens = useCallback(() => {
     if (!index || index.length === 0) return;
 
-    const entidades = index.filter(e => {
-      const tipo = String(e.metadata?.tipo || '').toLowerCase();
-      const status = String(e.metadata?.status || '').toLowerCase();
-      const path = e.path.toLowerCase();
-      if (path.includes('_modelo')) return false;
-
-      return ['pc', 'npc', 'monstro', 'personagem', 'jogador', 'inimigo'].includes(tipo) ||
-             ['jogador', 'npc', 'inimigo'].includes(status) ||
-             path.includes('/fichas/') ||
-             path.includes('/personagens/');
-    });
+    const entidades = index.filter(isFichaEntry);
 
     const carregadas: FichaPersonagem[] = entidades.map(e => {
       const tipo = e.metadata?.tipo;
@@ -293,7 +284,7 @@ export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClos
     });
 
     // Filtrar apenas os personagens ativos para a mesa
-    const ativas = carregadas.filter(p => p.ativo);
+    const ativas = carregadas.filter(p => p.ativo !== false);
     setPersonagens(ativas);
     if (selectedChar) {
       const updated = carregadas.find(p => p.caminhoArquivo === selectedChar.caminhoArquivo);

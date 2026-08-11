@@ -23,7 +23,7 @@ tags:
   - slime
   - lutador
   - capoeirista
-ativo: false
+ativo: true
 origem: Pântano dos Ecos Perdidos
 Localizacao: Algum vilarejo costeiro, treinando.
 HP: 24
@@ -97,7 +97,7 @@ sede_max: 100
 cansaco: 0
 cansaco_max: 100
 defesa: 15
-riquezas: 0
+riquezas: 134
 armas:
   - nome: Cajado do Conjurador
     tipo: equipamento
@@ -136,7 +136,34 @@ magias_preparadas:
     max: 0
 registro_aventura: ''
 visionRadius: 200
+Riquezas: 150
+ouro: 145
+Ouro: 145
+hasVision: true
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
