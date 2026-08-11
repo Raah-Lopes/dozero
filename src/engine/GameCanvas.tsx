@@ -193,8 +193,20 @@ export const GameCanvas: React.FC = () => {
         const bgEntries = Object.values(bgSprites);
         if (bgEntries.length > 0) {
           const mainBg = bgEntries[0];
-          viewport.x = window.innerWidth / 2 - mainBg.x * viewport.scale.x;
-          viewport.y = window.innerHeight / 2 - mainBg.y * viewport.scale.x;
+          
+          const mapWidth = mainBg.width;
+          const mapHeight = mainBg.height;
+          
+          const scaleX = window.innerWidth / mapWidth;
+          const scaleY = window.innerHeight / mapHeight;
+          
+          let newScale = Math.min(scaleX, scaleY) * 0.95;
+          if (newScale > 2) newScale = 2;
+          if (newScale < 0.05) newScale = 0.05;
+          
+          viewport.scale.set(newScale);
+          viewport.x = window.innerWidth / 2 - mainBg.x * newScale;
+          viewport.y = window.innerHeight / 2 - mainBg.y * newScale;
         } else {
           handleCanvasResetView();
         }
