@@ -15,6 +15,7 @@
 
 import { state } from '../../services/yjs';
 import { pushChatMessage } from '../chat';
+import { localState as oldLocalState } from '../tokens';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -295,6 +296,7 @@ export const Tokens = {
     state.tokens.delete(id);
     localState.selected.delete(id);
     localState.targets.delete(id);
+    oldLocalState.selectedTokens?.delete(id);
     
     window.dispatchEvent(new Event('token-selection-updated'));
     window.dispatchEvent(new Event('targets-updated'));
@@ -310,14 +312,18 @@ export const Tokens = {
    * @param multi - If true, add to existing selection. If false, replace selection.
    */
   toggleSelected(id: string, multi: boolean = false): void {
+    if (!oldLocalState.selectedTokens) oldLocalState.selectedTokens = new Set<string>();
     if (!multi) {
       localState.selected.clear();
+      oldLocalState.selectedTokens.clear();
     }
 
     if (localState.selected.has(id)) {
       localState.selected.delete(id);
+      oldLocalState.selectedTokens.delete(id);
     } else {
       localState.selected.add(id);
+      oldLocalState.selectedTokens.add(id);
     }
 
     window.dispatchEvent(new Event('token-selection-updated'));
@@ -329,8 +335,13 @@ export const Tokens = {
    * @param ids - Array of token IDs to select
    */
   selectBulk(ids: string[]): void {
+    if (!oldLocalState.selectedTokens) oldLocalState.selectedTokens = new Set<string>();
     localState.selected.clear();
-    ids.forEach(id => localState.selected.add(id));
+    oldLocalState.selectedTokens.clear();
+    ids.forEach(id => {
+       localState.selected.add(id);
+       oldLocalState.selectedTokens.add(id);
+    });
     window.dispatchEvent(new Event('token-selection-updated'));
   },
 
@@ -338,7 +349,9 @@ export const Tokens = {
    * Clear all selections
    */
   clearSelection(): void {
+    if (!oldLocalState.selectedTokens) oldLocalState.selectedTokens = new Set<string>();
     localState.selected.clear();
+    oldLocalState.selectedTokens.clear();
     window.dispatchEvent(new Event('token-selection-updated'));
   },
 
