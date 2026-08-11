@@ -812,10 +812,10 @@ export const GridToolbar: React.FC = () => {
         className="zoom-controls-container"
         style={{
         position: 'fixed',
-        bottom: isMobile ? '140px' : '8.5rem',
+        bottom: isMobile ? '140px' : '18rem',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 90,
+        zIndex: 110,
         display: 'flex',
         alignItems: 'center',
         gap: '4px',
