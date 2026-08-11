@@ -1757,6 +1757,15 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
 
     pushChatMessage(`💰 **A party saqueou ${goldToDistribute} PO** de ${tokenData.name || tokenData.titulo || 'o alvo'}! (${share} PO para cada)`, false, false);
     
+    window.dispatchEvent(new CustomEvent('theater-cutscene', {
+      detail: {
+        title: `💰 SAQUE: ${tokenData.name || tokenData.titulo || 'O Alvo'} 💰`,
+        subtitle: `${goldToDistribute} PO divididos entre a party! (+${share} para cada)`,
+        imageUrl: tokenData.imageUrl || tokenData.avatar || '',
+        durationMs: 4000
+      }
+    }));
+
     handlePropChange('po', 0);
     handlePropChange('saqueado', true);
     toast.success("Ouro distribuído para a party!");
@@ -2151,7 +2160,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
             )}
             
             {/* Loot Button */}
-            {tokenData.po > 0 && tokenData.hp <= 0 && (tokenData.tipo === 'inimigo' || tokenData.status === 'inimigo' || tokenData.tipo?.toLowerCase() === 'monstro' || tokenData.status === 'npc') && !tokenData.saqueado && (
+            {tokenData.po > 0 && tokenData.hp <= 0 && !tokenData.saqueado && (
               <button 
                 onClick={handleLoot}
                 title="Saquear e distribuir para a Party"

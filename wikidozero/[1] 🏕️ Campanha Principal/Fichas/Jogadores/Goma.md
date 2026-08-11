@@ -1,6 +1,6 @@
 ---
 titulo: Goma
-tipo: NPC
+tipo: Monstro
 classe: Monge de Geleia
 raça: Slime Humanóide
 força: 14
@@ -43,8 +43,8 @@ inventario:
     quantidade: 1
     descricao: Converte mana em barreira física temporária.
     equipado: false
-pv: 100
-HP: 100
+pv: 0
+HP: 0
 energia: 100
 mana: 100
 PM: 99
@@ -54,7 +54,7 @@ HP_max: 100
 pv_max: 100
 PM_max: 99
 usos_cura_atual: 3
-saqueado: true
+saqueado: false
 energia_max: 100
 sanidade_max: null
 fome: null
@@ -103,7 +103,7 @@ ativo: true
 mana_max: 99
 vigor_max: 100
 forca: 19
-po: 0
+po: 1000
 pp: 0
 pc: 0
 defesas:
@@ -134,7 +134,7 @@ des: 11
 visionRadius: 200
 hasVision: false
 inCombat: true
-status: npc
+status: inimigo
 Ouro: 292
 Riquezas: 3200
 ouro: 297
@@ -145,6 +145,10 @@ loja:
       quantidade: 1
       descricao: Causa dano de fogo em área a múltiplos alvos.
 ---
+
+
+
+
 
 
 

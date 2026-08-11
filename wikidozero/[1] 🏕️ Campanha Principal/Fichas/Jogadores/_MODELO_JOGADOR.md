@@ -35,7 +35,7 @@ inventario:
     tipo: equipamento
     efeito: ataque_5
     equipado: false
-po: 1000
+po: 2500
 pp: 0
 pc: 0
 defesas:
@@ -63,6 +63,8 @@ magias_preparadas:
 poderes: []
 macros: []
 ---
+
+
 
 # 📋 MODELO — Ficha de Jogador
 

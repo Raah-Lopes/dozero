@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { state, toggleTarget, localState } from '../../store';
+import { state, toggleTarget, localState, pushChatMessage } from '../../store';
 import { Tokens } from '../../store/modules/tokenModule';
-import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus, Crosshair } from 'lucide-react';
+import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus, Crosshair, Coins } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
+import { useWiki } from '../../hooks/useWiki';
+import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
+import { toast } from '../UI/Toast';
 
 export function TokenContextHUD() {
   const { setShowActors } = useWindowManager();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [tokenData, setTokenData] = useState<any | null>(null);
   const [isTargeted, setIsTargeted] = useState(false);
+  const { index } = useWiki();
 
   useEffect(() => {
     const handleSelection = () => {
@@ -60,6 +64,79 @@ export function TokenContextHUD() {
     if (!isNaN(max) && next > max && field !== 'hp') next = max;
     if (next < 0) next = 0;
     Tokens.update(tokenData.id, { [field]: next });
+  };
+
+  const entry = index.find(e => {
+    if (tokenData?.wikiPath && e.path === tokenData.wikiPath) return true;
+    if (tokenData?.wikiSlug && e.slug === tokenData.wikiSlug) return true;
+    if (tokenData?.name && (e.slug === tokenData.name || e.metadata?.nome === tokenData.name || e.metadata?.titulo === tokenData.name)) return true;
+    return false;
+  });
+  const meta = entry?.metadata || {};
+  const tokenType = tokenData?.tipo || meta.tipo || tokenData?.status || meta.status || 'npc';
+  const tokenPo = Number(tokenData?.po ?? tokenData?.ouro ?? meta.po ?? meta.PO ?? meta.ouro ?? meta.Ouro) || 0;
+  const tokenHp = Number(tokenData?.hp ?? meta.hp ?? meta.pv ?? meta.HP) || 0;
+  const isSaqueado = tokenData?.saqueado || meta.saqueado;
+
+  const parseNum = (val: any, fallback: number): number => {
+    if (val === undefined || val === null || val === '') return fallback;
+    const n = Number(val);
+    return isNaN(n) ? fallback : n;
+  };
+
+  const handleLoot = async () => {
+    const goldToDistribute = tokenPo;
+    if (goldToDistribute <= 0) {
+      toast.warn("Não há ouro para saquear.");
+      return;
+    }
+
+    const players = index.filter(e => {
+      const status = e.metadata?.status;
+      const tipo = e.metadata?.tipo;
+      const isChar = status === 'jogador' || tipo === 'pc' || tipo === 'Personagem' || (e.metadata?.tags && e.metadata.tags.includes('personagem'));
+      const isAlive = parseNum(e.metadata?.hp ?? e.metadata?.pv ?? e.metadata?.HP, 10) > 0;
+      const isAtivo = e.metadata?.ativo !== false;
+      return isChar && isAlive && isAtivo;
+    });
+
+    if (players.length === 0) {
+      pushChatMessage(`Nenhum jogador ativo para receber o saque!`, false, true);
+      return;
+    }
+
+    const perPlayer = Math.floor(goldToDistribute / players.length);
+
+    let successCount = 0;
+    for (const player of players) {
+      const currentGold = parseNum(player.metadata?.po ?? player.metadata?.PO ?? player.metadata?.ouro ?? player.metadata?.Ouro, 0);
+      const newGold = currentGold + perPlayer;
+      
+      const success = await syncTokenFieldToWiki(player.path, 'po', newGold);
+      if (success) successCount++;
+    }
+
+    if (successCount > 0) {
+      pushChatMessage(`**Saque de ${tokenData.name}**: ${goldToDistribute} PO divididos entre ${players.length} jogadores. (${perPlayer} PO para cada)`, false, true);
+      Tokens.update(tokenData.id, { po: 0, saqueado: true });
+      if (tokenData.wikiPath) {
+        await syncTokenFieldToWiki(tokenData.wikiPath, 'po', 0);
+        await syncTokenFieldToWiki(tokenData.wikiPath, 'saqueado', true);
+      }
+      
+      window.dispatchEvent(new CustomEvent('theater-cutscene', {
+        detail: {
+          title: `💰 SAQUE: ${tokenData.name} 💰`,
+          subtitle: `${goldToDistribute} PO divididos entre a party! (+${perPlayer} para cada)`,
+          imageUrl: tokenData.imageUrl || '',
+          durationMs: 4000
+        }
+      }));
+
+      toast.success("Saque distribuído com sucesso!");
+    } else {
+      toast.error("Erro ao distribuir saque.");
+    }
   };
 
   const toggleLock = () => {
@@ -129,6 +206,12 @@ export function TokenContextHUD() {
       <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }} />
 
       {/* Actions */}
+      {tokenPo > 0 && tokenHp <= 0 && !isSaqueado && (
+        <button onClick={handleLoot} title="Saquear e distribuir para a Party" style={{ ...actionButtonStyle, background: 'rgba(234, 179, 8, 0.2)', border: '1px solid rgba(234, 179, 8, 0.5)' }}>
+          <Coins size={18} color="#fde047" />
+        </button>
+      )}
+
       <button onClick={() => toggleTarget(tokenData.id)} title={isTargeted ? "Remover Alvo" : "Colocar como Alvo"} style={{ ...actionButtonStyle, background: isTargeted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.05)', border: isTargeted ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
         <Crosshair size={18} color={isTargeted ? "#ef4444" : "rgba(255,255,255,0.7)"} />
       </button>

@@ -109,7 +109,7 @@ poderes: []
 pocoes: []
 maldicoes: []
 objetos_campanha: []
-po: 80
+po: 1580
 pp: 0
 pc: 0
 defesas:
@@ -141,6 +141,8 @@ ouro: 145
 Ouro: 145
 hasVision: true
 ---
+
+
 
 
 
