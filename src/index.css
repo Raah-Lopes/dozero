@@ -831,7 +831,7 @@ html[data-theme^="chronicles"] .stage-prop.selected {
 
 /* Zoom Controls Hover Effect */
 .zoom-controls-container {
-  opacity: 0.15;
+  opacity: 0.55;
   transition: opacity 0.3s ease-in-out;
 }
 

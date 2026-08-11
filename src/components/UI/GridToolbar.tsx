@@ -11,6 +11,52 @@ import {
   Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { Tooltip } from './Tooltip';
+
+// ============================================================================
+// DESIGN TOKENS — single source of truth for the toolbar palette
+// ============================================================================
+const C = {
+  accent:    '#0ea5e9',   // sky-500 — active/selected states
+  accentBg:  'rgba(14,165,233,0.15)',
+  accentBrd: 'rgba(14,165,233,0.3)',
+  success:   '#10b981',   // emerald — "add/create" actions only
+  successBg: 'rgba(16,185,129,0.15)',
+  successBrd:'rgba(16,185,129,0.3)',
+  danger:    '#ef4444',
+  dangerBg:  'rgba(239,68,68,0.1)',
+  dangerBrd: 'rgba(239,68,68,0.3)',
+  warn:      '#f59e0b',
+  textPri:   '#f1f5f9',   // slate-100
+  textSec:   '#cbd5e1',   // slate-300 — icons (good contrast)
+  textMut:   '#94a3b8',   // slate-400 — labels
+  textDim:   '#64748b',   // slate-500
+  textOff:   '#475569',   // slate-600
+  surfBg:    'rgba(15,23,42,0.95)',
+  surfBrd:   'rgba(255,255,255,0.12)',
+  surfHov:   'rgba(255,255,255,0.05)',
+  surfItem:  'rgba(255,255,255,0.03)',
+};
+
+// ============================================================================
+// TOOL DESCRIPTIONS — used for rich tooltips
+// ============================================================================
+const TOOL_META: Record<string, { label: string; desc: string; shortcut?: string }> = {
+  select:      { label: 'Selecionar',         desc: 'Selecione e mova tokens e objetos', shortcut: 'V ou 1' },
+  pan:         { label: 'Mão',                desc: 'Arraste para navegar pelo mapa',     shortcut: 'Espaço ou 2' },
+  pen:         { label: 'Caneta',             desc: 'Desenhe linhas livres no mapa',      shortcut: 'P ou 3' },
+  shape:       { label: 'Formas',             desc: 'Crie retângulos, círculos e triângulos', shortcut: 'R ou 4' },
+  arrow:       { label: 'Seta Tática',        desc: 'Desenhe setas para indicar direções', shortcut: 'A ou 5' },
+  text:        { label: 'Texto',              desc: 'Insira textos e anotações no mapa',  shortcut: 'T ou 6' },
+  ruler:       { label: 'Régua',              desc: 'Meça distâncias entre dois pontos',  shortcut: '7' },
+  eraser:      { label: 'Borracha',           desc: 'Apague desenhos clicando neles',     shortcut: '8' },
+  fog_brush:   { label: 'Névoa (Pincel)',     desc: 'Revele ou esconda áreas da névoa' },
+  fog_polygon: { label: 'Névoa (Polígono)',   desc: 'Crie áreas poligonais de névoa' },
+};
+
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
 
 const LayerRenameInput = ({ layer, isActive, onRename }: { layer: any, isActive: boolean, onRename: (id: string, name: string) => void }) => {
   const [name, setName] = useState(layer.name);
@@ -27,9 +73,9 @@ const LayerRenameInput = ({ layer, isActive, onRename }: { layer: any, isActive:
         if (e.key === 'Enter') e.currentTarget.blur(); 
       }}
       style={{ 
-        fontSize: '13px', 
+        fontSize: '12px', 
         fontWeight: isActive ? 600 : 400, 
-        color: isActive ? '#10b981' : '#e2e8f0', 
+        color: isActive ? C.accent : C.textSec, 
         flex: 1, 
         background: 'transparent', 
         border: 'none', 
@@ -59,8 +105,8 @@ const DrawingRenameInput = ({ drawing, typeName, onRename }: { drawing: any, typ
       style={{ 
         background: 'transparent', 
         border: 'none', 
-        color: drawing.hidden ? '#64748b' : '#cbd5e1', 
-        fontSize: '11px', 
+        color: drawing.hidden ? C.textDim : C.textSec, 
+        fontSize: '12px', 
         textDecoration: drawing.hidden ? 'line-through' : 'none', 
         outline: 'none', 
         width: '100%' 
@@ -68,6 +114,10 @@ const DrawingRenameInput = ({ drawing, typeName, onRename }: { drawing: any, typ
     />
   );
 };
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 export const GridToolbar: React.FC = () => {
   const [activeTool, setActiveToolState] = useState(localState.activeTool);
@@ -238,20 +288,21 @@ export const GridToolbar: React.FC = () => {
     e.target.value = '';
   };
 
+  // Build tools array
   let tools = [
-    { id: 'select', label: 'Selecionar / Mover (1)', icon: MousePointer2 },
-    { id: 'pan', label: 'Mão (Navegar / Espaço) (2)', icon: Hand },
-    { id: 'pen', label: 'Desenho Livre (Caneta) (3)', icon: Pen },
-    { id: 'shape', label: 'Forma Geométrica (4)', icon: Square },
-    { id: 'arrow', label: 'Seta Tática / Alvo (5)', icon: ArrowRight },
-    { id: 'text', label: 'Inserir Texto (6)', icon: Type },
-    { id: 'ruler', label: 'Régua de Medição (7)', icon: Ruler },
-    { id: 'eraser', label: 'Borracha Mágica (8)', icon: Eraser },
-  ] as any[];
+    { id: 'select', icon: MousePointer2 },
+    { id: 'pan',    icon: Hand },
+    { id: 'pen',    icon: Pen },
+    { id: 'shape',  icon: Square },
+    { id: 'arrow',  icon: ArrowRight },
+    { id: 'text',   icon: Type },
+    { id: 'ruler',  icon: Ruler },
+    { id: 'eraser', icon: Eraser },
+  ] as { id: string; icon: any }[];
 
   if (mapConfig.fogOfWar) {
-    tools.push({ id: 'fog_brush', label: 'Pincel de Névoa (Revelar/Esconder)', icon: CloudFog });
-    tools.push({ id: 'fog_polygon', label: 'Polígono de Névoa', icon: Hexagon, Target, Scan });
+    tools.push({ id: 'fog_brush',   icon: CloudFog });
+    tools.push({ id: 'fog_polygon', icon: Hexagon });
   }
 
   // Render minimized trigger when hidden
@@ -267,10 +318,10 @@ export const GridToolbar: React.FC = () => {
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 100000,
-          background: 'rgba(15, 23, 42, 0.9)',
+          background: C.surfBg,
           backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(14, 165, 233, 0.4)',
-          color: '#0ea5e9',
+          border: `1px solid ${C.accentBrd}`,
+          color: C.accent,
           borderRadius: '20px',
           padding: '6px 16px',
           fontSize: '12px',
@@ -311,9 +362,9 @@ export const GridToolbar: React.FC = () => {
           flexDirection: 'column',
           gap: '12px',
           padding: '16px',
-          background: 'rgba(15, 23, 42, 0.96)',
+          background: C.surfBg,
           backdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255,255,255,0.15)',
+          border: `1px solid rgba(255,255,255,0.15)`,
           borderRadius: '16px',
           boxShadow: '0 16px 48px rgba(0,0,0,0.8)',
           pointerEvents: 'auto',
@@ -332,27 +383,28 @@ export const GridToolbar: React.FC = () => {
               const Icon = tab.icon;
               const isActive = activeConfigTab === tab.id;
               return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveConfigTab(tab.id as any)}
-                  style={{
-                    flex: 1,
-                    background: isActive ? 'rgba(14,165,233,0.15)' : 'transparent',
-                    color: isActive ? '#0ea5e9' : '#94a3b8',
-                    border: isActive ? '1px solid rgba(14,165,233,0.3)' : '1px solid transparent',
-                    borderRadius: '8px',
-                    padding: '6px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <Icon size={14} /> {tab.label}
-                </button>
+                <Tooltip key={tab.id} label={tab.label} position="bottom">
+                  <button
+                    onClick={() => setActiveConfigTab(tab.id as any)}
+                    style={{
+                      flex: 1,
+                      background: isActive ? C.accentBg : 'transparent',
+                      color: isActive ? C.accent : C.textMut,
+                      border: isActive ? `1px solid ${C.accentBrd}` : '1px solid transparent',
+                      borderRadius: '8px',
+                      padding: '6px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Icon size={14} /> {tab.label}
+                  </button>
+                </Tooltip>
               );
             })}
           </div>
@@ -360,70 +412,81 @@ export const GridToolbar: React.FC = () => {
           {/* TAB: MAPAS */}
           {activeConfigTab === 'mapas' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  background: 'rgba(16,185,129,0.15)',
-                  border: '1px solid rgba(16,185,129,0.3)',
-                  color: '#10b981',
-                  borderRadius: '8px',
-                  padding: '8px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Plus size={16} /> Adicionar Novo Mapa de Fundo
-              </button>
+              <Tooltip label="Adicionar Mapa" description="Envie uma imagem como mapa de fundo" position="bottom">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    background: C.successBg,
+                    border: `1px solid ${C.successBrd}`,
+                    color: C.success,
+                    borderRadius: '8px',
+                    padding: '8px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%'
+                  }}
+                >
+                  <Plus size={14} /> Adicionar Novo Mapa de Fundo
+                </button>
+              </Tooltip>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>CENÁRIOS E MAPAS ({backgrounds.length})</span>
+                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>CENÁRIOS E MAPAS ({backgrounds.length})</span>
               </div>
               {backgrounds.length === 0 ? (
-                <span style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', padding: '10px' }}>Nenhum mapa na cena.</span>
+                <span style={{ fontSize: '12px', color: C.textDim, textAlign: 'center', padding: '10px' }}>Nenhum mapa na cena.</span>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '250px', overflowY: 'auto', paddingRight: '4px' }}>
                   {backgrounds.map(bg => (
-                    <div key={bg.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', padding: '6px 8px', borderRadius: '6px' }}>
-                      <span style={{ fontSize: '12px', color: '#e2e8f0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div key={bg.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: C.surfItem, padding: '6px 8px', borderRadius: '6px' }}>
+                      <span style={{ fontSize: '12px', color: C.textSec, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {bg.name || 'Mapa sem nome'}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <button
-                          onClick={() => updateBackgroundProps(bg.id, { zIndex: (bg.zIndex || 0) + 1 })}
-                          style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', fontSize: '10px' }}
-                          title="Trazer para a Frente (Z-Index +)"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          onClick={() => updateBackgroundProps(bg.id, { zIndex: (bg.zIndex || 0) - 1 })}
-                          style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', fontSize: '10px' }}
-                          title="Mandar para Trás (Z-Index -)"
-                        >
-                          ↓
-                        </button>
-                        <button
-                          onClick={() => updateBackgroundProps(bg.id, { locked: !bg.locked })}
-                          style={{ background: 'none', border: 'none', color: bg.locked ? '#f59e0b' : '#64748b', cursor: 'pointer', padding: '4px' }}
-                        >
-                          {bg.locked ? <Lock size={14} /> : <Unlock size={14} />}
-                        </button>
-                        <button
-                          onClick={() => updateBackgroundProps(bg.id, { hidden: !bg.hidden })}
-                          style={{ background: 'none', border: 'none', color: bg.hidden ? '#ef4444' : '#64748b', cursor: 'pointer', padding: '4px' }}
-                        >
-                          {bg.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
-                        <button
-                          onClick={() => removeBackground(bg.id)}
-                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <Tooltip label="Trazer para Frente" description="Z-Index +1">
+                          <button
+                            onClick={() => updateBackgroundProps(bg.id, { zIndex: (bg.zIndex || 0) + 1 })}
+                            style={{ background: 'none', border: 'none', color: C.textDim, cursor: 'pointer', padding: '4px' }}
+                          >
+                            <ChevronUp size={14} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Mandar para Trás" description="Z-Index -1">
+                          <button
+                            onClick={() => updateBackgroundProps(bg.id, { zIndex: (bg.zIndex || 0) - 1 })}
+                            style={{ background: 'none', border: 'none', color: C.textDim, cursor: 'pointer', padding: '4px' }}
+                          >
+                            <ChevronDown size={14} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label={bg.locked ? "Destravar" : "Travar"}>
+                          <button
+                            onClick={() => updateBackgroundProps(bg.id, { locked: !bg.locked })}
+                            style={{ background: 'none', border: 'none', color: bg.locked ? C.warn : C.textDim, cursor: 'pointer', padding: '4px' }}
+                          >
+                            {bg.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                          </button>
+                        </Tooltip>
+                        <Tooltip label={bg.hidden ? "Mostrar" : "Ocultar"}>
+                          <button
+                            onClick={() => updateBackgroundProps(bg.id, { hidden: !bg.hidden })}
+                            style={{ background: 'none', border: 'none', color: bg.hidden ? C.danger : C.textDim, cursor: 'pointer', padding: '4px' }}
+                          >
+                            {bg.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Excluir Mapa">
+                          <button
+                            onClick={() => removeBackground(bg.id)}
+                            style={{ background: 'none', border: 'none', color: C.danger, cursor: 'pointer', padding: '4px' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                   ))}
@@ -436,11 +499,11 @@ export const GridToolbar: React.FC = () => {
           {activeConfigTab === 'grid' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>Tipo do Grid</span>
+                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tipo do Grid</span>
                 <select
                   value={mapConfig.gridType}
                   onChange={e => updateMapConfig({ gridType: e.target.value as any })}
-                  style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#f8fafc', padding: '6px', borderRadius: '6px', fontSize: '12px' }}
+                  style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid ${C.surfBrd}`, color: C.textPri, padding: '6px', borderRadius: '6px', fontSize: '12px' }}
                 >
                   <option value="square">Quadrados</option>
                   <option value="hex_v">Hexágonos (Verticais)</option>
@@ -450,7 +513,7 @@ export const GridToolbar: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>Tamanho do Grid ({mapConfig.gridSize}px)</span>
+                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600 }}>Tamanho do Grid ({mapConfig.gridSize}px)</span>
                 <input
                   type="range" min="20" max="200" step="10" value={mapConfig.gridSize}
                   onChange={e => updateMapConfig({ gridSize: parseInt(e.target.value) })}
@@ -459,14 +522,14 @@ export const GridToolbar: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px' }}>
-                <span style={{ fontSize: '12px', color: '#e2e8f0' }}>Névoa de Guerra (FOW)</span>
+                <span style={{ fontSize: '12px', color: C.textSec }}>Névoa de Guerra (FOW)</span>
                 <button
                   onClick={() => updateMapConfig({ fogOfWar: !mapConfig.fogOfWar })}
                   style={{
-                    background: mapConfig.fogOfWar ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.05)',
-                    border: mapConfig.fogOfWar ? '1px solid #0ea5e9' : '1px solid transparent',
-                    color: mapConfig.fogOfWar ? '#0ea5e9' : '#94a3b8',
-                    borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer'
+                    background: mapConfig.fogOfWar ? 'rgba(14,165,233,0.3)' : C.surfHov,
+                    border: mapConfig.fogOfWar ? `1px solid ${C.accent}` : '1px solid transparent',
+                    color: mapConfig.fogOfWar ? C.accent : C.textMut,
+                    borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer'
                   }}
                 >
                   {mapConfig.fogOfWar ? 'Ativada' : 'Desativada'}
@@ -478,42 +541,48 @@ export const GridToolbar: React.FC = () => {
           {/* TAB: OBJETOS */}
           {activeConfigTab === 'objetos' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                onClick={() => window.dispatchEvent(new Event('locate-texts'))}
-                style={{
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e2e8f0',
-                  borderRadius: '6px', padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                }}
-              >
-                <Search size={14} /> Localizar Todos os Textos
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm("Deseja apagar TODOS os textos do mapa?")) {
-                    state.mapTexts.clear();
-                  }
-                }}
-                style={{
-                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444',
-                  borderRadius: '6px', padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                }}
-              >
-                <Eraser size={14} /> Limpar Todos os Textos
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm("Deseja apagar TODOS os desenhos (linhas e formas) do mapa?")) {
-                    import('../../store/drawings').then(s => s.clearAllDrawings());
-                  }
-                }}
-                style={{
-                  background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444',
-                  borderRadius: '6px', padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                  marginTop: '4px'
-                }}
-              >
-                <Trash2 size={14} /> Limpar Todos os Desenhos
-              </button>
+              <Tooltip label="Localizar Textos" description="Destaca todos os textos no mapa" position="bottom">
+                <button
+                  onClick={() => window.dispatchEvent(new Event('locate-texts'))}
+                  style={{
+                    background: C.surfHov, border: `1px solid ${C.surfBrd}`, color: C.textSec,
+                    borderRadius: '6px', padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%'
+                  }}
+                >
+                  <Search size={14} /> Localizar Todos os Textos
+                </button>
+              </Tooltip>
+              <Tooltip label="Limpar Textos" description="Remove todos os textos do mapa" position="bottom">
+                <button
+                  onClick={() => {
+                    if (confirm("Deseja apagar TODOS os textos do mapa?")) {
+                      state.mapTexts.clear();
+                    }
+                  }}
+                  style={{
+                    background: C.dangerBg, border: `1px solid ${C.dangerBrd}`, color: C.danger,
+                    borderRadius: '6px', padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%'
+                  }}
+                >
+                  <Eraser size={14} /> Limpar Todos os Textos
+                </button>
+              </Tooltip>
+              <Tooltip label="Limpar Desenhos" description="Remove todas as linhas e formas" position="bottom">
+                <button
+                  onClick={() => {
+                    if (confirm("Deseja apagar TODOS os desenhos (linhas e formas) do mapa?")) {
+                      import('../../store/drawings').then(s => s.clearAllDrawings());
+                    }
+                  }}
+                  style={{
+                    background: C.dangerBg, border: `1px solid ${C.dangerBrd}`, color: C.danger,
+                    borderRadius: '6px', padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    marginTop: '4px', width: '100%'
+                  }}
+                >
+                  <Trash2 size={14} /> Limpar Todos os Desenhos
+                </button>
+              </Tooltip>
             </div>
           )}
         </div>
@@ -528,9 +597,9 @@ export const GridToolbar: React.FC = () => {
           left: '16px',
           zIndex: 99999,
           width: isMobile ? '280px' : '250px',
-          background: 'rgba(15, 23, 42, 0.95)',
+          background: C.surfBg,
           backdropFilter: 'blur(24px)',
-          border: '1px solid rgba(16, 185, 129, 0.4)',
+          border: `1px solid ${C.accentBrd}`,
           borderRadius: '12px',
           boxShadow: '0 12px 40px rgba(0,0,0,0.8)',
           pointerEvents: 'auto',
@@ -541,46 +610,50 @@ export const GridToolbar: React.FC = () => {
           maxHeight: isMobile && !isLayersMinimized ? '400px' : (!isLayersMinimized ? '70vh' : 'none')
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '14px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <h3 style={{ margin: 0, fontSize: '14px', color: C.accent, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Layers size={16} /> Camadas de Desenho
               </h3>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 {selectedBatch.size > 0 && (
-                   <button
-                     onClick={() => {
-                        if (confirm(`Excluir ${selectedBatch.size} objetos selecionados?`)) {
-                           import('../../store/drawings').then(s => {
-                              selectedBatch.forEach(id => s.removeDrawing(id));
-                              setSelectedBatch(new Set());
-                           });
-                        }
-                     }}
-                     style={{ background: 'rgba(239, 68, 68, 0.2)', border: 'none', color: '#ef4444', borderRadius: '6px', padding: '4px 8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                     title="Excluir Selecionados"
-                   >
-                     <Trash2 size={14} /> ({selectedBatch.size})
-                   </button>
+                   <Tooltip label="Excluir Selecionados" description={`${selectedBatch.size} itens selecionados`}>
+                     <button
+                       onClick={() => {
+                          if (confirm(`Excluir ${selectedBatch.size} objetos selecionados?`)) {
+                             import('../../store/drawings').then(s => {
+                                selectedBatch.forEach(id => s.removeDrawing(id));
+                                setSelectedBatch(new Set());
+                             });
+                          }
+                       }}
+                       style={{ background: 'rgba(239, 68, 68, 0.2)', border: 'none', color: C.danger, borderRadius: '6px', padding: '4px 8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                     >
+                       <Trash2 size={14} /> ({selectedBatch.size})
+                     </button>
+                   </Tooltip>
                 )}
-                <button
-                  onClick={() => setIsLayersMinimized(!isLayersMinimized)}
-                  style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#94a3b8', borderRadius: '6px', padding: '4px', cursor: 'pointer' }}
-                  title={isLayersMinimized ? "Expandir" : "Minimizar"}
-                >
-                  {isLayersMinimized ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-                </button>
-                {!isLayersMinimized && (
+                <Tooltip label={isLayersMinimized ? "Expandir" : "Minimizar"}>
                   <button
-                    onClick={() => {
-                       import('../../store/drawingLayers').then(s => s.addDrawingLayer({
-                          id: 'layer_' + Date.now(),
-                          name: 'Nova Camada',
-                          zIndex: 100
-                       }));
-                    }}
-                    style={{ background: 'rgba(16,185,129,0.2)', border: 'none', color: '#10b981', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                    onClick={() => setIsLayersMinimized(!isLayersMinimized)}
+                    style={{ background: C.surfHov, border: 'none', color: C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer' }}
                   >
-                    <Plus size={14} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }}/> Nova
+                    {isLayersMinimized ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
                   </button>
+                </Tooltip>
+                {!isLayersMinimized && (
+                  <Tooltip label="Nova Camada" description="Cria uma nova camada de desenho">
+                    <button
+                      onClick={() => {
+                         import('../../store/drawingLayers').then(s => s.addDrawingLayer({
+                            id: 'layer_' + Date.now(),
+                            name: 'Nova Camada',
+                            zIndex: 100
+                         }));
+                      }}
+                      style={{ background: C.successBg, border: 'none', color: C.success, borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      <Plus size={14} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }}/> Nova
+                    </button>
+                  </Tooltip>
                 )}
               </div>
             </div>
@@ -595,8 +668,8 @@ export const GridToolbar: React.FC = () => {
                          onClick={() => import('../../store').then(s => s.setActiveDrawingLayerId(layer.id))}
                          style={{ 
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                            background: activeLayerId === layer.id ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)', 
-                            border: activeLayerId === layer.id ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
+                            background: activeLayerId === layer.id ? C.accentBg : C.surfItem, 
+                            border: activeLayerId === layer.id ? `1px solid ${C.accentBrd}` : '1px solid transparent',
                             padding: '8px 10px', borderRadius: '8px', cursor: 'pointer',
                             transition: 'all 0.2s'
                          }}
@@ -623,53 +696,56 @@ export const GridToolbar: React.FC = () => {
                            title="Selecionar tudo nesta camada"
                            style={{ cursor: 'pointer', margin: 0, marginRight: '4px' }}
                         />
-                        <button
-                          onClick={() => {
-                             import('../../store/drawingLayers').then(s => s.updateDrawingLayer(layer.id, { hidden: !layer.hidden }));
-                          }}
-                          style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.hidden ? '#ef4444' : '#94a3b8', cursor: 'pointer', padding: '6px', transition: 'all 0.1s' }}
-                          title={layer.hidden ? "Mostrar Camada" : "Ocultar Camada"}
-                        >
-                          {layer.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
-                        <button
-                          onClick={() => {
-                             if (layerDrawings.length === 0) return;
-                             if (confirm(`Limpar todos os ${layerDrawings.length} desenhos da camada '${layer.name}'?`)) {
-                                import('../../store/drawings').then(s => {
-                                   layerDrawings.forEach((d: any) => s.removeDrawing(d.id));
-                                });
-                             }
-                          }}
-                          style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layerDrawings.length === 0 ? '#475569' : '#f59e0b', cursor: layerDrawings.length === 0 ? 'not-allowed' : 'pointer', padding: '6px', transition: 'all 0.1s' }}
-                          title="Limpar todos os desenhos da camada"
-                        >
-                          <Eraser size={14} />
-                        </button>
-                        <button
-                          onClick={() => {
-                             if (layer.id === 'default') {
-                                alert('A camada principal não pode ser excluída.');
-                                return;
-                             }
-                             if (confirm(`Excluir a camada '${layer.name}' apagará todos os desenhos nela. Continuar?`)) {
-                                import('../../store/drawingLayers').then(s => s.removeDrawingLayer(layer.id));
-                                if (activeLayerId === layer.id) {
-                                   import('../../store').then(s => s.setActiveDrawingLayerId('default'));
-                                }
-                             }
-                          }}
-                          style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '6px', border: 'none', color: layer.id === 'default' ? '#475569' : '#ef4444', cursor: layer.id === 'default' ? 'not-allowed' : 'pointer', padding: '6px' }}
-                          title="Excluir Camada"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        <Tooltip label={layer.hidden ? "Mostrar Camada" : "Ocultar Camada"}>
+                          <button
+                            onClick={() => {
+                               import('../../store/drawingLayers').then(s => s.updateDrawingLayer(layer.id, { hidden: !layer.hidden }));
+                            }}
+                            style={{ background: C.surfHov, borderRadius: '6px', border: 'none', color: layer.hidden ? C.danger : C.textMut, cursor: 'pointer', padding: '6px', transition: 'all 0.1s' }}
+                          >
+                            {layer.hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Limpar Camada" description="Remove todos os desenhos desta camada">
+                          <button
+                            onClick={() => {
+                               if (layerDrawings.length === 0) return;
+                               if (confirm(`Limpar todos os ${layerDrawings.length} desenhos da camada '${layer.name}'?`)) {
+                                  import('../../store/drawings').then(s => {
+                                     layerDrawings.forEach((d: any) => s.removeDrawing(d.id));
+                                  });
+                               }
+                            }}
+                            style={{ background: C.surfHov, borderRadius: '6px', border: 'none', color: layerDrawings.length === 0 ? C.textOff : C.warn, cursor: layerDrawings.length === 0 ? 'not-allowed' : 'pointer', padding: '6px', transition: 'all 0.1s' }}
+                          >
+                            <Eraser size={14} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Excluir Camada">
+                          <button
+                            onClick={() => {
+                               if (layer.id === 'default') {
+                                  alert('A camada principal não pode ser excluída.');
+                                  return;
+                               }
+                               if (confirm(`Excluir a camada '${layer.name}' apagará todos os desenhos nela. Continuar?`)) {
+                                  import('../../store/drawingLayers').then(s => s.removeDrawingLayer(layer.id));
+                                  if (activeLayerId === layer.id) {
+                                     import('../../store').then(s => s.setActiveDrawingLayerId('default'));
+                                  }
+                               }
+                            }}
+                            style={{ background: C.surfHov, borderRadius: '6px', border: 'none', color: layer.id === 'default' ? C.textOff : C.danger, cursor: layer.id === 'default' ? 'not-allowed' : 'pointer', padding: '6px' }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                     
                     {/* Layer Drawings (Expanded list) */}
                     {layerDrawings.length > 0 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '12px', borderLeft: '1px solid rgba(255,255,255,0.1)', marginLeft: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '12px', borderLeft: `1px solid ${C.surfBrd}`, marginLeft: '8px' }}>
                         {layerDrawings.map((d: any) => {
                           let Icon = Pen;
                           let typeName = "Linha";
@@ -697,7 +773,7 @@ export const GridToolbar: React.FC = () => {
                                   }}
                                   style={{ cursor: 'pointer', margin: 0, padding: 0 }}
                                 />
-                                <Icon size={12} color={d.color || '#94a3b8'} />
+                                <Icon size={12} color={d.color || C.textMut} />
                                 <DrawingRenameInput 
                                   drawing={d} 
                                   typeName={typeName} 
@@ -707,21 +783,21 @@ export const GridToolbar: React.FC = () => {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                               <button
                                 onClick={() => import('../../store/drawings').then(s => s.updateDrawingProps(d.id, { hidden: !d.hidden }))}
-                                style={{ background: 'transparent', border: 'none', color: d.hidden ? '#ef4444' : '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                                style={{ background: 'transparent', border: 'none', color: d.hidden ? C.danger : C.textMut, cursor: 'pointer', padding: '4px' }}
                                 title={d.hidden ? "Mostrar" : "Ocultar"}
                               >
                                 {d.hidden ? <EyeOff size={12} /> : <Eye size={12} />}
                               </button>
                               <button
                                 onClick={() => import('../../store/drawings').then(s => s.updateDrawingProps(d.id, { locked: !d.locked }))}
-                                style={{ background: 'transparent', border: 'none', color: d.locked ? '#f59e0b' : '#64748b', cursor: 'pointer', padding: '4px' }}
+                                style={{ background: 'transparent', border: 'none', color: d.locked ? C.warn : C.textDim, cursor: 'pointer', padding: '4px' }}
                                 title={d.locked ? "Destravar" : "Travar"}
                               >
                                 {d.locked ? <Lock size={12} /> : <Unlock size={12} />}
                               </button>
                               <button
                                 onClick={() => { if (confirm("Apagar desenho?")) import('../../store/drawings').then(s => s.removeDrawing(d.id)); }}
-                                style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                                style={{ background: 'transparent', border: 'none', color: C.danger, cursor: 'pointer', padding: '4px' }}
                                 title="Excluir"
                               >
                                 <Trash2 size={12} />
@@ -733,7 +809,7 @@ export const GridToolbar: React.FC = () => {
                     </div>
                   )}
                 </div>
-              )})}
+              );})}
           </div>
           )}
         </div>
@@ -752,9 +828,9 @@ export const GridToolbar: React.FC = () => {
           alignItems: 'center',
           gap: '12px',
           padding: '8px 16px',
-          background: 'rgba(15, 23, 42, 0.95)',
+          background: C.surfBg,
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.15)',
+          border: `1px solid rgba(255,255,255,0.15)`,
           borderRadius: '14px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
           pointerEvents: 'auto',
@@ -763,13 +839,15 @@ export const GridToolbar: React.FC = () => {
         }}>
           {/* Color presets */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>COR:</span>
-            <input
-              type="color"
-              value={drawColor}
-              onChange={e => setDrawColor(e.target.value)}
-              style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
-            />
+            <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>COR:</span>
+            <Tooltip label="Cor do Traço" description="Escolha a cor do desenho">
+              <input
+                type="color"
+                value={drawColor}
+                onChange={e => setDrawColor(e.target.value)}
+                style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+              />
+            </Tooltip>
           </div>
 
           <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
@@ -778,19 +856,25 @@ export const GridToolbar: React.FC = () => {
           {activeTool === 'shape' && (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>FORMA:</span>
-                <button
-                   onClick={() => import('../../store').then(s => s.setActiveShapeType('rectangle'))}
-                   style={{ background: localState.activeShapeType === 'rectangle' ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.05)', border: localState.activeShapeType === 'rectangle' ? '1px solid #0ea5e9' : '1px solid transparent', color: localState.activeShapeType === 'rectangle' ? '#0ea5e9' : '#94a3b8', borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
-                ><Square size={14} /></button>
-                <button
-                   onClick={() => import('../../store').then(s => s.setActiveShapeType('circle'))}
-                   style={{ background: localState.activeShapeType === 'circle' ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.05)', border: localState.activeShapeType === 'circle' ? '1px solid #0ea5e9' : '1px solid transparent', color: localState.activeShapeType === 'circle' ? '#0ea5e9' : '#94a3b8', borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
-                ><Circle size={14} /></button>
-                <button
-                   onClick={() => import('../../store').then(s => s.setActiveShapeType('triangle'))}
-                   style={{ background: localState.activeShapeType === 'triangle' ? 'rgba(14,165,233,0.3)' : 'rgba(255,255,255,0.05)', border: localState.activeShapeType === 'triangle' ? '1px solid #0ea5e9' : '1px solid transparent', color: localState.activeShapeType === 'triangle' ? '#0ea5e9' : '#94a3b8', borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
-                ><Triangle size={14} /></button>
+                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>FORMA:</span>
+                <Tooltip label="Retângulo">
+                  <button
+                     onClick={() => import('../../store').then(s => s.setActiveShapeType('rectangle'))}
+                     style={{ background: localState.activeShapeType === 'rectangle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'rectangle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'rectangle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
+                  ><Square size={14} /></button>
+                </Tooltip>
+                <Tooltip label="Círculo">
+                  <button
+                     onClick={() => import('../../store').then(s => s.setActiveShapeType('circle'))}
+                     style={{ background: localState.activeShapeType === 'circle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'circle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'circle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
+                  ><Circle size={14} /></button>
+                </Tooltip>
+                <Tooltip label="Triângulo">
+                  <button
+                     onClick={() => import('../../store').then(s => s.setActiveShapeType('triangle'))}
+                     style={{ background: localState.activeShapeType === 'triangle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'triangle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'triangle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
+                  ><Triangle size={14} /></button>
+                </Tooltip>
               </div>
               <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
             </>
@@ -798,77 +882,106 @@ export const GridToolbar: React.FC = () => {
 
           {/* Stroke Width */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>{activeTool === 'eraser' ? 'TAMANHO:' : 'TRAÇO:'}</span>
+            <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{activeTool === 'eraser' ? 'TAMANHO:' : 'TRAÇO:'}</span>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <input type="range" min="1" max="50" value={drawWidth} onChange={(e) => setDrawWidth(Number(e.target.value))} />
-              <span style={{color: '#94a3b8', fontSize: '12px', minWidth: '30px'}}>{drawWidth}px</span>
+              <span style={{color: C.textMut, fontSize: '12px', minWidth: '30px'}}>{drawWidth}px</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ZOOM & NAVIGATION CONTROLS */}
+      {/* ================================================================ */}
+      {/* UNIFIED TOOLBAR: Drawing Tools + Zoom/Navigation Controls       */}
+      {/* ================================================================ */}
       <div 
         className="zoom-controls-container"
         style={{
         position: 'fixed',
-        bottom: isMobile ? '140px' : '18rem',
+        bottom: isMobile ? '140px' : '20rem',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 110,
         display: 'flex',
         alignItems: 'center',
-        gap: '4px',
+        gap: '2px',
         padding: '4px 8px',
-        background: 'rgba(15, 23, 42, 0.88)',
+        background: 'rgba(15, 23, 42, 0.92)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: '14px',
+        border: `1px solid ${C.surfBrd}`,
+        borderRadius: '16px',
         boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
         pointerEvents: 'auto'
       }}>
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new CustomEvent('canvas-zoom', { detail: -0.15 }))}
-          title="Diminuir Zoom"
-        >
-          <ZoomOut size={16} color="#94a3b8" />
-        </button>
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new Event('canvas-center-map'))}
-          title="Centralizar Mapa Base"
-        >
-          <MapIcon size={16} color="#94a3b8" />
-        </button>
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new Event('canvas-focus-selected'))}
-          title="Focar nos Tokens Selecionados"
-        >
-          <Target size={16} color="#94a3b8" />
-        </button>
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new Event('canvas-fit-all'))}
-          title="Enquadrar Todos os Itens"
-        >
-          <Scan size={16} color="#94a3b8" />
-        </button>
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new Event('canvas-reset-view'))}
-          title="Resetar Câmera"
-        >
-          <Maximize2 size={16} color="#94a3b8" />
-        </button>
-        <button
-          className="tldraw-tool-btn"
-          onClick={() => window.dispatchEvent(new CustomEvent('canvas-zoom', { detail: 0.15 }))}
-          title="Aumentar Zoom"
-        >
-          <ZoomIn size={16} color="#94a3b8" />
-        </button>
+        {/* Drawing Tools */}
+        {tools.map(tool => {
+          const Icon = tool.icon;
+          const meta = TOOL_META[tool.id] || { label: tool.id, desc: '' };
+          const isActive = activeTool === tool.id;
+          return (
+            <Tooltip key={tool.id} label={meta.label} description={meta.desc} shortcut={meta.shortcut} position="top">
+              <button
+                className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
+                onClick={() => setActiveTool(tool.id as any)}
+              >
+                <Icon size={18} color={isActive ? C.accent : C.textSec} />
+              </button>
+            </Tooltip>
+          );
+        })}
+
+        {/* Divider between tools and navigation */}
+        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
+
+        {/* Navigation/Zoom Controls */}
+        <Tooltip label="Diminuir Zoom" description="Afasta a visão do mapa" shortcut="Scroll ↓">
+          <button
+            className="tldraw-tool-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('canvas-zoom', { detail: -0.15 }))}
+          >
+            <ZoomOut size={18} color={C.textSec} />
+          </button>
+        </Tooltip>
+        <Tooltip label="Centralizar Mapa" description="Enquadra o mapa base na tela">
+          <button
+            className="tldraw-tool-btn"
+            onClick={() => window.dispatchEvent(new Event('canvas-center-map'))}
+          >
+            <MapIcon size={18} color={C.textSec} />
+          </button>
+        </Tooltip>
+        <Tooltip label="Focar Seleção" description="Aproxima nos tokens selecionados">
+          <button
+            className="tldraw-tool-btn"
+            onClick={() => window.dispatchEvent(new Event('canvas-focus-selected'))}
+          >
+            <Target size={18} color={C.textSec} />
+          </button>
+        </Tooltip>
+        <Tooltip label="Enquadrar Tudo" description="Mostra todos os itens visíveis">
+          <button
+            className="tldraw-tool-btn"
+            onClick={() => window.dispatchEvent(new Event('canvas-fit-all'))}
+          >
+            <Scan size={18} color={C.textSec} />
+          </button>
+        </Tooltip>
+        <Tooltip label="Resetar Câmera" description="Volta a câmera para a posição inicial">
+          <button
+            className="tldraw-tool-btn"
+            onClick={() => window.dispatchEvent(new Event('canvas-reset-view'))}
+          >
+            <Maximize2 size={18} color={C.textSec} />
+          </button>
+        </Tooltip>
+        <Tooltip label="Aumentar Zoom" description="Aproxima a visão do mapa" shortcut="Scroll ↑">
+          <button
+            className="tldraw-tool-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('canvas-zoom', { detail: 0.15 }))}
+          >
+            <ZoomIn size={18} color={C.textSec} />
+          </button>
+        </Tooltip>
       </div>
 
       <style>{`
@@ -876,8 +989,8 @@ export const GridToolbar: React.FC = () => {
           background: transparent;
           border: none;
           border-radius: 8px;
-          width: 32px;
-          height: 32px;
+          width: 34px;
+          height: 34px;
           display: flex;
           align-items: center;
           justify-content: center;
