@@ -190,45 +190,55 @@ export const GameCanvas: React.FC = () => {
       };
 
       const handleCanvasCenterMap = () => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let hasItems = false;
+        
+        const addPoint = (x: number, y: number, hw: number, hh: number) => {
+          if (x - hw < minX) minX = x - hw;
+          if (x + hw > maxX) maxX = x + hw;
+          if (y - hh < minY) minY = y - hh;
+          if (y + hh > maxY) maxY = y + hh;
+          hasItems = true;
+        };
+
         const bgEntries = Object.values(bgSprites).filter(bg => bg.visible);
-        if (bgEntries.length > 0) {
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-          
-          bgEntries.forEach(bg => {
-            const hw = Math.abs(bg.width) / 2 || 0;
-            const hh = Math.abs(bg.height) / 2 || 0;
-            if (bg.x - hw < minX) minX = bg.x - hw;
-            if (bg.x + hw > maxX) maxX = bg.x + hw;
-            if (bg.y - hh < minY) minY = bg.y - hh;
-            if (bg.y + hh > maxY) maxY = bg.y + hh;
-          });
-          
-          if (maxX === -Infinity) {
-            handleCanvasResetView();
-            return;
+        bgEntries.forEach(bg => {
+          const hw = Math.abs(bg.width) / 2 || 0;
+          const hh = Math.abs(bg.height) / 2 || 0;
+          addPoint(bg.x, bg.y, hw, hh);
+        });
+        
+        Array.from(state.drawings.values()).forEach((draw: any) => {
+          if (draw.type === 'image' && draw.points && draw.points.length > 0) {
+            const hw = (draw.imageWidth || 400) / 2;
+            const hh = (draw.imageHeight || 300) / 2;
+            addPoint(draw.points[0].x, draw.points[0].y, hw, hh);
           }
-          
-          const mapWidth = maxX - minX;
-          const mapHeight = maxY - minY;
-          const centerX = (minX + maxX) / 2;
-          const centerY = (minY + maxY) / 2;
-          
-          const effWidth = mapWidth > 10 ? mapWidth : 1000;
-          const effHeight = mapHeight > 10 ? mapHeight : 1000;
-          
-          const scaleX = window.innerWidth / effWidth;
-          const scaleY = window.innerHeight / effHeight;
-          
-          let newScale = Math.min(scaleX, scaleY) * 0.90;
-          if (newScale > 2) newScale = 2;
-          if (newScale < 0.01) newScale = 0.01;
-          
-          viewport.scale.set(newScale);
-          viewport.x = window.innerWidth / 2 - centerX * newScale;
-          viewport.y = window.innerHeight / 2 - centerY * newScale;
-        } else {
+        });
+        
+        if (!hasItems) {
           handleCanvasResetView();
+          return;
         }
+        
+        const mapWidth = maxX - minX;
+        const mapHeight = maxY - minY;
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        
+        const effWidth = mapWidth > 10 ? mapWidth : 1000;
+        const effHeight = mapHeight > 10 ? mapHeight : 1000;
+        
+        const scaleX = window.innerWidth / effWidth;
+        const scaleY = window.innerHeight / effHeight;
+        
+        let newScale = Math.min(scaleX, scaleY) * 0.90;
+        if (newScale > 2) newScale = 2;
+        if (newScale < 0.01) newScale = 0.01;
+        
+        viewport.scale.set(newScale);
+        viewport.x = window.innerWidth / 2 - centerX * newScale;
+        viewport.y = window.innerHeight / 2 - centerY * newScale;
       };
 
       const handleCanvasFocusSelected = () => {
@@ -273,6 +283,13 @@ export const GameCanvas: React.FC = () => {
         });
         Object.values(propSprites).forEach(prop => {
            if (prop.visible) addPoint(prop.x, prop.y, prop.width, prop.height);
+        });
+        Array.from(state.drawings.values()).forEach((draw: any) => {
+          if (draw.type === 'image' && draw.points && draw.points.length > 0) {
+            addPoint(draw.points[0].x, draw.points[0].y, draw.imageWidth || 400, draw.imageHeight || 300);
+          } else if (draw.points && draw.points.length > 0) {
+            draw.points.forEach((p: any) => addPoint(p.x, p.y, 10, 10));
+          }
         });
         if (hasItems && maxX !== -Infinity) {
           const centerX = (minX + maxX) / 2;
