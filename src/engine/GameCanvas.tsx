@@ -203,7 +203,6 @@ export const GameCanvas: React.FC = () => {
       const handleCanvasFocusSelected = () => {
         const selected = Tokens.getSelectedIds();
         if (selected.length === 0) {
-          toast.error("Nenhum token selecionado para focar.");
           return;
         }
         let sumX = 0, sumY = 0, count = 0;
