@@ -190,30 +190,38 @@ export const GameCanvas: React.FC = () => {
       };
 
       const handleCanvasCenterMap = () => {
-        const bgEntries = Object.values(bgSprites);
+        const bgEntries = Object.values(bgSprites).filter(bg => bg.visible);
         if (bgEntries.length > 0) {
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
           
           bgEntries.forEach(bg => {
-            const hw = bg.width / 2;
-            const hh = bg.height / 2;
+            const hw = Math.abs(bg.width) / 2 || 0;
+            const hh = Math.abs(bg.height) / 2 || 0;
             if (bg.x - hw < minX) minX = bg.x - hw;
             if (bg.x + hw > maxX) maxX = bg.x + hw;
             if (bg.y - hh < minY) minY = bg.y - hh;
             if (bg.y + hh > maxY) maxY = bg.y + hh;
           });
           
+          if (maxX === -Infinity) {
+            handleCanvasResetView();
+            return;
+          }
+          
           const mapWidth = maxX - minX;
           const mapHeight = maxY - minY;
           const centerX = (minX + maxX) / 2;
           const centerY = (minY + maxY) / 2;
           
-          const scaleX = window.innerWidth / (mapWidth || 100);
-          const scaleY = window.innerHeight / (mapHeight || 100);
+          const effWidth = mapWidth > 10 ? mapWidth : 1000;
+          const effHeight = mapHeight > 10 ? mapHeight : 1000;
           
-          let newScale = Math.min(scaleX, scaleY) * 0.95;
+          const scaleX = window.innerWidth / effWidth;
+          const scaleY = window.innerHeight / effHeight;
+          
+          let newScale = Math.min(scaleX, scaleY) * 0.90;
           if (newScale > 2) newScale = 2;
-          if (newScale < 0.05) newScale = 0.05;
+          if (newScale < 0.01) newScale = 0.01;
           
           viewport.scale.set(newScale);
           viewport.x = window.innerWidth / 2 - centerX * newScale;
@@ -249,31 +257,37 @@ export const GameCanvas: React.FC = () => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         let hasItems = false;
         const addPoint = (x: number, y: number, w: number, h: number) => {
-          if (x - w/2 < minX) minX = x - w/2;
-          if (y - h/2 < minY) minY = y - h/2;
-          if (x + w/2 > maxX) maxX = x + w/2;
-          if (y + h/2 > maxY) maxY = y + h/2;
+          const hw = Math.abs(w)/2 || 0;
+          const hh = Math.abs(h)/2 || 0;
+          if (x - hw < minX) minX = x - hw;
+          if (y - hh < minY) minY = y - hh;
+          if (x + hw > maxX) maxX = x + hw;
+          if (y + hh > maxY) maxY = y + hh;
           hasItems = true;
         };
         Object.values(tokenSprites).forEach(ts => {
-           if (ts.container) addPoint(ts.container.x, ts.container.y, ts.container.width, ts.container.height);
+           if (ts.container && ts.container.visible) addPoint(ts.container.x, ts.container.y, ts.container.width, ts.container.height);
         });
         Object.values(bgSprites).forEach(bg => {
-           addPoint(bg.x, bg.y, bg.width, bg.height);
+           if (bg.visible) addPoint(bg.x, bg.y, bg.width, bg.height);
         });
         Object.values(propSprites).forEach(prop => {
-           addPoint(prop.x, prop.y, prop.width, prop.height);
+           if (prop.visible) addPoint(prop.x, prop.y, prop.width, prop.height);
         });
-        if (hasItems) {
+        if (hasItems && maxX !== -Infinity) {
           const centerX = (minX + maxX) / 2;
           const centerY = (minY + maxY) / 2;
           const width = maxX - minX + 200;
           const height = maxY - minY + 200;
-          const scaleX = window.innerWidth / (width || 100);
-          const scaleY = window.innerHeight / (height || 100);
-          let newScale = Math.min(scaleX, scaleY) * 0.95;
+          
+          const effWidth = width > 10 ? width : 1000;
+          const effHeight = height > 10 ? height : 1000;
+          
+          const scaleX = window.innerWidth / effWidth;
+          const scaleY = window.innerHeight / effHeight;
+          let newScale = Math.min(scaleX, scaleY) * 0.90;
           if (newScale > 2) newScale = 2;
-          if (newScale < 0.05) newScale = 0.05;
+          if (newScale < 0.01) newScale = 0.01;
           viewport.scale.set(newScale);
           viewport.x = window.innerWidth / 2 - centerX * newScale;
           viewport.y = window.innerHeight / 2 - centerY * newScale;
