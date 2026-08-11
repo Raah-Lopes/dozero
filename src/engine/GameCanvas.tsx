@@ -243,23 +243,48 @@ export const GameCanvas: React.FC = () => {
 
       const handleCanvasFocusSelected = () => {
         const selected = Tokens.getSelectedIds();
-        if (selected.length === 0) {
-          return;
-        }
-        let sumX = 0, sumY = 0, count = 0;
+        if (selected.length === 0) return;
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let count = 0;
+
         selected.forEach(id => {
           const ts = tokenSprites[id];
           if (ts && ts.container) {
-            sumX += ts.container.x;
-            sumY += ts.container.y;
+            const w = ts.container.width || 100;
+            const h = ts.container.height || 100;
+            const hw = Math.abs(w) / 2;
+            const hh = Math.abs(h) / 2;
+            const x = ts.container.x;
+            const y = ts.container.y;
+            
+            if (x - hw < minX) minX = x - hw;
+            if (x + hw > maxX) maxX = x + hw;
+            if (y - hh < minY) minY = y - hh;
+            if (y + hh > maxY) maxY = y + hh;
             count++;
           }
         });
+
         if (count > 0) {
-          const centerX = sumX / count;
-          const centerY = sumY / count;
-          viewport.x = window.innerWidth / 2 - centerX * viewport.scale.x;
-          viewport.y = window.innerHeight / 2 - centerY * viewport.scale.x;
+          const centerX = (minX + maxX) / 2;
+          const centerY = (minY + maxY) / 2;
+          const width = maxX - minX + 300; // Padding
+          const height = maxY - minY + 300;
+          
+          const effWidth = width > 10 ? width : 300;
+          const effHeight = height > 10 ? height : 300;
+
+          const scaleX = window.innerWidth / effWidth;
+          const scaleY = window.innerHeight / effHeight;
+          
+          let newScale = Math.min(scaleX, scaleY);
+          if (newScale > 2.0) newScale = 2.0;
+          if (newScale < 0.1) newScale = 0.1;
+
+          viewport.scale.set(newScale);
+          viewport.x = window.innerWidth / 2 - centerX * newScale;
+          viewport.y = window.innerHeight / 2 - centerY * newScale;
         }
       };
 
