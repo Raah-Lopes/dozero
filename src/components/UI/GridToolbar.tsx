@@ -971,7 +971,7 @@ export const GridToolbar: React.FC = () => {
         <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
 
         {/* Navigation/Zoom Controls */}
-        <Tooltip label="Diminuir Zoom" description="Afasta a visão do mapa" shortcut="Scroll ↓">
+        <Tooltip label="Diminuir Zoom" description="Afasta a visão do mapa" shortcut="Scroll ↓" position="top">
           <button
             className="tldraw-tool-btn"
             onClick={() => window.dispatchEvent(new CustomEvent('canvas-zoom', { detail: -0.15 }))}
@@ -979,7 +979,7 @@ export const GridToolbar: React.FC = () => {
             <ZoomOut size={18} color={C.textSec} />
           </button>
         </Tooltip>
-        <Tooltip label="Centralizar Mapa" description="Enquadra o mapa base na tela">
+        <Tooltip label="Centralizar Mapa" description="Enquadra o mapa base na tela" position="top">
           <button
             className="tldraw-tool-btn"
             onClick={() => window.dispatchEvent(new Event('canvas-center-map'))}
@@ -987,7 +987,7 @@ export const GridToolbar: React.FC = () => {
             <MapIcon size={18} color={C.textSec} />
           </button>
         </Tooltip>
-        <Tooltip label="Focar Seleção" description="Aproxima nos tokens selecionados">
+        <Tooltip label="Focar Seleção" description="Aproxima nos tokens selecionados" position="top">
           <button
             className="tldraw-tool-btn"
             onClick={() => window.dispatchEvent(new Event('canvas-focus-selected'))}
@@ -995,7 +995,7 @@ export const GridToolbar: React.FC = () => {
             <Target size={18} color={C.textSec} />
           </button>
         </Tooltip>
-        <Tooltip label="Enquadrar Tudo" description="Mostra todos os itens visíveis">
+        <Tooltip label="Enquadrar Tudo" description="Mostra todos os itens visíveis" position="top">
           <button
             className="tldraw-tool-btn"
             onClick={() => window.dispatchEvent(new Event('canvas-fit-all'))}
@@ -1003,7 +1003,7 @@ export const GridToolbar: React.FC = () => {
             <Scan size={18} color={C.textSec} />
           </button>
         </Tooltip>
-        <Tooltip label="Resetar Câmera" description="Volta a câmera para a posição inicial">
+        <Tooltip label="Resetar Câmera" description="Volta a câmera para a posição inicial" position="top">
           <button
             className="tldraw-tool-btn"
             onClick={() => window.dispatchEvent(new Event('canvas-reset-view'))}
@@ -1011,7 +1011,7 @@ export const GridToolbar: React.FC = () => {
             <Maximize2 size={18} color={C.textSec} />
           </button>
         </Tooltip>
-        <Tooltip label="Aumentar Zoom" description="Aproxima a visão do mapa" shortcut="Scroll ↑">
+        <Tooltip label="Aumentar Zoom" description="Aproxima a visão do mapa" shortcut="Scroll ↑" position="top">
           <button
             className="tldraw-tool-btn"
             onClick={() => window.dispatchEvent(new CustomEvent('canvas-zoom', { detail: 0.15 }))}
