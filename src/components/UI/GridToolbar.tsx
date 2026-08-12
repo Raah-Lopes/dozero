@@ -8,7 +8,7 @@ import type { BackgroundData, MapConfig } from '../../store';
 import { 
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
-  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan
+  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan, X
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from './Tooltip';
@@ -375,8 +375,9 @@ export const GridToolbar: React.FC = () => {
           maxHeight: '400px',
           overflowY: 'auto'
         }}>
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+          {/* Tabs and Close Button */}
+          <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
             {[
               { id: 'mapas', label: 'Cenários & Mapas', icon: MapIcon },
               { id: 'grid', label: 'Grid & FOW', icon: Grid },
@@ -409,6 +410,25 @@ export const GridToolbar: React.FC = () => {
                 </Tooltip>
               );
             })}
+            </div>
+            <Tooltip label="Fechar Menu" position="bottom">
+              <button
+                onClick={() => setShowConfigMenu(false)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: C.textMut,
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </Tooltip>
           </div>
 
           {/* TAB: MAPAS */}
