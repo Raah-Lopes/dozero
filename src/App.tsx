@@ -33,7 +33,6 @@ import { TensionClockManager } from './components/HUD/TensionClockManager';
 import { FloatingDocument } from './components/UI/FloatingDocument';
 import { TheaterView } from './components/Theater/TheaterView';
 import { WidgetLayer } from './components/HUD/WidgetLayer';
-import { MainToolbar } from './components/HUD/MainToolbar';
 import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps } from './store';
@@ -188,7 +187,6 @@ function App() {
       {/* Layer 10: React HUD */}
       <div className="hud-layer hud-grid">
         <ErrorBoundary componentName="Interface Principal (HUD)">
-          <MainToolbar />
           <QuestTrackerHUD />
 
           {/* Combat Tracker Widget */}

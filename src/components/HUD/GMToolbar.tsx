@@ -1,5 +1,5 @@
 import React from 'react';
-import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Layers } from 'lucide-react';
+import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Layers, LayoutGrid, BookOpen, Film, MessageSquare, LogOut, Pin } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
@@ -8,7 +8,7 @@ import { Tooltip } from '../UI/Tooltip';
 import type { FogConfig } from '../../store/modules/configModule';
 
 export function GMToolbar() {
-  const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors } = useWindowManager();
+  const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors, openWindows, toggleWindow, viewMode, setViewMode } = useWindowManager();
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
   React.useEffect(() => {
     const h = () => setIsMobile(window.innerWidth <= 768);
@@ -20,6 +20,8 @@ export function GMToolbar() {
   const [fogMode, setLocalFogMode] = React.useState<'reveal' | 'hide'>('reveal');
   const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso' | 'eraser'>('brush');
   const [activeSubmenu, setActiveSubmenu] = React.useState<string | null>(null);
+  const [isPinned, setIsPinned] = React.useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
 
   React.useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -141,32 +143,60 @@ export function GMToolbar() {
 
   const isFog = activeTool === 'FOG';
 
+  const isExpanded = isPinned || isHovered || isMobile;
+
   return (
     <div 
-      className="gm-toolbar"
-      style={{
-      position: 'absolute',
-      left: '1rem',
-      top: '50%',
-      bottom: 'auto',
-      transform: 'translateY(-50%)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.5rem',
-      background: 'rgba(15, 23, 42, 0.65)',
-      backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255,255,255,0.1)',
-      padding: '0.5rem',
-      borderRadius: '16px',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-      zIndex: 50,
-      maxHeight: 'calc(100vh - 40px)',
-      maxWidth: 'auto',
-      overflowX: 'visible',
-      overflowY: 'visible',
-    }}>
-      {activeFolder === 'root' && (
-        <>
+      className={`hud-sidebar-container ${isExpanded ? '' : 'collapsed'}`}
+      onMouseEnter={() => !isPinned && setIsHovered(true)}
+      onMouseLeave={() => !isPinned && setIsHovered(false)}
+    >
+      <div className="hud-glass" style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+        padding: '0.5rem',
+        borderTopRightRadius: '16px',
+        borderBottomRightRadius: '16px',
+        borderLeft: 'none',
+        overflowX: 'visible',
+        overflowY: 'visible',
+        pointerEvents: 'auto',
+      }}>
+        {/* Pin Button */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <ToolButton 
+            icon={<Pin size={16} />} 
+            active={isPinned} 
+            onClick={() => setIsPinned(!isPinned)} 
+            tooltip={isPinned ? "Desafixar Menu" : "Fixar Menu"} 
+          />
+        </div>
+        <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+
+        {activeFolder === 'root' && (
+          <>
+            {/* Hub & Nav Tools */}
+            <ToolButton 
+              icon={<LayoutGrid size={20} />} 
+              active={activeModal === 'widgets'} 
+              onClick={() => setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets')} 
+              tooltip="Menu Geral (Hub)"
+            />
+            <ToolButton 
+              icon={<BookOpen size={20} />} 
+              active={viewMode === 'wiki'} 
+              onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} 
+              tooltip="Wiki da Campanha"
+            />
+            <ToolButton 
+              icon={<Film size={20} />} 
+              active={viewMode === 'theater'} 
+              onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} 
+              tooltip="Teatro da Mente"
+            />
+            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
           <FlyoutGroup 
             id="map_tools" 
             title="Ferramentas do Mapa" 
@@ -211,27 +241,76 @@ export function GMToolbar() {
               tooltip="Régua de Medição"
             />
           </FlyoutGroup>
+            <ToolButton 
+              icon={<Users size={20} />} 
+              active={showActors} 
+              onClick={toggleNPCPanel} 
+              tooltip="Entidades (NPCs)"
+            />
+            
+            <FlyoutGroup 
+              id="social" 
+              title="Social & Jogadores" 
+              align="top"
+              isGroupActive={activeModal === 'players' || openWindows.chatWindow || openWindows.combatLog}
+              activeIcon={<MessageSquare size={20} />}
+            >
+              <ToolButton 
+                icon={<Users size={20} />} 
+                active={activeModal === 'players'} 
+                onClick={() => setActiveModal('players')} 
+                tooltip="Convidar Jogadores"
+              />
+              <ToolButton 
+                icon={<MessageSquare size={20} />} 
+                active={openWindows.chatWindow} 
+                onClick={() => toggleWindow('chatWindow')} 
+                tooltip="Chat P2P"
+              />
+              <ToolButton 
+                icon={<MessageSquare size={20} />} 
+                active={openWindows.combatLog} 
+                onClick={() => toggleWindow('combatLog')} 
+                tooltip="Registro de Rolagens"
+              />
+            </FlyoutGroup>
 
-          <ToolButton 
-            icon={<Users size={20} />} 
-            active={showActors} 
-            onClick={toggleNPCPanel} 
-            tooltip="Entidades (NPCs)"
-          />
-          <ToolButton 
-            icon={<Settings size={20} />} 
-            active={false} 
-            onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} 
-            tooltip="Configurações do Mapa"
-          />
-          <ToolButton 
-            icon={<Layers size={20} />} 
-            active={false} 
-            onClick={() => window.dispatchEvent(new Event('toggle-layers-menu'))} 
-            tooltip="Camadas (Layers)"
-          />
-        </>
-      )}
+            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+
+            <FlyoutGroup 
+              id="system" 
+              title="Sistema" 
+              align="bottom"
+              isGroupActive={activeModal === 'settings'}
+              activeIcon={<Settings size={20} />}
+            >
+              <ToolButton 
+                icon={<Settings size={20} />} 
+                active={activeModal === 'settings'} 
+                onClick={() => setActiveModal('settings')} 
+                tooltip="Configurações Globais"
+              />
+              <ToolButton 
+                icon={<Settings size={20} />} 
+                active={false} 
+                onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} 
+                tooltip="Configurações do Mapa"
+              />
+              <ToolButton 
+                icon={<Layers size={20} />} 
+                active={false} 
+                onClick={() => window.dispatchEvent(new Event('toggle-layers-menu'))} 
+                tooltip="Camadas (Layers)"
+              />
+              <ToolButton 
+                icon={<LogOut size={20} />} 
+                active={false} 
+                onClick={() => window.location.href = '/'} 
+                tooltip="Sair"
+              />
+            </FlyoutGroup>
+          </>
+        )}
 
       {activeFolder === 'draw' && (
         <>
@@ -364,6 +443,8 @@ export function GMToolbar() {
           </FlyoutGroup>
         </>
       )}
+      </div>
+      <div className="hud-sidebar-trigger" />
     </div>
   );
 }

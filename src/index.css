@@ -212,6 +212,53 @@ h1, h2, h3, h4, h5, h6 {
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
+/* Premium HUD Glassmorphism */
+.hud-glass {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hud-glass-hoverable:hover {
+  background: rgba(20, 30, 50, 0.85);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+.hud-sidebar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 64px;
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hud-sidebar-container.collapsed {
+  transform: translateX(calc(-100% + 12px));
+}
+
+.hud-sidebar-container.collapsed:hover {
+  transform: translateX(0);
+}
+
+.hud-sidebar-trigger {
+  position: absolute;
+  top: 0;
+  right: -12px;
+  width: 12px;
+  height: 100%;
+  cursor: pointer;
+  z-index: 10000;
+}
+
 /* Global Color Themes for UI Standardization using CSS Variables */
 .theme-cyan { color: var(--mana); border-color: var(--mana); opacity: 0.8; }
 .theme-cyan:hover, .btn-icon.theme-cyan:hover { background: rgba(6, 182, 212, 0.1); border-color: var(--mana); box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); color: var(--mana); opacity: 1; }
