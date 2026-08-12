@@ -168,36 +168,50 @@ export function GMToolbar() {
     }}>
       {activeFolder === 'root' && (
         <>
-          <ToolButton 
-            icon={<MousePointer2 size={20} />} 
-            active={activeTool === 'CURSOR'} 
-            onClick={() => setActiveTool('CURSOR')} 
-            tooltip="Cursor"
-          />
-          <ToolButton 
-            icon={<Hand size={20} />} 
-            active={activeTool === 'pan'} 
-            onClick={() => setActiveTool('pan')} 
-            tooltip="Mover"
-          />
-          <ToolButton 
-            icon={<Pen size={20} />} 
-            active={false} 
-            onClick={() => setActiveFolder('draw')} 
-            tooltip="Desenhar"
-          />
-          <ToolButton 
-            icon={<CloudFog size={20} />} 
-            active={isFog} 
-            onClick={() => setActiveFolder('fog')} 
-            tooltip="Névoa"
-          />
-          <ToolButton 
-            icon={<Ruler size={20} />} 
-            active={activeTool === 'RULER'} 
-            onClick={() => setActiveTool('RULER')} 
-            tooltip="Régua de Medição"
-          />
+          <FlyoutGroup 
+            id="map_tools" 
+            title="Ferramentas do Mapa" 
+            isGroupActive={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser'].includes(activeTool as string)}
+            activeIcon={
+              activeTool === 'pan' ? <Hand size={20} /> :
+              activeTool === 'RULER' ? <Ruler size={20} /> :
+              isFog ? <CloudFog size={20} /> :
+              ['pen','shape','arrow','text','eraser'].includes(activeTool as string) ? <Pen size={20} /> :
+              <MousePointer2 size={20} />
+            }
+          >
+            <ToolButton 
+              icon={<MousePointer2 size={20} />} 
+              active={activeTool === 'CURSOR'} 
+              onClick={() => { setActiveTool('CURSOR'); setActiveSubmenu(null); }} 
+              tooltip="Cursor"
+            />
+            <ToolButton 
+              icon={<Hand size={20} />} 
+              active={activeTool === 'pan'} 
+              onClick={() => { setActiveTool('pan'); setActiveSubmenu(null); }} 
+              tooltip="Mover"
+            />
+            <ToolButton 
+              icon={<Pen size={20} />} 
+              active={false} 
+              onClick={() => { setActiveFolder('draw'); setActiveSubmenu(null); }} 
+              tooltip="Desenhar"
+            />
+            <ToolButton 
+              icon={<CloudFog size={20} />} 
+              active={isFog} 
+              onClick={() => { setActiveFolder('fog'); setActiveSubmenu(null); }} 
+              tooltip="Névoa"
+            />
+            <ToolButton 
+              icon={<Ruler size={20} />} 
+              active={activeTool === 'RULER'} 
+              onClick={() => { setActiveTool('RULER'); setActiveSubmenu(null); }} 
+              tooltip="Régua de Medição"
+            />
+          </FlyoutGroup>
+
           <ToolButton 
             icon={<Users size={20} />} 
             active={showActors} 
