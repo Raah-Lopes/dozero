@@ -950,23 +950,25 @@ export const GridToolbar: React.FC = () => {
         {showDrawTools && (
           <div style={{
             position: 'absolute',
-            bottom: 'calc(100% + 8px)',
-            left: '0',
+            bottom: 'calc(100% + 12px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
             display: 'flex',
-            gap: '2px',
+            flexDirection: 'column',
+            gap: '4px',
             padding: '4px',
-            background: 'rgba(15, 23, 42, 0.92)',
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${C.surfBrd}`,
+            background: 'rgba(20, 20, 25, 0.95)',
+            backdropFilter: 'blur(24px)',
+            border: `1px solid rgba(255,255,255,0.1)`,
             borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
           }}>
             {tools.filter(t => t.id !== 'select' && t.id !== 'pan').map(tool => {
               const Icon = tool.icon;
               const meta = TOOL_META[tool.id] || { label: tool.id, desc: '' };
               const isActive = activeTool === tool.id;
               return (
-                <Tooltip key={tool.id} label={meta.label} description={meta.desc} shortcut={meta.shortcut} position="top">
+                <Tooltip key={tool.id} label={meta.label} description={meta.desc} shortcut={meta.shortcut} position="right">
                   <button
                     className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
                     onClick={() => setActiveTool(tool.id as any)}
