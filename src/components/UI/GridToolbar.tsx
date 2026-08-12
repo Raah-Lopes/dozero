@@ -936,19 +936,31 @@ export const GridToolbar: React.FC = () => {
         pointerEvents: 'auto'
       }}>
         {/* Drawing Tools Toggle */}
-        <Tooltip label={showDrawTools ? 'Fechar Desenho' : 'Ferramentas de Desenho'} description="Caneta, formas, texto e mais" shortcut="P">
-          <button
-            className={`tldraw-tool-btn${showDrawTools || !['select','pan'].includes(activeTool) ? ' active' : ''}`}
-            onClick={() => setShowDrawTools(v => !v)}
-          >
-            <Pen size={18} color={showDrawTools || !['select','pan'].includes(activeTool) ? C.accent : C.textSec} />
-          </button>
-        </Tooltip>
+        <div style={{ position: 'relative' }}>
+          <Tooltip label={showDrawTools ? 'Fechar Desenho' : 'Ferramentas de Desenho'} description="Caneta, formas, texto e mais" shortcut="P">
+            <button
+              className={`tldraw-tool-btn${showDrawTools || !['select','pan'].includes(activeTool) ? ' active' : ''}`}
+              onClick={() => setShowDrawTools(v => !v)}
+            >
+              <Pen size={18} color={showDrawTools || !['select','pan'].includes(activeTool) ? C.accent : C.textSec} />
+            </button>
+          </Tooltip>
 
-        {/* Drawing Tools (collapsible) */}
+        {/* Drawing Tools (collapsible, floating above) */}
         {showDrawTools && (
-          <>
-            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 2px' }} />
+          <div style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 8px)',
+            left: '0',
+            display: 'flex',
+            gap: '2px',
+            padding: '4px',
+            background: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(20px)',
+            border: `1px solid ${C.surfBrd}`,
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          }}>
             {tools.filter(t => t.id !== 'select' && t.id !== 'pan').map(tool => {
               const Icon = tool.icon;
               const meta = TOOL_META[tool.id] || { label: tool.id, desc: '' };
@@ -964,8 +976,10 @@ export const GridToolbar: React.FC = () => {
                 </Tooltip>
               );
             })}
-          </>
+          </div>
         )}
+
+        </div>
 
         {/* Divider */}
         <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.15)', margin: '0 4px' }} />
