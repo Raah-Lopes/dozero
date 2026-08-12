@@ -17,6 +17,7 @@ import { getWikiConfig } from '../../store';
 import { resolveImageUrl, convertImageToWebP } from '../../utils/imageUtils';
 import { toast } from '../UI/Toast';
 import { confirmDialog } from '../UI/Toast';
+import { Tooltip } from '../UI/Tooltip';
 
 const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
 
@@ -522,9 +523,11 @@ export const NPCPanel: React.FC = () => {
           {activePanelTab === 'board' ? 'Gerenciador de Instâncias' : 'Fichas Disponíveis na Wiki'}
         </span>
         {activePanelTab === 'board' && (
-          <button onClick={createNewCharacter} className="btn-icon" title="Criar Token Rápido" style={{ background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', width: '22px', height: '22px', padding: 0 }}>
-            <UserPlus size={12} />
-          </button>
+          <Tooltip label="Criar Token Rápido">
+            <button onClick={createNewCharacter} className="btn-icon" style={{ background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', width: '22px', height: '22px', padding: 0 }}>
+              <UserPlus size={12} />
+            </button>
+          </Tooltip>
         )}
       </div>
 
@@ -577,28 +580,30 @@ export const NPCPanel: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <button
-                onClick={() => setViewMode('list')}
-                style={{
-                  background: viewMode === 'list' ? 'rgba(255,255,255,0.05)' : 'transparent',
-                  border: 'none', color: viewMode === 'list' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                  cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center'
-                }}
-                title="Visualização em Lista"
-              >
-                <List size={12} />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                style={{
-                  background: viewMode === 'grid' ? 'rgba(255,255,255,0.05)' : 'transparent',
-                  border: 'none', color: viewMode === 'grid' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                  cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center'
-                }}
-                title="Visualização em Grade"
-              >
-                <LayoutGrid size={12} />
-              </button>
+              <Tooltip label="Visualização em Lista">
+                <button
+                  onClick={() => setViewMode('list')}
+                  style={{
+                    background: viewMode === 'list' ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    border: 'none', color: viewMode === 'list' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center'
+                  }}
+                >
+                  <List size={12} />
+                </button>
+              </Tooltip>
+              <Tooltip label="Visualização em Grade">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  style={{
+                    background: viewMode === 'grid' ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    border: 'none', color: viewMode === 'grid' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center'
+                  }}
+                >
+                  <LayoutGrid size={12} />
+                </button>
+              </Tooltip>
             </div>
           </div>
         )}
@@ -670,63 +675,70 @@ export const NPCPanel: React.FC = () => {
 
                       {/* Actions */}
                       <div style={{ display: 'flex', gap: '3px', marginLeft: '4px' }}>
-                        <button
-                          onClick={(e) => handleToggleVisibility(t, e)}
-                          style={{ background: 'transparent', border: 'none', color: isVisible ? '#34d399' : 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }}
-                          title={isVisible ? "Esconder do Mapa" : "Materializar no Mapa"}
-                        >
-                          {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
-                        </button>
-                        {isVisible && (
+                        <Tooltip label={isVisible ? "Esconder do Mapa" : "Materializar no Mapa"}>
                           <button
-                            onClick={(e) => handleFocusToken(t.id, e)}
-                            style={{ background: 'transparent', border: 'none', color: 'var(--mana)', cursor: 'pointer', padding: '2px' }}
-                            title="Focar Câmera no Token"
+                            onClick={(e) => handleToggleVisibility(t, e)}
+                            style={{ background: 'transparent', border: 'none', color: isVisible ? '#34d399' : 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }}
                           >
-                            <Target size={12} />
+                            {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
                           </button>
+                        </Tooltip>
+                        {isVisible && (
+                          <Tooltip label="Focar Câmera no Token">
+                            <button
+                              onClick={(e) => handleFocusToken(t.id, e)}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--mana)', cursor: 'pointer', padding: '2px' }}
+                            >
+                              <Target size={12} />
+                            </button>
+                          </Tooltip>
                         )}
-                        <button
-                          onClick={(e) => handleCloneToken(t, e)}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '2px' }}
-                          title="Duplicar Token (Clonar)"
-                        >
-                          <Copy size={12} />
-                        </button>
+                        <Tooltip label="Duplicar Token (Clonar)">
+                          <button
+                            onClick={(e) => handleCloneToken(t, e)}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '2px' }}
+                          >
+                            <Copy size={12} />
+                          </button>
+                        </Tooltip>
                         
                         {/* Gerador de Ficha se não tiver vinculada */}
                         {!hasLinkedSheet && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleGenerateSheetForToken(t); }}
-                            style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '2px' }}
-                            title="Gerar Ficha .md (Oráculo)"
-                          >
-                            <Sparkles size={12} />
-                          </button>
+                          <Tooltip label="Gerar Ficha .md (Oráculo)">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleGenerateSheetForToken(t); }}
+                              style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '2px' }}
+                            >
+                              <Sparkles size={12} />
+                            </button>
+                          </Tooltip>
                         )}
 
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setExpandedTokenId(expandedTokenId === t.id ? null : t.id); }}
-                          style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : '#cbd5e1', cursor: 'pointer', padding: '2px' }}
-                          title="Aparência e Estilo do Token"
-                        >
-                          <Settings size={12} />
-                        </button>
+                        <Tooltip label="Aparência e Estilo do Token">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setExpandedTokenId(expandedTokenId === t.id ? null : t.id); }}
+                            style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : '#cbd5e1', cursor: 'pointer', padding: '2px' }}
+                          >
+                            <Settings size={12} />
+                          </button>
+                        </Tooltip>
 
-                        <button
-                          onClick={(e) => handleOpenSheet(t.id, e)}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }}
-                          title="Abrir Ficha do Personagem"
-                        >
-                          <FileText size={12} />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteToken(t.id, t.name, e)}
-                          style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                          title="Excluir do Tabuleiro"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        <Tooltip label="Abrir Ficha do Personagem">
+                          <button
+                            onClick={(e) => handleOpenSheet(t.id, e)}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px' }}
+                          >
+                            <FileText size={12} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Excluir do Tabuleiro">
+                          <button
+                            onClick={(e) => handleDeleteToken(t.id, t.name, e)}
+                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
 
@@ -753,31 +765,32 @@ export const NPCPanel: React.FC = () => {
 
                         {/* Name & Avatar */}
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            onClick={() => handleAvatarClick(t.id)}
-                            style={{
-                              width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden',
-                              border: '1px dashed var(--glass-border)', cursor: 'pointer', position: 'relative',
-                              flexShrink: 0, padding: 0, background: 'transparent'
-                            }}
-                            title="Alterar Imagem/Avatar"
-                          >
-                            {t.imageUrl ? (
-                              <img loading="lazy" decoding="async" src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            ) : (
-                              <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <User size={16} />
+                          <Tooltip label="Alterar Imagem/Avatar">
+                            <button
+                              type="button"
+                              onClick={() => handleAvatarClick(t.id)}
+                              style={{
+                                width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden',
+                                border: '1px dashed var(--glass-border)', cursor: 'pointer', position: 'relative',
+                                flexShrink: 0, padding: 0, background: 'transparent'
+                              }}
+                            >
+                              {t.imageUrl ? (
+                                <img loading="lazy" decoding="async" src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <User size={16} />
+                                </div>
+                              )}
+                              <div style={{
+                                position: 'absolute', bottom: 0, left: 0, right: 0, 
+                                background: 'rgba(0,0,0,0.6)', color: 'var(--text-primary)', fontSize: '0.5rem', 
+                                textAlign: 'center', padding: '1px 0'
+                              }}>
+                                EDIT
                               </div>
-                            )}
-                            <div style={{
-                              position: 'absolute', bottom: 0, left: 0, right: 0, 
-                              background: 'rgba(0,0,0,0.6)', color: 'var(--text-primary)', fontSize: '0.5rem', 
-                              textAlign: 'center', padding: '1px 0'
-                            }}>
-                              EDIT
-                            </div>
-                          </button>
+                            </button>
+                          </Tooltip>
 
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Nome do Token</label>
@@ -957,20 +970,20 @@ export const NPCPanel: React.FC = () => {
                             {CONDITIONS.map(cond => {
                               const isActive = (t.status_efeitos || []).includes(cond.id);
                               return (
-                                <button
-                                  key={cond.id}
-                                  title={cond.title}
-                                  onClick={(e) => { e.stopPropagation(); Tokens.toggleEffect(t.id, cond.id); }}
-                                  style={{
-                                    background: isActive ? cond.color : 'rgba(255,255,255,0.05)',
-                                    border: `1px solid ${isActive ? cond.color : 'var(--glass-border)'}`,
-                                    borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem',
-                                    color: isActive ? '#000' : 'var(--text-secondary)',
-                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px'
-                                  }}
-                                >
-                                  {cond.label}
-                                </button>
+                                <Tooltip key={cond.id} label={cond.title}>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); Tokens.toggleEffect(t.id, cond.id); }}
+                                    style={{
+                                      background: isActive ? cond.color : 'rgba(255,255,255,0.05)',
+                                      border: `1px solid ${isActive ? cond.color : 'var(--glass-border)'}`,
+                                      borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem',
+                                      color: isActive ? '#000' : 'var(--text-secondary)',
+                                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px'
+                                    }}
+                                  >
+                                    {cond.label}
+                                  </button>
+                                </Tooltip>
                               );
                             })}
                           </div>
@@ -1056,62 +1069,69 @@ export const NPCPanel: React.FC = () => {
                       onMouseLeave={e => e.currentTarget.style.opacity = '0'}
                       onClick={e => e.stopPropagation()}
                       >
-                        <button
-                          onClick={(e) => handleToggleVisibility(t, e)}
-                          style={{ background: 'transparent', border: 'none', color: isVisible ? '#34d399' : 'var(--text-secondary)', cursor: 'pointer', padding: '1px' }}
-                          title={isVisible ? "Esconder" : "Mostrar"}
-                        >
-                          {isVisible ? <Eye size={10} /> : <EyeOff size={10} />}
-                        </button>
-                        {isVisible && (
+                        <Tooltip label={isVisible ? "Esconder" : "Mostrar"} position="top">
                           <button
-                            onClick={(e) => handleFocusToken(t.id, e)}
-                            style={{ background: 'transparent', border: 'none', color: 'var(--mana)', cursor: 'pointer', padding: '1px' }}
-                            title="Focar"
+                            onClick={(e) => handleToggleVisibility(t, e)}
+                            style={{ background: 'transparent', border: 'none', color: isVisible ? '#34d399' : 'var(--text-secondary)', cursor: 'pointer', padding: '1px' }}
                           >
-                            <Target size={10} />
+                            {isVisible ? <Eye size={10} /> : <EyeOff size={10} />}
                           </button>
+                        </Tooltip>
+                        {isVisible && (
+                          <Tooltip label="Focar" position="top">
+                            <button
+                              onClick={(e) => handleFocusToken(t.id, e)}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--mana)', cursor: 'pointer', padding: '1px' }}
+                            >
+                              <Target size={10} />
+                            </button>
+                          </Tooltip>
                         )}
-                        <button
-                          onClick={(e) => handleCloneToken(t, e)}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '1px' }}
-                          title="Clonar"
-                        >
-                          <Copy size={10} />
-                        </button>
+                        <Tooltip label="Clonar" position="top">
+                          <button
+                            onClick={(e) => handleCloneToken(t, e)}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '1px' }}
+                          >
+                            <Copy size={10} />
+                          </button>
+                        </Tooltip>
 
                         {!hasLinkedSheet && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleGenerateSheetForToken(t); }}
-                            style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '1px' }}
-                            title="Gerar Ficha"
-                          >
-                            <Sparkles size={10} />
-                          </button>
+                          <Tooltip label="Gerar Ficha" position="top">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleGenerateSheetForToken(t); }}
+                              style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '1px' }}
+                            >
+                              <Sparkles size={10} />
+                            </button>
+                          </Tooltip>
                         )}
 
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setExpandedTokenId(expandedTokenId === t.id ? null : t.id); }}
-                          style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : '#cbd5e1', cursor: 'pointer', padding: '1px' }}
-                          title="Configurar Aparência"
-                        >
-                          <Settings size={10} />
-                        </button>
+                        <Tooltip label="Configurar Aparência" position="top">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setExpandedTokenId(expandedTokenId === t.id ? null : t.id); }}
+                            style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : '#cbd5e1', cursor: 'pointer', padding: '1px' }}
+                          >
+                            <Settings size={10} />
+                          </button>
+                        </Tooltip>
 
-                        <button
-                          onClick={(e) => handleOpenSheet(t.id, e)}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '1px' }}
-                          title="Ficha"
-                        >
-                          <FileText size={10} />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteToken(t.id, t.name, e)}
-                          style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '1px' }}
-                          title="Excluir"
-                        >
-                          <Trash2 size={10} />
-                        </button>
+                        <Tooltip label="Ficha" position="top">
+                          <button
+                            onClick={(e) => handleOpenSheet(t.id, e)}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '1px' }}
+                          >
+                            <FileText size={10} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Excluir" position="top">
+                          <button
+                            onClick={(e) => handleDeleteToken(t.id, t.name, e)}
+                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '1px' }}
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
 

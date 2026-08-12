@@ -3,6 +3,7 @@ import * as yaml from 'js-yaml';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import './CharacterSheet.css';
 import { Heart, Zap, Shield, Crosshair } from 'lucide-react';
+import { Tooltip } from './Tooltip';
 
 interface CharacterSheetProps {
   rawYaml: string;
@@ -237,18 +238,26 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ rawYaml, onChang
 
       {/* TABS SECTION */}
       <div className="actor-tabs">
-        <div className={`actor-tab ${activeTab === 'geral' ? 'active' : ''}`} onClick={() => setActiveTab('geral')}>
-          Visão Geral
-        </div>
-        <div className={`actor-tab ${activeTab === 'magias' ? 'active' : ''}`} onClick={() => setActiveTab('magias')}>
-          Magias
-        </div>
-        <div className={`actor-tab ${activeTab === 'inventario' ? 'active' : ''}`} onClick={() => setActiveTab('inventario')}>
-          Inventário
-        </div>
-        <div className={`actor-tab ${activeTab === 'biografia' ? 'active' : ''}`} onClick={() => setActiveTab('biografia')}>
-          Biografia
-        </div>
+        <Tooltip label="Visão Geral da Ficha">
+          <div className={`actor-tab ${activeTab === 'geral' ? 'active' : ''}`} onClick={() => setActiveTab('geral')}>
+            Visão Geral
+          </div>
+        </Tooltip>
+        <Tooltip label="Magias e Habilidades">
+          <div className={`actor-tab ${activeTab === 'magias' ? 'active' : ''}`} onClick={() => setActiveTab('magias')}>
+            Magias
+          </div>
+        </Tooltip>
+        <Tooltip label="Equipamentos e Itens">
+          <div className={`actor-tab ${activeTab === 'inventario' ? 'active' : ''}`} onClick={() => setActiveTab('inventario')}>
+            Inventário
+          </div>
+        </Tooltip>
+        <Tooltip label="História e Background">
+          <div className={`actor-tab ${activeTab === 'biografia' ? 'active' : ''}`} onClick={() => setActiveTab('biografia')}>
+            Biografia
+          </div>
+        </Tooltip>
       </div>
 
       {/* BODY SECTION */}
@@ -276,13 +285,14 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ rawYaml, onChang
                         onChange={(e) => updateAttr(attr.id, Number(e.target.value))} 
                       />
                     </div>
-                    <div 
-                      className="actor-ability-mod" 
-                      onClick={() => sendRollToChat(attr.label, calcMod(attr.val))}
-                      title={`Rolar ${attr.label}`}
-                    >
-                      {formatMod(calcMod(attr.val))}
-                    </div>
+                    <Tooltip label={`Rolar ${attr.label}`}>
+                      <div 
+                        className="actor-ability-mod" 
+                        onClick={() => sendRollToChat(attr.label, calcMod(attr.val))}
+                      >
+                        {formatMod(calcMod(attr.val))}
+                      </div>
+                    </Tooltip>
                   </div>
                 ))}
               </div>
@@ -298,18 +308,20 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ rawYaml, onChang
                   ].map(save => {
                     const saveVal = getField(['defesas', save.id], getField([save.id], 0));
                     return (
-                      <div key={save.id} className="actor-rollable-row" onClick={() => sendRollToChat(save.label, Number(saveVal))}>
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'baseline' }}>
-                          <span className="actor-roll-name">{save.label}</span>
-                          <span className="actor-roll-attr">({save.attr})</span>
+                      <Tooltip key={save.id} label={`Rolar ${save.label}`}>
+                        <div className="actor-rollable-row" onClick={() => sendRollToChat(save.label, Number(saveVal))}>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'baseline' }}>
+                            <span className="actor-roll-name">{save.label}</span>
+                            <span className="actor-roll-attr">({save.attr})</span>
+                          </div>
+                          <input 
+                            type="number" 
+                            value={saveVal} 
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => updateDefesa(save.id, Number(e.target.value))} 
+                          />
                         </div>
-                        <input 
-                          type="number" 
-                          value={saveVal} 
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => updateDefesa(save.id, Number(e.target.value))} 
-                        />
-                      </div>
+                      </Tooltip>
                     );
                   })}
                 </div>
@@ -330,15 +342,17 @@ export const CharacterSheet: React.FC<CharacterSheetProps> = ({ rawYaml, onChang
                     const skillVal = getField(['pericias', skillId], getField([skillId], 0));
                     
                     return (
-                      <div key={skillId} className="actor-rollable-row" onClick={() => sendRollToChat(skillName, Number(skillVal))}>
-                        <span className="actor-roll-name">{skillName}</span>
-                        <input 
-                          type="number" 
-                          value={skillVal}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => updatePericia(skillId, Number(e.target.value))} 
-                        />
-                      </div>
+                      <Tooltip key={skillId} label={`Rolar ${skillName}`}>
+                        <div className="actor-rollable-row" onClick={() => sendRollToChat(skillName, Number(skillVal))}>
+                          <span className="actor-roll-name">{skillName}</span>
+                          <input 
+                            type="number" 
+                            value={skillVal}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => updatePericia(skillId, Number(e.target.value))} 
+                          />
+                        </div>
+                      </Tooltip>
                     );
                   })}
                 </div>

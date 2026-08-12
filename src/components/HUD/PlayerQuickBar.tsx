@@ -9,6 +9,7 @@ import { useWindowManager } from '../../hooks/useWindowManager';
 import { state } from '../../services/yjs';
 import { toast } from '../UI/Toast';
 import { syncTokenFieldToWiki, syncMultipleFieldsToWiki } from '../../services/wiki/syncWiki';
+import { Tooltip } from '../UI/Tooltip';
 
 // ponytail: Rolagem customizada, vinculação com token e sincronização de ficha markdown no Yjs/Wiki
 
@@ -413,19 +414,20 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                       {activeToken.status_efeitos && activeToken.status_efeitos.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
                           {activeToken.status_efeitos.map(cond => (
-                            <span
-                              key={cond}
-                              onClick={() => handleToggleStatusEffect(cond)}
-                              title="Clique para remover efeito do Token e da Ficha"
-                              style={{
-                                fontSize: '0.58rem', padding: '1px 5px', borderRadius: '3px',
-                                background: cond === 'Morto' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.25)',
-                                border: cond === 'Morto' ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(245,158,11,0.4)',
-                                color: cond === 'Morto' ? '#fca5a5' : '#fde68a', cursor: 'pointer'
-                              }}
-                            >
-                              ⚠️ {cond} ×
-                            </span>
+                            <Tooltip key={cond} label="Remover Efeito" description="Do Token e da Ficha">
+                              <span
+                                onClick={() => handleToggleStatusEffect(cond)}
+                                style={{
+                                  fontSize: '0.58rem', padding: '1px 5px', borderRadius: '3px',
+                                  background: cond === 'Morto' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.25)',
+                                  border: cond === 'Morto' ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(245,158,11,0.4)',
+                                  color: cond === 'Morto' ? '#fca5a5' : '#fde68a', cursor: 'pointer',
+                                  display: 'inline-block'
+                                }}
+                              >
+                                ⚠️ {cond} ×
+                              </span>
+                            </Tooltip>
                           ))}
                         </div>
                       )}
@@ -477,25 +479,26 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                 const Icon = t.icon;
                 const active = tab === t.id;
                 return (
-                  <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
-                    title={t.label}
-                    style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center',
-                      gap: '2px', padding: '6px 2px',
-                      background: active ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.04)',
-                      border: active ? '1px solid rgba(99,102,241,0.6)' : '1px solid transparent',
-                      borderRadius: '6px', cursor: 'pointer', color: active ? '#a5b4fc' : '#94a3b8',
-                      fontSize: '0.58rem', fontWeight: active ? 'bold' : 'normal',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    <Icon size={13} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>
-                      {t.label}
-                    </span>
-                  </button>
+                  <Tooltip key={t.id} label={t.label}>
+                    <button
+                      onClick={() => setTab(t.id)}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        gap: '2px', padding: '6px 2px',
+                        background: active ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.04)',
+                        border: active ? '1px solid rgba(99,102,241,0.6)' : '1px solid transparent',
+                        borderRadius: '6px', cursor: 'pointer', color: active ? '#a5b4fc' : '#94a3b8',
+                        fontSize: '0.58rem', fontWeight: active ? 'bold' : 'normal',
+                        transition: 'all 0.15s',
+                        width: '100%',
+                      }}
+                    >
+                      <Icon size={13} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>
+                        {t.label}
+                      </span>
+                    </button>
+                  </Tooltip>
                 );
               })}
             </div>
@@ -504,14 +507,18 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '4px 6px', borderRadius: '6px' }}>
               <span style={{ fontSize: '0.65rem', color: '#64748b', whiteSpace: 'nowrap' }}>Bônus Mod:</span>
               <div style={{ display: 'flex', flex: 1, gap: '4px', alignItems: 'center' }}>
-                <button onClick={() => setBonus(b => b - 1)} style={bonusBtn}>−</button>
+                <Tooltip label="Diminuir Bônus">
+                  <button onClick={() => setBonus(b => b - 1)} style={bonusBtn}>−</button>
+                </Tooltip>
                 <span style={{
                   flex: 1, textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold',
                   color: bonus > 0 ? '#4ade80' : bonus < 0 ? '#f87171' : '#94a3b8',
                 }}>
                   {bonus >= 0 ? '+' : ''}{bonus}
                 </span>
-                <button onClick={() => setBonus(b => b + 1)} style={bonusBtn}>+</button>
+                <Tooltip label="Aumentar Bônus">
+                  <button onClick={() => setBonus(b => b + 1)} style={bonusBtn}>+</button>
+                </Tooltip>
               </div>
             </div>
 
@@ -559,13 +566,14 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                         color: '#f8fafc', fontSize: '0.75rem', fontFamily: 'monospace'
                       }}
                     />
-                    <button
-                      onClick={() => setCustomFormula('')}
-                      title="Limpar fórmula"
-                      style={{ ...bonusBtn, width: '26px', height: '26px' }}
-                    >
-                      <RotateCcw size={12} />
-                    </button>
+                    <Tooltip label="Limpar fórmula">
+                      <button
+                        onClick={() => setCustomFormula('')}
+                        style={{ ...bonusBtn, width: '26px', height: '26px' }}
+                      >
+                        <RotateCcw size={12} />
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
 
@@ -618,20 +626,22 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                     <span>{r.label}: <strong>{r.val}</strong></span>
                     {isLinkedToCharacter && activeToken && (
                       <div style={{ display: 'flex', gap: '2px' }}>
-                        <button
-                          onClick={() => handleApplyDamageToToken(r.val, false)}
-                          title={`Aplicar ${r.val} de dano no HP de ${activeToken.name} (Token + Ficha .md)`}
-                          style={{ padding: '1px 4px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', color: '#fca5a5', fontSize: '0.58rem', cursor: 'pointer' }}
-                        >
-                          -HP
-                        </button>
-                        <button
-                          onClick={() => handleApplyDamageToToken(r.val, true)}
-                          title={`Curar ${r.val} de HP em ${activeToken.name} (Token + Ficha .md)`}
-                          style={{ padding: '1px 4px', background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: '3px', color: '#86efac', fontSize: '0.58rem', cursor: 'pointer' }}
-                        >
-                          +HP
-                        </button>
+                        <Tooltip label={`Aplicar ${r.val} de dano`} description={`No HP de ${activeToken.name}`}>
+                          <button
+                            onClick={() => handleApplyDamageToToken(r.val, false)}
+                            style={{ padding: '1px 4px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', color: '#fca5a5', fontSize: '0.58rem', cursor: 'pointer' }}
+                          >
+                            -HP
+                          </button>
+                        </Tooltip>
+                        <Tooltip label={`Curar ${r.val} de HP`} description={`Em ${activeToken.name}`}>
+                          <button
+                            onClick={() => handleApplyDamageToToken(r.val, true)}
+                            style={{ padding: '1px 4px', background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: '3px', color: '#86efac', fontSize: '0.58rem', cursor: 'pointer' }}
+                          >
+                            +HP
+                          </button>
+                        </Tooltip>
                       </div>
                     )}
                   </div>
@@ -644,33 +654,34 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
       </div>
 
       {/* Botão de abrir/fechar a barra lateral */}
-      <button
-        onClick={toggleOpen}
-        title="Abrir barra de ações do jogador"
-        style={{
-          width: '28px',
-          height: '72px',
-          background: 'rgba(10,15,30,0.95)',
-          backdropFilter: 'blur(12px)',
-          borderTop: '1px solid rgba(255,255,255,0.12)',
-          borderBottom: '1px solid rgba(255,255,255,0.12)',
-          borderLeft: '1px solid rgba(255,255,255,0.12)',
-          borderRight: 'none',
-          borderRadius: '10px 0 0 10px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#6366f1',
-          boxShadow: '-2px 0 12px rgba(0,0,0,0.4)',
-          transition: 'background 0.2s',
-          flexShrink: 0,
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.2)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(10,15,30,0.95)'; }}
-      >
-        {open ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
+      <Tooltip label={open ? "Fechar barra de ações" : "Abrir barra de ações do jogador"} position="top">
+        <button
+          onClick={toggleOpen}
+          style={{
+            width: '28px',
+            height: '72px',
+            background: 'rgba(10,15,30,0.95)',
+            backdropFilter: 'blur(12px)',
+            borderTop: '1px solid rgba(255,255,255,0.12)',
+            borderBottom: '1px solid rgba(255,255,255,0.12)',
+            borderLeft: '1px solid rgba(255,255,255,0.12)',
+            borderRight: 'none',
+            borderRadius: '10px 0 0 10px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#6366f1',
+            boxShadow: '-2px 0 12px rgba(0,0,0,0.4)',
+            transition: 'background 0.2s',
+            flexShrink: 0,
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(10,15,30,0.95)'; }}
+        >
+          {open ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
+      </Tooltip>
     </div>
   );
 };

@@ -14,6 +14,7 @@ import type { BackgroundData, MapConfig } from '../../store';
 import type { FogConfig } from '../../store/modules/configModule';
 import { ImagePlus, Trash2, Eye, EyeOff, Grid, RefreshCw, MousePointer2, Type, Search, Eraser } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { Tooltip } from '../UI/Tooltip';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
@@ -184,17 +185,18 @@ export const MapSettingsPanel: React.FC = () => {
           { id: 'ferramentas', label: 'Ferramentas' },
           { id: 'props', label: 'Objetos' }
         ].map(tab => (
-          <button 
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            style={{ 
-              background: 'none', border: 'none', padding: '0.4rem 0.6rem', color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              fontWeight: activeTab === tab.id ? 'bold' : 'normal', borderBottom: activeTab === tab.id ? '2px solid var(--accent-primary)' : '2px solid transparent',
-              cursor: 'pointer', fontSize: '0.8rem'
-            }}
-          >
-            {tab.label}
-          </button>
+          <Tooltip key={tab.id} label={tab.label}>
+            <button 
+              onClick={() => setActiveTab(tab.id as any)}
+              style={{ 
+                background: 'none', border: 'none', padding: '0.4rem 0.6rem', color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                fontWeight: activeTab === tab.id ? 'bold' : 'normal', borderBottom: activeTab === tab.id ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                cursor: 'pointer', fontSize: '0.8rem'
+              }}
+            >
+              {tab.label}
+            </button>
+          </Tooltip>
         ))}
       </div>
 
@@ -205,45 +207,51 @@ export const MapSettingsPanel: React.FC = () => {
               <MousePointer2 size={16} /> Ferramentas do Mouse
             </label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                className={`btn ${activeTool === 'select' ? 'active' : ''}`}
-                onClick={() => setActiveTool('select')}
-                title="Selecionar e Mover"
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  background: activeTool === 'select' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
-                  color: activeTool === 'select' ? '#fff' : 'var(--text-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem'
-                }}
-              >
-                <MousePointer2 size={16} /> Cursor Livre
-              </button>
-              <button
-                className={`btn ${activeTool === 'text' ? 'active' : ''}`}
-                onClick={() => setActiveTool('text')}
-                title="Criar Texto (Clique no grid)"
-                style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                  background: activeTool === 'text' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
-                  color: activeTool === 'text' ? '#fff' : 'var(--text-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem'
-                }}
-              >
-                <Type size={16} /> Anotações
-              </button>
+              <Tooltip label="Selecionar e Mover">
+                <button
+                  className={`btn ${activeTool === 'select' ? 'active' : ''}`}
+                  onClick={() => setActiveTool('select')}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    background: activeTool === 'select' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                    color: activeTool === 'select' ? '#fff' : 'var(--text-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem'
+                  }}
+                >
+                  <MousePointer2 size={16} /> Cursor Livre
+                </button>
+              </Tooltip>
+              <Tooltip label="Criar Texto (Clique no grid)">
+                <button
+                  className={`btn ${activeTool === 'text' ? 'active' : ''}`}
+                  onClick={() => setActiveTool('text')}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    background: activeTool === 'text' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                    color: activeTool === 'text' ? '#fff' : 'var(--text-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem'
+                  }}
+                >
+                  <Type size={16} /> Anotações
+                </button>
+              </Tooltip>
             </div>
             
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <button
-                className="btn" onClick={locateAllTexts} title="Localizar todos os textos ativos"
-                style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)' }}
-              >
-                <Search size={14} /> Localizar Textos
-              </button>
-              <button
-                className="btn" onClick={clearAllTexts} title="Apagar TODOS os textos"
-                style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.1)' }}
-              >
-                <Eraser size={14} /> Limpar Todos
-              </button>
+              <Tooltip label="Localizar todos os textos ativos">
+                <button
+                  className="btn" onClick={locateAllTexts}
+                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)' }}
+                >
+                  <Search size={14} /> Localizar Textos
+                </button>
+              </Tooltip>
+              <Tooltip label="Apagar TODOS os textos">
+                <button
+                  className="btn" onClick={clearAllTexts}
+                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.1)' }}
+                >
+                  <Eraser size={14} /> Limpar Todos
+                </button>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -331,18 +339,26 @@ export const MapSettingsPanel: React.FC = () => {
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, width: '100%' }}>
                   {selectedIds.size} Mapa(s) Selecionado(s)
                 </span>
-                <button onClick={toggleHideSelected} className="btn-icon" title="Ocultar/Mostrar" style={{ border: '1px solid var(--glass-border)', padding: '0.5rem' }}>
-                  {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.hidden) ? <Eye size={14} /> : <EyeOff size={14} color="var(--danger)" />}
-                </button>
-                <button onClick={toggleLockSelected} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
-                  {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.locked) ? 'Travar 🔒' : 'Destravar 🔓'}
-                </button>
-                <button onClick={clearBgSelection} className="btn-icon" title="Limpar Seleção" style={{ border: '1px solid var(--glass-border)', marginLeft: 'auto' }}>
-                  X
-                </button>
+                <Tooltip label="Ocultar/Mostrar">
+                  <button onClick={toggleHideSelected} className="btn-icon" style={{ border: '1px solid var(--glass-border)', padding: '0.5rem' }}>
+                    {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.hidden) ? <Eye size={14} /> : <EyeOff size={14} color="var(--danger)" />}
+                  </button>
+                </Tooltip>
+                <Tooltip label={backgrounds.some(bg => selectedIds.has(bg.id) && !bg.locked) ? "Travar Selecionados" : "Destravar Selecionados"}>
+                  <button onClick={toggleLockSelected} className="btn" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
+                    {backgrounds.some(bg => selectedIds.has(bg.id) && !bg.locked) ? 'Travar 🔒' : 'Destravar 🔓'}
+                  </button>
+                </Tooltip>
+                <Tooltip label="Limpar Seleção">
+                  <button onClick={clearBgSelection} className="btn-icon" style={{ border: '1px solid var(--glass-border)', marginLeft: 'auto' }}>
+                    X
+                  </button>
+                </Tooltip>
               </div>
             ) : (
-              <button onClick={selectAll} className="btn" style={{ padding: '0.5rem', fontSize: '0.8rem' }}>Selecionar Todos na Cena</button>
+              <Tooltip label="Selecionar Todos">
+                <button onClick={selectAll} className="btn" style={{ padding: '0.5rem', fontSize: '0.8rem' }}>Selecionar Todos na Cena</button>
+              </Tooltip>
             )}
           </div>
 
@@ -363,7 +379,7 @@ export const MapSettingsPanel: React.FC = () => {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, overflow: 'hidden' }}>
-                      {bg.locked && <span title="Travado">🔒</span>}
+                      {bg.locked && <Tooltip label="Travado"><span>🔒</span></Tooltip>}
                       <input
                         type="text" value={bg.name || `Cenário ${idx + 1}`}
                         onChange={(e) => updateBackgroundProps(bg.id, { name: e.target.value })}
@@ -378,27 +394,33 @@ export const MapSettingsPanel: React.FC = () => {
                       />
                     </div>
                     <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); updateBackgroundProps(bg.id, { hidden: !bg.hidden }); }}
-                        className="btn-icon" title={bg.hidden ? "Mostrar" : "Ocultar"}
-                        style={{ padding: '0.3rem', border: '1px solid transparent', background: bg.hidden ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.1)' }}
-                      >
-                        {bg.hidden ? <EyeOff size={14} color="var(--text-secondary)" /> : <Eye size={14} color="var(--text-primary)" />}
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleReplaceImage(bg.id); }}
-                        className="btn-icon" title="Trocar Imagem"
-                        style={{ padding: '0.3rem', border: '1px solid transparent', background: 'rgba(59,130,246,0.1)', color: 'var(--mana)' }}
-                      >
-                        <RefreshCw size={14} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); removeBackground(bg.id); }}
-                        className="btn-icon" title="Excluir"
-                        style={{ padding: '0.3rem', border: '1px solid transparent', background: 'transparent', color: 'var(--danger)' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <Tooltip label={bg.hidden ? "Mostrar" : "Ocultar"}>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); updateBackgroundProps(bg.id, { hidden: !bg.hidden }); }}
+                          className="btn-icon"
+                          style={{ padding: '0.3rem', border: '1px solid transparent', background: bg.hidden ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.1)' }}
+                        >
+                          {bg.hidden ? <EyeOff size={14} color="var(--text-secondary)" /> : <Eye size={14} color="var(--text-primary)" />}
+                        </button>
+                      </Tooltip>
+                      <Tooltip label="Trocar Imagem">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleReplaceImage(bg.id); }}
+                          className="btn-icon"
+                          style={{ padding: '0.3rem', border: '1px solid transparent', background: 'rgba(59,130,246,0.1)', color: 'var(--mana)' }}
+                        >
+                          <RefreshCw size={14} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label="Excluir">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); removeBackground(bg.id); }}
+                          className="btn-icon"
+                          style={{ padding: '0.3rem', border: '1px solid transparent', background: 'transparent', color: 'var(--danger)' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 ))}
@@ -456,21 +478,21 @@ const PropLibraryGallery = () => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginTop: '0.5rem' }}>
       {library.map((item, idx) => (
-        <div 
-          key={idx}
-          draggable
-          onDragStart={(e) => {
-            e.dataTransfer.setData('application/json', JSON.stringify({ type: 'prop', url: item.url, name: item.name }));
-          }}
-          style={{
-            aspectRatio: '1', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-            borderRadius: '4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            cursor: 'grab', padding: '0.2rem', position: 'relative'
-          }}
-          title={item.name}
-        >
-          <img loading="lazy" decoding="async" src={item.url} alt={item.name} draggable={false} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
-        </div>
+        <Tooltip key={idx} label={item.name}>
+          <div 
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('application/json', JSON.stringify({ type: 'prop', url: item.url, name: item.name }));
+            }}
+            style={{
+              aspectRatio: '1', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+              borderRadius: '4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              cursor: 'grab', padding: '0.2rem', position: 'relative'
+            }}
+          >
+            <img loading="lazy" decoding="async" src={item.url} alt={item.name} draggable={false} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
+          </div>
+        </Tooltip>
       ))}
     </div>
   );

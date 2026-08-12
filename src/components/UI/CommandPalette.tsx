@@ -8,6 +8,7 @@ import {
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
 import { useCommandRegistry } from '../../store';
+import { Tooltip } from './Tooltip';
 
 interface ActionDef {
   id: string;
@@ -197,14 +198,15 @@ export const CommandPalette: React.FC = () => {
           <span className="item-icon">{action.icon}</span>
           {action.title}
         </div>
-        <button 
-          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); togglePin(e, action.id); }}
-          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
-          title={pinnedIds.includes(action.id) ? "Desafixar do Acesso Rápido" : "Fixar no Acesso Rápido"}
-        >
-          <Pin size={14} style={{ color: pinnedIds.includes(action.id) ? '#facc15' : 'rgba(255,255,255,0.2)', transform: 'rotate(45deg)' }} />
-        </button>
+        <Tooltip label={pinnedIds.includes(action.id) ? "Desafixar do Acesso Rápido" : "Fixar no Acesso Rápido"}>
+          <button 
+            onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); togglePin(e, action.id); }}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+          >
+            <Pin size={14} style={{ color: pinnedIds.includes(action.id) ? '#facc15' : 'rgba(255,255,255,0.2)', transform: 'rotate(45deg)' }} />
+          </button>
+        </Tooltip>
       </div>
     </Command.Item>
   );
@@ -213,13 +215,14 @@ export const CommandPalette: React.FC = () => {
     <>
       {/* Botão Hover no Topo da Tela (mais seguro contra barras nativas do SO/Browser) */}
       <div className="cmd-hover-area">
-        <button 
-          className="cmd-trigger-btn"
-          title="Paleta de Comandos (Ctrl+K)"
-          onClick={() => setOpen(true)}
-        >
-          <Search size={20} />
-        </button>
+        <Tooltip label="Paleta de Comandos (Ctrl+K)">
+          <button 
+            className="cmd-trigger-btn"
+            onClick={() => setOpen(true)}
+          >
+            <Search size={20} />
+          </button>
+        </Tooltip>
       </div>
 
       <style>
@@ -407,12 +410,14 @@ export const CommandPalette: React.FC = () => {
                 onValueChange={setSearch}
                 autoFocus
               />
-              <button 
-                onClick={() => setOpen(false)}
-                style={{ background:'transparent', border:'none', color:'var(--text-secondary)', cursor:'pointer' }}
-              >
-                <X size={18} />
-              </button>
+              <Tooltip label="Fechar">
+                <button 
+                  onClick={() => setOpen(false)}
+                  style={{ background:'transparent', border:'none', color:'var(--text-secondary)', cursor:'pointer' }}
+                >
+                  <X size={18} />
+                </button>
+              </Tooltip>
             </div>
 
             <Command.List className="cmd-list">

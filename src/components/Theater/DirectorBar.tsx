@@ -5,6 +5,7 @@ import { setTheaterMood, setTheaterWeather, addTensionClock, addTheaterDiaryEntr
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
+import { Tooltip } from '../UI/Tooltip';
 
 const MOODS: { value: MoodType; label: string; emoji: string; color: string }[] = [
   { value: 'neutral',   label: 'Neutro',   emoji: '○',  color: '#475569' },
@@ -90,15 +91,15 @@ export const DirectorBar: React.FC = () => {
       {/* MOOD pills */}
       <span className="theater-cockpit-label">Atmosfera</span>
       {MOODS.map(m => (
-        <button
-          key={m.value}
-          className={`theater-pill ${theaterData.mood === m.value ? 'active' : ''}`}
-          style={theaterData.mood === m.value ? { color: m.color, borderColor: m.color, background: `${m.color}20` } : {}}
-          onClick={() => setTheaterMood(m.value)}
-          title={m.label}
-        >
-          {m.emoji} {m.label}
-        </button>
+        <Tooltip key={m.value} label={m.label}>
+          <button
+            className={`theater-pill ${theaterData.mood === m.value ? 'active' : ''}`}
+            style={theaterData.mood === m.value ? { color: m.color, borderColor: m.color, background: `${m.color}20` } : {}}
+            onClick={() => setTheaterMood(m.value)}
+          >
+            {m.emoji} {m.label}
+          </button>
+        </Tooltip>
       ))}
 
       <div className="theater-cockpit-divider" />
@@ -106,26 +107,26 @@ export const DirectorBar: React.FC = () => {
       {/* WEATHER pills */}
       <span className="theater-cockpit-label">Clima</span>
       {WEATHERS.map(w => (
-        <button
-          key={w.value}
-          className={`theater-pill ${theaterData.weather === w.value ? 'active' : ''}`}
-          style={theaterData.weather === w.value ? { color: '#38bdf8', borderColor: '#38bdf8', background: 'rgba(56,189,248,0.15)' } : {}}
-          onClick={() => setTheaterWeather(w.value)}
-          title={w.label}
-        >
-          {w.icon} {w.label}
-        </button>
+        <Tooltip key={w.value} label={w.label}>
+          <button
+            className={`theater-pill ${theaterData.weather === w.value ? 'active' : ''}`}
+            style={theaterData.weather === w.value ? { color: '#38bdf8', borderColor: '#38bdf8', background: 'rgba(56,189,248,0.15)' } : {}}
+            onClick={() => setTheaterWeather(w.value)}
+          >
+            {w.icon} {w.label}
+          </button>
+        </Tooltip>
       ))}
 
       <div className="theater-cockpit-divider" />
 
       {/* QUICK DICE */}
       <span className="theater-cockpit-label">Dados</span>
-      <button className="theater-qbtn red"    onClick={() => roll('1d20', '1d20')}   title="Rola 1d20"><Target size={11} /> 1d20</button>
-      <button className="theater-qbtn orange" onClick={() => roll('Ataque', '1d20+5')} title="Ataque +5"><Swords size={11} /> Atq</button>
-      <button className="theater-qbtn blue"   onClick={() => roll('Defesa', '1d20+3')} title="Defesa +3"><Shield size={11} /> Def</button>
-      <button className="theater-qbtn purple" onClick={() => roll('Dano', '2d6')}    title="Dano 2d6"><Zap size={11} /> 2d6</button>
-      <button className="theater-qbtn amber"  onClick={() => roll('Dano', '3d6')}    title="Dano 3d6">🎲 3d6</button>
+      <Tooltip label="Rola 1d20"><button className="theater-qbtn red"    onClick={() => roll('1d20', '1d20')}><Target size={11} /> 1d20</button></Tooltip>
+      <Tooltip label="Ataque +5"><button className="theater-qbtn orange" onClick={() => roll('Ataque', '1d20+5')}><Swords size={11} /> Atq</button></Tooltip>
+      <Tooltip label="Defesa +3"><button className="theater-qbtn blue"   onClick={() => roll('Defesa', '1d20+3')}><Shield size={11} /> Def</button></Tooltip>
+      <Tooltip label="Dano 2d6"><button className="theater-qbtn purple" onClick={() => roll('Dano', '2d6')}><Zap size={11} /> 2d6</button></Tooltip>
+      <Tooltip label="Dano 3d6"><button className="theater-qbtn amber"  onClick={() => roll('Dano', '3d6')}>🎲 3d6</button></Tooltip>
 
       <div className="theater-cockpit-divider" />
 
@@ -133,28 +134,29 @@ export const DirectorBar: React.FC = () => {
       <span className="theater-cockpit-label" style={{ color: selectedMember ? '#10b981' : '#64748b' }}>
         {selectedMember ? `Alvo: ${selectedMember.nome.split(' ')[0]}` : 'Sem Alvo'}
       </span>
-      <button className="theater-qbtn green"  onClick={() => quickStat('pv', 5)}   ><Heart size={11} /> +5</button>
-      <button className="theater-qbtn green"  onClick={() => quickStat('pv', 10)}  ><Heart size={11} /> +10</button>
-      <button className="theater-qbtn red"    onClick={() => quickStat('pv', -5)}  ><Heart size={11} /> -5</button>
-      <button className="theater-qbtn red"    onClick={() => quickStat('pv', -10)} ><Heart size={11} /> -10</button>
-      <button className="theater-qbtn blue"   onClick={() => quickStat('mana', 5)}  ><Droplets size={11} /> +Mana</button>
-      <button className="theater-qbtn amber"  onClick={() => quickStat('xp', 50)}><Star size={11} /> +XP</button>
+      <Tooltip label="Cura 5 PV"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 5)}   ><Heart size={11} /> +5</button></Tooltip>
+      <Tooltip label="Cura 10 PV"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 10)}  ><Heart size={11} /> +10</button></Tooltip>
+      <Tooltip label="Dano 5 PV"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -5)}  ><Heart size={11} /> -5</button></Tooltip>
+      <Tooltip label="Dano 10 PV"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -10)} ><Heart size={11} /> -10</button></Tooltip>
+      <Tooltip label="Adiciona 5 Mana"><button className="theater-qbtn blue"   onClick={() => quickStat('mana', 5)}  ><Droplets size={11} /> +Mana</button></Tooltip>
+      <Tooltip label="Adiciona 50 XP"><button className="theater-qbtn amber"  onClick={() => quickStat('xp', 50)}><Star size={11} /> +XP</button></Tooltip>
 
       <div className="theater-cockpit-divider" />
 
       {/* NARRATIVE */}
       <span className="theater-cockpit-label">Narrativa</span>
-      <button className="theater-qbtn purple" onClick={() => createScene()}><Film size={11} /> + Cena</button>
-      <button className="theater-qbtn blue"   onClick={goToNextScene}><ArrowRight size={11} /> Próxima</button>
-      <button className="theater-qbtn purple" onClick={addQuickClock}><Bell size={11} /> + Relógio</button>
-      <button
-        className="theater-qbtn purple"
-        style={{ boxShadow: '0 0 8px rgba(168,85,247,0.3)' }}
-        onClick={() => window.dispatchEvent(new CustomEvent('theater-open-drawer', { detail: 'cutscenes' }))}
-        title="Abrir biblioteca de cutscenes"
-      >
-        🎬 Cutscenes
-      </button>
+      <Tooltip label="Criar Nova Cena"><button className="theater-qbtn purple" onClick={() => createScene()}><Film size={11} /> + Cena</button></Tooltip>
+      <Tooltip label="Avançar Cena"><button className="theater-qbtn blue"   onClick={goToNextScene}><ArrowRight size={11} /> Próxima</button></Tooltip>
+      <Tooltip label="Adicionar Relógio"><button className="theater-qbtn purple" onClick={addQuickClock}><Bell size={11} /> + Relógio</button></Tooltip>
+      <Tooltip label="Abrir biblioteca de cutscenes">
+        <button
+          className="theater-qbtn purple"
+          style={{ boxShadow: '0 0 8px rgba(168,85,247,0.3)' }}
+          onClick={() => window.dispatchEvent(new CustomEvent('theater-open-drawer', { detail: 'cutscenes' }))}
+        >
+          🎬 Cutscenes
+        </button>
+      </Tooltip>
     </div>
   );
 };

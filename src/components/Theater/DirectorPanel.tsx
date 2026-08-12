@@ -20,6 +20,7 @@ import { importSceneFromMarkdown } from './sceneExport';
 import { GlassAccordion } from '../UI/GlassAccordion';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { saveImageToCloud } from '../../utils/githubApi';
+import { Tooltip } from '../UI/Tooltip';
 
 import { toast } from '../UI/Toast';
 type DrawerTab = 'ambiente' | 'personagens' | 'mecanicas' | 'narrativa';
@@ -97,35 +98,39 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
       {/* Header */}
       <div className="theater-drawer-header">
         <h3>🎬 Diretor de Cenas</h3>
-        <button
-          onClick={onClose}
-          style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', display: 'flex' }}
-        >
-          <X size={16} />
-        </button>
+        <Tooltip label="Fechar Diretor">
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', display: 'flex' }}
+          >
+            <X size={16} />
+          </button>
+        </Tooltip>
       </div>
 
       {/* Tabs */}
       <div className="theater-drawer-tabs" style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>
         {TABS.map(t => (
-          <button
-            key={t.id}
-            className={`theater-drawer-tab ${tab === t.id ? 'active' : ''}`}
-            onClick={() => setTab(t.id)}
-            title={t.label}
-          >
-            {t.label}
-          </button>
+          <Tooltip key={t.id} label={t.label}>
+            <button
+              className={`theater-drawer-tab ${tab === t.id ? 'active' : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          </Tooltip>
         ))}
       </div>
 
       <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          onClick={() => onToggleFloat(tab)}
-          style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '4px', padding: '4px 8px', fontSize: '0.65rem', cursor: 'pointer' }}
-        >
-          {floatingPanels.includes(tab) ? 'Restaurar ao Painel' : '↗ Destacar Janela'}
-        </button>
+        <Tooltip label={floatingPanels.includes(tab) ? 'Restaurar ao Painel' : 'Destacar Janela'}>
+          <button
+            onClick={() => onToggleFloat(tab)}
+            style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', borderRadius: '4px', padding: '4px 8px', fontSize: '0.65rem', cursor: 'pointer' }}
+          >
+            {floatingPanels.includes(tab) ? 'Restaurar ao Painel' : '↗ Destacar Janela'}
+          </button>
+        </Tooltip>
       </div>
 
       {/* Body */}
@@ -152,41 +157,45 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                           <div className="theater-scene-row-title">{s.title}</div>
                           {s.subtitle && <div className="theater-scene-row-sub">{s.subtitle}</div>}
                         </div>
-                        <button
-                          title="Excluir cena"
-                          onClick={e => {
-                            e.stopPropagation();
-                            if (!confirm(`Excluir "${s.title}"? Esta ação não pode ser desfeita.`)) return;
-                            deleteScene(s.id);
-                          }}
-                          style={{
-                            background: 'none', border: 'none', color: '#475569',
-                            cursor: 'pointer', padding: '2px 4px', display: 'flex',
-                            alignItems: 'center', borderRadius: 4, flexShrink: 0,
-                          }}
-                          onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
-                          onMouseLeave={e => (e.currentTarget.style.color = '#475569')}
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                        <Tooltip label="Excluir cena">
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (!confirm(`Excluir "${s.title}"? Esta ação não pode ser desfeita.`)) return;
+                              deleteScene(s.id);
+                            }}
+                            style={{
+                              background: 'none', border: 'none', color: '#475569',
+                              cursor: 'pointer', padding: '2px 4px', display: 'flex',
+                              alignItems: 'center', borderRadius: 4, flexShrink: 0,
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+                            onMouseLeave={e => (e.currentTarget.style.color = '#475569')}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </Tooltip>
                       </div>
                     ))}
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        className="theater-scene-row"
-                        style={{ flex: 1, borderStyle: 'dashed', color: '#334155', justifyContent: 'center' }}
-                        onClick={() => createScene()}
-                      >
-                        <Plus size={13} /> Nova
-                      </button>
-                      <button
-                        className="theater-scene-row"
-                        style={{ flex: 1, borderStyle: 'dashed', color: '#6366f1', justifyContent: 'center' }}
-                        onClick={() => document.getElementById('theater-scene-import-input')?.click()}
-                        title="Carregar arquivo .md de cena exportada"
-                      >
-                        <BookOpen size={13} /> Importar
-                      </button>
+                      <Tooltip label="Nova Cena">
+                        <button
+                          className="theater-scene-row"
+                          style={{ flex: 1, borderStyle: 'dashed', color: '#334155', justifyContent: 'center' }}
+                          onClick={() => createScene()}
+                        >
+                          <Plus size={13} /> Nova
+                        </button>
+                      </Tooltip>
+                      <Tooltip label="Carregar arquivo .md de cena exportada">
+                        <button
+                          className="theater-scene-row"
+                          style={{ flex: 1, borderStyle: 'dashed', color: '#6366f1', justifyContent: 'center' }}
+                          onClick={() => document.getElementById('theater-scene-import-input')?.click()}
+                        >
+                          <BookOpen size={13} /> Importar
+                        </button>
+                      </Tooltip>
                       <input
                         id="theater-scene-import-input"
                         type="file"
@@ -225,14 +234,13 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                   ) : (
                     <div className="theater-bg-gallery">
                       {bgItems.map((bg, idx) => (
-                        <div
-                          key={bg.id}
-                          className={`theater-bg-thumb ${activeBgIndex === idx ? 'active' : ''} asset-card-hover`}
-                          onClick={() => onBgChange(idx)}
-                          title={bg.label}
-                          style={{ position: 'relative' }}
-                        >
-                          <img loading="lazy" decoding="async" src={bg.url} alt={bg.label} />
+                        <Tooltip key={bg.id} label={bg.label}>
+                          <div
+                            className={`theater-bg-thumb ${activeBgIndex === idx ? 'active' : ''} asset-card-hover`}
+                            onClick={() => onBgChange(idx)}
+                            style={{ position: 'relative' }}
+                          >
+                            <img loading="lazy" decoding="async" src={bg.url} alt={bg.label} />
                           
                           {/* Botões de ação em overlay (só aparecem no hover) */}
                           <div
@@ -244,77 +252,83 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                             }}
                           >
                             {idx > 0 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const newBgs = [...bgItems];
-                                  [newBgs[idx - 1], newBgs[idx]] = [newBgs[idx], newBgs[idx - 1]];
-                                  handleUpdateBgs(newBgs);
-                                  if (activeBgIndex === idx) onBgChange(idx - 1);
-                                  else if (activeBgIndex === idx - 1) onBgChange(idx);
-                                }}
-                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
-                                title="Mover para esquerda"
-                              >
-                                ⬅️
-                              </button>
+                              <Tooltip label="Mover para esquerda">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const newBgs = [...bgItems];
+                                    [newBgs[idx - 1], newBgs[idx]] = [newBgs[idx], newBgs[idx - 1]];
+                                    handleUpdateBgs(newBgs);
+                                    if (activeBgIndex === idx) onBgChange(idx - 1);
+                                    else if (activeBgIndex === idx - 1) onBgChange(idx);
+                                  }}
+                                  style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
+                                >
+                                  ⬅️
+                                </button>
+                              </Tooltip>
                             )}
                             {idx < bgItems.length - 1 && (
+                              <Tooltip label="Mover para direita">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const newBgs = [...bgItems];
+                                    [newBgs[idx + 1], newBgs[idx]] = [newBgs[idx], newBgs[idx + 1]];
+                                    handleUpdateBgs(newBgs);
+                                    if (activeBgIndex === idx) onBgChange(idx + 1);
+                                    else if (activeBgIndex === idx + 1) onBgChange(idx);
+                                  }}
+                                  style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
+                                >
+                                  ➡️
+                                </button>
+                              </Tooltip>
+                            )}
+                            <Tooltip label="Excluir">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const newBgs = [...bgItems];
-                                  [newBgs[idx + 1], newBgs[idx]] = [newBgs[idx], newBgs[idx + 1]];
+                                  if (!confirm(`Excluir o fundo "${bg.label}"?`)) return;
+                                  const newBgs = bgItems.filter((_, i) => i !== idx);
                                   handleUpdateBgs(newBgs);
-                                  if (activeBgIndex === idx) onBgChange(idx + 1);
-                                  else if (activeBgIndex === idx + 1) onBgChange(idx);
+                                  if (activeBgIndex === idx) onBgChange(Math.max(0, idx - 1));
+                                  else if (activeBgIndex > idx) onBgChange(activeBgIndex - 1);
                                 }}
-                                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
-                                title="Mover para direita"
+                                style={{ background: 'rgba(239,68,68,0.4)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
                               >
-                                ➡️
+                                🗑️
                               </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!confirm(`Excluir o fundo "${bg.label}"?`)) return;
-                                const newBgs = bgItems.filter((_, i) => i !== idx);
-                                handleUpdateBgs(newBgs);
-                                if (activeBgIndex === idx) onBgChange(Math.max(0, idx - 1));
-                                else if (activeBgIndex > idx) onBgChange(activeBgIndex - 1);
-                              }}
-                              style={{ background: 'rgba(239,68,68,0.4)', border: 'none', borderRadius: 4, color: 'var(--text-primary)', cursor: 'pointer', padding: '4px' }}
-                              title="Excluir"
-                            >
-                              🗑️
-                            </button>
+                            </Tooltip>
                           </div>
                         </div>
+                        </Tooltip>
                       ))}
-                      <div
-                        className="theater-bg-thumb-add"
-                        title="Adicionar fundo via arquivo local"
-                        onClick={() => {
-                          document.getElementById('theater-bg-upload-input')?.click();
-                        }}
-                        style={{ fontSize: '1rem' }}
-                      >
-                        📂
-                      </div>
-                      <div
-                        className="theater-bg-thumb-add"
-                        title="Adicionar fundo via URL"
-                        onClick={() => {
-                          const url = prompt('URL da imagem de fundo:');
-                          if (!url || !currentScene) return;
-                          const newAsset = { id: `bg_${Date.now()}`, title: 'Fundo', url, type: 'location' as const };
-                          patchCurrentScene({ assets: [...(currentScene.assets ?? []), newAsset] });
-                        }}
-                        style={{ fontSize: '1rem' }}
-                      >
-                        🌐
-                      </div>
+                      <Tooltip label="Adicionar fundo via arquivo local">
+                        <div
+                          className="theater-bg-thumb-add"
+                          onClick={() => {
+                            document.getElementById('theater-bg-upload-input')?.click();
+                          }}
+                          style={{ fontSize: '1rem' }}
+                        >
+                          📂
+                        </div>
+                      </Tooltip>
+                      <Tooltip label="Adicionar fundo via URL">
+                        <div
+                          className="theater-bg-thumb-add"
+                          onClick={() => {
+                            const url = prompt('URL da imagem de fundo:');
+                            if (!url || !currentScene) return;
+                            const newAsset = { id: `bg_${Date.now()}`, title: 'Fundo', url, type: 'location' as const };
+                            patchCurrentScene({ assets: [...(currentScene.assets ?? []), newAsset] });
+                          }}
+                          style={{ fontSize: '1rem' }}
+                        >
+                          🌐
+                        </div>
+                      </Tooltip>
                       <input
                         id="theater-bg-upload-input"
                         type="file"
@@ -350,53 +364,55 @@ export const DirectorPanel: React.FC<Props> = ({ onClose, activeBgIndex, onBgCha
                 <GlassAccordion title="NPCs (Suporte/Figurantes)" defaultOpen={false}>
                   {/* Scene NPCs from assets */}
                   {currentScene?.assets?.filter(a => a.type === 'npc').map(npc => (
-                    <div 
-                      key={npc.id} 
-                      className="theater-npc-row" 
-                      onClick={() => handleShowNpc(npc.title, npc.url)}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'prop', url: npc.url, title: npc.title }));
-                      }}
-                      title="Arraste para o palco ou clique para mostrar"
-                    >
-                      <div className="theater-npc-avatar">
-                        {npc.url ? <img loading="lazy" decoding="async" src={npc.url} alt={npc.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
+                    <Tooltip key={npc.id} label="Arraste para o palco ou clique para mostrar">
+                      <div 
+                        className="theater-npc-row" 
+                        onClick={() => handleShowNpc(npc.title, npc.url)}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'prop', url: npc.url, title: npc.title }));
+                        }}
+                      >
+                        <div className="theater-npc-avatar">
+                          {npc.url ? <img loading="lazy" decoding="async" src={npc.url} alt={npc.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
+                        </div>
+                        <div className="theater-npc-info">
+                          <div className="theater-npc-name">{npc.title}</div>
+                          <div className="theater-npc-type">NPC desta cena</div>
+                        </div>
                       </div>
-                      <div className="theater-npc-info">
-                        <div className="theater-npc-name">{npc.title}</div>
-                        <div className="theater-npc-type">NPC desta cena</div>
-                      </div>
-                    </div>
+                    </Tooltip>
                   ))}
                   {/* Wiki NPCs */}
                   {npcs.slice(0, 12).map(npc => (
-                    <div 
-                      key={npc.caminhoArquivo} 
-                      className="theater-npc-row" 
-                      onClick={() => handleShowNpc(npc.nome, npc.avatar)}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'prop', url: npc.avatar, title: npc.nome }));
-                      }}
-                      title="Arraste para o palco ou clique para mostrar"
-                    >
-                      <div className="theater-npc-avatar">
-                        {npc.avatar ? <img loading="lazy" decoding="async" src={npc.avatar} alt={npc.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
+                    <Tooltip key={npc.caminhoArquivo} label="Arraste para o palco ou clique para mostrar">
+                      <div 
+                        className="theater-npc-row" 
+                        onClick={() => handleShowNpc(npc.nome, npc.avatar)}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'prop', url: npc.avatar, title: npc.nome }));
+                        }}
+                      >
+                        <div className="theater-npc-avatar">
+                          {npc.avatar ? <img loading="lazy" decoding="async" src={npc.avatar} alt={npc.nome} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🧙'}
+                        </div>
+                        <div className="theater-npc-info">
+                          <div className="theater-npc-name">{npc.nome}</div>
+                          <div className="theater-npc-type">Wiki</div>
+                        </div>
                       </div>
-                      <div className="theater-npc-info">
-                        <div className="theater-npc-name">{npc.nome}</div>
-                        <div className="theater-npc-type">Wiki</div>
-                      </div>
-                    </div>
+                    </Tooltip>
                   ))}
-                  <button
-                    className="theater-npc-row"
-                    style={{ justifyContent: 'center', color: '#475569', borderStyle: 'dashed', marginTop: 8 }}
-                    onClick={handleHideNpc}
-                  >
-                    <X size={13} /> Esconder retrato
-                  </button>
+                  <Tooltip label="Esconder retrato de NPC">
+                    <button
+                      className="theater-npc-row"
+                      style={{ justifyContent: 'center', color: '#475569', borderStyle: 'dashed', marginTop: 8 }}
+                      onClick={handleHideNpc}
+                    >
+                      <X size={13} /> Esconder retrato
+                    </button>
+                  </Tooltip>
                   <CastPanel type="npc" />
                 </GlassAccordion>
               </div>

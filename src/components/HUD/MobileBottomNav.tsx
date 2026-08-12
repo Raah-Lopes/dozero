@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutGrid, BookOpen, MessageSquare, Dices, Grid, CloudFog, Ruler, Pin, PinOff, Menu as MenuIcon } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
+import { Tooltip } from '../UI/Tooltip';
 
 export const MobileBottomNav: React.FC = () => {
   const { viewMode, setViewMode, toggleWindow, openWindows, activeModal, setActiveModal, activeTool, setActiveTool } = useWindowManager();
@@ -236,31 +237,32 @@ export const MobileBottomNav: React.FC = () => {
         {navItems.map(item => {
           const Icon = item.icon;
           return (
-            <button
-              key={item.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                item.action();
-                if (!isPinned) setIsExpanded(false);
-              }}
-              className={`dock-item ${item.active ? 'active' : ''}`}
-              title={item.label}
-            >
-              <Icon size={20} strokeWidth={item.active ? 2.5 : 2} />
-              <span className="dock-label" style={{ display: item.active ? 'block' : 'none' }}>
-                {item.label}
-              </span>
-            </button>
+            <Tooltip key={item.id} label={item.label} position="top">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  item.action();
+                  if (!isPinned) setIsExpanded(false);
+                }}
+                className={`dock-item ${item.active ? 'active' : ''}`}
+              >
+                <Icon size={20} strokeWidth={item.active ? 2.5 : 2} />
+                <span className="dock-label" style={{ display: item.active ? 'block' : 'none' }}>
+                  {item.label}
+                </span>
+              </button>
+            </Tooltip>
           );
         })}
         
-        <button 
-          className={`pin-btn ${isPinned ? 'pinned' : ''}`} 
-          onClick={togglePin}
-          title={isPinned ? "Desafixar menu" : "Fixar menu"}
-        >
-          {isPinned ? <Pin size={12} /> : <PinOff size={12} />}
-        </button>
+        <Tooltip label={isPinned ? "Desafixar menu" : "Fixar menu"} position="top">
+          <button 
+            className={`pin-btn ${isPinned ? 'pinned' : ''}`} 
+            onClick={togglePin}
+          >
+            {isPinned ? <Pin size={12} /> : <PinOff size={12} />}
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

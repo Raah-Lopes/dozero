@@ -6,6 +6,7 @@ import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 import { toast } from '../UI/Toast';
+import { Tooltip } from '../UI/Tooltip';
 
 export function TokenContextHUD() {
   const { setShowActors } = useWindowManager();
@@ -198,35 +199,47 @@ export function TokenContextHUD() {
 
       {/* Def/Armor */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 0.5rem' }}>
-        <div title="Defesa" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 'bold' }}>
-          <Shield size={16} /> {tokenData.defesa || 0}
-        </div>
+        <Tooltip label="Defesa" position="top">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            <Shield size={16} /> {tokenData.defesa || 0}
+          </div>
+        </Tooltip>
       </div>
 
       <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }} />
 
       {/* Actions */}
       {tokenPo > 0 && tokenHp <= 0 && !isSaqueado && (
-        <button onClick={handleLoot} title="Saquear e distribuir para a Party" style={{ ...actionButtonStyle, background: 'rgba(234, 179, 8, 0.2)', border: '1px solid rgba(234, 179, 8, 0.5)' }}>
-          <Coins size={18} color="#fde047" />
-        </button>
+        <Tooltip label="Saquear e distribuir para a Party" position="top">
+          <button onClick={handleLoot} style={{ ...actionButtonStyle, background: 'rgba(234, 179, 8, 0.2)', border: '1px solid rgba(234, 179, 8, 0.5)' }}>
+            <Coins size={18} color="#fde047" />
+          </button>
+        </Tooltip>
       )}
 
-      <button onClick={() => toggleTarget(tokenData.id)} title={isTargeted ? "Remover Alvo" : "Colocar como Alvo"} style={{ ...actionButtonStyle, background: isTargeted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.05)', border: isTargeted ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
-        <Crosshair size={18} color={isTargeted ? "#ef4444" : "rgba(255,255,255,0.7)"} />
-      </button>
+      <Tooltip label={isTargeted ? "Remover Alvo" : "Colocar como Alvo"} position="top">
+        <button onClick={() => toggleTarget(tokenData.id)} style={{ ...actionButtonStyle, background: isTargeted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.05)', border: isTargeted ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
+          <Crosshair size={18} color={isTargeted ? "#ef4444" : "rgba(255,255,255,0.7)"} />
+        </button>
+      </Tooltip>
 
-      <button onClick={toggleLock} title={tokenData.locked ? "Destravar" : "Travar"} style={actionButtonStyle}>
-        {tokenData.locked ? <Lock size={18} color="#f59e0b" /> : <Unlock size={18} color="rgba(255,255,255,0.7)" />}
-      </button>
+      <Tooltip label={tokenData.locked ? "Destravar" : "Travar"} position="top">
+        <button onClick={toggleLock} style={actionButtonStyle}>
+          {tokenData.locked ? <Lock size={18} color="#f59e0b" /> : <Unlock size={18} color="rgba(255,255,255,0.7)" />}
+        </button>
+      </Tooltip>
 
-      <button onClick={() => setShowActors(true)} title="Abrir Biblioteca de Atores" style={actionButtonStyle}>
-        <Settings size={18} color="rgba(255,255,255,0.7)" />
-      </button>
+      <Tooltip label="Abrir Biblioteca de Atores" position="top">
+        <button onClick={() => setShowActors(true)} style={actionButtonStyle}>
+          <Settings size={18} color="rgba(255,255,255,0.7)" />
+        </button>
+      </Tooltip>
 
-      <button onClick={() => { Tokens.delete(tokenData.id); }} title="Excluir Token" style={{ ...actionButtonStyle, background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.5)' }}>
-        <Skull size={18} color="#ef4444" />
-      </button>
+      <Tooltip label="Excluir Token" position="top">
+        <button onClick={() => { Tokens.delete(tokenData.id); }} style={{ ...actionButtonStyle, background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.5)' }}>
+          <Skull size={18} color="#ef4444" />
+        </button>
+      </Tooltip>
 
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes slideUp {

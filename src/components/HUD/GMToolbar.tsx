@@ -4,6 +4,7 @@ import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
 import { setActiveTool as setGlobalActiveTool, setFogMode as setGlobalFogMode, localState } from '../../store';
+import { Tooltip } from '../UI/Tooltip';
 import type { FogConfig } from '../../store/modules/configModule';
 
 export function GMToolbar() {
@@ -354,23 +355,27 @@ export function GMToolbar() {
 }
 
 function ToolButton({ icon, active, onClick, tooltip, small = false }: { icon: React.ReactNode, active: boolean, onClick: () => void, tooltip: string, small?: boolean }) {
+  const shortcutMatch = tooltip.match(/\(([^)]+)\)$/);
+  const shortcut = shortcutMatch ? shortcutMatch[1] : undefined;
+  const label = shortcutMatch ? tooltip.replace(/\s*\([^)]+\)$/, '') : tooltip;
+
   return (
-    <button
-      onClick={onClick}
-      title={tooltip}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: small ? '32px' : '40px',
-        height: small ? '32px' : '40px',
-        borderRadius: '10px',
-        background: active ? 'rgba(147, 51, 234, 0.2)' : 'transparent',
-        border: `1px solid ${active ? 'rgba(147, 51, 234, 0.5)' : 'transparent'}`,
-        color: active ? '#c084fc' : 'rgba(255,255,255,0.7)',
-        cursor: 'pointer',
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
+    <Tooltip label={label} shortcut={shortcut} position="right">
+      <button
+        onClick={onClick}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: small ? '32px' : '40px',
+          height: small ? '32px' : '40px',
+          borderRadius: '10px',
+          background: active ? 'rgba(147, 51, 234, 0.2)' : 'transparent',
+          border: `1px solid ${active ? 'rgba(147, 51, 234, 0.5)' : 'transparent'}`,
+          color: active ? '#c084fc' : 'rgba(255,255,255,0.7)',
+          cursor: 'pointer',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
       onMouseEnter={(e) => {
         if (!active) {
           e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
@@ -386,5 +391,6 @@ function ToolButton({ icon, active, onClick, tooltip, small = false }: { icon: R
     >
       {icon}
     </button>
+    </Tooltip>
   );
 }

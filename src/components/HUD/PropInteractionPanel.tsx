@@ -3,6 +3,7 @@ import { state } from '../../services/yjs';
 import { updateMapProp, removeMapProp } from '../../store/props';
 import { X, Lock, Unlock, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { pushChatMessage } from '../../store/chat';
+import { Tooltip } from '../UI/Tooltip';
 
 export const PropInteractionPanel: React.FC = () => {
   const [propId, setPropId] = useState<string | null>(null);
@@ -85,9 +86,11 @@ export const PropInteractionPanel: React.FC = () => {
           <img loading="lazy" decoding="async" src={prop.imageUrl} alt="Prop" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
           <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{prop.name}</h3>
         </div>
-        <button onClick={() => setPropId(null)} className="btn-icon" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
-          <X size={18} />
-        </button>
+        <Tooltip label="Fechar">
+          <button onClick={() => setPropId(null)} className="btn-icon" style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
+            <X size={18} />
+          </button>
+        </Tooltip>
       </div>
 
       {/* Body - GM Edit Mode */}
@@ -128,47 +131,55 @@ export const PropInteractionPanel: React.FC = () => {
         </label>
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-          <button 
-            className="btn"
-            onClick={() => updateMapProp(propId, { isHidden: !prop.isHidden })}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: prop.isHidden ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)' }}
-          >
-            {prop.isHidden ? <><EyeOff size={16} /> Oculto (GM)</> : <><Eye size={16} /> Visível</>}
-          </button>
+          <Tooltip label="Alternar Visibilidade">
+            <button 
+              className="btn"
+              onClick={() => updateMapProp(propId, { isHidden: !prop.isHidden })}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: prop.isHidden ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)' }}
+            >
+              {prop.isHidden ? <><EyeOff size={16} /> Oculto (GM)</> : <><Eye size={16} /> Visível</>}
+            </button>
+          </Tooltip>
           
-          <button 
-            className="btn"
-            onClick={() => updateMapProp(propId, { isLocked: !prop.isLocked })}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: prop.isLocked ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)' }}
-          >
-            {prop.isLocked ? <><Lock size={16} /> Trancado</> : <><Unlock size={16} /> Destrancado</>}
-          </button>
+          <Tooltip label="Trancar/Destrancar">
+            <button 
+              className="btn"
+              onClick={() => updateMapProp(propId, { isLocked: !prop.isLocked })}
+              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: prop.isLocked ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)' }}
+            >
+              {prop.isLocked ? <><Lock size={16} /> Trancado</> : <><Unlock size={16} /> Destrancado</>}
+            </button>
+          </Tooltip>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
-          <button 
-            onClick={() => {
-               pushChatMessage(`🕵️ O Mestre revelou as informações de <b>${prop.name}</b>:<br/><br/><i>${prop.description || 'Não há nada notável.'}</i>`, false, true);
-               setPropId(null);
-            }}
-            className="btn active"
-            style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', background: 'var(--accent-primary)', color: '#fff' }}
-          >
-            Compartilhar Descrição no Chat
-          </button>
+          <Tooltip label="Compartilhar Descrição no Chat">
+            <button 
+              onClick={() => {
+                 pushChatMessage(`🕵️ O Mestre revelou as informações de <b>${prop.name}</b>:<br/><br/><i>${prop.description || 'Não há nada notável.'}</i>`, false, true);
+                 setPropId(null);
+              }}
+              className="btn active"
+              style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', background: 'var(--accent-primary)', color: '#fff' }}
+            >
+              Compartilhar Descrição no Chat
+            </button>
+          </Tooltip>
 
-          <button 
-            onClick={() => {
-              if (confirm("Deletar este objeto do cenário?")) {
-                removeMapProp(propId);
-                setPropId(null);
-              }
-            }}
-            className="btn"
-            style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
-          >
-            <Trash2 size={16} /> Excluir Prop
-          </button>
+          <Tooltip label="Excluir Objeto">
+            <button 
+              onClick={() => {
+                if (confirm("Deletar este objeto do cenário?")) {
+                  removeMapProp(propId);
+                  setPropId(null);
+                }
+              }}
+              className="btn"
+              style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+            >
+              <Trash2 size={16} /> Excluir Prop
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>

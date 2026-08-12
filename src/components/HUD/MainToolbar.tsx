@@ -5,6 +5,7 @@ import {
 import { useWindowManager } from '../../hooks/useWindowManager';
 
 import { toast } from '../UI/Toast';
+import { Tooltip } from '../UI/Tooltip';
 export function MainToolbar() {
   const {
     viewMode, setViewMode,
@@ -136,56 +137,75 @@ export function MainToolbar() {
       {/* Left side: Navigation & Hub */}
       <div className="hud-hub-btn" style={{ gap: '0.5rem' }}>
         <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem' }}>
-          <button
-            className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`}
-            onClick={(e) => { e.stopPropagation(); setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets'); }}
-            title="Menu Geral (Hub de Ferramentas)"
-            aria-label="Abrir Menu Geral"
-          >
-            <LayoutGrid size={20} />
-          </button>
+          <Tooltip label="Menu Geral" description="Hub de Ferramentas" position="bottom">
+            <button
+              className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets'); }}
+              aria-label="Abrir Menu Geral"
+            >
+              <LayoutGrid size={20} />
+            </button>
+          </Tooltip>
         </div>
 
         <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
-          <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon theme-cyan ${viewMode === 'wiki' ? 'active' : ''}`} title="Wiki da Campanha" aria-label="Abrir Wiki da Campanha">
-            <BookOpen size={20} />
-          </button>
-          <button onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} className={`btn-icon theme-violet ${viewMode === 'theater' ? 'active' : ''}`} title="Teatro da Mente" aria-label="Abrir Teatro da Mente">
-            <Film size={20} />
-          </button>
-          <button onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))} className="btn-icon theme-amber" title="Pesquisa Global (Ctrl+K)" aria-label="Abrir Pesquisa Global">
-            <Search size={20} />
-          </button>
+          <Tooltip label="Wiki da Campanha" position="bottom">
+            <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon theme-cyan ${viewMode === 'wiki' ? 'active' : ''}`} aria-label="Abrir Wiki da Campanha">
+              <BookOpen size={20} />
+            </button>
+          </Tooltip>
+          <Tooltip label="Teatro da Mente" position="bottom">
+            <button onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} className={`btn-icon theme-violet ${viewMode === 'theater' ? 'active' : ''}`} aria-label="Abrir Teatro da Mente">
+              <Film size={20} />
+            </button>
+          </Tooltip>
+          <Tooltip label="Pesquisa Global" shortcut="Ctrl+K" position="bottom">
+            <button onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))} className="btn-icon theme-amber" aria-label="Abrir Pesquisa Global">
+              <Search size={20} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
       {/* Right side: Social & System */}
       <div className="hud-tools-bar">
         <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
-          <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} title="Convidar Jogadores (Compartilhar Mesa)" aria-label="Gerenciar Jogadores">
-            <Users size={20} />
-          </button>
-          <button className={`btn-icon theme-blue ${openWindows.chatWindow ? 'active' : ''}`} onClick={() => toggleWindow('chatWindow')} title="Chat P2P (Mensagens)" aria-label="Abrir Chat de Mensagens">
-            <MessageSquare size={20} />
-          </button>
-          <button className={`btn-icon theme-red ${openWindows.combatLog ? 'active' : ''}`} onClick={() => toggleWindow('combatLog')} title="Registro de Rolagens (Log)" aria-label="Abrir Registro de Rolagens">
-            <MessageSquare size={20} />
-          </button>
+          <Tooltip label="Convidar Jogadores" description="Compartilhar Mesa" position="bottom">
+            <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} aria-label="Gerenciar Jogadores">
+              <Users size={20} />
+            </button>
+          </Tooltip>
+          <Tooltip label="Chat P2P" description="Mensagens" position="bottom">
+            <button className={`btn-icon theme-blue ${openWindows.chatWindow ? 'active' : ''}`} onClick={() => toggleWindow('chatWindow')} aria-label="Abrir Chat de Mensagens">
+              <MessageSquare size={20} />
+            </button>
+          </Tooltip>
+          <Tooltip label="Registro de Rolagens" description="Log" position="bottom">
+            <button className={`btn-icon theme-red ${openWindows.combatLog ? 'active' : ''}`} onClick={() => toggleWindow('combatLog')} aria-label="Abrir Registro de Rolagens">
+              <MessageSquare size={20} />
+            </button>
+          </Tooltip>
         </div>
         
         <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
           {isLocalhost && (
-            <button className="btn-icon theme-green" onClick={handleSyncCloud} title={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem (Vercel)"} aria-label="Sincronizar com a Nuvem">
-              <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />
-            </button>
+            <Tooltip label={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem (Vercel)"} position="bottom">
+              <button className="btn-icon theme-green" onClick={handleSyncCloud} aria-label="Sincronizar com a Nuvem">
+                <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />
+              </button>
+            </Tooltip>
           )}
-          <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} title="Configurações do Sistema" aria-label="Abrir Configurações do Sistema">
-            <Settings size={20} />
-          </button>
+          <Tooltip label="Configurações do Sistema" position="bottom">
+            <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} aria-label="Abrir Configurações do Sistema">
+              <Settings size={20} />
+            </button>
+          </Tooltip>
           <div style={{ width: '1px', background: 'var(--glass-border)', margin: '0 4px' }}></div>
-          <button className="btn-icon theme-red" onClick={() => window.location.href = '/'} title="Sair (Voltar ao Início)" aria-label="Sair da Mesa">
-            <LogOut size={20} />
-          </button>
+          <Tooltip label="Sair" description="Voltar ao Início" position="bottom">
+            <button className="btn-icon theme-red" onClick={() => window.location.href = '/'} aria-label="Sair da Mesa">
+              <LogOut size={20} />
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>

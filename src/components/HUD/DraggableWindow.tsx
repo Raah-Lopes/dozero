@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GripHorizontal, X, Minus, Pin, ExternalLink } from 'lucide-react';
 import { ErrorBoundary } from '../ErrorBoundary';
+import { Tooltip } from '../UI/Tooltip';
 
 interface DraggableWindowProps {
   id: string;
@@ -394,26 +395,27 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
       }}
     >
       {isBubble ? (
-        <div
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          style={{
-            width: '100%', height: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
-            borderRadius: '24px', cursor: isDragging ? 'grabbing' : 'pointer',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-            touchAction: 'none',
-            userSelect: 'none'
-          }}
-          title={title}
-        >
-          <span className="text-gold" style={{ fontSize: '1.2rem' }}>
-             {title.charAt(0).toUpperCase()}
-          </span>
-        </div>
+        <Tooltip label={title}>
+          <div
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
+              borderRadius: '24px', cursor: isDragging ? 'grabbing' : 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              touchAction: 'none',
+              userSelect: 'none'
+            }}
+          >
+            <span className="text-gold" style={{ fontSize: '1.2rem' }}>
+               {title.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        </Tooltip>
       ) : (
         <>
           {/* Drag Handle */}
@@ -455,127 +457,132 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
               }}
             >
               {/* Pin Button */}
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  setIsPinned(!isPinned);
-                  localStorage.setItem(storageKey, JSON.stringify({
-                    x: pos.x, y: pos.y, w: size.w, h: size.h, pinned: !isPinned
-                  }));
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                title={isPinned ? "Desafixar Janela" : "Fixar Janela"}
-                style={{ 
-                  width: '28px', height: '28px', borderRadius: '50%',
-                  background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.06)',
-                  border: isPinned ? '1px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
-                  color: isPinned ? '#e9d5ff' : 'var(--text-secondary)', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
-                }}
-              >
-                <Pin size={13} />
-              </button>
+              <Tooltip label={isPinned ? "Desafixar Janela" : "Fixar Janela"}>
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setIsPinned(!isPinned);
+                    localStorage.setItem(storageKey, JSON.stringify({
+                      x: pos.x, y: pos.y, w: size.w, h: size.h, pinned: !isPinned
+                    }));
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  style={{ 
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.06)',
+                    border: isPinned ? '1px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
+                    color: isPinned ? '#e9d5ff' : 'var(--text-secondary)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  }}
+                >
+                  <Pin size={13} />
+                </button>
+              </Tooltip>
 
               {/* PopOut Button */}
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  const popoutId = widgetKey || id;
-                  const currentScreen = typeof window !== 'undefined' ? {
-                    availLeft: window.screen?.availLeft || 0,
-                    availTop: window.screen?.availTop || 0,
-                    width: window.screen?.width || 1920,
-                    height: window.screen?.height || 1080
-                  } : { availLeft: 0, availTop: 0, width: 1920, height: 1080 };
+              <Tooltip label="Destacar para outra tela (Pop-out)">
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    const popoutId = widgetKey || id;
+                    const currentScreen = typeof window !== 'undefined' ? {
+                      availLeft: window.screen?.availLeft || 0,
+                      availTop: window.screen?.availTop || 0,
+                      width: window.screen?.width || 1920,
+                      height: window.screen?.height || 1080
+                    } : { availLeft: 0, availTop: 0, width: 1920, height: 1080 };
 
-                  localStorage.setItem(`popout_${popoutId}`, JSON.stringify({
-                    isOpen: true,
-                    screen: currentScreen,
-                    title: title,
-                    timestamp: Date.now()
-                  }));
+                    localStorage.setItem(`popout_${popoutId}`, JSON.stringify({
+                      isOpen: true,
+                      screen: currentScreen,
+                      title: title,
+                      timestamp: Date.now()
+                    }));
 
-                  window.open(`${window.location.pathname}?widget=${popoutId}`, `popout_${popoutId}`, 'width=450,height=700');
-                  if (onClose) onClose();
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                title="Destacar para outra tela (Pop-out)"
-                style={{ 
-                  width: '28px', height: '28px', borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'var(--text-secondary)', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
-                }}
-              >
-                <ExternalLink size={13} />
-              </button>
+                    window.open(`${window.location.pathname}?widget=${popoutId}`, `popout_${popoutId}`, 'width=450,height=700');
+                    if (onClose) onClose();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  style={{ 
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'var(--text-secondary)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  }}
+                >
+                  <ExternalLink size={13} />
+                </button>
+              </Tooltip>
 
               {/* Minimize Button (-) */}
-              <button 
-                onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                title={isMinimized ? "Restaurar Janela" : "Minimizar Janela"}
-                style={{ 
-                  width: '28px', height: '28px', borderRadius: '50%',
-                  background: 'rgba(234, 179, 8, 0.25)', border: '1px solid rgba(234, 179, 8, 0.5)',
-                  color: '#fef08a', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
-                }}
-              >
-                <Minus size={13} />
-              </button>
+              <Tooltip label={isMinimized ? "Restaurar Janela" : "Minimizar Janela"}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setIsMinimized(!isMinimized); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  style={{ 
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    background: 'rgba(234, 179, 8, 0.25)', border: '1px solid rgba(234, 179, 8, 0.5)',
+                    color: '#fef08a', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  }}
+                >
+                  <Minus size={13} />
+                </button>
+              </Tooltip>
 
               {/* Close Button (X) */}
               {onClose && (
-                <button 
-                  className="draggable-window-close-btn"
-                  onClick={(e) => { e.stopPropagation(); onClose(); }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  title="Fechar Janela"
-                  style={{ 
-                    width: '28px', height: '28px', borderRadius: '50%',
-                    background: 'rgba(239, 68, 68, 0.3)', border: '1px solid rgba(239, 68, 68, 0.6)',
-                    color: '#fca5a5', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.8)'; e.currentTarget.style.color = 'white'; }}
-                  onMouseOut={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)'; e.currentTarget.style.color = '#fca5a5'; }}
-                >
-                  <X size={13} />
-                </button>
+                <Tooltip label="Fechar Janela">
+                  <button 
+                    className="draggable-window-close-btn"
+                    onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    style={{ 
+                      width: '28px', height: '28px', borderRadius: '50%',
+                      background: 'rgba(239, 68, 68, 0.3)', border: '1px solid rgba(239, 68, 68, 0.6)',
+                      color: '#fca5a5', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                    }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.8)'; e.currentTarget.style.color = 'white'; }}
+                    onMouseOut={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)'; e.currentTarget.style.color = '#fca5a5'; }}
+                  >
+                    <X size={13} />
+                  </button>
+                </Tooltip>
               )}
             </div>
           )}
         </div>
       ) : (
-        <div
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          style={{
-            position: 'absolute',
-            top: '-15px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.5)',
-            borderRadius: '10px',
-            padding: '2px 10px',
-            cursor: isDragging ? 'grabbing' : 'grab',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--text-secondary)',
-            opacity: 0,
-            transition: 'opacity 0.2s',
-            zIndex: 100
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-          onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.opacity = '0'; }}
-          title="Arraste para mover"
-        >
-          <GripHorizontal size={16} />
-        </div>
+        <Tooltip label="Arraste para mover">
+          <div
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            style={{
+              position: 'absolute',
+              top: '-15px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.5)',
+              borderRadius: '10px',
+              padding: '2px 10px',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-secondary)',
+              opacity: 0,
+              transition: 'opacity 0.2s',
+              zIndex: 100
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => { if (!isDragging) e.currentTarget.style.opacity = '0'; }}
+          >
+            <GripHorizontal size={16} />
+          </div>
+        </Tooltip>
       )}
 
       {/* Content Area */}
