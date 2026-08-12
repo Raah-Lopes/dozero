@@ -6,7 +6,7 @@ interface TooltipProps {
   description?: string;
   shortcut?: string;
   children: React.ReactElement;
-  position?: 'top' | 'bottom';
+  position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({ label, description, shortcut, children, position = 'top' }) => {

@@ -33,6 +33,18 @@
   top: calc(100% + 8px);
 }
 
+.tt-left {
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tt-right {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .tt-label {
   font-size: 12px;
   font-weight: 600;
@@ -60,6 +72,6 @@
 }
 
 @keyframes tt-fade {
-  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
