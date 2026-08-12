@@ -75,14 +75,13 @@ export function GMToolbar() {
     (window as any).__FOG_SHAPE__ = fogShape;
   }, [activeTool, fogMode, fogShape]);
 
-  const FlyoutGroup = ({ id, activeIcon, children, title, isGroupActive }: { id: string, activeIcon: React.ReactNode, children: React.ReactNode, title: string, isGroupActive: boolean }) => {
+  const FlyoutGroup = ({ id, activeIcon, children, title, isGroupActive, align = 'center' }: { id: string, activeIcon: React.ReactNode, children: React.ReactNode, title: string, isGroupActive: boolean, align?: 'top' | 'center' | 'bottom' }) => {
     const isOpen = activeSubmenu === id;
     
     const flyoutStyle: React.CSSProperties = {
       position: 'absolute',
       left: 'calc(100% + 12px)',
-      top: '50%',
-      transform: 'translateY(-50%)',
+      ...(align === 'top' ? { top: '0' } : align === 'bottom' ? { bottom: '0' } : { top: '50%', transform: 'translateY(-50%)' }),
       display: 'flex',
       flexDirection: 'column',
       gap: '4px',
@@ -171,6 +170,7 @@ export function GMToolbar() {
           <FlyoutGroup 
             id="map_tools" 
             title="Ferramentas do Mapa" 
+            align="top"
             isGroupActive={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser'].includes(activeTool as string)}
             activeIcon={
               activeTool === 'pan' ? <Hand size={20} /> :
