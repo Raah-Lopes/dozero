@@ -1,5 +1,5 @@
 import React from 'react';
-import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Layers, LayoutGrid, BookOpen, Film, MessageSquare, LogOut, Pin, Menu } from 'lucide-react';
+import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Layers, LayoutGrid, BookOpen, Film, MessageSquare, LogOut, Pin, Menu, Search } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
@@ -119,7 +119,7 @@ export function GMToolbar() {
            }} />
         </div>
         
-        <div style={flyoutStyle} onClick={(e) => { e.stopPropagation(); setActiveSubmenu(null); }}>
+        <div style={flyoutStyle} onClick={(e) => { e.stopPropagation(); setActiveSubmenu(null); }} className="gm-submenu">
           {children}
         </div>
       </div>
@@ -189,6 +189,12 @@ export function GMToolbar() {
         {activeFolder === 'root' && (
           <>
             {/* Hub & Nav Tools */}
+            <ToolButton 
+              icon={<Search size={20} />} 
+              active={false} 
+              onClick={() => window.dispatchEvent(new Event('open-command-palette'))} 
+              tooltip="Busca (Ctrl+K)"
+            />
             <ToolButton 
               icon={<LayoutGrid size={20} />} 
               active={activeModal === 'widgets'} 

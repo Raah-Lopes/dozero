@@ -325,6 +325,11 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
+.gm-submenu .gm-tool-label {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
 
 .hud-sidebar-trigger {
   position: absolute;
