@@ -1,27 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { LayoutGrid, BookOpen, MessageSquare, Dices, Grid, CloudFog, Ruler, Pin, PinOff, Menu as MenuIcon } from 'lucide-react';
+import React from 'react';
+import { LayoutGrid, BookOpen, MessageSquare, Dices, Grid } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
-import { Tooltip } from '../UI/Tooltip';
 
 export const MobileBottomNav: React.FC = () => {
-  const { viewMode, setViewMode, toggleWindow, openWindows, activeModal, setActiveModal, activeTool, setActiveTool } = useWindowManager();
+  const { viewMode, setViewMode, toggleWindow, openWindows, activeModal, setActiveModal } = useWindowManager();
 
   const isChatOpen = !!openWindows['chatWindow'];
   const isDiceOpen = !!openWindows['diceRoller'];
-
-  const [isPinned, setIsPinned] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  // Auto-collapse logic when not pinned
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (!isPinned && isExpanded) {
-      timeout = setTimeout(() => {
-        setIsExpanded(false);
-      }, 3500);
-    }
-    return () => clearTimeout(timeout);
-  }, [isPinned, isExpanded]);
 
   const navItems = [
     {
@@ -33,20 +18,6 @@ export const MobileBottomNav: React.FC = () => {
         setViewMode('canvas');
         if (activeModal !== 'none') setActiveModal('none');
       }
-    },
-    {
-      id: 'fog',
-      icon: CloudFog,
-      label: 'Fog',
-      active: activeTool === 'FOG',
-      action: () => setActiveTool(activeTool === 'FOG' ? 'CURSOR' : 'FOG')
-    },
-    {
-      id: 'ruler',
-      icon: Ruler,
-      label: 'Régua',
-      active: activeTool === 'RULER',
-      action: () => setActiveTool(activeTool === 'RULER' ? 'CURSOR' : 'RULER')
     },
     {
       id: 'wiki',
@@ -78,192 +49,176 @@ export const MobileBottomNav: React.FC = () => {
     }
   ];
 
-  const togglePin = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsPinned(!isPinned);
-    if (!isPinned) setIsExpanded(true);
-  };
+  // Find active index for indicator translation
+  const activeIndex = navItems.findIndex(item => item.active) === -1 ? 0 : navItems.findIndex(item => item.active);
 
   return (
-    <div 
-      className={`dock-navigation ${isExpanded ? 'expanded' : 'collapsed'}`}
-      onMouseEnter={() => !isPinned && setIsExpanded(true)}
-      onMouseLeave={() => !isPinned && setIsExpanded(false)}
-      onClick={() => !isExpanded && setIsExpanded(true)}
-    >
+    <div className="liquid-nav-container">
       <style>{`
-        .dock-navigation {
+        .liquid-nav-container {
           position: fixed;
-          bottom: 20px;
+          bottom: 15px;
           left: 50%;
           transform: translateX(-50%);
-          background: var(--primary-bg, rgba(15, 23, 42, 0.90));
+          z-index: 1000000;
+        }
+
+        .liquid-navigation {
+          position: relative;
+          width: 350px;
+          height: 70px;
+          background: rgba(15, 23, 42, 0.95);
           backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
           display: flex;
           justify-content: center;
           align-items: center;
           border-radius: 10px;
-          box-shadow: 0 15px 25px rgba(0,0,0,0.2);
-          border: 1px solid rgba(255,255,255,0.1);
-          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          z-index: 1000000;
-          overflow: hidden;
-        }
-        
-        .dock-navigation.expanded {
-          width: 400px;
-          max-width: 95vw;
-          height: 70px;
-          padding: 0 15px;
-          border-radius: 10px;
-        }
-        
-        .dock-navigation.collapsed {
-          width: 50px;
-          height: 50px;
-          border-radius: 25px;
-          cursor: pointer;
-          bottom: 15px;
+          box-shadow: 0 15px 25px rgba(0,0,0,0.5);
+          border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .dock-content {
+        .liquid-navigation ul {
           display: flex;
+          width: 350px;
+          padding: 0;
+          margin: 0;
+        }
+
+        .liquid-navigation ul li {
+          position: relative;
+          list-style: none;
+          width: 70px;
+          height: 70px;
+          z-index: 1;
+        }
+
+        .liquid-navigation ul li button {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
           width: 100%;
           height: 100%;
-          align-items: center;
-          justify-content: space-between;
-          opacity: 1;
-          transition: opacity 0.3s;
-          position: relative;
-        }
-
-        .dock-navigation.collapsed .dock-content {
-          opacity: 0;
-          pointer-events: none;
-          position: absolute;
-        }
-
-        .dock-collapsed-icon {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          opacity: 0;
-          transition: opacity 0.3s, transform 0.3s;
-          color: white;
-        }
-
-        .dock-navigation.collapsed .dock-collapsed-icon {
-          opacity: 1;
-          transform: translate(-50%, -50%) rotate(0deg);
-        }
-        .dock-navigation.expanded .dock-collapsed-icon {
-          transform: translate(-50%, -50%) rotate(180deg);
-        }
-
-        .dock-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          padding: 8px 4px;
+          text-align: center;
+          font-weight: 500;
           background: transparent;
           border: none;
-          color: rgba(255,255,255,0.5);
           cursor: pointer;
-          transition: all 0.2s;
-          border-radius: 12px;
-          flex: 1;
+        }
+
+        .liquid-navigation ul li button .icon {
           position: relative;
+          display: block;
+          transition: 0.5s;
+          color: rgba(255,255,255,0.6);
         }
 
-        .dock-item:hover {
-          color: white;
-          background: rgba(255,255,255,0.05);
-          transform: translateY(-2px);
+        .liquid-navigation ul li.active button .icon {
+          transform: translateY(-32px);
+          color: #0f172a;
         }
 
-        .dock-item.active {
-          color: var(--accent-primary, #3b82f6);
-        }
-
-        .dock-item.active::after {
-          content: '';
+        .liquid-navigation ul li button .text {
           position: absolute;
-          bottom: 0px;
-          width: 4px;
-          height: 4px;
-          background: var(--accent-primary, #3b82f6);
-          border-radius: 50%;
-        }
-
-        .dock-label {
-          font-size: 0.65rem;
+          color: #fff;
           font-weight: 600;
+          font-size: 0.65em;
+          letter-spacing: 0.05em;
+          transition: 0.5s;
+          opacity: 0;
+          transform: translateY(20px);
           text-transform: uppercase;
         }
 
-        .pin-btn {
+        .liquid-navigation ul li.active button .text {
+          opacity: 1;
+          transform: translateY(10px);
+        }
+
+        .liquid-indicator {
           position: absolute;
-          top: -2px;
-          right: -8px;
-          background: transparent;
-          border: none;
-          color: rgba(255,255,255,0.3);
-          cursor: pointer;
-          padding: 4px;
+          top: -50%;
+          width: 70px;
+          height: 70px;
+          background: #cbd5e1; /* Cinza azulado claro para destacar */
           border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: 0.2s;
+          border: 6px solid #141e30; /* Cor escura do fundo para imitar o body-bg */
+          transition: 0.5s;
+          left: 0; /* Starter position */
         }
-        .pin-btn:hover {
-          color: white;
-          background: rgba(255,255,255,0.1);
+
+        .liquid-indicator::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: -22px;
+          width: 20px;
+          height: 20px;
+          background: transparent;
+          border-top-right-radius: 20px;
+          box-shadow: 1px -10px 0 0 #141e30;
         }
-        .pin-btn.pinned {
-          color: #f59e0b;
+
+        .liquid-indicator::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          right: -22px;
+          width: 20px;
+          height: 20px;
+          background: transparent;
+          border-top-left-radius: 20px;
+          box-shadow: -1px -10px 0 0 #141e30;
+        }
+
+        @media (max-width: 380px) {
+          .liquid-navigation {
+            width: 320px;
+          }
+          .liquid-navigation ul {
+            width: 320px;
+          }
+          .liquid-navigation ul li {
+            width: 64px;
+          }
+          .liquid-indicator {
+            width: 64px;
+            height: 64px;
+            border-width: 5px;
+          }
+          .liquid-navigation ul li.active button .icon {
+            transform: translateY(-28px);
+          }
         }
       `}</style>
 
-      <div className="dock-collapsed-icon">
-        <MenuIcon size={22} />
-      </div>
-
-      <div className="dock-content">
-        {navItems.map(item => {
-          const Icon = item.icon;
-          return (
-            <Tooltip key={item.id} label={item.label} position="top">
-              <button
-                onClick={(e) => {
+      <div className="liquid-navigation">
+        <ul>
+          {navItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <li key={item.id} className={item.active ? 'active' : ''}>
+                <button onClick={(e) => {
                   e.stopPropagation();
                   item.action();
-                  if (!isPinned) setIsExpanded(false);
-                }}
-                className={`dock-item ${item.active ? 'active' : ''}`}
-              >
-                <Icon size={20} strokeWidth={item.active ? 2.5 : 2} />
-                <span className="dock-label" style={{ display: item.active ? 'block' : 'none' }}>
-                  {item.label}
-                </span>
-              </button>
-            </Tooltip>
-          );
-        })}
-        
-        <Tooltip label={isPinned ? "Desafixar menu" : "Fixar menu"} position="top">
-          <button 
-            className={`pin-btn ${isPinned ? 'pinned' : ''}`} 
-            onClick={togglePin}
-          >
-            {isPinned ? <Pin size={12} /> : <PinOff size={12} />}
-          </button>
-        </Tooltip>
+                }}>
+                  <span className="icon"><Icon size={24} strokeWidth={item.active ? 2.5 : 2} /></span>
+                  <span className="text">{item.label}</span>
+                </button>
+              </li>
+            );
+          })}
+          
+          <div 
+            className="liquid-indicator" 
+            style={{ 
+              transform: \`translateX(calc(\${100 * activeIndex}%))\` 
+            }}
+          ></div>
+        </ul>
       </div>
     </div>
   );
 };
+
