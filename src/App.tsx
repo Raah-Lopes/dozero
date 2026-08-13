@@ -37,6 +37,7 @@ import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps } from './store';
 import type { TensionClock } from './store';
+import { MobileBottomNav } from './components/HUD/MobileBottomNav';
 import { MobileQuickActions } from './components/HUD/MobileQuickActions';
 import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
 import { GlobalSearchModal } from './components/Modals/GlobalSearchModal';
@@ -415,6 +416,7 @@ function App() {
             </div>
           </div>
         )}
+        <MobileBottomNav />
         <MobileQuickActions />
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />

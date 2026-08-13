@@ -246,6 +246,15 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateX(calc(-100% + 12px));
 }
 
+@media (max-width: 768px) {
+  .hud-sidebar-container.collapsed {
+    transform: translateX(0);
+  }
+  .hud-sidebar-trigger {
+    display: none;
+  }
+}
+
 .hud-sidebar-container.collapsed:hover {
   transform: translateX(0);
 }

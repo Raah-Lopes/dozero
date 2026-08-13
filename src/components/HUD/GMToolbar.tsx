@@ -143,7 +143,7 @@ export function GMToolbar() {
 
   const isFog = activeTool === 'FOG';
 
-  const isExpanded = isPinned || isHovered || isMobile;
+  const isExpanded = (isPinned || isHovered) && !isMobile;
 
   return (
     <div 

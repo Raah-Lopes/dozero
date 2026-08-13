@@ -264,8 +264,18 @@ export const CommandPalette: React.FC = () => {
           
           @media (max-width: 768px) {
             .cmd-trigger-btn {
-              transform: translate(-50%, 0);
+              left: auto;
+              right: 15px;
+              top: 15px;
+              transform: none;
               color: white;
+              border-radius: 50%;
+              width: 48px;
+              height: 48px;
+              padding: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
               box-shadow: 0 5px 15px rgba(0,0,0,0.4);
             }
           }
