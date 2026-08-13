@@ -213,7 +213,7 @@ export const MobileBottomNav: React.FC = () => {
           <div 
             className="liquid-indicator" 
             style={{ 
-              transform: \`translateX(calc(\${100 * activeIndex}%))\` 
+              transform: `translateX(calc(${100 * activeIndex}%))` 
             }}
           ></div>
         </ul>
