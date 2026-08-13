@@ -234,20 +234,75 @@ h1, h2, h3, h4, h5, h6 {
   top: 0;
   left: 0;
   height: 100vh;
-  width: 64px;
+  width: 240px; /* expanded width */
   display: flex;
   flex-direction: column;
   z-index: 9999;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hud-sidebar-container.collapsed {
+  width: 64px;
   transform: translateX(calc(-100% + 12px));
 }
 
 .hud-sidebar-container.collapsed:hover {
   transform: translateX(0);
 }
+
+.hud-sidebar-container .tt-wrap {
+  width: 100%;
+}
+
+.gm-tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.gm-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.gm-tool-btn.active {
+  background: rgba(147, 51, 234, 0.2);
+  border-color: rgba(147, 51, 234, 0.5);
+  color: #c084fc;
+}
+
+.gm-tool-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+}
+
+.gm-tool-label {
+  margin-left: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hud-sidebar-container.collapsed .gm-tool-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
 
 .hud-sidebar-trigger {
   position: absolute;

@@ -456,36 +456,10 @@ function ToolButton({ icon, active, onClick, tooltip, small = false }: { icon: R
 
   return (
     <Tooltip label={label} shortcut={shortcut} position="right">
-      <button
-        onClick={onClick}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: small ? '32px' : '40px',
-          height: small ? '32px' : '40px',
-          borderRadius: '10px',
-          background: active ? 'rgba(147, 51, 234, 0.2)' : 'transparent',
-          border: `1px solid ${active ? 'rgba(147, 51, 234, 0.5)' : 'transparent'}`,
-          color: active ? '#c084fc' : 'rgba(255,255,255,0.7)',
-          cursor: 'pointer',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      onMouseEnter={(e) => {
-        if (!active) {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-          e.currentTarget.style.color = '#fff';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!active) {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
-        }
-      }}
-    >
-      {icon}
-    </button>
+      <button className={`gm-tool-btn ${active ? 'active' : ''}`} onClick={onClick}>
+        <div className="gm-tool-icon">{icon}</div>
+        <span className="gm-tool-label">{label}</span>
+      </button>
     </Tooltip>
   );
 }
