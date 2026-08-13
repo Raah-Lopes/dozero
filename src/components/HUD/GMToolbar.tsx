@@ -1,5 +1,5 @@
 import React from 'react';
-import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Layers, LayoutGrid, BookOpen, Film, MessageSquare, LogOut, Pin } from 'lucide-react';
+import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Layers, LayoutGrid, BookOpen, Film, MessageSquare, LogOut, Pin, Menu } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
@@ -20,8 +20,7 @@ export function GMToolbar() {
   const [fogMode, setLocalFogMode] = React.useState<'reveal' | 'hide'>('reveal');
   const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso' | 'eraser'>('brush');
   const [activeSubmenu, setActiveSubmenu] = React.useState<string | null>(null);
-  const [isPinned, setIsPinned] = React.useState(false);
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -143,13 +142,11 @@ export function GMToolbar() {
 
   const isFog = activeTool === 'FOG';
 
-  const isExpanded = (isPinned || isHovered) && !isMobile;
+  const isExpanded = isOpen;
 
   return (
     <div 
       className={`hud-sidebar-container ${isExpanded ? '' : 'collapsed'}`}
-      onMouseEnter={() => !isPinned && setIsHovered(true)}
-      onMouseLeave={() => !isPinned && setIsHovered(false)}
     >
       <div className="hud-glass" style={{
         flex: 1,
@@ -164,14 +161,28 @@ export function GMToolbar() {
         overflowY: 'visible',
         pointerEvents: 'auto',
       }}>
-        {/* Pin Button */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <ToolButton 
-            icon={<Pin size={16} />} 
-            active={isPinned} 
-            onClick={() => setIsPinned(!isPinned)} 
-            tooltip={isPinned ? "Desafixar Menu" : "Fixar Menu"} 
-          />
+        {/* Logo Details / Menu Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', height: '50px', position: 'relative', marginBottom: '8px', paddingLeft: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', opacity: isOpen ? 1 : 0, transition: 'opacity 0.3s', pointerEvents: isOpen ? 'auto' : 'none' }}>
+            <Layers size={24} color="var(--accent-primary)" />
+            <span style={{ color: 'white', fontWeight: 600, fontSize: '18px', marginLeft: '12px' }}>Menu DOZERO</span>
+          </div>
+          <button 
+            onClick={() => setIsOpen(!isOpen)}
+            style={{ 
+              position: 'absolute', 
+              right: isOpen ? '8px' : '50%', 
+              transform: isOpen ? 'none' : 'translateX(50%)', 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'white', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s' 
+            }}
+            title={isOpen ? "Recolher Menu" : "Expandir Menu"}
+          >
+            <Menu size={24} />
+          </button>
         </div>
         <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
 

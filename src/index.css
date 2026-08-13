@@ -255,6 +255,14 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+.hud-sidebar-container:not(.collapsed) .tt-popup {
+  display: none !important;
+}
+
+.hud-sidebar-container .tt-wrap {
+  width: 100%;
+}
+
 .hud-sidebar-container.collapsed:hover {
   transform: translateX(0);
 }
