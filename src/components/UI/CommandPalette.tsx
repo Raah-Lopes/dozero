@@ -75,6 +75,12 @@ export const CommandPalette: React.FC = () => {
     return () => document.removeEventListener('keydown', down);
   }, [search, page]);
 
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener('open-command-palette', handleOpen);
+    return () => window.removeEventListener('open-command-palette', handleOpen);
+  }, []);
+
   // Reset page when closing
   useEffect(() => {
     if (!open) {
@@ -213,90 +219,21 @@ export const CommandPalette: React.FC = () => {
 
   return (
     <>
-      {/* Botão Hover no Topo da Tela (mais seguro contra barras nativas do SO/Browser) */}
-      <div className="cmd-hover-area">
-        <Tooltip label="Paleta de Comandos (Ctrl+K)">
-          <button 
-            className="cmd-trigger-btn"
-            onClick={() => setOpen(true)}
-          >
-            <Search size={20} />
-          </button>
-        </Tooltip>
-      </div>
-
-      <style>
-        {`
-          .cmd-hover-area {
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 250px;
-            height: 15px; /* Área invisível que detecta o mouse no topo */
-            z-index: 999999;
-          }
-
-          .cmd-trigger-btn {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            background: rgba(15, 23, 42, 0.9);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-top: none;
-            border-radius: 0 0 16px 16px;
-            color: rgba(255,255,255,0.4);
-            padding: 0.3rem 2.5rem;
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            
-            /* Fica recolhido pra cima */
-            transform: translate(-50%, -100%);
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
-          }
-          
-          .cmd-hover-area:hover .cmd-trigger-btn {
-            /* Desce quando o mouse encosta na borda superior */
-            transform: translate(-50%, 0);
-            color: white;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
-          }
-          
-          @media (max-width: 768px) {
-            .cmd-trigger-btn {
-              left: auto;
-              right: 15px;
-              top: 15px;
-              transform: none;
-              color: white;
-              border-radius: 50%;
-              width: 48px;
-              height: 48px;
-              padding: 0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            }
-          }
-        `}
-      </style>
-
       {open && (
         <div className="cmd-overlay" onClick={() => setOpen(false)}>
           <style>
-            {`
-              .cmd-overlay {
-                position: fixed;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(4px);
-                display: flex;
-                align-items: flex-start;
-                justify-content: center;
-                padding-top: 15vh;
-                z-index: 9999999;
-              }
+        {`
+          .cmd-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 15vh;
+            z-index: 9999999;
+          }
               
               .cmd-dialog {
                 width: 100%;
