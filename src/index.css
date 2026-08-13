@@ -237,7 +237,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 240px; /* expanded width */
   display: flex;
   flex-direction: column;
-  z-index: 9999;
+  z-index: 9999999;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -272,14 +272,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gm-tool-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: #cbd5e1; /* cinza azulado mais claro */
+  color: #0f172a; /* letras escuras */
 }
 
 .gm-tool-btn.active {
-  background: rgba(147, 51, 234, 0.2);
-  border-color: rgba(147, 51, 234, 0.5);
-  color: #c084fc;
+  background: rgba(148, 163, 184, 0.25);
+  border-color: rgba(148, 163, 184, 0.5);
+  color: #94a3b8;
+}
+
+.gm-tool-btn.active:hover {
+  background: #cbd5e1;
+  color: #0f172a;
 }
 
 .gm-tool-icon {
