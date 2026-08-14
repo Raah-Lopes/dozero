@@ -616,7 +616,7 @@ export const GridToolbar: React.FC = () => {
           position: 'fixed',
           top: isMobile ? '70px' : '80px',
           bottom: 'auto',
-          left: '16px',
+          right: '16px',
           zIndex: 99999,
           width: isMobile ? '280px' : '250px',
           background: C.surfBg,
