@@ -293,7 +293,7 @@ export function GMToolbar() {
               icon={<Users size={20} />} 
               active={showActors} 
               onClick={toggleNPCPanel} 
-              tooltip="Entidades (NPCs)"
+              tooltip="Fichas & Tokens"
             />
 
             <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
