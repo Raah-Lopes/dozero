@@ -677,6 +677,14 @@ export const GridToolbar: React.FC = () => {
                     </button>
                   </Tooltip>
                 )}
+                <Tooltip label="Fechar">
+                  <button
+                    onClick={() => setShowLayersMenu(false)}
+                    style={{ background: 'transparent', border: 'none', color: C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  >
+                    <X size={16} />
+                  </button>
+                </Tooltip>
               </div>
             </div>
             

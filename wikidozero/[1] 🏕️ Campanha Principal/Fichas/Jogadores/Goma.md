@@ -1,5 +1,5 @@
 ---
-titulo: Goma
+titulo: Mr. Goma
 tipo: Monstro
 classe: Monge de Geleia
 raça: Slime Humanóide
@@ -92,12 +92,12 @@ imagem: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
 imageUrl: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
 energiaMax: 0
 nivel: 1
-nome: Goma
-title: Goma
-tokenShape: circle
-borderColor: '#5c5c5c'
+nome: Mr. Goma
+title: Mr. Goma
+tokenShape: square
+borderColor: '#ff00ae'
 showName: true
-sizeScale: 0.5
+sizeScale: 1
 hpBarMode: always
 ativo: true
 mana_max: 99
@@ -145,6 +145,10 @@ loja:
       quantidade: 1
       descricao: Causa dano de fogo em área a múltiplos alvos.
 ---
+
+
+
+
 
 
 

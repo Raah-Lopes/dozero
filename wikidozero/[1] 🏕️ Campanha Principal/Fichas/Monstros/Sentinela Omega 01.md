@@ -140,7 +140,12 @@ classe: ''
 borderColor: '#858200'
 hasVision: true
 Ouro: 5
+inCombat: true
+visionRadius: 200
 ---
+
+
+
 
 
 

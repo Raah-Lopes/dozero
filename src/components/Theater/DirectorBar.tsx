@@ -1,37 +1,38 @@
 // src/components/Theater/DirectorBar.tsx
-import React from 'react';
-import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, Bell } from 'lucide-react';
+import React, { useState } from 'react';
+import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, Bell, ChevronUp, ChevronDown } from 'lucide-react';
 import { setTheaterMood, setTheaterWeather, addTensionClock, addTheaterDiaryEntry, pushChatMessage, type MoodType, type WeatherType } from '../../store';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 import { Tooltip } from '../UI/Tooltip';
 
-const MOODS: { value: MoodType; label: string; emoji: string; color: string }[] = [
-  { value: 'neutral',   label: 'Neutro',   emoji: '○',  color: '#475569' },
-  { value: 'combat',    label: 'Combate',  emoji: '⚔',  color: '#ef4444' },
-  { value: 'suspense',  label: 'Suspense', emoji: '◉',  color: '#a855f7' },
-  { value: 'horror',    label: 'Horror',   emoji: '☠',  color: '#dc2626' },
-  { value: 'adventure', label: 'Aventura', emoji: '★',  color: '#f59e0b' },
-  { value: 'victory',   label: 'Vitória',  emoji: '✦',  color: '#10b981' },
-  { value: 'sadness',   label: 'Tristeza', emoji: '◆',  color: 'var(--text-secondary)' },
-  { value: 'mystery',   label: 'Mistério', emoji: '⬟',  color: '#8b5cf6' },
+const MOODS: { value: MoodType; label: string; emoji: string; color: string; description: string }[] = [
+  { value: 'neutral',   label: 'Neutro',   emoji: '○',  color: '#475569', description: 'Remove filtros visuais de cena' },
+  { value: 'combat',    label: 'Combate',  emoji: '⚔',  color: '#ef4444', description: 'Aplica tom vermelho e vinheta para alta tensão' },
+  { value: 'suspense',  label: 'Suspense', emoji: '◉',  color: '#a855f7', description: 'Atmosfera roxa profunda de mistério e alerta' },
+  { value: 'horror',    label: 'Horror',   emoji: '☠',  color: '#dc2626', description: 'Tela escura com baixo contraste para terror' },
+  { value: 'adventure', label: 'Aventura', emoji: '★',  color: '#f59e0b', description: 'Brilho dourado para momentos heróicos e exploração' },
+  { value: 'victory',   label: 'Vitória',  emoji: '✦',  color: '#10b981', description: 'Tons esverdeados e vibrantes de triunfo' },
+  { value: 'sadness',   label: 'Tristeza', emoji: '◆',  color: 'var(--text-secondary)', description: 'Remove saturação para uma cena melancólica' },
+  { value: 'mystery',   label: 'Mistério', emoji: '⬟',  color: '#8b5cf6', description: 'Filtro azul escuro com contraste investigativo' },
 ];
 
-const WEATHERS: { value: WeatherType; label: string; icon: React.ReactNode }[] = [
-  { value: 'clear',    label: 'Claro',      icon: <Sun size={11} /> },
-  { value: 'rain',     label: 'Chuva',      icon: <CloudRain size={11} /> },
-  { value: 'storm',    label: 'Tempestade', icon: '⛈' },
-  { value: 'fog',      label: 'Névoa',      icon: <Wind size={11} /> },
-  { value: 'snow',     label: 'Neve',       icon: <Snowflake size={11} /> },
-  { value: 'fire',     label: 'Fogo',       icon: <Flame size={11} /> },
-  { value: 'darkness', label: 'Escuridão',  icon: <Moon size={11} /> },
+const WEATHERS: { value: WeatherType; label: string; icon: React.ReactNode; description: string }[] = [
+  { value: 'clear',    label: 'Claro',      icon: <Sun size={11} />, description: 'Céu aberto, sem condições climáticas adversas' },
+  { value: 'rain',     label: 'Chuva',      icon: <CloudRain size={11} />, description: 'Efeito contínuo de gotas de chuva caindo' },
+  { value: 'storm',    label: 'Tempestade', icon: '⛈', description: 'Chuva pesada acompanhada de clarões de relâmpagos' },
+  { value: 'fog',      label: 'Névoa',      icon: <Wind size={11} />, description: 'Neblina espessa obscurecendo parte do fundo' },
+  { value: 'snow',     label: 'Neve',       icon: <Snowflake size={11} />, description: 'Flocos de neve caindo lentamente na tela' },
+  { value: 'fire',     label: 'Fogo',       icon: <Flame size={11} />, description: 'Brasas e faíscas incandescentes voando pelo ar' },
+  { value: 'darkness', label: 'Escuridão',  icon: <Moon size={11} />, description: 'Breu total que dificulta severamente a visão' },
 ];
 
 export const DirectorBar: React.FC = () => {
   const { goToNextScene, createScene, theaterData, selectedCastMemberId } = useSceneState();
   const { members } = useCastData();
   const selectedMember = members.find(m => m.caminhoArquivo === selectedCastMemberId);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const roll = (label: string, notation: string) => {
     const parts = notation.match(/(\d+)d(\d+)([+-]\d+)?/i);
@@ -86,12 +87,41 @@ export const DirectorBar: React.FC = () => {
   };
 
   return (
-    <div className="theater-cockpit">
+    <div style={{ position: 'relative', zIndex: 20 }}>
+      <button 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{
+          position: 'absolute',
+          top: '-24px',
+          right: '20px',
+          background: 'rgba(2,6,23,0.9)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderBottom: 'none',
+          borderRadius: '8px 8px 0 0',
+          color: 'rgba(255,255,255,0.6)',
+          padding: '2px 16px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backdropFilter: 'blur(10px)',
+          zIndex: 21,
+          transition: 'all 0.2s',
+          height: '24px'
+        }}
+        title={isCollapsed ? 'Expandir Menu do Diretor' : 'Recolher Menu'}
+        onMouseOver={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(15,23,42,1)'; }}
+        onMouseOut={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'rgba(2,6,23,0.9)'; }}
+      >
+        {isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
+
+      <div className="theater-cockpit" style={{ display: isCollapsed ? 'none' : 'flex' }}>
 
       {/* MOOD pills */}
       <span className="theater-cockpit-label">Atmosfera</span>
       {MOODS.map(m => (
-        <Tooltip key={m.value} label={m.label}>
+        <Tooltip key={m.value} label={m.label} description={m.description}>
           <button
             className={`theater-pill ${theaterData.mood === m.value ? 'active' : ''}`}
             style={theaterData.mood === m.value ? { color: m.color, borderColor: m.color, background: `${m.color}20` } : {}}
@@ -107,7 +137,7 @@ export const DirectorBar: React.FC = () => {
       {/* WEATHER pills */}
       <span className="theater-cockpit-label">Clima</span>
       {WEATHERS.map(w => (
-        <Tooltip key={w.value} label={w.label}>
+        <Tooltip key={w.value} label={w.label} description={w.description}>
           <button
             className={`theater-pill ${theaterData.weather === w.value ? 'active' : ''}`}
             style={theaterData.weather === w.value ? { color: '#38bdf8', borderColor: '#38bdf8', background: 'rgba(56,189,248,0.15)' } : {}}
@@ -122,11 +152,11 @@ export const DirectorBar: React.FC = () => {
 
       {/* QUICK DICE */}
       <span className="theater-cockpit-label">Dados</span>
-      <Tooltip label="Rola 1d20"><button className="theater-qbtn red"    onClick={() => roll('1d20', '1d20')}><Target size={11} /> 1d20</button></Tooltip>
-      <Tooltip label="Ataque +5"><button className="theater-qbtn orange" onClick={() => roll('Ataque', '1d20+5')}><Swords size={11} /> Atq</button></Tooltip>
-      <Tooltip label="Defesa +3"><button className="theater-qbtn blue"   onClick={() => roll('Defesa', '1d20+3')}><Shield size={11} /> Def</button></Tooltip>
-      <Tooltip label="Dano 2d6"><button className="theater-qbtn purple" onClick={() => roll('Dano', '2d6')}><Zap size={11} /> 2d6</button></Tooltip>
-      <Tooltip label="Dano 3d6"><button className="theater-qbtn amber"  onClick={() => roll('Dano', '3d6')}>🎲 3d6</button></Tooltip>
+      <Tooltip label="Rolagem Pura" description="Rola 1d20 sem nenhum modificador adicionado"><button className="theater-qbtn red"    onClick={() => roll('1d20', '1d20')}><Target size={11} /> 1d20</button></Tooltip>
+      <Tooltip label="Rolagem de Ataque" description="Rola 1d20 com bônus de combate (+5)"><button className="theater-qbtn orange" onClick={() => roll('Ataque', '1d20+5')}><Swords size={11} /> Atq</button></Tooltip>
+      <Tooltip label="Rolagem de Defesa" description="Rola 1d20 com bônus de reflexo (+3)"><button className="theater-qbtn blue"   onClick={() => roll('Defesa', '1d20+3')}><Shield size={11} /> Def</button></Tooltip>
+      <Tooltip label="Dano de Impacto" description="Calcula a soma de 2 dados de 6 faces"><button className="theater-qbtn purple" onClick={() => roll('Dano', '2d6')}><Zap size={11} /> 2d6</button></Tooltip>
+      <Tooltip label="Dano Massivo" description="Calcula a soma de 3 dados de 6 faces"><button className="theater-qbtn amber"  onClick={() => roll('Dano', '3d6')}>🎲 3d6</button></Tooltip>
 
       <div className="theater-cockpit-divider" />
 
@@ -134,21 +164,21 @@ export const DirectorBar: React.FC = () => {
       <span className="theater-cockpit-label" style={{ color: selectedMember ? '#10b981' : '#64748b' }}>
         {selectedMember ? `Alvo: ${selectedMember.nome.split(' ')[0]}` : 'Sem Alvo'}
       </span>
-      <Tooltip label="Cura 5 PV"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 5)}   ><Heart size={11} /> +5</button></Tooltip>
-      <Tooltip label="Cura 10 PV"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 10)}  ><Heart size={11} /> +10</button></Tooltip>
-      <Tooltip label="Dano 5 PV"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -5)}  ><Heart size={11} /> -5</button></Tooltip>
-      <Tooltip label="Dano 10 PV"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -10)} ><Heart size={11} /> -10</button></Tooltip>
-      <Tooltip label="Adiciona 5 Mana"><button className="theater-qbtn blue"   onClick={() => quickStat('mana', 5)}  ><Droplets size={11} /> +Mana</button></Tooltip>
-      <Tooltip label="Adiciona 50 XP"><button className="theater-qbtn amber"  onClick={() => quickStat('xp', 50)}><Star size={11} /> +XP</button></Tooltip>
+      <Tooltip label="Cura Leve" description="Restaura 5 Pontos de Vida ao NPC selecionado"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 5)}   ><Heart size={11} /> +5</button></Tooltip>
+      <Tooltip label="Cura Moderada" description="Restaura 10 Pontos de Vida ao NPC selecionado"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 10)}  ><Heart size={11} /> +10</button></Tooltip>
+      <Tooltip label="Ferimento Leve" description="Subtrai 5 Pontos de Vida do NPC selecionado"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -5)}  ><Heart size={11} /> -5</button></Tooltip>
+      <Tooltip label="Ferimento Grave" description="Subtrai 10 Pontos de Vida do NPC selecionado"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -10)} ><Heart size={11} /> -10</button></Tooltip>
+      <Tooltip label="Fôlego" description="Recupera 5 pontos de Mana/Energia ao NPC"><button className="theater-qbtn blue"   onClick={() => quickStat('mana', 5)}  ><Droplets size={11} /> +Mana</button></Tooltip>
+      <Tooltip label="Recompensa de Cena" description="Atribui 50 de experiência ao NPC/Aliado"><button className="theater-qbtn amber"  onClick={() => quickStat('xp', 50)}><Star size={11} /> +XP</button></Tooltip>
 
       <div className="theater-cockpit-divider" />
 
       {/* NARRATIVE */}
       <span className="theater-cockpit-label">Narrativa</span>
-      <Tooltip label="Criar Nova Cena"><button className="theater-qbtn purple" onClick={() => createScene()}><Film size={11} /> + Cena</button></Tooltip>
-      <Tooltip label="Avançar Cena"><button className="theater-qbtn blue"   onClick={goToNextScene}><ArrowRight size={11} /> Próxima</button></Tooltip>
-      <Tooltip label="Adicionar Relógio"><button className="theater-qbtn purple" onClick={addQuickClock}><Bell size={11} /> + Relógio</button></Tooltip>
-      <Tooltip label="Abrir biblioteca de cutscenes">
+      <Tooltip label="Nova Cena" description="Inicia uma página limpa na história para um novo contexto"><button className="theater-qbtn purple" onClick={() => createScene()}><Film size={11} /> + Cena</button></Tooltip>
+      <Tooltip label="Avançar Cena" description="Conclui o ato atual e passa para o próximo estágio"><button className="theater-qbtn blue"   onClick={goToNextScene}><ArrowRight size={11} /> Próxima</button></Tooltip>
+      <Tooltip label="Relógio de Tensão" description="Adiciona um relógio temporizador global para os jogadores"><button className="theater-qbtn purple" onClick={addQuickClock}><Bell size={11} /> + Relógio</button></Tooltip>
+      <Tooltip label="Biblioteca de Cutscenes" description="Projete imagens cinematográficas flutuantes sobre a mesa">
         <button
           className="theater-qbtn purple"
           style={{ boxShadow: '0 0 8px rgba(168,85,247,0.3)' }}
@@ -157,6 +187,7 @@ export const DirectorBar: React.FC = () => {
           🎬 Cutscenes
         </button>
       </Tooltip>
+      </div>
     </div>
   );
 };

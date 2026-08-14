@@ -23,7 +23,7 @@ tags:
   - slime
   - lutador
   - capoeirista
-ativo: true
+ativo: false
 origem: Pântano dos Ecos Perdidos
 Localizacao: Algum vilarejo costeiro, treinando.
 HP: 24
@@ -141,6 +141,7 @@ ouro: 145
 Ouro: 145
 hasVision: true
 ---
+
 
 
 

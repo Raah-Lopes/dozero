@@ -547,8 +547,8 @@ export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClos
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
         
         {/* CABEÇALHO DO ARSENAL */}
-        <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '250px' }}>
             <Sword size={22} style={{ color: 'var(--warning)' }} />
             <div>
               <h3 style={{ margin: 0, fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Arsenal de Mesa do Narrador</h3>
@@ -557,7 +557,7 @@ export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClos
           </div>
           
           {/* Seletor de Ficha do Personagem */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', flex: '1 1 auto' }}>
             <button 
               onClick={() => setShowCreateChar(!showCreateChar)}
               style={{ background: 'rgba(var(--success-rgb, 16,185,129), 0.2)', border: '1px solid #10b981', color: 'var(--success)', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
@@ -579,7 +579,8 @@ export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClos
                 padding: '6px 12px',
                 fontSize: '0.8rem',
                 outline: 'none',
-                minWidth: '220px'
+                minWidth: '150px',
+                flex: 1
               }}
             >
               <option value="">-- Escolha um Personagem --</option>
@@ -593,10 +594,10 @@ export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClos
         </div>
 
         {/* CONTAINER DO WIDGET */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', overflowY: 'auto', overflowX: 'hidden' }}>
           
           {/* PAINEL ESQUERDO: SELEÇÃO & CONTROLE RÁPIDO */}
-          <div style={{ width: '380px', borderRight: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '15px' }}>
+          <div style={{ flex: '1 1 300px', maxWidth: '100%', borderRight: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '15px' }}>
             {selectedChar ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 
@@ -831,10 +832,10 @@ export const ArsenalMestreWidget: React.FC<ArsenalMestreWidgetProps> = ({ onClos
           </div>
 
           {/* PAINEL DIREITO: CATÁLOGO VISUAL DE ITENS E DISTRIBUIDOR */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-tertiary)', position: 'relative' }}>
+          <div style={{ flex: '1 1 300px', maxWidth: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-tertiary)', position: 'relative' }}>
             
             {/* Navegação de Categorias do Catálogo */}
-            <div style={{ display: 'flex', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '6px', background: 'var(--bg-tertiary)', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '6px', background: 'var(--bg-tertiary)', alignItems: 'center' }}>
               {[
                 { label: 'Todos', val: 'todos' },
                 { label: '⚔️ Armas', val: 'arma' },

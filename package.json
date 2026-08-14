@@ -2,7 +2,7 @@
   "name": "dozero",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "version": "0.1.0",
   "type": "module",

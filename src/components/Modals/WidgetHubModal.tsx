@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Star } from 'lucide-react';
 import { WIDGET_REGISTRY } from '../../constants/widgetRegistry';
+import { Tooltip } from '../UI/Tooltip';
 
 interface Props {
   onClose: () => void;
@@ -274,9 +275,11 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                 const Icon = w.icon;
                 return (
                   <div className="widget-item" key={`fav-${w.id}`} style={{ position: 'relative' }}>
-                    <button onClick={w.action} title={w.title} className={`widget-btn ${w.theme}`} style={w.shadow ? { boxShadow: w.shadow } : {}}>
-                      <Icon size={30} />
-                    </button>
+                    <Tooltip label={w.title} description={w.description} position="bottom">
+                      <button onClick={w.action} className={`widget-btn ${w.theme}`} style={w.shadow ? { boxShadow: w.shadow } : {}}>
+                        <Icon size={30} />
+                      </button>
+                    </Tooltip>
                     <button onClick={(e) => toggleFavorite(w.id, e)} style={{ position: 'absolute', top: 0, right: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#fbbf24' }} title="Remover dos favoritos">
                       <Star size={11} fill="#fbbf24" />
                     </button>
@@ -301,14 +304,15 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                   const isFav = favorites.includes(w.id);
                   return (
                     <div className="widget-item" key={w.id} style={{ position: 'relative' }}>
-                      <button 
-                        onClick={w.action} 
-                        title={w.title} 
-                        className={`widget-btn ${w.theme}`} 
-                        style={w.shadow ? { boxShadow: w.shadow } : {}}
-                      >
-                        <Icon size={30} />
-                      </button>
+                      <Tooltip label={w.title} description={w.description} position="bottom">
+                        <button 
+                          onClick={w.action} 
+                          className={`widget-btn ${w.theme}`} 
+                          style={w.shadow ? { boxShadow: w.shadow } : {}}
+                        >
+                          <Icon size={30} />
+                        </button>
+                      </Tooltip>
                       <button
                         onClick={(e) => toggleFavorite(w.id, e)}
                         style={{

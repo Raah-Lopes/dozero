@@ -367,7 +367,9 @@ function App() {
 
         <WidgetLayer />
 
-        <PlayerQuickBar playerName={localStorage.getItem('dozero_player_name') || 'Jogador'} />
+        {viewMode !== 'theater' && viewMode !== 'wiki' && (
+          <PlayerQuickBar playerName={localStorage.getItem('dozero_player_name') || 'Jogador'} />
+        )}
 
         {/* WidgetHubModal */}
         {activeModal === 'widgets' && (
@@ -416,8 +418,12 @@ function App() {
             </div>
           </div>
         )}
-        <MobileBottomNav />
-        <MobileQuickActions />
+        {viewMode !== 'theater' && viewMode !== 'wiki' && (
+          <>
+            <MobileBottomNav />
+            <MobileQuickActions />
+          </>
+        )}
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
       </>
