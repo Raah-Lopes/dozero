@@ -276,6 +276,7 @@ export function GMToolbar() {
               active={activeTool === 'RULER'} 
               onClick={() => { setActiveTool('RULER'); setActiveSubmenu(null); }} 
               tooltip="Régua de Medição"
+            />
             <ToolButton 
               icon={<Layers size={20} />} 
               active={false} 
