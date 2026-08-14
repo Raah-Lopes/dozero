@@ -1,10 +1,11 @@
 import React from 'react';
-import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Layers, LayoutGrid, BookOpen, Film, MessageSquare, LogOut, Pin, Menu, Search } from 'lucide-react';
+import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
 import { setActiveTool as setGlobalActiveTool, setFogMode as setGlobalFogMode, localState } from '../../store';
 import { Tooltip } from '../UI/Tooltip';
+import { toast } from '../UI/Toast';
 import type { FogConfig } from '../../store/modules/configModule';
 
 export function GMToolbar() {
@@ -21,6 +22,25 @@ export function GMToolbar() {
   const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso' | 'eraser'>('brush');
   const [activeSubmenu, setActiveSubmenu] = React.useState<string | null>(null);
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSyncing, setIsSyncing] = React.useState(false);
+
+  const handleSyncCloud = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/wiki/sync-cloud', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success(data.message || 'Sincronizado com sucesso!');
+    } catch (e: any) {
+      toast.error("Erro ao sincronizar: " + e.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.');
 
   React.useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -272,10 +292,54 @@ export function GMToolbar() {
               tooltip="Camadas (Layers)"
             />
             <ToolButton 
-              icon={<Settings size={20} />} 
+              icon={<Settings2 size={20} />} 
               active={false} 
               onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} 
               tooltip="Configurações do Mapa"
+            />
+
+            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+            
+            <ToolButton 
+              icon={<Users size={20} />} 
+              active={activeModal === 'players'} 
+              onClick={() => setActiveModal('players')} 
+              tooltip="Convidar Jogadores"
+            />
+            <ToolButton 
+              icon={<MessageSquare size={20} />} 
+              active={openWindows.chatWindow} 
+              onClick={() => toggleWindow('chatWindow')} 
+              tooltip="Chat P2P"
+            />
+            <ToolButton 
+              icon={<Dices size={20} />} 
+              active={openWindows.combatLog} 
+              onClick={() => toggleWindow('combatLog')} 
+              tooltip="Registro de Rolagens"
+            />
+
+            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+
+            <ToolButton 
+              icon={<Settings size={20} />} 
+              active={activeModal === 'settings'} 
+              onClick={() => setActiveModal('settings')} 
+              tooltip="Configurações Globais"
+            />
+            {isLocalhost && (
+              <ToolButton 
+                icon={<CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />} 
+                active={false} 
+                onClick={handleSyncCloud} 
+                tooltip={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem (Vercel)"}
+              />
+            )}
+            <ToolButton 
+              icon={<LogOut size={20} />} 
+              active={false} 
+              onClick={() => window.location.href = '/'} 
+              tooltip="Sair"
             />
           </>
         )}
