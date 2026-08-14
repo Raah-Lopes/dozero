@@ -276,15 +276,6 @@ export function GMToolbar() {
               active={activeTool === 'RULER'} 
               onClick={() => { setActiveTool('RULER'); setActiveSubmenu(null); }} 
               tooltip="Régua de Medição"
-            />
-          </FlyoutGroup>
-            <ToolButton 
-              icon={<Users size={20} />} 
-              active={showActors} 
-              onClick={toggleNPCPanel} 
-              tooltip="Entidades (NPCs)"
-            />
-            
             <ToolButton 
               icon={<Layers size={20} />} 
               active={false} 
@@ -296,6 +287,13 @@ export function GMToolbar() {
               active={false} 
               onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} 
               tooltip="Configurações do Mapa"
+            />
+          </FlyoutGroup>
+            <ToolButton 
+              icon={<Users size={20} />} 
+              active={showActors} 
+              onClick={toggleNPCPanel} 
+              tooltip="Entidades (NPCs)"
             />
 
             <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
