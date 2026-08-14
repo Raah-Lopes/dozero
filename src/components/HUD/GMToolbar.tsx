@@ -265,67 +265,18 @@ export function GMToolbar() {
               tooltip="Entidades (NPCs)"
             />
             
-            <FlyoutGroup 
-              id="social" 
-              title="Social & Jogadores" 
-              align="top"
-              isGroupActive={activeModal === 'players' || openWindows.chatWindow || openWindows.combatLog}
-              activeIcon={<MessageSquare size={20} />}
-            >
-              <ToolButton 
-                icon={<Users size={20} />} 
-                active={activeModal === 'players'} 
-                onClick={() => setActiveModal('players')} 
-                tooltip="Convidar Jogadores"
-              />
-              <ToolButton 
-                icon={<MessageSquare size={20} />} 
-                active={openWindows.chatWindow} 
-                onClick={() => toggleWindow('chatWindow')} 
-                tooltip="Chat P2P"
-              />
-              <ToolButton 
-                icon={<MessageSquare size={20} />} 
-                active={openWindows.combatLog} 
-                onClick={() => toggleWindow('combatLog')} 
-                tooltip="Registro de Rolagens"
-              />
-            </FlyoutGroup>
-
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-
-            <FlyoutGroup 
-              id="system" 
-              title="Sistema" 
-              align="bottom"
-              isGroupActive={activeModal === 'settings'}
-              activeIcon={<Settings size={20} />}
-            >
-              <ToolButton 
-                icon={<Settings size={20} />} 
-                active={activeModal === 'settings'} 
-                onClick={() => setActiveModal('settings')} 
-                tooltip="Configurações Globais"
-              />
-              <ToolButton 
-                icon={<Settings size={20} />} 
-                active={false} 
-                onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} 
-                tooltip="Configurações do Mapa"
-              />
-              <ToolButton 
-                icon={<Layers size={20} />} 
-                active={false} 
-                onClick={() => window.dispatchEvent(new Event('toggle-layers-menu'))} 
-                tooltip="Camadas (Layers)"
-              />
-              <ToolButton 
-                icon={<LogOut size={20} />} 
-                active={false} 
-                onClick={() => window.location.href = '/'} 
-                tooltip="Sair"
-              />
-            </FlyoutGroup>
+            <ToolButton 
+              icon={<Layers size={20} />} 
+              active={false} 
+              onClick={() => window.dispatchEvent(new Event('toggle-layers-menu'))} 
+              tooltip="Camadas (Layers)"
+            />
+            <ToolButton 
+              icon={<Settings size={20} />} 
+              active={false} 
+              onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} 
+              tooltip="Configurações do Mapa"
+            />
           </>
         )}
 

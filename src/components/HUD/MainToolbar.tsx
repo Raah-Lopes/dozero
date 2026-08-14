@@ -133,40 +133,7 @@ export function MainToolbar() {
 
   // Desktop Render
   return (
-    <div className="hud-top-area">
-      {/* Left side: Navigation & Hub */}
-      <div className="hud-hub-btn" style={{ gap: '0.5rem' }}>
-        <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem' }}>
-          <Tooltip label="Menu Geral" description="Hub de Ferramentas" position="bottom">
-            <button
-              className={`btn-icon theme-purple ${activeModal === 'widgets' ? 'active' : ''}`}
-              onClick={(e) => { e.stopPropagation(); setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets'); }}
-              aria-label="Abrir Menu Geral"
-            >
-              <LayoutGrid size={20} />
-            </button>
-          </Tooltip>
-        </div>
-
-        <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
-          <Tooltip label="Wiki da Campanha" position="bottom">
-            <button onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} className={`btn-icon theme-cyan ${viewMode === 'wiki' ? 'active' : ''}`} aria-label="Abrir Wiki da Campanha">
-              <BookOpen size={20} />
-            </button>
-          </Tooltip>
-          <Tooltip label="Teatro da Mente" position="bottom">
-            <button onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} className={`btn-icon theme-violet ${viewMode === 'theater' ? 'active' : ''}`} aria-label="Abrir Teatro da Mente">
-              <Film size={20} />
-            </button>
-          </Tooltip>
-          <Tooltip label="Pesquisa Global" shortcut="Ctrl+K" position="bottom">
-            <button onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))} className="btn-icon theme-amber" aria-label="Abrir Pesquisa Global">
-              <Search size={20} />
-            </button>
-          </Tooltip>
-        </div>
-      </div>
-
+    <div className="hud-top-area" style={{ justifyContent: 'flex-end' }}>
       {/* Right side: Social & System */}
       <div className="hud-tools-bar">
         <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
