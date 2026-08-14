@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload, LogOut
+  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload, LogOut, Dices
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
@@ -149,7 +149,7 @@ export function MainToolbar() {
           </Tooltip>
           <Tooltip label="Registro de Rolagens" description="Log" position="bottom">
             <button className={`btn-icon theme-red ${openWindows.combatLog ? 'active' : ''}`} onClick={() => toggleWindow('combatLog')} aria-label="Abrir Registro de Rolagens">
-              <MessageSquare size={20} />
+              <Dices size={20} />
             </button>
           </Tooltip>
         </div>
