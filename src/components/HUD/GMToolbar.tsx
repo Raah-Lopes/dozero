@@ -400,15 +400,8 @@ export function GMToolbar() {
 
           <div style={{ width: isMobile ? '1px' : '100%', height: isMobile ? '100%' : '1px', background: 'rgba(255,255,255,0.1)', margin: isMobile ? '0 4px' : '4px 0' }} />
           
-          <FlyoutGroup 
-            id="global" 
-            title="Controles Globais" 
-            isGroupActive={false}
-            activeIcon={<RefreshCcw size={20} />}
-          >
-            <ToolButton icon={<RefreshCcw size={20} />} active={false} onClick={() => FogOfWar.clear()} tooltip="Resetar FOG" />
-            <ToolButton icon={fogConfig.enabled ? <EyeOff size={20} color="#ef4444" /> : <Eye size={20} color="#10b981" />} active={false} onClick={() => Config.updateFog({ enabled: !fogConfig.enabled })} tooltip={fogConfig.enabled ? "Desativar FOG Global" : "Ativar FOG Global"} />
-          </FlyoutGroup>
+          <ToolButton icon={<RefreshCcw size={20} />} active={false} onClick={() => FogOfWar.clear()} tooltip="Resetar FOG" />
+          <ToolButton icon={fogConfig.enabled ? <EyeOff size={20} color="#ef4444" /> : <Eye size={20} color="#10b981" />} active={false} onClick={() => Config.updateFog({ enabled: !fogConfig.enabled })} tooltip={fogConfig.enabled ? "Desativar FOG Global" : "Ativar FOG Global"} />
         </>
       )}
       </div>
