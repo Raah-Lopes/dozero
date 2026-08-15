@@ -158,14 +158,7 @@ function App() {
         </div>
       )}
 
-      {viewMode === 'theater' && (
-        <div className="exit-door-container-left">
-          <button onClick={() => setViewMode('canvas')} className="glass-panel exit-door-btn-hoverable">
-            <DoorOpen size={20} color="var(--accent-primary)" className="exit-icon" />
-            <span className="exit-text">Painel Principal</span>
-          </button>
-        </div>
-      )}
+
 
       {/* PÁGINA DA MESA (HUD + MAPA) */}
       <div className={`view-layer canvas-layer-container ${viewMode === 'canvas' ? 'active' : ''}`}>

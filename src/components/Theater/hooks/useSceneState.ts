@@ -10,20 +10,30 @@ import {
   addTheaterDiaryEntry,
   type TheaterStateData,
   type TheaterScene,
-    type MoodType,
-    type WeatherType,
-    type TimeOfDay,
+  type MoodType,
+  type WeatherType,
+  type TimeOfDay,
   type TheaterObjective,
+  type TheaterNpcPresentation,
 } from '../../../store';
+import { indexeddbProvider } from '../../../services/yjs';
 
 export function useSceneState() {
   const [theaterData, setTheaterData] = useState<TheaterStateData>(getTheaterState);
 
-  // Observe Yjs changes
+  // Observe Yjs & IndexedDB changes
   useEffect(() => {
     const handler = () => setTheaterData(getTheaterState());
     state.theater.observe(handler);
-    return () => state.theater.unobserve(handler);
+    
+    // When indexedDB sync finishes, reload fresh state
+    const onSynced = () => setTheaterData(getTheaterState());
+    indexeddbProvider.on('synced', onSynced);
+
+    return () => {
+      state.theater.unobserve(handler);
+      indexeddbProvider.off('synced', onSynced);
+    };
   }, []);
 
   const currentScene = theaterData.scenes.find(s => s.id === theaterData.currentSceneId) || null;
@@ -185,6 +195,9 @@ export function useSceneState() {
     weather: theaterData.weather,
     timeOfDay: theaterData.timeOfDay,
     diaryEntries: theaterData.diaryEntries,
+    globalAssets: theaterData.globalAssets || [],
+    activeNpc: theaterData.activeNpc || null,
+    setActiveNpc: (npc: TheaterNpcPresentation | null) => updateTheaterState({ activeNpc: npc }),
     enemies: theaterData.enemies,
     castConditions: theaterData.castConditions,
     selectedCastMemberId: theaterData.selectedCastMemberId,

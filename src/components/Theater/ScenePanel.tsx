@@ -236,9 +236,8 @@ export const ScenePanel: React.FC = () => {
   const visibleObjectives = currentScene.objectives.filter(o => showSecretObjs || !o.secret);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '0', overflowY: 'auto' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'min-content', flexShrink: 0 }}>
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'min-content', flexShrink: 0 }}>
+    <div className="scene-panel">
+      <div className="scene-panel-inner">
       {/* Top toolbar */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
         <button
@@ -358,9 +357,9 @@ export const ScenePanel: React.FC = () => {
       </div>
 
       {/* Mood & Weather & Audio & Transition controls */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+      <div className="scene-panel-controls">
         <div style={{ flex: 1, minWidth: '120px' }}>
-          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '6px' }}>Atmosfera</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '4px' }}>Atmosfera</label>
           <select
             value={mood}
             onChange={e => setTheaterMood(e.target.value as MoodType)}
@@ -370,41 +369,41 @@ export const ScenePanel: React.FC = () => {
           </select>
         </div>
         <div>
-          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '6px' }}>Clima</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '4px' }}>Clima</label>
           <div style={{ display: 'flex', gap: '4px' }}>
             {WEATHERS.map(w => (
-              <button key={w.value} onClick={() => setTheaterWeather(w.value)} title={w.value} style={{ padding: '6px 8px', borderRadius: '6px', background: weather === w.value ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${weather === w.value ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.06)'}`, cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s' }}>
+              <button key={w.value} onClick={() => setTheaterWeather(w.value)} title={w.value} style={{ padding: '6px 8px', borderRadius: '6px', background: weather === w.value ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${weather === w.value ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.06)'}`, cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {w.label}
               </button>
             ))}
           </div>
         </div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Transição de Cena</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '120px' }}>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '0' }}>Transição de Cena</label>
           <select
             value={currentScene.transitionType || 'fade'}
             onChange={e => patchCurrentScene({ transitionType: e.target.value as any })}
             style={{ width: '100%', padding: '6px 10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0', fontSize: '0.8rem', cursor: 'pointer' }}
           >
-            <option value="none">Corte Seco (Nenhuma)</option>
-            <option value="fade">Fade to Black</option>
-            <option value="wipe">Cortina Wipe</option>
+            <option value="none">Corte Seco</option>
+            <option value="fade">Fade</option>
+            <option value="wipe">Wipe</option>
           </select>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '2px' }}>Áudio Vinculado</label>
+          <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)', display: 'block', marginBottom: '0' }}>Áudio Vinculado</label>
           <button
             onClick={linkAudioToScene}
-            style={{ padding: '6px 12px', background: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)', border: `1px solid ${(currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '8px', color: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? '#6ee7b7' : '#cbd5e1', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '6px 12px', background: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)', border: `1px solid ${(currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '8px', color: (currentScene.musicPresetId || currentScene.ambiencePresetId) ? '#6ee7b7' : '#cbd5e1', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', height: '100%' }}
           >
-            <Music size={14} /> {(currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'Áudio Salvo' : 'Vincular Som Atual'}
+            <Music size={14} /> {(currentScene.musicPresetId || currentScene.ambiencePresetId) ? 'Salvo' : 'Vincular Atual'}
           </button>
         </div>
       </div>
       {/* Description */}
-      <div style={{ marginBottom: '16px' }}>
+      <div className="scene-panel-description">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Descrição Narrativa</label>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -441,28 +440,13 @@ export const ScenePanel: React.FC = () => {
         )}
       </div>
 
-      {/* Estilos específicos para hover dos cards */}
-      <style>{`
-        .asset-card-hover:hover .asset-actions {
-          opacity: 1 !important;
-        }
-        .asset-card-hover:hover {
-          transform: scale(1.03);
-          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3) !important;
-          border-color: rgba(255,255,255,0.4) !important;
-        }
-        .asset-card-add-hover:hover {
-          background: rgba(255,255,255,0.05) !important;
-          border-color: rgba(168,85,247,0.4) !important;
-          color: rgba(255,255,255,0.7) !important;
-        }
-      `}</style>
+
 
       {/* Painel de Missões (Quest Board) */}
       <QuestLog />
 
-            {/* Elementos Visuais */}
-      <div style={{ marginBottom: '20px', marginTop: '4px' }}>
+      {/* Elementos Visuais */}
+      <div className="scene-panel-assets">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <label style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>Elementos Visuais</label>
           <button
@@ -1125,7 +1109,6 @@ export const ScenePanel: React.FC = () => {
           </div>
         );
       })()}
-    </div>
       </div>
     </div>
   );

@@ -78,49 +78,138 @@
 .theater-topbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 200px; /* 200px padding left and right to clear MainToolbar */
-  background: linear-gradient(to bottom, rgba(2,6,23,0.92) 0%, transparent 100%);
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  background: linear-gradient(to bottom, rgba(4, 8, 20, 0.95) 0%, rgba(4, 8, 20, 0.4) 70%, transparent 100%);
   height: 52px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.theater-topbar-left,
+.theater-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
-@media (max-width: 900px) {
-  .theater-topbar {
-    padding: 8px 60px; /* reduce padding on smaller screens */
-  }
-  .theater-topbar-title {
-    display: none; /* hide title to make space for buttons */
-  }
+.theater-topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 50%;
+  min-width: 0;
 }
 
-@media (max-width: 600px) {
-  .theater-topbar {
-    padding: 8px 10px; /* Reduced to fit mobile screens and not overlap hamburger */
-    padding-left: 60px; /* Leave space for hamburger menu */
-    overflow-x: auto;
-    white-space: nowrap;
-  }
+.theater-topbar-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 4px;
 }
 
-.theater-topbar-title {
-  flex: 1;
-  text-align: center;
-  font-size: 0.8rem;
+/* Exit button */
+.theater-exit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #f1f5f9;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
+  font-family: var(--font-display, 'Outfit', sans-serif);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.theater-exit-btn:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #a855f7;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Director trigger button */
+.theater-director-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.theater-director-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.theater-director-btn.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: rgba(168, 85, 247, 0.6);
+  color: #c084fc;
+}
+
+/* Center Scene title box */
+.theater-topbar-title-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  max-width: 320px;
+  overflow: hidden;
+}
+
+.theater-topbar-title-box:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.theater-topbar-title-text {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #e2e8f0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 8px;
-  cursor: pointer;
-  transition: color 0.2s;
 }
 
-.theater-topbar-title:hover {
-  color: white;
+.theater-topbar-sub-text {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .theater-exit-btn-text,
+  .theater-director-btn span,
+  .theater-topbar-sub-text {
+    display: none;
+  }
 }
 
 /* Pill buttons (mood/weather) */
@@ -198,58 +287,288 @@
   pointer-events: auto;
 }
 
-/* NPC Portrait — appears center or right */
-.theater-npc-portrait {
+/* ==========================================================================
+   THEATER CHARACTER STAGE PRESENTATION (Destaque Central & Lateral)
+   ========================================================================== */
+.theater-npc-stage-wrapper {
   position: absolute;
-  bottom: 0;
-  right: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
   pointer-events: auto;
-  animation: npcSlideIn 0.4s cubic-bezier(0.4,0,0.2,1);
+  z-index: 9990;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: npcStageEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes npcSlideIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes npcStageEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.92);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
-.theater-npc-portrait-img {
-  width: 120px;
-  height: 160px;
+/* Center Stage Alignment */
+.theater-npc-stage-wrapper.center {
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+}
+
+/* Side Stage Alignment */
+.theater-npc-stage-wrapper.side {
+  right: 24px;
+  bottom: 8px;
+  transform: translateX(0);
+}
+
+/* Atmospheric Behind Glow */
+.theater-npc-stage-glow {
+  position: absolute;
+  inset: -20% -30%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(28px);
+  border-radius: 50%;
+  animation: pulseGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0%   { opacity: 0.5; transform: scale(0.95); }
+  100% { opacity: 0.9; transform: scale(1.06); }
+}
+
+/* Toolbar Controls */
+.theater-npc-stage-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  background: rgba(10, 15, 30, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 4px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+}
+
+.theater-npc-stage-wrapper:hover .theater-npc-stage-toolbar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theater-npc-tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.theater-npc-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.theater-npc-tool-btn.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+  color: #c084fc;
+}
+
+.theater-npc-tool-btn.close:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #f87171;
+}
+
+/* Speech Bubble */
+.theater-npc-speech-bubble {
+  position: relative;
+  max-width: 380px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  animation: fadeIn 0.2s ease;
+}
+
+.theater-npc-dialogue-text {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #f1f5f9;
+  line-height: 1.4;
+  cursor: pointer;
+  text-align: center;
+}
+
+.theater-npc-dialogue-edit {
+  display: flex;
+  gap: 6px;
+}
+
+.theater-npc-dialogue-edit input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #fff;
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.theater-npc-dialogue-edit button {
+  background: #a855f7;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0 8px;
+  cursor: pointer;
+}
+
+.theater-npc-speech-tail {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 6px;
+  background: rgba(15, 23, 42, 0.92);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+/* Character Main Frame */
+.theater-npc-stage-card {
+  position: relative;
+  background: rgba(8, 12, 24, 0.88);
+  backdrop-filter: blur(14px);
+  border: 2px solid rgba(168, 85, 247, 0.4);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(168, 85, 247, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scale Sizes */
+.theater-npc-stage-wrapper.normal .theater-npc-stage-card {
+  width: 200px;
+}
+.theater-npc-stage-wrapper.normal .theater-npc-stage-img,
+.theater-npc-stage-wrapper.normal .theater-npc-stage-placeholder {
+  height: 240px;
+}
+
+.theater-npc-stage-wrapper.large .theater-npc-stage-card {
+  width: min(320px, 80vw);
+}
+.theater-npc-stage-wrapper.large .theater-npc-stage-img,
+.theater-npc-stage-wrapper.large .theater-npc-stage-placeholder {
+  height: min(400px, 48vh);
+}
+
+.theater-npc-stage-wrapper.epic .theater-npc-stage-card {
+  width: min(420px, 88vw);
+}
+.theater-npc-stage-wrapper.epic .theater-npc-stage-img,
+.theater-npc-stage-wrapper.epic .theater-npc-stage-placeholder {
+  height: min(520px, 60vh);
+}
+
+/* Character Image */
+.theater-npc-stage-img {
+  width: 100%;
   object-fit: cover;
-  border-radius: 12px 12px 0 0;
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+  object-position: top center;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.theater-npc-stage-card:hover .theater-npc-stage-img {
+  transform: scale(1.02);
 }
 
-.theater-npc-portrait-img-placeholder {
-  width: 120px;
-  height: 160px;
-  border-radius: 12px 12px 0 0;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(15,23,42,0.8);
+.theater-npc-stage-placeholder {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+  font-size: 5rem;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(2, 6, 23, 0.9) 100%);
 }
 
-.theater-npc-portrait-name {
-  background: rgba(0,0,0,0.75);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-top: none;
-  width: 120px;
+/* Character Name Banner Plate */
+.theater-npc-stage-banner {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 14px;
   text-align: center;
-  padding: 6px 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.theater-npc-stage-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #f8fafc;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.theater-npc-stage-sub {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #e2e8f0;
-  border-radius: 0 0 8px 8px;
+}
+
+.theater-npc-boss-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+/* Boss Aura Variation */
+.theater-npc-stage-wrapper.boss-aura .theater-npc-stage-card {
+  box-shadow: 0 16px 60px rgba(220, 38, 38, 0.4), 0 0 30px rgba(239, 68, 68, 0.3);
 }
 
 /* ---------- HERO BADGE ---------- */
@@ -302,18 +621,588 @@
   white-space: nowrap;
 }
 
+/* ---------- DIRECTOR PANEL (drawer) ---------- */
+.theater-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+.theater-drawer-overlay.open {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+
+.theater-drawer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(520px, 94vw);
+  background: rgba(6, 11, 24, 0.98);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 12px 0 40px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(24px);
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  z-index: 100001;
+  overflow: hidden;
+}
+
+.theater-drawer.open {
+  transform: translateX(0);
+}
+
+.theater-director-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Header */
+.theater-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.theater-drawer-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theater-drawer-header-icon {
+  font-size: 1.25rem;
+}
+
+.theater-drawer-header h3 {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.theater-drawer-header-sub {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.theater-drawer-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-drawer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Tabs */
+.theater-drawer-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+
+.theater-drawer-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  padding: 10px 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.theater-drawer-tab:hover {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.theater-drawer-tab.active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Body */
+.theater-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.theater-drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Scene Roster list inside drawer */
+.theater-scene-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.theater-scene-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.theater-scene-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.theater-scene-row.active {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.15);
+}
+
+.theater-scene-number {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #64748b;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.theater-scene-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.theater-scene-row-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theater-scene-row-sub {
+  font-size: 0.65rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theater-scene-delete-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.18s;
+}
+
+.theater-scene-delete-btn:hover {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.theater-scene-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.theater-scene-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px dashed;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+}
+
+.theater-scene-action-btn.new {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+}
+.theater-scene-action-btn.new:hover {
+  background: rgba(168, 85, 247, 0.18);
+  border-color: #a855f7;
+}
+
+.theater-scene-action-btn.import {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+.theater-scene-action-btn.import:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: #3b82f6;
+}
+
+/* Cast sub-tabs (Heróis / Ameaças / NPCs) */
+.theater-cast-subtabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.theater-cast-subtab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+}
+
+.theater-cast-subtab:hover {
+  color: #e2e8f0;
+}
+
+.theater-cast-subtab.active {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.theater-subtab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* NPC Projector Grid */
+.theater-npc-projector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.theater-section-mini-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.theater-hide-npc-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-hide-npc-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+.theater-npc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.theater-npc-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-align: center;
+}
+
+.theater-npc-card:hover {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.4);
+  transform: translateY(-2px);
+}
+
+.theater-npc-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theater-npc-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.theater-npc-card-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theater-npc-card-tag {
+  font-size: 0.52rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #c084fc;
+  margin-top: 2px;
+}
+
+.theater-npc-card-tag.wiki {
+  color: #93c5fd;
+}
+
 /* ---------- COCKPIT (bottom bar) ---------- */
 .theater-cockpit {
   flex-shrink: 0;
   background: rgba(2,6,23,0.97);
   border-top: 1px solid rgba(255,255,255,0.05);
   backdrop-filter: blur(16px);
-  padding: 8px 12px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   gap: 6px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.theater-cockpit-collapse {
+  position: absolute;
+  top: -22px;
+  right: 20px;
+  background: rgba(2,6,23,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: rgba(255,255,255,0.5);
+  padding: 2px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  z-index: 21;
+  transition: all 0.2s;
+  height: 22px;
+}
+.theater-cockpit-collapse:hover {
+  color: #fff;
+  background: rgba(15,23,42,1);
+}
+
+/* Scene title chip in the bar */
+.theater-cockpit-scene-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+  max-width: 180px;
+  min-width: 0;
+}
+.theater-cockpit-scene-title span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.theater-cockpit-scene-title:hover {
+  background: rgba(168,85,247,0.1);
+  border-color: rgba(168,85,247,0.3);
+}
+
+/* Submenu tab buttons */
+.theater-cockpit-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.5);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.theater-cockpit-tab:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.8);
+}
+.theater-cockpit-tab.active {
+  border-color: currentColor;
+  background: rgba(255,255,255,0.06);
+}
+.theater-cockpit-tab-label {
+  display: inline;
+}
+@media (max-width: 600px) {
+  .theater-cockpit-tab-label {
+    display: none;
+  }
+  .theater-cockpit-scene-title {
+    max-width: 100px;
+  }
+}
+
+/* Submenu panel (opens above the bar) */
+.theater-submenu-panel {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(4,9,26,0.96);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: submenuSlideUp 0.15s ease-out;
+  z-index: 19;
+}
+@keyframes submenuSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.theater-submenu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.theater-submenu-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #475569;
+}
+.theater-submenu-row {
+  display: flex;
   flex-wrap: wrap;
-  min-height: 52px;
+  gap: 5px;
+}
+
+/* Legacy group (unused but kept for safety) */
+.theater-cockpit-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .theater-cockpit-divider {
@@ -705,18 +1594,6 @@
   background: rgba(15, 23, 42, 0.9);
 }
 
-.theater-cockpit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 12px 24px;
-  background: linear-gradient(to top, rgba(2,6,23,0.95) 0%, rgba(2,6,23,0.7) 100%);
-  border-top: 1px solid rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  z-index: 20;
-}
-
 @media (max-width: 768px) {
   .theater-cockpit {
     justify-content: flex-start;
@@ -981,3 +1858,2061 @@
   z-index: 15; /* Atrás da UI mas em cima da imagem */
   transition: all 1s ease-in-out;
 }
+/* ---------- SCENE PANEL ---------- */
+.scene-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 0;
+  overflow-y: auto;
+}
+
+.scene-panel-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: min-content;
+  flex-shrink: 0;
+}
+
+.scene-panel-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .scene-panel-controls {
+    flex-direction: column;
+  }
+}
+
+.scene-panel-description {
+  margin-bottom: 16px;
+}
+
+.scene-panel-assets {
+  margin-bottom: 20px;
+  margin-top: 4px;
+}
+
+/* Asset Card Hover Effects */
+.asset-card-hover:hover .asset-actions {
+  opacity: 1 !important;
+}
+.asset-card-hover:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3) !important;
+  border-color: rgba(255,255,255,0.4) !important;
+}
+.asset-card-add-hover:hover {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(168,85,247,0.4) !important;
+  color: rgba(255,255,255,0.7) !important;
+}
+
+/* ==========================================================================
+   LIVE CHRONICLE LOG (Feed Narrativo Translúcido)
+   ========================================================================== */
+.theater-chronicle-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeIn 0.15s ease;
+}
+
+.theater-chronicle-drawer {
+  width: min(440px, 92vw);
+  height: 100%;
+  background: rgba(6, 12, 26, 0.95);
+  border-left: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.theater-chronicle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.06) 0%, transparent 100%);
+  flex-shrink: 0;
+}
+
+.theater-chronicle-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theater-chronicle-header-title h3 {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.theater-chronicle-header-count {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.theater-chronicle-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theater-chronicle-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-chronicle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.theater-chronicle-btn.close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.theater-chronicle-filters {
+  display: flex;
+  gap: 6px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.2);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.theater-chronicle-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.theater-chronicle-filter-btn:hover {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.theater-chronicle-filter-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.theater-chronicle-stream {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.theater-chronicle-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60%;
+  color: #64748b;
+  text-align: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.theater-chronicle-empty span {
+  font-size: 0.68rem;
+  color: #475569;
+}
+
+.theater-chronicle-entry {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.theater-chronicle-entry:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.theater-chronicle-entry-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.theater-chronicle-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.theater-chronicle-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.theater-chronicle-entry-del-btn {
+  background: transparent;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  opacity: 0.6;
+}
+
+.theater-chronicle-entry:hover .theater-chronicle-entry-del-btn {
+  opacity: 1;
+}
+
+.theater-chronicle-entry-del-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.theater-chronicle-time {
+  font-size: 0.62rem;
+  color: #475569;
+  font-family: monospace;
+}
+
+.theater-chronicle-entry-text {
+  font-size: 0.78rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   HANDOUT THEATRICAL SPOTLIGHT (Projetor de Pistas)
+   ========================================================================== */
+.theater-spotlight-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.98) 100%);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.theater-spotlight-modal {
+  max-width: 900px;
+  max-height: 90vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 15, 30, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.15);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.theater-spotlight-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, transparent 100%);
+  flex-shrink: 0;
+}
+
+.theater-spotlight-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theater-spotlight-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+}
+
+.theater-spotlight-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theater-spotlight-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+  color: #fcd34d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-spotlight-action-btn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+}
+
+.theater-spotlight-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 4px;
+}
+
+.theater-spotlight-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-spotlight-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.theater-spotlight-icon-btn.close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.theater-spotlight-image-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #020617;
+  min-height: 380px;
+}
+
+.theater-spotlight-image {
+  max-width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  transition: transform 0.2s ease;
+}
+
+.theater-spotlight-footer {
+  padding: 12px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.theater-spotlight-footer p {
+  margin: 0;
+}
+
+/* ==========================================================================
+   GLOBAL STAGE PROJECTOR DROPZONE
+   ========================================================================== */
+.theater-dropzone-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.theater-drag-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 3px dashed #a855f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: fadeIn 0.15s ease;
+}
+
+.theater-drag-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  color: #f1f5f9;
+}
+
+.theater-drag-icon {
+  color: #c084fc;
+  animation: pulse 1.5s infinite;
+}
+
+.theater-drag-box h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: var(--font-display, 'Outfit', sans-serif);
+}
+
+.theater-drag-box p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+/* Drop Modal */
+.theater-drop-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100002;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.theater-drop-modal {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(10, 15, 30, 0.98);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.theater-drop-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.theater-drop-modal-header h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.theater-drop-modal-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.theater-drop-modal-close:hover {
+  color: #f87171;
+}
+
+.theater-drop-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.theater-drop-preview img {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theater-drop-preview span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theater-drop-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theater-drop-opt-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.theater-drop-opt-btn:hover {
+  transform: translateY(-2px);
+}
+
+.theater-drop-opt-btn.bg:hover {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: #a855f7;
+  color: #c084fc;
+}
+
+.theater-drop-opt-btn.npc:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+}
+
+.theater-drop-opt-btn.spotlight:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+
+.theater-drop-opt-btn strong {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+}
+
+.theater-drop-opt-btn small {
+  display: block;
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+/* ==========================================================================
+   THEATER SOUNDSCAPE (Jukebox & Ambientes)
+   ========================================================================== */
+.theater-soundscape-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.theater-soundscape-modal {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(10, 15, 30, 0.98);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(236, 72, 153, 0.15);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.theater-soundscape-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.theater-soundscape-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theater-soundscape-title-group h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.theater-soundscape-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+}
+.theater-soundscape-close:hover {
+  color: #f87171;
+}
+
+.theater-soundscape-mixers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.theater-mixer-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theater-mixer-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.theater-mixer-mute {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px;
+}
+.theater-mixer-mute:hover { color: #fff; }
+
+.theater-fader {
+  width: 100%;
+  accent-color: #ec4899;
+  cursor: pointer;
+}
+
+.theater-mixer-now-playing {
+  font-size: 0.62rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theater-soundscape-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.theater-soundscape-section-header h4 {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.theater-link-sound-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.theater-link-sound-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+}
+
+.theater-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.theater-preset-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.theater-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateY(-1px);
+}
+
+.theater-preset-btn.active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.theater-preset-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.theater-preset-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   SCENE CLUES MODAL (Mural de Pistas)
+   ========================================================================== */
+.theater-clues-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.theater-clues-modal {
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  background: rgba(10, 15, 30, 0.98);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.15);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.theater-clues-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.theater-clues-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theater-clues-title-group h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.theater-clues-title-group span {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.theater-clues-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theater-clue-btn-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fcd34d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-clue-btn-add:hover {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.theater-clues-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+}
+.theater-clues-close:hover { color: #f87171; }
+
+.theater-clue-form {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.2s;
+}
+
+.theater-clue-input,
+.theater-clue-textarea {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #f1f5f9;
+  font-size: 0.78rem;
+  outline: none;
+}
+.theater-clue-input:focus,
+.theater-clue-textarea:focus {
+  border-color: #f59e0b;
+}
+
+.theater-clue-img-row {
+  display: flex;
+  gap: 8px;
+}
+
+.theater-clue-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.theater-clue-upload-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.theater-clue-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: none;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.theater-clue-submit-btn:hover {
+  filter: brightness(1.1);
+}
+
+.theater-clues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.theater-clues-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #64748b;
+  text-align: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.theater-clue-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+}
+.theater-clue-card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px);
+}
+
+.theater-clue-thumbnail {
+  position: relative;
+  height: 110px;
+  background: #000;
+  cursor: pointer;
+  overflow: hidden;
+}
+.theater-clue-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.theater-clue-thumbnail:hover img {
+  transform: scale(1.05);
+}
+
+.theater-clue-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #fcd34d;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.theater-clue-thumbnail:hover .theater-clue-hover-overlay {
+  opacity: 1;
+}
+
+.theater-clue-info {
+  padding: 10px;
+  flex: 1;
+}
+.theater-clue-info h4 {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+.theater-clue-info p {
+  margin: 0;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.theater-clue-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.theater-clue-disc-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.theater-clue-disc-btn.active {
+  color: #10b981;
+}
+
+.theater-clue-del-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px;
+}
+.theater-clue-del-btn:hover { color: #f87171; }
+
+/* ==========================================================================
+   GM SECRETS DRAWER (Segredos do Mestre)
+   ========================================================================== */
+.theater-secrets-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.theater-secrets-modal {
+  width: 100%;
+  max-width: 540px;
+  background: rgba(12, 10, 20, 0.98);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.15);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.theater-secrets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.theater-secrets-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theater-secrets-title-group h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.theater-secrets-title-group span {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.theater-secrets-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theater-secret-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theater-secret-save-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.theater-secret-save-btn.saved {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #6ee7b7;
+}
+
+.theater-secrets-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+}
+.theater-secrets-close:hover { color: #f87171; }
+
+.theater-secrets-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.theater-chips-label {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.theater-chip-btn {
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.theater-chip-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.theater-secrets-body {
+  width: 100%;
+}
+
+.theater-secrets-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  color: #f1f5f9;
+  font-size: 0.8rem;
+  font-family: inherit;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+}
+
+.theater-secrets-textarea:focus {
+  border-color: #ef4444;
+}
+
+.theater-secrets-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+/* ==========================================================================
+   THEATER ASSET VAULT (Acervo Global da Campanha)
+   ========================================================================== */
+.theater-vault-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.theater-vault-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.theater-vault-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.theater-vault-search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.theater-vault-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #f1f5f9;
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.theater-vault-clear-search {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+}
+.theater-vault-clear-search:hover { color: #fff; }
+
+.theater-vault-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.theater-vault-add-btn:hover {
+  background: rgba(244, 63, 94, 0.28);
+}
+.theater-vault-add-btn.active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+}
+
+.theater-vault-pills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.theater-vault-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #64748b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.theater-vault-pill:hover {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.theater-vault-pill.active {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: #f43f5e;
+  color: #fda4af;
+}
+
+/* Vault Form */
+.theater-vault-form {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeIn 0.2s;
+}
+
+.theater-vault-form-row {
+  display: flex;
+  gap: 8px;
+}
+
+.theater-vault-input {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: #fff;
+  font-size: 0.75rem;
+  outline: none;
+}
+.theater-vault-input:focus { border-color: #f43f5e; }
+
+.theater-vault-select {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #f1f5f9;
+  font-size: 0.72rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.theater-vault-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.theater-vault-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  border: none;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.theater-vault-submit-btn:hover { filter: brightness(1.1); }
+
+/* Vault Grid */
+.theater-vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+  gap: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.theater-vault-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #64748b;
+  text-align: center;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.theater-vault-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+}
+.theater-vault-card:hover {
+  border-color: rgba(244, 63, 94, 0.4);
+  transform: translateY(-2px);
+}
+
+.theater-vault-card-img-wrap {
+  position: relative;
+  height: 100px;
+  background: #020617;
+  overflow: hidden;
+}
+
+.theater-vault-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.theater-vault-card:hover .theater-vault-card-img {
+  transform: scale(1.05);
+}
+
+.theater-vault-card-actions {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 4px;
+}
+.theater-vault-card:hover .theater-vault-card-actions {
+  opacity: 1;
+}
+
+.theater-vault-action-btn {
+  width: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.15s;
+}
+
+.theater-vault-action-btn.bg {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+  color: #d8b4fe;
+}
+.theater-vault-action-btn.bg:hover { background: #a855f7; color: #fff; }
+
+.theater-vault-action-btn.npc {
+  background: rgba(52, 211, 153, 0.25);
+  border-color: #34d399;
+  color: #6ee7b7;
+}
+.theater-vault-action-btn.npc:hover { background: #10b981; color: #fff; }
+
+.theater-vault-action-btn.spot {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+.theater-vault-action-btn.spot:hover { background: #f59e0b; color: #000; }
+
+.theater-vault-card-info {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.theater-vault-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.theater-vault-title-row h4 {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theater-vault-rename-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.theater-vault-rename-btn:hover { color: #f43f5e; }
+
+.theater-vault-inline-edit {
+  display: flex;
+  gap: 4px;
+}
+.theater-vault-inline-edit input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #f43f5e;
+  border-radius: 4px;
+  padding: 2px 4px;
+  color: #fff;
+  font-size: 0.68rem;
+  outline: none;
+}
+.theater-vault-inline-edit button {
+  background: #f43f5e;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.theater-vault-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.theater-vault-type-tag {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 1px 4px;
+  color: #94a3b8;
+  font-size: 0.58rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.theater-vault-del-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px;
+}
+.theater-vault-del-btn:hover { color: #f87171; }
+
+/* Dropzone Name Input */
+.theater-drop-name-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  outline: none;
+  margin-bottom: 2px;
+}
+.theater-drop-name-input:focus {
+  border-color: #c084fc;
+}
+
+.theater-drop-vault-hint {
+  font-size: 0.62rem;
+  color: #34d399;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   STAGE CLOCK OVERLAY (Relógios de Tensão no Palco)
+   ========================================================================== */
+.theater-stage-clock-overlay {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 320px;
+  max-width: calc(100vw - 28px);
+  background: rgba(10, 14, 23, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(245, 158, 11, 0.2);
+  z-index: 9995;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Expired Alarm Stage Banner */
+.theater-clock-alarm-banner {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border: 1px solid #f87171;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+  animation: bannerShake 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes bannerShake {
+  from { transform: translateX(-2px); }
+  to { transform: translateX(2px); }
+}
+
+.theater-alarm-shake {
+  animation: clockCriticalPulse 0.4s infinite alternate;
+}
+
+.theater-clock-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.theater-clock-overlay-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fcd34d;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.theater-clock-pulse-icon {
+  animation: clockPulse 1.5s infinite alternate;
+  color: #f59e0b;
+}
+
+.theater-clock-overlay-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theater-clock-tool-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #cbd5e1;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+.theater-clock-tool-btn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fff;
+}
+.theater-clock-tool-btn.active {
+  background: #f59e0b;
+  color: #000;
+  border-color: #f59e0b;
+}
+.theater-clock-tool-btn.close:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+/* Create Box */
+.theater-clock-create-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+  border-radius: 10px;
+  padding: 12px;
+  animation: fadeIn 0.2s;
+}
+
+.theater-clock-field-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.theater-clock-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.8rem;
+  outline: none;
+}
+.theater-clock-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
+.theater-clock-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.theater-clock-preset-btn {
+  flex: 1;
+  min-width: 50px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 6px 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.theater-clock-preset-btn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+.theater-clock-preset-btn.selected {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #000;
+}
+
+.theater-clock-create-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.theater-clock-cancel-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 12px;
+}
+.theater-clock-cancel-btn:hover { color: #fff; }
+
+.theater-clock-confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.theater-clock-confirm-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+/* Clocks List */
+.theater-clock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.theater-clock-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.theater-clock-card.urgent {
+  border-color: rgba(249, 115, 22, 0.6);
+  background: rgba(249, 115, 22, 0.06);
+}
+.theater-clock-card.critical {
+  border-color: rgba(239, 68, 68, 0.8);
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);
+  animation: clockCriticalPulse 1s infinite alternate;
+}
+
+.theater-clock-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.theater-clock-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+.theater-clock-label-group strong {
+  font-size: 0.82rem;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theater-clock-time-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.theater-clock-paused-tag {
+  font-size: 0.6rem;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 2px 5px;
+  color: #cbd5e1;
+  font-weight: 800;
+}
+
+.theater-clock-digits {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #f8fafc;
+  letter-spacing: 0.06em;
+}
+.theater-clock-card.critical .theater-clock-digits {
+  color: #fca5a5;
+}
+
+/* Progress bar */
+.theater-clock-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.theater-clock-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #10b981, #f59e0b);
+  transition: width 1s linear;
+}
+.theater-clock-card.urgent .theater-clock-bar-fill {
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+}
+.theater-clock-card.critical .theater-clock-bar-fill {
+  background: linear-gradient(90deg, #f97316, #ef4444);
+}
+
+/* Large Controls Bar */
+.theater-clock-card-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.theater-clock-btn-action {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.theater-clock-btn-action.play {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+.theater-clock-btn-action.pause {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+
+.theater-clock-time-adjusts {
+  display: flex;
+  gap: 4px;
+}
+
+.theater-clock-btn-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.theater-clock-btn-pill:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+
+.theater-clock-btn-icon {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #94a3b8;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.theater-clock-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+.theater-clock-btn-icon.delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+/* ==========================================================================
+   MOBILE & SMALL SCREEN RESPONSIVENESS (Telas Pequenas < 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .theater-stage-clock-overlay {
+    top: auto;
+    bottom: 70px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-width: none;
+    border-radius: 16px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+  }
+
+  .theater-clock-preset-btn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .theater-clock-btn-action,
+  .theater-clock-btn-pill,
+  .theater-clock-btn-icon {
+    padding: 8px 10px;
+  }
+
+  .theater-clock-digits {
+    font-size: 1.15rem;
+  }
+}
+
+
+
+
+

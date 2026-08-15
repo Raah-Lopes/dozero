@@ -70,6 +70,16 @@ export interface TheaterScene {
   ambiencePresetId?: string;
   // Transição visual ao entrar nesta cena
   transitionType?: SceneTransition;
+  // Segredos do Mestre (exclusivo para o narrador)
+  gmSecrets?: string;
+  // Pistas e Handouts vinculados à cena
+  clues?: Array<{
+    id: string;
+    title: string;
+    url: string;
+    description?: string;
+    discovered: boolean;
+  }>;
 }
 
 export interface TheaterEnemy {
@@ -91,6 +101,14 @@ export interface DiaryEntry {
 
 // ponytail: DistanceEntry removida — era código morto, TacticalRadar usa entityBands
 
+export interface TheaterNpcPresentation {
+  name: string;
+  imageUrl?: string;
+  subtitle?: string;
+  quote?: string;
+  type?: 'hero' | 'npc' | 'boss' | 'threat';
+}
+
 export interface TheaterStateData {
   currentSceneId: string;
   scenes: TheaterScene[];
@@ -104,6 +122,8 @@ export interface TheaterStateData {
   cutscenes: SavedCutscene[];
   selectedCastMemberId: string;
   vnModeActive?: boolean;
+  globalAssets?: SceneAsset[];
+  activeNpc?: TheaterNpcPresentation | null;
 }
 
 const THEATER_DEFAULT: TheaterStateData = {
@@ -119,24 +139,82 @@ const THEATER_DEFAULT: TheaterStateData = {
   cutscenes: [],
   selectedCastMemberId: '',
   vnModeActive: false,
+  globalAssets: [],
+  activeNpc: null,
 };
+
+const THEATER_STORAGE_KEY = 'dozero_theater_state_v2';
 
 export function getTheaterState(): TheaterStateData {
   const current = state.theater.get('global');
   if (current) return current as TheaterStateData;
+
+  // Instant local-first cache recovery if Yjs is still initializing
+  try {
+    const cached = localStorage.getItem(THEATER_STORAGE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed === 'object') {
+        state.theater.set('global', parsed);
+        return parsed as TheaterStateData;
+      }
+    }
+  } catch {}
+
   return { ...THEATER_DEFAULT };
 }
 
 export function updateTheaterState(updates: Partial<TheaterStateData>) {
   const current = getTheaterState();
-  state.theater.set('global', { ...current, ...updates });
+  const next = { ...current, ...updates };
+  state.theater.set('global', next);
+  try {
+    localStorage.setItem(THEATER_STORAGE_KEY, JSON.stringify(next));
+  } catch {}
+}
+
+export function addTheaterAsset(asset: Omit<SceneAsset, 'id'>): string {
+  const current = getTheaterState();
+  const existing = (current.globalAssets || []).find(a => a.url === asset.url);
+  if (existing) {
+    updateTheaterAsset(existing.id, asset);
+    return existing.id;
+  }
+  const id = `asset_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const newAsset: SceneAsset = { ...asset, id };
+  const globalAssets = [...(current.globalAssets || []), newAsset];
+  state.theater.set('global', { ...current, globalAssets });
+  return id;
+}
+
+export function updateTheaterAsset(id: string, updates: Partial<SceneAsset>) {
+  const current = getTheaterState();
+  const globalAssets = (current.globalAssets || []).map(a => a.id === id ? { ...a, ...updates } : a);
+  state.theater.set('global', { ...current, globalAssets });
+}
+
+export function removeTheaterAsset(id: string) {
+  const current = getTheaterState();
+  const globalAssets = (current.globalAssets || []).filter(a => a.id !== id);
+  state.theater.set('global', { ...current, globalAssets });
 }
 
 export function addTheaterDiaryEntry(entry: Omit<DiaryEntry, 'id'>) {
   const current = getTheaterState();
-  const newEntry: DiaryEntry = { ...entry, id: `diary_${Date.now()}` };
+  const newEntry: DiaryEntry = { ...entry, id: `diary_${Date.now()}_${Math.random().toString(36).substring(2, 7)}` };
   const entries = [...current.diaryEntries.slice(-200), newEntry];
   state.theater.set('global', { ...current, diaryEntries: entries });
+}
+
+export function removeTheaterDiaryEntry(id: string) {
+  const current = getTheaterState();
+  const entries = current.diaryEntries.filter(e => e.id !== id);
+  state.theater.set('global', { ...current, diaryEntries: entries });
+}
+
+export function clearTheaterDiaryEntries() {
+  const current = getTheaterState();
+  state.theater.set('global', { ...current, diaryEntries: [] });
 }
 
 export function addTheaterScene(scene: Omit<TheaterScene, 'id'>): string {

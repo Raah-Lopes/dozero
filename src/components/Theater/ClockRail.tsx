@@ -15,11 +15,7 @@ export const ClockRail: React.FC = () => {
   }, []);
 
   const handleAddClock = () => {
-    const label = prompt('Nome do relógio:');
-    if (!label) return;
-    const mins = Number(prompt('Duração em minutos:', '5')) || 5;
-    const id = `clock_theater_${Date.now()}`;
-    addTensionClock({ id, x: 0, y: 0, label, durationMs: mins * 60000, endTime: Date.now() + mins * 60000, isRunning: true, hpMod: '0', mpMod: '0' });
+    window.dispatchEvent(new CustomEvent('theater-open-clock-creator'));
   };
 
   return (

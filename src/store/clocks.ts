@@ -28,6 +28,38 @@ export function removeTensionClock(id: string) {
   state.clocks.delete(id);
 }
 
+export function pauseTensionClock(id: string) {
+  const clock = state.clocks.get(id) as TensionClock;
+  if (!clock || !clock.isRunning) return;
+  const remaining = Math.max(0, clock.endTime - Date.now());
+  state.clocks.set(id, { ...clock, isRunning: false, pausedRemainingMs: remaining });
+}
+
+export function resumeTensionClock(id: string) {
+  const clock = state.clocks.get(id) as TensionClock;
+  if (!clock || clock.isRunning) return;
+  const remaining = clock.pausedRemainingMs ?? clock.durationMs;
+  state.clocks.set(id, { ...clock, isRunning: true, endTime: Date.now() + remaining, pausedRemainingMs: undefined });
+}
+
+export function addMinutesToClock(id: string, mins: number) {
+  const clock = state.clocks.get(id) as TensionClock;
+  if (!clock) return;
+  const ms = mins * 60000;
+  if (clock.isRunning) {
+    state.clocks.set(id, { ...clock, endTime: Math.max(Date.now(), clock.endTime + ms), durationMs: Math.max(1000, clock.durationMs + ms) });
+  } else {
+    const remaining = Math.max(0, (clock.pausedRemainingMs ?? clock.durationMs) + ms);
+    state.clocks.set(id, { ...clock, pausedRemainingMs: remaining, durationMs: Math.max(1000, clock.durationMs + ms) });
+  }
+}
+
+export function resetTensionClock(id: string) {
+  const clock = state.clocks.get(id) as TensionClock;
+  if (!clock) return;
+  state.clocks.set(id, { ...clock, isRunning: true, endTime: Date.now() + clock.durationMs, pausedRemainingMs: undefined });
+}
+
 function applyMod(currentValue: number, modStr: string): number {
   if (!modStr || modStr === '0' || modStr === '') return currentValue;
   const str = modStr.trim();

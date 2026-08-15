@@ -1,5 +1,5 @@
 import React from 'react';
-import { MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload } from 'lucide-react';
+import { Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
@@ -17,7 +17,7 @@ export function GMToolbar() {
     return () => window.removeEventListener('resize', h);
   }, []);
   const [fogConfig, setFogConfig] = React.useState<FogConfig>(Config.getFogConfig());
-  const [activeFolder, setActiveFolder] = React.useState<'root'|'draw'|'fog'>('root');
+  const [activeFolder, setActiveFolder] = React.useState<'root'|'draw'|'fog'|'map_tools'>('root');
   const [fogMode, setLocalFogMode] = React.useState<'reveal' | 'hide'>('reveal');
   const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso' | 'eraser'>('brush');
   const [activeSubmenu, setActiveSubmenu] = React.useState<string | null>(null);
@@ -96,66 +96,6 @@ export function GMToolbar() {
     (window as any).__FOG_SHAPE__ = fogShape;
   }, [activeTool, fogMode, fogShape]);
 
-  const FlyoutGroup = ({ id, activeIcon, children, title, isGroupActive, align = 'center' }: { id: string, activeIcon: React.ReactNode, children: React.ReactNode, title: string, isGroupActive: boolean, align?: 'top' | 'center' | 'bottom' }) => {
-    const isOpen = activeSubmenu === id;
-    
-    const flyoutStyle: React.CSSProperties = {
-      position: 'absolute',
-      left: 'calc(100% + 12px)',
-      ...(align === 'top' ? { top: '0' } : align === 'bottom' ? { bottom: '0' } : { top: '50%', transform: 'translateY(-50%)' }),
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '4px',
-      padding: '4px',
-      background: 'rgba(20, 20, 25, 0.95)',
-      backdropFilter: 'blur(24px)',
-      borderRadius: '12px',
-      border: '1px solid rgba(255,255,255,0.1)',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-      opacity: isOpen ? 1 : 0,
-      pointerEvents: isOpen ? 'auto' : 'none',
-      transformOrigin: 'left center',
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-      zIndex: 100
-    };
-
-    return (
-      <div style={{ position: 'relative' }} className="gm-flyout-container">
-        <div onClick={(e) => { e.stopPropagation(); setActiveSubmenu(isOpen ? null : id); }}>
-           <ToolButton 
-             icon={activeIcon} 
-             active={isOpen || isGroupActive} 
-             onClick={() => {}} 
-             tooltip={title}
-           />
-           <div style={{
-             position: 'absolute',
-             bottom: '6px',
-             right: '6px',
-             width: 0,
-             height: 0,
-             borderLeft: '4px solid transparent',
-             borderBottom: '4px solid rgba(255,255,255,0.7)'
-           }} />
-        </div>
-        
-        <div style={flyoutStyle} onClick={(e) => { e.stopPropagation(); setActiveSubmenu(null); }} className="gm-submenu">
-          {children}
-        </div>
-      </div>
-    );
-  };
-
-  const groupStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    padding: '4px',
-    background: 'rgba(0,0,0,0.15)',
-    borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.03)'
-  };
-
   const toggleNPCPanel = () => {
     setShowActors(!showActors);
   };
@@ -206,6 +146,22 @@ export function GMToolbar() {
         </div>
         <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
 
+        <div 
+          className="gm-tools-scroll-area"
+          style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '8px', 
+            flex: 1, 
+            overflowY: 'auto', 
+            overflowX: 'visible',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            paddingBottom: '20px'
+          }}
+        >
         {activeFolder === 'root' && (
           <>
             {/* Hub & Nav Tools */}
@@ -238,69 +194,15 @@ export function GMToolbar() {
               description="Modo cinematográfico imersivo para interpretação sem grid"
             />
             <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-          <FlyoutGroup 
-            id="map_tools" 
-            title="Ferramentas do Mapa" 
-            align="top"
-            isGroupActive={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser'].includes(activeTool as string)}
-            activeIcon={
-              activeTool === 'pan' ? <Hand size={20} /> :
-              activeTool === 'RULER' ? <Ruler size={20} /> :
-              isFog ? <CloudFog size={20} /> :
-              ['pen','shape','arrow','text','eraser'].includes(activeTool as string) ? <Pen size={20} /> :
-              <MousePointer2 size={20} />
-            }
-          >
+            {/* Ferramentas do Mapa */}
             <ToolButton 
-              icon={<MousePointer2 size={20} />} 
-              active={activeTool === 'CURSOR'} 
-              onClick={() => { setActiveTool('CURSOR'); setActiveSubmenu(null); }} 
-              tooltip="Cursor"
-              description="Interaja, selecione e mova tokens e objetos na mesa"
+              icon={<Map size={20} />} 
+              active={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser'].includes(activeTool as string)}
+              onClick={() => setActiveFolder('map_tools')} 
+              tooltip="Ferramentas do Mapa"
+              description="Abre o menu de Cursor, Medição, Névoa, Camadas e mais"
             />
-            <ToolButton 
-              icon={<Hand size={20} />} 
-              active={activeTool === 'pan'} 
-              onClick={() => { setActiveTool('pan'); setActiveSubmenu(null); }} 
-              tooltip="Mover"
-              description="Arraste para navegar pelo cenário livremente"
-            />
-            <ToolButton 
-              icon={<Pen size={20} />} 
-              active={false} 
-              onClick={() => { setActiveFolder('draw'); setActiveSubmenu(null); }} 
-              tooltip="Desenhar"
-              description="Exibe ferramentas de caneta, formas, setas e texto"
-            />
-            <ToolButton 
-              icon={<CloudFog size={20} />} 
-              active={isFog} 
-              onClick={() => { setActiveFolder('fog'); setActiveSubmenu(null); }} 
-              tooltip="Névoa"
-              description="Esconda ou revele partes do mapa dos jogadores"
-            />
-            <ToolButton 
-              icon={<Ruler size={20} />} 
-              active={activeTool === 'RULER'} 
-              onClick={() => { setActiveTool('RULER'); setActiveSubmenu(null); }} 
-              tooltip="Régua de Medição"
-              description="Verifique distâncias com o sistema de deslocamento do jogo"
-            />
-            <ToolButton 
-              icon={<Layers size={20} />} 
-              active={false} 
-              onClick={() => window.dispatchEvent(new Event('toggle-layers-menu'))} 
-              tooltip="Camadas (Layers)"
-              description="Destranque mapas, ordene desenhos ou apague conteúdos"
-            />
-            <ToolButton 
-              icon={<Settings2 size={20} />} 
-              active={false} 
-              onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} 
-              tooltip="Configurações do Mapa"
-              description="Altere tamanho do grid, imagem de fundo ou modo fow"
-            />
-          </FlyoutGroup>
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
             <ToolButton 
               icon={<Users size={20} />} 
               active={showActors} 
@@ -360,6 +262,30 @@ export function GMToolbar() {
             />
           </>
         )}
+
+      {activeFolder === 'map_tools' && (
+        <>
+          <ToolButton 
+            icon={<ChevronLeft size={20} />} 
+            active={false} 
+            onClick={() => { setActiveFolder('root'); setActiveTool('CURSOR'); }} 
+            tooltip="Voltar"
+            description="Retorna ao menu principal"
+          />
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          
+          <ToolButton icon={<MousePointer2 size={20} />} active={activeTool === 'CURSOR'} onClick={() => { setActiveTool('CURSOR'); setActiveSubmenu(null); }} tooltip="Cursor" description="Interaja, selecione e mova tokens e objetos na mesa" />
+          <ToolButton icon={<Hand size={20} />} active={activeTool === 'pan'} onClick={() => { setActiveTool('pan'); setActiveSubmenu(null); }} tooltip="Mover" description="Arraste para navegar pelo cenário livremente" />
+          <ToolButton icon={<Ruler size={20} />} active={activeTool === 'RULER'} onClick={() => { setActiveTool('RULER'); setActiveSubmenu(null); }} tooltip="Régua de Medição" description="Verifique distâncias com o sistema de deslocamento do jogo" />
+          <ToolButton icon={<Layers size={20} />} active={false} onClick={() => window.dispatchEvent(new Event('toggle-layers-menu'))} tooltip="Camadas (Layers)" description="Destranque mapas, ordene desenhos ou apague conteúdos" />
+          <ToolButton icon={<Settings2 size={20} />} active={false} onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} tooltip="Configurações do Mapa" description="Altere tamanho do grid, imagem de fundo ou modo fow" />
+          
+          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          
+          <ToolButton icon={<Pen size={20} />} active={false} onClick={() => { setActiveFolder('draw'); setActiveSubmenu(null); }} tooltip="Desenhar" description="Exibe ferramentas de caneta, formas, setas e texto" />
+          <ToolButton icon={<CloudFog size={20} />} active={isFog} onClick={() => { setActiveFolder('fog'); setActiveSubmenu(null); }} tooltip="Névoa" description="Esconda ou revele partes do mapa dos jogadores" />
+        </>
+      )}
 
       {activeFolder === 'draw' && (
         <>
@@ -432,7 +358,7 @@ export function GMToolbar() {
       )}
 
        {activeFolder === 'fog' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <>
           <ToolButton 
             icon={<ChevronLeft size={20} />} 
             active={false} 
@@ -464,8 +390,9 @@ export function GMToolbar() {
           
           <ToolButton icon={<RefreshCcw size={20} />} active={false} onClick={() => FogOfWar.clear()} tooltip="Resetar FOG" description="Preenche toda a tela de volta com escuridão completa, apagando todos os recortes!" />
           <ToolButton icon={fogConfig.enabled ? <EyeOff size={20} color="#ef4444" /> : <Eye size={20} color="#10b981" />} active={false} onClick={() => Config.updateFog({ enabled: !fogConfig.enabled })} tooltip={fogConfig.enabled ? "Desativar FOG Global" : "Ativar FOG Global"} description="Liga ou desliga o escurecimento total do mapa provisoriamente (Se desligado, os players veem TUDO!)" />
-        </div>
+        </>
       )}
+        </div>
       </div>
       <div className="hud-sidebar-trigger" />
     </div>

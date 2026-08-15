@@ -1,6 +1,6 @@
 // src/components/Theater/DirectorBar.tsx
 import React, { useState } from 'react';
-import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, Bell, ChevronUp, ChevronDown } from 'lucide-react';
+import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, ArrowLeft, Bell, ChevronUp, ChevronDown, Palette, Dice5, Crosshair, BookOpen } from 'lucide-react';
 import { setTheaterMood, setTheaterWeather, addTensionClock, addTheaterDiaryEntry, pushChatMessage, type MoodType, type WeatherType } from '../../store';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
@@ -28,11 +28,22 @@ const WEATHERS: { value: WeatherType; label: string; icon: React.ReactNode; desc
   { value: 'darkness', label: 'Escuridão',  icon: <Moon size={11} />, description: 'Breu total que dificulta severamente a visão' },
 ];
 
+type SubMenu = null | 'atmosfera' | 'dados' | 'alvo' | 'narrativa';
+
 export const DirectorBar: React.FC = () => {
-  const { goToNextScene, createScene, theaterData, selectedCastMemberId } = useSceneState();
+  const { createScene, theaterData, selectedCastMemberId, scenes, setCurrentScene } = useSceneState();
+  const currentSceneIdx = scenes.findIndex(s => s.id === theaterData.currentSceneId);
+  const hasPrev = currentSceneIdx > 0;
+  const hasNext = currentSceneIdx < scenes.length - 1;
+
+  const handlePrevScene = () => { if (hasPrev) setCurrentScene(scenes[currentSceneIdx - 1].id); };
+  const handleNextScene = () => { if (hasNext) setCurrentScene(scenes[currentSceneIdx + 1].id); };
   const { members } = useCastData();
   const selectedMember = members.find(m => m.caminhoArquivo === selectedCastMemberId);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeSubmenu, setActiveSubmenu] = useState<SubMenu>(null);
+
+  const toggleSubmenu = (menu: SubMenu) => setActiveSubmenu(prev => prev === menu ? null : menu);
 
   const roll = (label: string, notation: string) => {
     const parts = notation.match(/(\d+)d(\d+)([+-]\d+)?/i);
@@ -78,115 +89,172 @@ export const DirectorBar: React.FC = () => {
   };
 
   const addQuickClock = () => {
-    const label = prompt('Nome do relógio:');
-    if (!label) return;
-    const mins = Number(prompt('Duração em minutos:', '5')) || 5;
-    const id = `clock_director_${Date.now()}`;
-    addTensionClock({ id, x: 0, y: 0, label, durationMs: mins * 60000, endTime: Date.now() + mins * 60000, isRunning: true, hpMod: '0', mpMod: '0' });
-    addTheaterDiaryEntry({ timestamp: Date.now(), type: 'clock', text: `🔔 Relógio: "${label}" (${mins}min)` });
+    window.dispatchEvent(new CustomEvent('theater-open-clock-creator'));
   };
+
+  // ponytail: submenu tabs keep UI flat. Upgrade path: proper popover with useFloating if needed.
+  const TABS: { id: SubMenu; label: string; icon: React.ReactNode; accent: string }[] = [
+    { id: 'atmosfera', label: 'Atmosfera', icon: <Palette size={13} />, accent: '#a855f7' },
+    { id: 'dados',     label: 'Dados',     icon: <Dice5 size={13} />,   accent: '#ef4444' },
+    { id: 'alvo',      label: 'Alvo',      icon: <Crosshair size={13} />, accent: '#10b981' },
+    { id: 'narrativa', label: 'Narrativa', icon: <BookOpen size={13} />, accent: '#3b82f6' },
+  ];
+
+  const activeMood = MOODS.find(m => m.value === theaterData.mood);
+  const activeWeather = WEATHERS.find(w => w.value === theaterData.weather);
 
   return (
     <div style={{ position: 'relative', zIndex: 20 }}>
+      {/* Collapse toggle */}
       <button 
         onClick={() => setIsCollapsed(!isCollapsed)}
-        style={{
-          position: 'absolute',
-          top: '-24px',
-          right: '20px',
-          background: 'rgba(2,6,23,0.9)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderBottom: 'none',
-          borderRadius: '8px 8px 0 0',
-          color: 'rgba(255,255,255,0.6)',
-          padding: '2px 16px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backdropFilter: 'blur(10px)',
-          zIndex: 21,
-          transition: 'all 0.2s',
-          height: '24px'
-        }}
+        className="theater-cockpit-collapse"
         title={isCollapsed ? 'Expandir Menu do Diretor' : 'Recolher Menu'}
-        onMouseOver={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(15,23,42,1)'; }}
-        onMouseOut={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'rgba(2,6,23,0.9)'; }}
       >
-        {isCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
       </button>
 
+      {/* Submenu panel (opens above the bar) */}
+      {activeSubmenu && !isCollapsed && (
+        <div className="theater-submenu-panel">
+          {activeSubmenu === 'atmosfera' && (
+            <>
+              <div className="theater-submenu-section">
+                <span className="theater-submenu-label">Atmosfera</span>
+                <div className="theater-submenu-row">
+                  {MOODS.map(m => (
+                    <Tooltip key={m.value} label={m.label} description={m.description}>
+                      <button
+                        className={`theater-pill ${theaterData.mood === m.value ? 'active' : ''}`}
+                        style={theaterData.mood === m.value ? { color: m.color, borderColor: m.color, background: `${m.color}20` } : {}}
+                        onClick={() => setTheaterMood(m.value)}
+                      >
+                        {m.emoji} {m.label}
+                      </button>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+              <div className="theater-submenu-section">
+                <span className="theater-submenu-label">Clima</span>
+                <div className="theater-submenu-row">
+                  {WEATHERS.map(w => (
+                    <Tooltip key={w.value} label={w.label} description={w.description}>
+                      <button
+                        className={`theater-pill ${theaterData.weather === w.value ? 'active' : ''}`}
+                        style={theaterData.weather === w.value ? { color: '#38bdf8', borderColor: '#38bdf8', background: 'rgba(56,189,248,0.15)' } : {}}
+                        onClick={() => setTheaterWeather(w.value)}
+                      >
+                        {w.icon} {w.label}
+                      </button>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeSubmenu === 'dados' && (
+            <div className="theater-submenu-section">
+              <span className="theater-submenu-label">Dados Rápidos</span>
+              <div className="theater-submenu-row">
+                <Tooltip label="Rolagem Pura" description="Rola 1d20 sem nenhum modificador adicionado"><button className="theater-qbtn red"    onClick={() => roll('1d20', '1d20')}><Target size={11} /> 1d20</button></Tooltip>
+                <Tooltip label="Rolagem de Ataque" description="Rola 1d20 com bônus de combate (+5)"><button className="theater-qbtn orange" onClick={() => roll('Ataque', '1d20+5')}><Swords size={11} /> Atq</button></Tooltip>
+                <Tooltip label="Rolagem de Defesa" description="Rola 1d20 com bônus de reflexo (+3)"><button className="theater-qbtn blue"   onClick={() => roll('Defesa', '1d20+3')}><Shield size={11} /> Def</button></Tooltip>
+                <Tooltip label="Dano de Impacto" description="Calcula a soma de 2 dados de 6 faces"><button className="theater-qbtn purple" onClick={() => roll('Dano', '2d6')}><Zap size={11} /> 2d6</button></Tooltip>
+                <Tooltip label="Dano Massivo" description="Calcula a soma de 3 dados de 6 faces"><button className="theater-qbtn amber"  onClick={() => roll('Dano', '3d6')}>🎲 3d6</button></Tooltip>
+              </div>
+            </div>
+          )}
+
+          {activeSubmenu === 'alvo' && (
+            <div className="theater-submenu-section">
+              <span className="theater-submenu-label">
+                {selectedMember ? `Alvo: ${selectedMember.nome}` : 'Nenhum alvo selecionado — clique em um personagem no painel lateral'}
+              </span>
+              {selectedMember && (
+                <div className="theater-submenu-row">
+                  <Tooltip label="Cura Leve" description="Restaura 5 Pontos de Vida"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 5)}><Heart size={11} /> +5 PV</button></Tooltip>
+                  <Tooltip label="Cura Moderada" description="Restaura 10 Pontos de Vida"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 10)}><Heart size={11} /> +10 PV</button></Tooltip>
+                  <Tooltip label="Ferimento Leve" description="Subtrai 5 Pontos de Vida"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -5)}><Heart size={11} /> -5 PV</button></Tooltip>
+                  <Tooltip label="Ferimento Grave" description="Subtrai 10 Pontos de Vida"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -10)}><Heart size={11} /> -10 PV</button></Tooltip>
+                  <Tooltip label="Fôlego" description="Recupera 5 pontos de Mana/Energia"><button className="theater-qbtn blue"   onClick={() => quickStat('mana', 5)}><Droplets size={11} /> +Mana</button></Tooltip>
+                  <Tooltip label="Recompensa de Cena" description="Atribui 50 de experiência"><button className="theater-qbtn amber"  onClick={() => quickStat('xp', 50)}><Star size={11} /> +XP</button></Tooltip>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeSubmenu === 'narrativa' && (
+            <div className="theater-submenu-section">
+              <span className="theater-submenu-label">Ferramentas Narrativas</span>
+              <div className="theater-submenu-row">
+                <Tooltip label="Nova Cena" description="Inicia uma página limpa na história"><button className="theater-qbtn purple" onClick={() => createScene()}><Film size={11} /> + Cena</button></Tooltip>
+                <Tooltip label="Relógio de Tensão" description="Adiciona um relógio temporizador global"><button className="theater-qbtn purple" onClick={addQuickClock}><Bell size={11} /> + Relógio</button></Tooltip>
+                <Tooltip label="Biblioteca de Cutscenes" description="Projete imagens cinematográficas flutuantes">
+                  <button
+                    className="theater-qbtn purple"
+                    style={{ boxShadow: '0 0 8px rgba(168,85,247,0.3)' }}
+                    onClick={() => window.dispatchEvent(new CustomEvent('theater-open-drawer', { detail: 'narrativa' }))}
+                  >
+                    🎬 Cutscenes
+                  </button>
+                </Tooltip>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main bar */}
       <div className="theater-cockpit" style={{ display: isCollapsed ? 'none' : 'flex' }}>
-
-      {/* MOOD pills */}
-      <span className="theater-cockpit-label">Atmosfera</span>
-      {MOODS.map(m => (
-        <Tooltip key={m.value} label={m.label} description={m.description}>
-          <button
-            className={`theater-pill ${theaterData.mood === m.value ? 'active' : ''}`}
-            style={theaterData.mood === m.value ? { color: m.color, borderColor: m.color, background: `${m.color}20` } : {}}
-            onClick={() => setTheaterMood(m.value)}
-          >
-            {m.emoji} {m.label}
-          </button>
+        {/* Scene navigation — always visible */}
+        <Tooltip label="Cena Anterior" description="Volta para a cena anterior">
+          <button className="theater-icon-btn" onClick={handlePrevScene} disabled={!hasPrev} style={{ opacity: hasPrev ? 1 : 0.35 }}><ArrowLeft size={14} /></button>
         </Tooltip>
-      ))}
 
-      <div className="theater-cockpit-divider" />
-
-      {/* WEATHER pills */}
-      <span className="theater-cockpit-label">Clima</span>
-      {WEATHERS.map(w => (
-        <Tooltip key={w.value} label={w.label} description={w.description}>
-          <button
-            className={`theater-pill ${theaterData.weather === w.value ? 'active' : ''}`}
-            style={theaterData.weather === w.value ? { color: '#38bdf8', borderColor: '#38bdf8', background: 'rgba(56,189,248,0.15)' } : {}}
-            onClick={() => setTheaterWeather(w.value)}
-          >
-            {w.icon} {w.label}
-          </button>
-        </Tooltip>
-      ))}
-
-      <div className="theater-cockpit-divider" />
-
-      {/* QUICK DICE */}
-      <span className="theater-cockpit-label">Dados</span>
-      <Tooltip label="Rolagem Pura" description="Rola 1d20 sem nenhum modificador adicionado"><button className="theater-qbtn red"    onClick={() => roll('1d20', '1d20')}><Target size={11} /> 1d20</button></Tooltip>
-      <Tooltip label="Rolagem de Ataque" description="Rola 1d20 com bônus de combate (+5)"><button className="theater-qbtn orange" onClick={() => roll('Ataque', '1d20+5')}><Swords size={11} /> Atq</button></Tooltip>
-      <Tooltip label="Rolagem de Defesa" description="Rola 1d20 com bônus de reflexo (+3)"><button className="theater-qbtn blue"   onClick={() => roll('Defesa', '1d20+3')}><Shield size={11} /> Def</button></Tooltip>
-      <Tooltip label="Dano de Impacto" description="Calcula a soma de 2 dados de 6 faces"><button className="theater-qbtn purple" onClick={() => roll('Dano', '2d6')}><Zap size={11} /> 2d6</button></Tooltip>
-      <Tooltip label="Dano Massivo" description="Calcula a soma de 3 dados de 6 faces"><button className="theater-qbtn amber"  onClick={() => roll('Dano', '3d6')}>🎲 3d6</button></Tooltip>
-
-      <div className="theater-cockpit-divider" />
-
-      {/* HP / RESOURCES */}
-      <span className="theater-cockpit-label" style={{ color: selectedMember ? '#10b981' : '#64748b' }}>
-        {selectedMember ? `Alvo: ${selectedMember.nome.split(' ')[0]}` : 'Sem Alvo'}
-      </span>
-      <Tooltip label="Cura Leve" description="Restaura 5 Pontos de Vida ao NPC selecionado"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 5)}   ><Heart size={11} /> +5</button></Tooltip>
-      <Tooltip label="Cura Moderada" description="Restaura 10 Pontos de Vida ao NPC selecionado"><button className="theater-qbtn green"  onClick={() => quickStat('pv', 10)}  ><Heart size={11} /> +10</button></Tooltip>
-      <Tooltip label="Ferimento Leve" description="Subtrai 5 Pontos de Vida do NPC selecionado"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -5)}  ><Heart size={11} /> -5</button></Tooltip>
-      <Tooltip label="Ferimento Grave" description="Subtrai 10 Pontos de Vida do NPC selecionado"><button className="theater-qbtn red"    onClick={() => quickStat('pv', -10)} ><Heart size={11} /> -10</button></Tooltip>
-      <Tooltip label="Fôlego" description="Recupera 5 pontos de Mana/Energia ao NPC"><button className="theater-qbtn blue"   onClick={() => quickStat('mana', 5)}  ><Droplets size={11} /> +Mana</button></Tooltip>
-      <Tooltip label="Recompensa de Cena" description="Atribui 50 de experiência ao NPC/Aliado"><button className="theater-qbtn amber"  onClick={() => quickStat('xp', 50)}><Star size={11} /> +XP</button></Tooltip>
-
-      <div className="theater-cockpit-divider" />
-
-      {/* NARRATIVE */}
-      <span className="theater-cockpit-label">Narrativa</span>
-      <Tooltip label="Nova Cena" description="Inicia uma página limpa na história para um novo contexto"><button className="theater-qbtn purple" onClick={() => createScene()}><Film size={11} /> + Cena</button></Tooltip>
-      <Tooltip label="Avançar Cena" description="Conclui o ato atual e passa para o próximo estágio"><button className="theater-qbtn blue"   onClick={goToNextScene}><ArrowRight size={11} /> Próxima</button></Tooltip>
-      <Tooltip label="Relógio de Tensão" description="Adiciona um relógio temporizador global para os jogadores"><button className="theater-qbtn purple" onClick={addQuickClock}><Bell size={11} /> + Relógio</button></Tooltip>
-      <Tooltip label="Biblioteca de Cutscenes" description="Projete imagens cinematográficas flutuantes sobre a mesa">
-        <button
-          className="theater-qbtn purple"
-          style={{ boxShadow: '0 0 8px rgba(168,85,247,0.3)' }}
-          onClick={() => window.dispatchEvent(new CustomEvent('theater-open-drawer', { detail: 'cutscenes' }))}
+        <div
+          className="theater-cockpit-scene-title"
+          onClick={() => window.dispatchEvent(new CustomEvent('theater-open-drawer', { detail: 'ambiente' }))}
+          title="Clique para abrir o Diretor de Cenas"
         >
-          🎬 Cutscenes
-        </button>
-      </Tooltip>
+          <Film size={12} style={{ color: '#a855f7', flexShrink: 0 }} />
+          <span>{currentSceneIdx >= 0 ? scenes[currentSceneIdx]?.title : 'Sem Cena'}</span>
+        </div>
+
+        <Tooltip label="Avançar Cena" description="Avança para a próxima cena">
+          <button className="theater-icon-btn" onClick={handleNextScene} disabled={!hasNext} style={{ opacity: hasNext ? 1 : 0.35 }}><ArrowRight size={14} /></button>
+        </Tooltip>
+
+        <div className="theater-cockpit-divider" />
+
+        {/* Submenu tabs */}
+        {TABS.map(t => {
+          const isActive = activeSubmenu === t.id;
+          // Show live indicator for atmosfera
+          let badge: React.ReactNode = null;
+          if (t.id === 'atmosfera' && activeMood && activeMood.value !== 'neutral') {
+            badge = <span style={{ fontSize: '0.6rem', color: activeMood.color }}>{activeMood.emoji}</span>;
+          }
+          if (t.id === 'alvo' && selectedMember) {
+            badge = selectedMember.avatar 
+              ? <img src={selectedMember.avatar} style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} alt="" />
+              : <span style={{ fontSize: '0.55rem', color: '#10b981' }}>{selectedMember.nome[0]}</span>;
+          }
+
+          return (
+            <button
+              key={t.id}
+              className={`theater-cockpit-tab ${isActive ? 'active' : ''}`}
+              style={isActive ? { color: t.accent, borderColor: t.accent } : {}}
+              onClick={() => toggleSubmenu(t.id)}
+            >
+              {t.icon}
+              <span className="theater-cockpit-tab-label">{t.label}</span>
+              {badge}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

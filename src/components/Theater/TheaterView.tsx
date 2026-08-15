@@ -1,6 +1,7 @@
 import { toggleVnMode } from '../../store/theater';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { PanelLeft, Video, VideoOff, ChevronLeft, ChevronRight, PlusCircle, Bot, Sparkles, MessageSquare } from 'lucide-react';
+import { PanelLeft, Video, VideoOff, ChevronLeft, ChevronRight, PlusCircle, Bot, Sparkles, MessageSquare, DoorOpen, Scroll, Music, Lock, BookOpen, Clock } from 'lucide-react';
+import { useWindowManager } from '../../hooks/useWindowManager';
 import { MoodEngine } from './MoodEngine';
 import { DirectorPanel } from './DirectorPanel';
 import { StagePropsLayer } from './StagePropsLayer';
@@ -8,8 +9,16 @@ import { DirectorBar } from './DirectorBar';
 import { NpcPortrait } from './NpcPortrait';
 import { HeroBadge } from './HeroBadge';
 import { DiceResultToast } from './DiceResultToast';
+import { LiveChronicleLog } from './LiveChronicleLog';
+import { HandoutSpotlight } from './HandoutSpotlight';
+import { StageProjectorDropzone } from './StageProjectorDropzone';
+import { TheaterSoundscape } from './TheaterSoundscape';
+import { SceneCluesModal } from './SceneCluesModal';
+import { GMSecretsDrawer } from './GMSecretsDrawer';
+import { StageClockOverlay } from './StageClockOverlay';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
+import { useTheaterClocks } from './hooks/useTheaterClocks';
 import { useAIStageManager } from './hooks/useAIStageManager';
 import { FloatingWindow } from './FloatingWindow';
 import { CastPanel } from './CastPanel';
@@ -26,20 +35,42 @@ import { VisualNovelOverlay } from './VisualNovelOverlay';
 import './Theater.css';
 
 export const TheaterView: React.FC = () => {
-  const { mood, weather, currentScene, scenes, setCurrentScene, patchCurrentScene, goToNextScene, goToPrevScene, linkAudioToScene, vnModeActive } = useSceneState();
+  const { setViewMode } = useWindowManager();
+  const { 
+    mood, weather, currentScene, scenes, setCurrentScene, patchCurrentScene, 
+    goToNextScene, goToPrevScene, linkAudioToScene, vnModeActive,
+    activeNpc, setActiveNpc
+  } = useSceneState();
   const { members } = useCastData();
+  const clocks = useTheaterClocks();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState('cenas');
+  const [chronicleOpen, setChronicleOpen] = useState(false);
+  const [soundscapeOpen, setSoundscapeOpen] = useState(false);
+  const [cluesOpen, setCluesOpen] = useState(false);
+  const [secretsOpen, setSecretsOpen] = useState(false);
+  const [clocksOpen, setClocksOpen] = useState(false);
   const [isCinematic, setIsCinematic] = useState(false);
   const [isAiActive, setIsAiActive] = useState(false);
   const [kenBurnsActive, setKenBurnsActive] = useState(true);
   useAIStageManager(isAiActive);
 
+  // Hotkey: 'L' or 'l' to toggle chronicle log
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'l' || e.key === 'L') {
+        setChronicleOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const isCinematicRef = useRef(isCinematic);
   useEffect(() => { isCinematicRef.current = isCinematic; }, [isCinematic]);
   
-  const [activeNpc, setActiveNpc] = useState<{ name: string; imageUrl?: string } | null>(null);
   // Active bg index within the current scene's asset gallery
   const [activeBgIndex, setActiveBgIndex] = useState(0);
   // Scene transition overlay
@@ -81,14 +112,34 @@ export const TheaterView: React.FC = () => {
     return () => window.removeEventListener('theater-scene-transition', handler);
   }, []);
 
-  // NPC portrait event (from DirectorPanel)
+  // NPC portrait event (from DirectorPanel or Projector)
   useEffect(() => {
     const handler = (e: Event) => {
-      const npc = (e as CustomEvent<{ name: string; imageUrl?: string } | null>).detail;
+      const npc = (e as CustomEvent<any>).detail;
       setActiveNpc(npc);
     };
     window.addEventListener('theater-show-npc', handler);
     return () => window.removeEventListener('theater-show-npc', handler);
+  }, [setActiveNpc]);
+
+  // Quick modals listeners
+  useEffect(() => {
+    const onSoundscape = () => setSoundscapeOpen(true);
+    const onClues = () => setCluesOpen(true);
+    const onSecrets = () => setSecretsOpen(true);
+    const onClocks = () => setClocksOpen(true);
+
+    window.addEventListener('theater-open-soundscape', onSoundscape);
+    window.addEventListener('theater-open-clues', onClues);
+    window.addEventListener('theater-open-secrets', onSecrets);
+    window.addEventListener('theater-open-clock-creator', onClocks);
+
+    return () => {
+      window.removeEventListener('theater-open-soundscape', onSoundscape);
+      window.removeEventListener('theater-open-clues', onClues);
+      window.removeEventListener('theater-open-secrets', onSecrets);
+      window.removeEventListener('theater-open-clock-creator', onClocks);
+    };
   }, []);
 
   // Open drawer to a specific tab (dispatched by DirectorBar buttons)
@@ -123,243 +174,350 @@ export const TheaterView: React.FC = () => {
   const hasNext = sceneIdx < scenes.length - 1;
 
   return (
-    <MoodEngine
-      mood={mood}
-      weather={weather}
-      bgElement={
-        <div className="theater-stage">
-          <div
-            className={`theater-stage-bg ${kenBurnsActive ? 'theater-ken-burns' : ''}`}
-            style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : undefined }}
-          />
-          <div className="theater-stage-vignette" />
-          {/* Global Color Grading Filter based on Mood */}
-          <div className={`theater-global-filter-overlay mood-filter-${mood}`} />
+    <StageProjectorDropzone>
+      <MoodEngine
+        mood={mood}
+        weather={weather}
+        bgElement={
+          <div className="theater-stage">
+            <div
+              className={`theater-stage-bg ${kenBurnsActive ? 'theater-ken-burns' : ''}`}
+              style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : undefined }}
+            />
+            <div className="theater-stage-vignette" />
+            {/* Global Color Grading Filter based on Mood */}
+            <div className={`theater-global-filter-overlay mood-filter-${mood}`} />
+          </div>
+        }
+      >
+        {/* ── Scene transition overlay ── */}
+        {transitionActive && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 9998, pointerEvents: 'none',
+            background: transitionType === 'wipe' ? 'linear-gradient(to right, black 50%, transparent 50%)' : 'black',
+            animation: transitionType === 'wipe'
+              ? 'sceneWipe 0.8s ease-in-out'
+              : 'sceneFade 0.8s ease-in-out',
+          }} />
+        )}
+        <style>{`
+          @keyframes sceneFade { 0% { opacity: 0; } 30% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+          @keyframes sceneWipe { 0% { transform: translateX(-100%); } 30% { transform: translateX(0); } 70% { transform: translateX(0); } 100% { transform: translateX(100%); } }
+        `}</style>
+
+        {/* ── Dice result toast ── */}
+        <DiceResultToast />
+
+        {/* ── Live Chronicle Stream / Event Log ── */}
+        <LiveChronicleLog 
+          isOpen={chronicleOpen} 
+          onClose={() => setChronicleOpen(false)} 
+        />
+
+        {/* ── Handout / Clue Theatrical Spotlight ── */}
+        <HandoutSpotlight />
+
+        {/* ── Soundscape & Jukebox Modal ── */}
+        <TheaterSoundscape 
+          isOpen={soundscapeOpen} 
+          onClose={() => setSoundscapeOpen(false)} 
+        />
+
+        {/* ── Scene Clues / Handouts Modal ── */}
+        <SceneCluesModal 
+          isOpen={cluesOpen} 
+          onClose={() => setCluesOpen(false)} 
+        />
+
+        {/* ── GM Secrets Drawer ── */}
+        <GMSecretsDrawer 
+          isOpen={secretsOpen} 
+          onClose={() => setSecretsOpen(false)} 
+        />
+
+        {/* ── Director panel (drawer) ── */}
+        <div 
+          className={`theater-drawer-overlay ${drawerOpen ? 'open' : ''}`}
+          onClick={() => setDrawerOpen(false)}
+        >
+          <div 
+            className={`theater-drawer ${drawerOpen ? 'open' : ''}`}
+            onClick={e => e.stopPropagation()}
+          >
+            <DirectorPanel
+              onClose={() => setDrawerOpen(false)}
+              activeBgIndex={activeBgIndex}
+              onBgChange={setActiveBgIndex}
+              initialTab={drawerTab}
+              floatingPanels={floatingPanels}
+              onToggleFloat={toggleFloat}
+            />
+          </div>
         </div>
-      }
-    >
-      {/* ── Scene transition overlay ── */}
-      {transitionActive && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9998, pointerEvents: 'none',
-          background: transitionType === 'wipe' ? 'linear-gradient(to right, black 50%, transparent 50%)' : 'black',
-          animation: transitionType === 'wipe'
-            ? 'sceneWipe 0.8s ease-in-out'
-            : 'sceneFade 0.8s ease-in-out',
-        }} />
-      )}
-      <style>{`
-        @keyframes sceneFade { 0% { opacity: 0; } 30% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
-        @keyframes sceneWipe { 0% { transform: translateX(-100%); } 30% { transform: translateX(0); } 70% { transform: translateX(0); } 100% { transform: translateX(100%); } }
-      `}</style>
 
-      {/* ── Dice result toast ── */}
-      <DiceResultToast />
+        {/* ── Floating Windows ── */}
+        {floatingPanels.map((tab, idx) => {
+          let content = null;
+          let title = '';
+          if (tab === 'ambiente') { 
+            content = (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <ScenePanel />
+                <PropsPanel />
+              </div>
+            ); 
+            title = 'Ambiente & Cena'; 
+          }
+          else if (tab === 'personagens') { 
+            content = (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Heróis</div><CastPanel type="jogador" /></div>
+                <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Ameaças</div><EnemyArsenal /></div>
+                <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>NPCs</div><CastPanel type="npc" /></div>
+              </div>
+            ); 
+            title = 'Elenco & Ameaças'; 
+          }
+          else if (tab === 'mecanicas') { 
+            content = (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Relógios</div><ClockRail /></div>
+                <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Zonas</div><TacticalRadar /></div>
+              </div>
+            ); 
+            title = 'Mecânicas'; 
+          }
+          else if (tab === 'narrativa') { 
+            content = (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <NarrativeTrack />
+                <SessionDiary />
+                <CutsceneManager />
+              </div>
+            ); 
+            title = 'Narrativa'; 
+          }
+          else return null;
 
-      {/* ── Director panel (drawer) ── */}
-      <div className="theater-drawer-overlay">
-        <div className={`theater-drawer ${drawerOpen ? 'open' : ''}`}>
-          <DirectorPanel
-            onClose={() => setDrawerOpen(false)}
-            activeBgIndex={activeBgIndex}
-            onBgChange={setActiveBgIndex}
-            initialTab={drawerTab}
-            floatingPanels={floatingPanels}
-            onToggleFloat={toggleFloat}
-          />
-        </div>
-      </div>
+          return (
+            <FloatingWindow
+              key={tab}
+              id={tab}
+              title={title}
+              isActive={activeWindow === tab}
+              onFocus={() => setActiveWindow(tab)}
+              onClose={() => toggleFloat(tab)}
+              initialX={100 + idx * 30}
+              initialY={100 + idx * 30}
+            >
+              {content}
+            </FloatingWindow>
+          );
+        })}
 
-      {/* ── Floating Windows ── */}
-      {floatingPanels.map((tab, idx) => {
-        let content = null;
-        let title = '';
-        if (tab === 'ambiente') { 
-          content = (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <ScenePanel />
-              <PropsPanel />
+        {/* ── Props Layer ── */}
+        {currentScene && <StagePropsLayer propsList={currentScene.props || []} />}
+
+        {/* ── UI Layer (topbar + stage content + cockpit) ── */}
+        <div className={`theater-ui theater-cinematic-ui ${isCinematic ? 'hidden' : ''}`}>
+
+          {/* TOPBAR */}
+          <div className="theater-topbar">
+            {/* Left: Exit & Director toggle */}
+            <div className="theater-topbar-left">
+              <button
+                className="theater-exit-btn"
+                onClick={() => setViewMode('canvas')}
+                title="Voltar para a Mesa de Jogo"
+              >
+                <DoorOpen size={16} color="var(--accent-primary)" />
+                <span className="theater-exit-btn-text">Painel Principal</span>
+              </button>
+
+              <div className="theater-topbar-divider" />
+
+              <button
+                className={`theater-director-btn ${drawerOpen ? 'active' : ''}`}
+                onClick={() => setDrawerOpen(!drawerOpen)}
+                title="Abrir Painel do Diretor"
+              >
+                <PanelLeft size={15} />
+                <span>Diretor</span>
+              </button>
             </div>
-          ); 
-          title = 'Ambiente & Cena'; 
-        }
-        else if (tab === 'personagens') { 
-          content = (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Heróis</div><CastPanel type="jogador" /></div>
-              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Ameaças</div><EnemyArsenal /></div>
-              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>NPCs</div><CastPanel type="npc" /></div>
+
+            {/* Center: Scene title & prev/next */}
+            <div className="theater-topbar-center">
+              <button
+                className="theater-icon-btn"
+                onClick={goToPrevScene}
+                disabled={!hasPrev}
+                style={{ opacity: hasPrev ? 1 : 0.3 }}
+                title="Cena anterior"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div
+                className="theater-topbar-title-box"
+                onClick={() => {
+                  setDrawerTab('ambiente');
+                  setDrawerOpen(true);
+                }}
+                title="Clique para abrir detalhes da cena"
+              >
+                <span className="theater-topbar-title-text">
+                  {currentScene?.title ?? 'Sem cena ativa'}
+                </span>
+                {currentScene?.subtitle && (
+                  <span className="theater-topbar-sub-text">
+                    — {currentScene.subtitle}
+                  </span>
+                )}
+              </div>
+
+              <button
+                className="theater-icon-btn"
+                onClick={goToNextScene}
+                disabled={!hasNext}
+                style={{ opacity: hasNext ? 1 : 0.3 }}
+                title="Próxima cena"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
-          ); 
-          title = 'Elenco & Ameaças'; 
-        }
-        else if (tab === 'mecanicas') { 
-          content = (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Relógios</div><ClockRail /></div>
-              <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase' }}>Zonas</div><TacticalRadar /></div>
+
+            {/* Right: Quick Stage Mode Toggles & Narration Tools */}
+            <div className="theater-topbar-right">
+              <button
+                className={`theater-icon-btn ${soundscapeOpen ? 'active' : ''}`}
+                onClick={() => setSoundscapeOpen(!soundscapeOpen)}
+                title="Jukebox & Efeitos Sonoros / Ambientes Rápidos"
+              >
+                <Music size={15} color={soundscapeOpen ? '#ec4899' : 'currentColor'} />
+              </button>
+
+              <button
+                className={`theater-icon-btn ${cluesOpen ? 'active' : ''}`}
+                onClick={() => setCluesOpen(!cluesOpen)}
+                title="Mural de Pistas & Handouts da Cena"
+              >
+                <BookOpen size={15} color={cluesOpen ? '#f59e0b' : 'currentColor'} />
+              </button>
+
+              <button
+                className={`theater-icon-btn ${clocksOpen ? 'active' : ''}`}
+                onClick={() => setClocksOpen(!clocksOpen)}
+                title="Relógios de Tensão (Ativar na Tela)"
+              >
+                <Clock size={15} color={clocksOpen ? '#f59e0b' : 'currentColor'} />
+                {clocks.length > 0 && (
+                  <span className="theater-badge-counter">{clocks.length}</span>
+                )}
+              </button>
+
+              <button
+                className={`theater-icon-btn ${secretsOpen ? 'active' : ''}`}
+                onClick={() => setSecretsOpen(!secretsOpen)}
+                title="Segredos do Mestre (Confidencial)"
+              >
+                <Lock size={15} color={secretsOpen ? '#ef4444' : 'currentColor'} />
+              </button>
+
+              <button
+                className={`theater-icon-btn ${chronicleOpen ? 'active' : ''}`}
+                onClick={() => setChronicleOpen(!chronicleOpen)}
+                title="Feed de Acontecimentos / Log (L)"
+              >
+                <Scroll size={15} color={chronicleOpen ? '#38bdf8' : 'currentColor'} />
+              </button>
+
+              <div className="theater-topbar-divider" />
+
+              <button
+                className={`theater-icon-btn ${kenBurnsActive ? 'active' : ''}`}
+                onClick={() => setKenBurnsActive(!kenBurnsActive)}
+                title={kenBurnsActive ? 'Câmera Viva Ativa (Ken Burns)' : 'Ativar Câmera Viva (Ken Burns)'}
+              >
+                <Sparkles size={15} color={kenBurnsActive ? 'var(--accent-primary)' : 'currentColor'} />
+              </button>
+
+              <button
+                className={`theater-icon-btn ${isAiActive ? 'active' : ''}`}
+                onClick={() => setIsAiActive(!isAiActive)}
+                title={isAiActive ? 'AI Auto Stage Manager Ativo' : 'Ativar AI Auto Stage Manager'}
+              >
+                <Bot size={15} color={isAiActive ? 'var(--accent-primary)' : 'currentColor'} />
+              </button>
+
+              <button
+                className={`theater-icon-btn ${vnModeActive ? 'active' : ''}`}
+                onClick={toggleVnMode}
+                title={vnModeActive ? 'Modo Visual Novel Ativo' : 'Ativar Modo Visual Novel'}
+              >
+                <MessageSquare size={15} color={vnModeActive ? 'var(--accent-primary)' : 'currentColor'} />
+              </button>
+
+              <div className="theater-topbar-divider" />
+
+              <button
+                className={`theater-icon-btn ${isCinematic ? 'active' : ''}`}
+                onClick={() => setIsCinematic(!isCinematic)}
+                title={isCinematic ? 'Sair do Modo Cinemático' : 'Modo Cinemático (Ocultar UI)'}
+              >
+                {isCinematic ? <VideoOff size={15} /> : <Video size={15} />}
+              </button>
             </div>
-          ); 
-          title = 'Mecânicas'; 
-        }
-        else if (tab === 'narrativa') { 
-          content = (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <NarrativeTrack />
-              <SessionDiary />
-              <CutsceneManager />
-            </div>
-          ); 
-          title = 'Narrativa'; 
-        }
-        else return null;
+          </div>
 
-        return (
-          <FloatingWindow
-            key={tab}
-            id={tab}
-            title={title}
-            isActive={activeWindow === tab}
-            onFocus={() => setActiveWindow(tab)}
-            onClose={() => toggleFloat(tab)}
-            initialX={100 + idx * 30}
-            initialY={100 + idx * 30}
-          >
-            {content}
-          </FloatingWindow>
-        );
-      })}
+          {/* STAGE CONTENT AREA */}
+          <div className="theater-stage-content">
+            {/* Stage Tension Clocks Floating Overlay */}
+            <StageClockOverlay 
+              isOpen={clocksOpen} 
+              onClose={() => setClocksOpen(false)} 
+            />
 
-      {/* ── Props Layer ── */}
-      {currentScene && <StagePropsLayer propsList={currentScene.props || []} />}
+            {/* Hero badges — bottom left */}
+            {members.length > 0 && (
+              <div className="theater-hero-strip">
+                {members.filter(m => m.status === 'jogador').slice(0, 6).map(m => (
+                  <HeroBadge key={m.caminhoArquivo} member={m} />
+                ))}
+              </div>
+            )}
 
-      {/* ── UI Layer (topbar + stage content + cockpit) ── */}
-      <div className={`theater-ui theater-cinematic-ui ${isCinematic ? 'hidden' : ''}`}>
-
-        {/* TOPBAR */}
-        <div className="theater-topbar">
-          {/* Left controls */}
-          <button
-            className={`theater-icon-btn ${drawerOpen ? 'active' : ''}`}
-            onClick={() => setDrawerOpen(!drawerOpen)}
-            title="Painel do Diretor"
-          >
-            <PanelLeft size={16} />
-          </button>
-
-          {/* Scene prev/next */}
-          <button
-            className="theater-icon-btn"
-            onClick={goToPrevScene}
-            disabled={!hasPrev}
-            style={{ opacity: hasPrev ? 1 : 0.3 }}
-            title="Cena anterior"
-          >
-            <ChevronLeft size={16} />
-          </button>
-
-          {/* Scene title (clickable — opens drawer) */}
-          <div
-            className="theater-topbar-title"
-            onClick={() => setDrawerOpen(true)}
-            title="Clique para abrir o painel"
-          >
-            {currentScene?.title ?? 'Sem cena ativa'}
-            {currentScene?.subtitle && (
-              <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 400, marginLeft: 8 }}>
-                — {currentScene.subtitle}
-              </span>
+            {/* Active Character Stage Presentation */}
+            {activeNpc && (
+              <NpcPortrait
+                name={activeNpc.name}
+                imageUrl={activeNpc.imageUrl}
+                subtitle={activeNpc.subtitle}
+                quote={activeNpc.quote}
+                type={activeNpc.type}
+                onClose={() => setActiveNpc(null)}
+              />
             )}
           </div>
 
-          <button
-            className="theater-icon-btn"
-            onClick={goToNextScene}
-            disabled={!hasNext}
-            style={{ opacity: hasNext ? 1 : 0.3 }}
-            title="Próxima cena"
-          >
-            <ChevronRight size={16} />
-          </button>
-
-          {/* Cinematic toggle */}
-          <button
-            className={`theater-icon-btn ${isCinematic ? 'active' : ''}`}
-            onClick={() => setIsCinematic(!isCinematic)}
-            title={isCinematic ? 'Sair do Modo Cinemático' : 'Modo Cinemático'}
-          >
-            {isCinematic ? <VideoOff size={15} /> : <Video size={15} />}
-          </button>
-          
-          {/* Ken Burns toggle */}
-          <button
-            className={`theater-icon-btn ${kenBurnsActive ? 'active' : ''}`}
-            onClick={() => setKenBurnsActive(!kenBurnsActive)}
-            title={kenBurnsActive ? 'Desativar Movimento de Câmera' : 'Ativar Movimento de Câmera (Ken Burns)'}
-            style={{ marginLeft: 4 }}
-          >
-            <Sparkles size={15} color={kenBurnsActive ? 'var(--accent-primary)' : 'currentColor'} />
-          </button>
-          
-          {/* AI Auto Stage Manager toggle */}
-          <button
-            className={`theater-icon-btn ${isAiActive ? 'active' : ''}`}
-            onClick={() => setIsAiActive(!isAiActive)}
-            title={isAiActive ? 'Desativar AI Stage Manager' : 'Ativar AI Stage Manager (Lê o chat para mudar a cena)'}
-            style={{ marginLeft: 8 }}
-          >
-            <Bot size={15} color={isAiActive ? 'var(--accent-primary)' : 'currentColor'} />
-          </button>
-
-          {/* VN Mode toggle */}
-          <button
-            className={`theater-icon-btn ${vnModeActive ? 'active' : ''}`}
-            onClick={toggleVnMode}
-            title={vnModeActive ? 'Desativar Modo Visual Novel' : 'Ativar Modo Visual Novel (Falas como RPG/Cutscene)'}
-            style={{ marginLeft: 8 }}
-          >
-            <MessageSquare size={15} color={vnModeActive ? 'var(--accent-primary)' : 'currentColor'} />
-          </button>
+          {/* COCKPIT / Director bar */}
+          <div className="theater-cockpit-wrapper" style={{ flexShrink: 0 }}>
+            <DirectorBar />
+          </div>
         </div>
 
-        {/* STAGE CONTENT AREA */}
-        <div className="theater-stage-content">
-          {/* Hero badges — bottom left */}
-          {members.length > 0 && (
-            <div className="theater-hero-strip">
-              {members.filter(m => m.status === 'jogador').slice(0, 6).map(m => (
-                <HeroBadge key={m.caminhoArquivo} member={m} />
-              ))}
-            </div>
-          )}
+        {/* Cinematic exit hint */}
+        {isCinematic && (
+          <button className="theater-cinematic-exit" onClick={() => setIsCinematic(false)}>
+            🎬 MODO CINEMÁTICO — clique ou ESC para sair
+          </button>
+        )}
 
-          {/* Active NPC portrait — bottom right */}
-          {activeNpc && (
-            <NpcPortrait
-              name={activeNpc.name}
-              imageUrl={activeNpc.imageUrl}
-              onClose={() => setActiveNpc(null)}
-            />
-          )}
-        </div>
+        {/* Visual Novel Mode */}
+        <VisualNovelOverlay />
 
-        {/* COCKPIT / Director bar */}
-        <div className="theater-cockpit-wrapper" style={{ flexShrink: 0 }}>
-          <DirectorBar />
-        </div>
-      </div>
-
-      {/* Cinematic exit hint */}
-      {isCinematic && (
-        <button className="theater-cinematic-exit" onClick={() => setIsCinematic(false)}>
-          🎬 MODO CINEMÁTICO — clique ou ESC para sair
-        </button>
-      )}
-
-      {/* Visual Novel Mode */}
-      <VisualNovelOverlay />
-
-      <TheaterCommandPalette />
-    </MoodEngine>
+        <TheaterCommandPalette />
+      </MoodEngine>
+    </StageProjectorDropzone>
   );
 };

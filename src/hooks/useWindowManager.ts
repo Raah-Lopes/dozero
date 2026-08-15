@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { startTransition } from 'react';
 
 export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain';
 export type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
@@ -74,7 +75,9 @@ export const useWindowManager = create<WindowManagerState>((set) => ({
   viewMode: (localStorage.getItem('dozero_viewMode') as ViewMode) || 'canvas',
   setViewMode: (mode) => {
     localStorage.setItem('dozero_viewMode', mode);
-    set({ viewMode: mode });
+    startTransition(() => {
+      set({ viewMode: mode });
+    });
   },
 
   activeModal: 'none',
