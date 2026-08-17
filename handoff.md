@@ -159,22 +159,39 @@ O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilida
 
 ```mermaid
 graph TD
-    A[Modo Espectador / Player View] --> B[Efeitos Atmosféricos & Partículas]
-    B --> C[Automação de Áudio por Cena]
-    C --> D[Pistas com Revelação Progressiva]
+    A[Passo 1: Integração Pixabay - Imagens, Músicas e SFX] --> B[Passo 2: Modo Espectador / Player View]
+    B --> C[Passo 3: Efeitos Atmosféricos & Partículas]
+    C --> D[Passo 4: Pistas com Revelação Progressiva]
 ```
 
-### 🥇 Passo 1: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
+### 🥇 Passo 1: Integração Pixabay — Acervo Infinito de Imagens, Músicas e Efeitos Sonoros (SFX)
+* **Objetivo**: Integrar a API oficial do **Pixabay** diretamente no ecossistema do DOZERO VTT, permitindo buscar e usar instantaneamente milhões de mídias gratuitas de alta qualidade sem sair da mesa.
+* **Módulos que se beneficiarão**:
+  1. 🖼️ **Imagens & Cenários (Teatro da Mente & Acervo Global)**:
+     - Busca direta por ilustrações de cenários (castelos, masmorras, florestas, tavernas) e retratos de NPCs com 1 clique para projetar no palco.
+  2. 🎵 **Músicas & Soundscapes (Audio Director & Teatro Sonoro)**:
+     - Pesquisa de faixas orquestrais, trilhas épicas, temas de combate e músicas de ambiente com prévia de áudio e vinculação a cenas.
+  3. 🔊 **Efeitos Sonoros (SFX)**:
+     - Biblioteca de sons de impacto, feitiços, passos, portas, monstros, alarmes e dados rolando para disparo rápido pelo Mestre.
+  4. 🎥 **Vídeos em Loop (Fundos Animados)**:
+     - Suporte a fundos cinematográficos em vídeo (fogueiras acesas, chuva contínua, neve, portais mágicos) rodando diretamente no fundo do Teatro.
+* **Arquitetura Planejada**:
+  - `src/services/pixabayService.ts`: Cliente HTTP com suporte a chave de API configurável, cache inteligente, paginação e filtros por tipo de mídia (`photo`, `illustration`, `music`, `sound_effects`, `video`).
+  - `PixabayMediaPickerModal.tsx`: Componente de busca universal reaproveitável em qualquer ferramenta do VTT.
+
+---
+
+### 🥈 Passo 2: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
 * **Objetivo**: Permitir que os jogadores vejam apenas o palco limpo e imersivo (sem botões de controle do Mestre, sem abas de segredos e sem botões de edição).
 * **Benefício**: Perfeito para sessões presenciais em TV/Telão secundário ou para jogadores que entram via link no navegador.
 
-### 🥈 Passo 2: Efeitos Atmosféricos em Partículas (Chuva, Névoa, Brasas, Magia)
+---
+
+### 🥉 Passo 3: Efeitos Atmosféricos em Partículas (Chuva, Névoa, Brasas, Magia)
 * **Objetivo**: Conectar o menu de **Atmosfera** do Diretor a uma camada visual leve em Canvas/CSS com efeitos de partículas realistas (Chuva com relâmpagos, Neblina densa, Cinzas vulcânicas, Neve suave, Luzes mágicas).
 * **Benefício**: Eleva a imersão visual das cenas a nível cinematográfico sem sobrecarregar o processador.
 
-### 🥉 Passo 3: Automação Sonora por Cena (Soundscape Sync)
-* **Objetivo**: Ao trocar de cena no seletor de cenas, disparar automaticamente o som ambiente configurado para aquela cena (ex: Som de taverna, Chuva lá fora, Ecos de masmorra).
-* **Benefício**: O Mestre não precisa mudar o som manualmente a cada transição de local.
+---
 
 ### 🏅 Passo 4: Pistas Interativas com Revelação Progressiva (Fog-of-War Textual)
 * **Objetivo**: Permitir que o Mestre crie cartas e documentos com trechos ocultos que são revelados aos poucos conforme os jogadores passam em testes de investigação.
