@@ -4,7 +4,7 @@ import {
   Volume2, VolumeX, Play, Pause, Square, Music, 
   CloudRain, Flame, Wind, ShieldAlert, Sparkles, X, 
   Disc, Sliders, Link, Bell, Zap, Swords, DoorClosed, 
-  Trophy, Plus, Upload, Check, Radio, ListMusic
+  Trophy, Plus, Upload, Check, Radio, ListMusic, Search, Globe
 } from 'lucide-react';
 import { useAudioStore } from '../../store/audioStore';
 import { audioEngine } from '../../services/AudioEngine';
@@ -178,10 +178,18 @@ export const TheaterSoundscape: React.FC<Props> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="theater-soundscape-overlay" onClick={onClose}>
+    <div 
+      className="theater-soundscape-overlay" 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div 
         className="theater-soundscape-modal" 
         onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
         style={{ maxWidth: '560px' }}
       >
         {/* Header */}

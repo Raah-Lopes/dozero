@@ -19,13 +19,14 @@ export const convertImageToWebP = async (
 ): Promise<{ base64: string, filename: string }> => {
   return new Promise((resolve, reject) => {
     const isSvg = file.type === 'image/svg+xml';
+    const isGif = file.type === 'image/gif';
     const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const finalFilename = isSvg ? file.name : `${baseName}.webp`;
+    const finalFilename = isSvg || isGif ? file.name : `${baseName}.webp`;
 
-    if (isSvg) {
+    if (isSvg || isGif) {
       const reader = new FileReader();
       reader.onload = () => resolve({ base64: reader.result as string, filename: finalFilename });
-      reader.onerror = () => reject(new Error('Falha ao ler arquivo SVG'));
+      reader.onerror = () => reject(new Error(`Falha ao ler arquivo ${isGif ? 'GIF' : 'SVG'}`));
       reader.readAsDataURL(file);
       return;
     }

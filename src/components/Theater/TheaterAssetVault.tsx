@@ -170,13 +170,30 @@ export const TheaterAssetVault: React.FC<Props> = ({ onClose }) => {
             )}
           </div>
 
-          <button 
-            onClick={() => setIsAdding(!isAdding)}
-            className={`theater-vault-add-btn ${isAdding ? 'active' : ''}`}
-          >
-            <Plus size={14} />
-            <span>{isAdding ? 'Cancelar' : 'Novo Recurso'}</span>
-          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button 
+              onClick={() => {
+                const tab = category === 'npc' || category === 'monster' ? 'portrait' : 'image';
+                window.dispatchEvent(new CustomEvent('theater-open-pixabay', { 
+                  detail: { query: search || 'fantasy scenery', tab } 
+                }));
+              }}
+              className="theater-vault-add-btn"
+              style={{ background: 'rgba(56, 189, 248, 0.15)', borderColor: 'rgba(56, 189, 248, 0.4)', color: '#38bdf8' }}
+              title="Buscar imagens e vídeos no acervo Pixabay"
+            >
+              <Sparkles size={14} />
+              <span>Pixabay</span>
+            </button>
+
+            <button 
+              onClick={() => setIsAdding(!isAdding)}
+              className={`theater-vault-add-btn ${isAdding ? 'active' : ''}`}
+            >
+              <Plus size={14} />
+              <span>{isAdding ? 'Cancelar' : 'Novo Recurso'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Category Pills */}

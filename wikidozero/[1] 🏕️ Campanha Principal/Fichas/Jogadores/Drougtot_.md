@@ -119,12 +119,12 @@ avatar: https://i.ibb.co/rfbvhDs9/Drougtot-1785592013203.webp
 imagem: https://i.ibb.co/rfbvhDs9/Drougtot-1785592013203.webp
 imageUrl: https://i.ibb.co/rfbvhDs9/Drougtot-1785592013203.webp
 sanidade: 44
-pv: 23
+pv: 18
 status_efeitos: []
-HP: 23
+HP: 18
 visionRadius: 200
 HP_max: 43
-PM: 15
+PM: 20
 PM_max: 0
 usos_cura_atual: 3
 saqueado: false
@@ -147,11 +147,13 @@ objetos_campanha: []
 Ouro: 0
 XP: 1200
 po: 356
-mana: 15
+mana: 20
 titulo: Drougtot_
 nome: Drougtot_
 title: Drougtot_
 ---
+
+
 
 
 

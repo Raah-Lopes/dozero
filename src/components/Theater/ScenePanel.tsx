@@ -278,8 +278,8 @@ export const ScenePanel: React.FC = () => {
         {/* Gradient overlay */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', borderRadius: '0 0 12px 12px' }} />
 
-        {/* Generate Image Button overlay */}
-        <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
+        {/* Action Buttons overlay (IA + Pixabay) */}
+        <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', gap: '6px' }}>
           <button 
             onClick={(e) => { e.stopPropagation(); handleGenerateImage(); }}
             disabled={isGeneratingImage}
@@ -300,6 +300,33 @@ export const ScenePanel: React.FC = () => {
           >
             <Wand2 size={14} />
             {isGeneratingImage ? 'Gerando Fundo...' : 'Gerar Fundo IA'}
+          </button>
+
+          <button 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              window.dispatchEvent(new CustomEvent('theater-open-pixabay', { 
+                detail: { query: currentScene.title || 'fantasy scenery', tab: 'image' } 
+              })); 
+            }}
+            style={{ 
+              background: 'rgba(2,132,199,0.75)', 
+              border: '1px solid rgba(255,255,255,0.2)', 
+              color: '#fff', 
+              borderRadius: '8px', 
+              padding: '6px 10px', 
+              fontSize: '0.75rem', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              backdropFilter: 'blur(4px)',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+            }}
+            title="Buscar fotos, ilustrações ou vídeos em loop no Pixabay"
+          >
+            <Sparkles size={14} />
+            <span>Pixabay</span>
           </button>
         </div>
 

@@ -99,7 +99,7 @@ borderColor: '#ff00ae'
 showName: true
 sizeScale: 1
 hpBarMode: always
-ativo: true
+ativo: false
 mana_max: 99
 vigor_max: 100
 forca: 19
@@ -145,6 +145,7 @@ loja:
       quantidade: 1
       descricao: Causa dano de fogo em área a múltiplos alvos.
 ---
+
 
 
 

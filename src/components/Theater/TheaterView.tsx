@@ -34,6 +34,7 @@ import { PropsPanel } from './PropsPanel';
 import { TheaterCommandPalette } from './TheaterCommandPalette';
 import { VisualNovelOverlay } from './VisualNovelOverlay';
 import { CinematicDialogueStudio } from './CinematicDialogueStudio';
+import { PixabayMediaPickerModal } from '../Modals/PixabayMediaPickerModal';
 import './Theater.css';
 
 export const TheaterView: React.FC = () => {
@@ -58,6 +59,9 @@ export const TheaterView: React.FC = () => {
   const [secretsOpen, setSecretsOpen] = useState(false);
   const [clocksOpen, setClocksOpen] = useState(false);
   const [dialogueStudioOpen, setDialogueStudioOpen] = useState(false);
+  const [pixabayOpen, setPixabayOpen] = useState(false);
+  const [pixabayInitialQuery, setPixabayInitialQuery] = useState('dark fantasy scenery');
+  const [pixabayInitialTab, setPixabayInitialTab] = useState<'image' | 'video' | 'portrait'>('image');
   const [isCinematic, setIsCinematic] = useState(false);
   const [isAiActive, setIsAiActive] = useState(false);
   const [kenBurnsActive, setKenBurnsActive] = useState(true);
@@ -136,12 +140,19 @@ export const TheaterView: React.FC = () => {
     const onSecrets = () => setSecretsOpen(true);
     const onClocks = () => setClocksOpen(true);
     const onDialogueStudio = () => setDialogueStudioOpen(true);
+    const onPixabay = (e: Event) => {
+      const detail = (e as CustomEvent<{ query?: string; tab?: 'image' | 'video' | 'portrait' }>).detail || {};
+      if (detail.query) setPixabayInitialQuery(detail.query);
+      if (detail.tab) setPixabayInitialTab(detail.tab);
+      setPixabayOpen(true);
+    };
 
     window.addEventListener('theater-open-soundscape', onSoundscape);
     window.addEventListener('theater-open-clues', onClues);
     window.addEventListener('theater-open-secrets', onSecrets);
     window.addEventListener('theater-open-clock-creator', onClocks);
     window.addEventListener('theater-open-dialogue-studio', onDialogueStudio);
+    window.addEventListener('theater-open-pixabay', onPixabay);
 
     return () => {
       window.removeEventListener('theater-open-soundscape', onSoundscape);
@@ -149,6 +160,7 @@ export const TheaterView: React.FC = () => {
       window.removeEventListener('theater-open-secrets', onSecrets);
       window.removeEventListener('theater-open-clock-creator', onClocks);
       window.removeEventListener('theater-open-dialogue-studio', onDialogueStudio);
+      window.removeEventListener('theater-open-pixabay', onPixabay);
     };
   }, []);
 
@@ -602,6 +614,14 @@ export const TheaterView: React.FC = () => {
 
         {/* Visual Novel Mode */}
         <VisualNovelOverlay />
+
+        {/* Pixabay Universal Media Picker Modal */}
+        <PixabayMediaPickerModal
+          isOpen={pixabayOpen}
+          onClose={() => setPixabayOpen(false)}
+          initialQuery={pixabayInitialQuery}
+          initialTab={pixabayInitialTab}
+        />
 
         <TheaterCommandPalette />
       </MoodEngine>

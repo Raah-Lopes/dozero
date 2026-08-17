@@ -127,11 +127,21 @@ O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilida
 
 ### 5. 📜 Live Chronicle & Handout Theatrical Spotlight
 - **Feed da Crônica**: Histórico translúcido de rolagens, danos e eventos na lateral do palco.
-- **Spotlight de Documentos**: Zoom cinematográfico para cartas, pistas e mapas.
 
-### 6. 🌐 CI/CD & Deploy na Vercel Desbloqueado
-- Configuração de `.npmrc` com `legacy-peer-deps=true` e overrides no `package.json` para resolver conflitos de peer dependencies do React 19.
-- Repositório sincronizado na branch `main` (`e3476fac`).
+### 6. 🖼️ Integração Pixabay — Acervo Infinito de Cenários, Vídeos em Loop & NPCs (`PixabayMediaPickerModal.tsx`)
+- **Cliente HTTP Dedicado** (`pixabayService.ts`): Suporte a chave de API Pixabay configurável pelo usuário no `localStorage`, com chave padrão inclusa, cache em memória e tratamento de erros.
+- **Modal Universal de Busca** (`PixabayMediaPickerModal.tsx`):
+  - Abas especializadas: **Cenários & Ilustrações**, **Fundos Animados (Vídeos em Loop)** e **Retratos / NPCs**.
+  - 12 tags rápidas de RPG pré-configuradas (*Taverna, Masmorra, Castelo, Floresta, Fogueira, etc.*).
+  - Pré-visualização instantânea de vídeos em loop ao passar o mouse.
+  - Ações rápidas de 1 clique: *Definir como Fundo da Cena*, *Salvar no Acervo Global*, *Projetar Retrato de NPC* e *Apresentar Pista em Destaque*.
+- **Pontos de Acesso Integrados**: Botão *Pixabay* no **Acervo Global** (`TheaterAssetVault.tsx`), no cabeçalho da cena (`ScenePanel.tsx`) e via evento global `theater-open-pixabay`.
+
+### 7. 🎵 Motor de Áudio Nativo & Fallback Procedural Web Audio (`AudioEngine.ts` & `ProceduralAudio.ts`)
+- **Loops Atmosféricos & Trilhas Rápidas**: Ambientes imersivos (Chuva/Tempestade, Taverna & Lareira, Vento Gélido, Tensão de Combate, Caverna, Floresta, Noite Estrelada e Rio) e trilhas musicais vinculáveis às cenas.
+- **Soundboard de Efeitos Rápidos (SFX)**: Disparos de 1 clique para dados, espadas, impactos, portas, magias, alarmes, baús de ouro e fanfarras de vitória.
+- **Resiliência Total com Síntese Procedural**: Se qualquer áudio local ou remoto for bloqueado pelo navegador ou falhar na rede, o motor Web Audio API sintetiza o som equivalente proceduralmente com 0ms de latência.
+- **Mixer Global & Importador**: Suporte completo a importação de pastas locais do PC no `AudioDirectorWidget` e transmissão de links diretos/YouTube para toda a mesa.
 
 ---
 
@@ -140,18 +150,24 @@ O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilida
 | Componente / Arquivo | Responsabilidade |
 | :--- | :--- |
 | [`src/components/Theater/TheaterView.tsx`](file:///d:/DOZERO/src/components/Theater/TheaterView.tsx) | Casca principal do Teatro da Mente, palco visual, topbar e orquestração de overlays. |
+| [`src/services/AudioEngine.ts`](file:///d:/DOZERO/src/services/AudioEngine.ts) | Gerenciador de reprodução de áudio, canais de música/ambiente e fallback procedural. |
+| [`src/services/ProceduralAudio.ts`](file:///d:/DOZERO/src/services/ProceduralAudio.ts) | Sintetizador de áudio procedural Web Audio API (100% offline, zero dependência de arquivos). |
+| [`src/components/Theater/TheaterSoundscape.tsx`](file:///d:/DOZERO/src/components/Theater/TheaterSoundscape.tsx) | Jukebox e player do Teatro com abas de Ambiente, Música e Soundboard de ação rápida. |
+| [`src/components/Widgets/System/AudioDirectorWidget.tsx`](file:///d:/DOZERO/src/components/Widgets/System/AudioDirectorWidget.tsx) | Mixer de canais da mesa (CH1 Música, CH2 Ambiente, SFX, Soundboard e Web YouTube). |
+| [`src/components/Modals/PixabayMediaPickerModal.tsx`](file:///d:/DOZERO/src/components/Modals/PixabayMediaPickerModal.tsx) | Modal universal de busca e projeção de mídias gratuitas (fotos, ilustrações, vídeos em loop e retratos) do Pixabay. |
+| [`src/services/pixabayService.ts`](file:///d:/DOZERO/src/services/pixabayService.ts) | Cliente HTTP para a API do Pixabay com tradução inteligente de termos de RPG, paginação e cache. |
 | [`src/components/Theater/HeroBadge.tsx`](file:///d:/DOZERO/src/components/Theater/HeroBadge.tsx) | Cards estilo RPG antigo/vintage com drag-and-drop livre, PV, estados visuais (morto, envenenado, etc.) e menu de contexto portal. |
 | [`src/components/Theater/NpcPortrait.tsx`](file:///d:/DOZERO/src/components/Theater/NpcPortrait.tsx) | Spotlight de apresentação de personagens e monstros no palco, com balão de fala e controle de escala. |
 | [`src/components/Theater/VisualNovelOverlay.tsx`](file:///d:/DOZERO/src/components/Theater/VisualNovelOverlay.tsx) | Camada cinematográfica centralizada de diálogos estilo Visual Novel com typewriter, áudio, escolhas e avanço de roteiro. |
 | [`src/components/Theater/CinematicDialogueStudio.tsx`](file:///d:/DOZERO/src/components/Theater/CinematicDialogueStudio.tsx) | Estúdio de fala rápida e mini-roteiros sequenciais com gerador IA, biblioteca de presets e ramificações de escolhas. |
 | [`src/components/Theater/StageClockOverlay.tsx`](file:///d:/DOZERO/src/components/Theater/StageClockOverlay.tsx) | HUD flutuante de relógios de tensão, temporizador e alarmes no palco. |
-| [`src/components/Theater/TheaterAssetVault.tsx`](file:///d:/DOZERO/src/components/Theater/TheaterAssetVault.tsx) | Gerenciador do Acervo Global de imagens, busca, categorização e projeção. |
+| [`src/components/Theater/TheaterAssetVault.tsx`](file:///d:/DOZERO/src/components/Theater/TheaterAssetVault.tsx) | Gerenciador do Acervo Global de imagens, busca, categorização e projeção com botão Pixabay. |
 | [`src/components/Theater/StageProjectorDropzone.tsx`](file:///d:/DOZERO/src/components/Theater/StageProjectorDropzone.tsx) | Captura de drag-and-drop de imagens direto na tela com auto-cadastro. |
 | [`src/components/Theater/DirectorBar.tsx`](file:///d:/DOZERO/src/components/Theater/DirectorBar.tsx) | Cockpit inferior de comando rápido do Mestre (Atmosfera, Dados, Alvo, Narrativa). |
-| [`src/components/Theater/DirectorPanel.tsx`](file:///d:/DOZERO/src/components/Theater/DirectorPanel.tsx) | Painel lateral avançado (Cenas, Acervo, Mecânicas, Anotações e Diário). |
+| [`src/components/Theater/DirectorPanel.tsx`](file:///d:/DOZERO/src/components/Theater/DirectorPanel.tsx) | Painel lateral avançado (Cenas, Acervo, Mecânicas, Anotações e Diário) com suporte a Pop-Out em janela flutuante. |
 | [`src/store/theater.ts`](file:///d:/DOZERO/src/store/theater.ts) | Store do estado do Teatro da Mente, sincronização Yjs, persistência e helpers de roteiros e diálogos. |
 | [`src/store/clocks.ts`](file:///d:/DOZERO/src/store/clocks.ts) | Lógica de estado dos relógios de tensão, gatilhos de consequência e sincronia Yjs. |
-| [`src/components/Theater/Theater.css`](file:///d:/DOZERO/src/components/Theater/Theater.css) | Sistema de design, animações, temas escuros, transições e regras de responsividade mobile. |
+| [`src/components/Theater/Theater.css`](file:///d:/DOZERO/src/components/Theater/Theater.css) | Sistema de design, animações, temas escuros, transições, modais e regras de responsividade. |
 
 ---
 
@@ -159,39 +175,22 @@ O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilida
 
 ```mermaid
 graph TD
-    A[Passo 1: Integração Pixabay - Imagens, Músicas e SFX] --> B[Passo 2: Modo Espectador / Player View]
-    B --> C[Passo 3: Efeitos Atmosféricos & Partículas]
+    A[Concluído: Integração Pixabay] --> B[Passo 2: Modo Espectador / Player View Refinado]
+    B --> C[Passo 3: Efeitos Atmosféricos & Partículas Canvas]
     C --> D[Passo 4: Pistas com Revelação Progressiva]
 ```
 
-### 🥇 Passo 1: Integração Pixabay — Acervo Infinito de Imagens, Músicas e Efeitos Sonoros (SFX)
-* **Objetivo**: Integrar a API oficial do **Pixabay** diretamente no ecossistema do DOZERO VTT, permitindo buscar e usar instantaneamente milhões de mídias gratuitas de alta qualidade sem sair da mesa.
-* **Módulos que se beneficiarão**:
-  1. 🖼️ **Imagens & Cenários (Teatro da Mente & Acervo Global)**:
-     - Busca direta por ilustrações de cenários (castelos, masmorras, florestas, tavernas) e retratos de NPCs com 1 clique para projetar no palco.
-  2. 🎵 **Músicas & Soundscapes (Audio Director & Teatro Sonoro)**:
-     - Pesquisa de faixas orquestrais, trilhas épicas, temas de combate e músicas de ambiente com prévia de áudio e vinculação a cenas.
-  3. 🔊 **Efeitos Sonoros (SFX)**:
-     - Biblioteca de sons de impacto, feitiços, passos, portas, monstros, alarmes e dados rolando para disparo rápido pelo Mestre.
-  4. 🎥 **Vídeos em Loop (Fundos Animados)**:
-     - Suporte a fundos cinematográficos em vídeo (fogueiras acesas, chuva contínua, neve, portais mágicos) rodando diretamente no fundo do Teatro.
-* **Arquitetura Planejada**:
-  - `src/services/pixabayService.ts`: Cliente HTTP com suporte a chave de API configurável, cache inteligente, paginação e filtros por tipo de mídia (`photo`, `illustration`, `music`, `sound_effects`, `video`).
-  - `PixabayMediaPickerModal.tsx`: Componente de busca universal reaproveitável em qualquer ferramenta do VTT.
-
----
-
-### 🥈 Passo 2: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
+### 🥇 Passo 2: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
 * **Objetivo**: Permitir que os jogadores vejam apenas o palco limpo e imersivo (sem botões de controle do Mestre, sem abas de segredos e sem botões de edição).
 * **Benefício**: Perfeito para sessões presenciais em TV/Telão secundário ou para jogadores que entram via link no navegador.
 
 ---
 
-### 🥉 Passo 3: Efeitos Atmosféricos em Partículas (Chuva, Névoa, Brasas, Magia)
+### 🥈 Passo 3: Efeitos Atmosféricos em Partículas (Chuva, Névoa, Brasas, Magia)
 * **Objetivo**: Conectar o menu de **Atmosfera** do Diretor a uma camada visual leve em Canvas/CSS com efeitos de partículas realistas (Chuva com relâmpagos, Neblina densa, Cinzas vulcânicas, Neve suave, Luzes mágicas).
 * **Benefício**: Eleva a imersão visual das cenas a nível cinematográfico sem sobrecarregar o processador.
 
 ---
 
-### 🏅 Passo 4: Pistas Interativas com Revelação Progressiva (Fog-of-War Textual)
+### 🥉 Passo 4: Pistas Interativas com Revelação Progressiva (Fog-of-War Textual)
 * **Objetivo**: Permitir que o Mestre crie cartas e documentos com trechos ocultos que são revelados aos poucos conforme os jogadores passam em testes de investigação.

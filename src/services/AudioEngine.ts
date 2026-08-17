@@ -165,8 +165,10 @@ class AudioEngine {
     audioEl.volume = Math.max(0, Math.min(1, volume));
     audioEl.addEventListener('ended', this.handleMusicEnded);
     audioEl.addEventListener('error', (e) => {
-      console.warn('[AudioEngine] Erro ao carregar arquivo de música:', finalUrl, e);
-      this.emitState({ isPlayingMusic: false });
+      console.warn('[AudioEngine] Erro ao carregar arquivo de música, ativando procedural:', finalUrl, e);
+      this.isUsingSynthMusic = true;
+      proceduralAudio.startMusic(track.id, volume);
+      this.emitState({ isPlayingMusic: true, currentMusicId: track.id, currentMusicTitle: track.name || track.title });
     });
     this.nativeMusicAudio = audioEl;
 
@@ -174,8 +176,10 @@ class AudioEngine {
       await audioEl.play();
       this.emitState({ isPlayingMusic: true, currentMusicId: track.id, currentMusicTitle: track.name || track.title });
     } catch (err) {
-      console.warn('[AudioEngine] Play de música bloqueado:', err);
-      this.emitState({ isPlayingMusic: false });
+      console.warn('[AudioEngine] Play de música bloqueado pelo navegador, ativando procedural:', err);
+      this.isUsingSynthMusic = true;
+      proceduralAudio.startMusic(track.id, volume);
+      this.emitState({ isPlayingMusic: true, currentMusicId: track.id, currentMusicTitle: track.name || track.title });
     }
   }
 
@@ -308,8 +312,10 @@ class AudioEngine {
     audioEl.volume = Math.max(0, Math.min(1, volume));
     audioEl.addEventListener('ended', this.handleAmbienceEnded);
     audioEl.addEventListener('error', (e) => {
-      console.warn('[AudioEngine] Erro ao carregar arquivo de som ambiente:', finalUrl, e);
-      this.emitState({ isPlayingAmbience: false });
+      console.warn('[AudioEngine] Erro ao carregar som ambiente, ativando procedural:', finalUrl, e);
+      this.isUsingSynthAmbience = true;
+      proceduralAudio.startAmbience(track.id, volume);
+      this.emitState({ isPlayingAmbience: true, currentAmbienceId: track.id, currentAmbienceTitle: track.name || track.title });
     });
     this.ambienceAudio = audioEl;
 
@@ -317,8 +323,10 @@ class AudioEngine {
       await audioEl.play();
       this.emitState({ isPlayingAmbience: true, currentAmbienceId: track.id, currentAmbienceTitle: track.name || track.title });
     } catch (err) {
-      console.warn('[AudioEngine] Play de ambiente bloqueado:', err);
-      this.emitState({ isPlayingAmbience: false });
+      console.warn('[AudioEngine] Play de ambiente bloqueado pelo navegador, ativando procedural:', err);
+      this.isUsingSynthAmbience = true;
+      proceduralAudio.startAmbience(track.id, volume);
+      this.emitState({ isPlayingAmbience: true, currentAmbienceId: track.id, currentAmbienceTitle: track.name || track.title });
     }
   }
 

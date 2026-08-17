@@ -1,6 +1,6 @@
 // src/components/Theater/DirectorBar.tsx
 import React, { useState } from 'react';
-import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, ArrowLeft, Bell, ChevronUp, ChevronDown, Palette, Dice5, Crosshair, BookOpen, X } from 'lucide-react';
+import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, ArrowLeft, Bell, ChevronUp, ChevronDown, Palette, Dice5, Crosshair, BookOpen, X, Sparkles } from 'lucide-react';
 import { setTheaterMood, setTheaterWeather, addTensionClock, addTheaterDiaryEntry, pushChatMessage, type MoodType, type WeatherType } from '../../store';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
@@ -164,6 +164,18 @@ export const DirectorBar: React.FC = () => {
                   ))}
                 </div>
               </div>
+              <div className="theater-submenu-section" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="theater-submenu-label">Cenários em HD & Vídeos em Loop</span>
+                  <button 
+                    className="theater-qbtn blue"
+                    onClick={() => window.dispatchEvent(new CustomEvent('theater-open-pixabay', { detail: { query: 'fantasy scenery', tab: 'image' } }))}
+                    style={{ borderColor: 'rgba(56,189,248,0.4)', background: 'rgba(56,189,248,0.15)', color: '#38bdf8' }}
+                  >
+                    <Sparkles size={11} /> Abrir Pixabay
+                  </button>
+                </div>
+              </div>
             </>
           )}
 
@@ -220,6 +232,15 @@ export const DirectorBar: React.FC = () => {
                     onClick={() => window.dispatchEvent(new CustomEvent('theater-open-drawer', { detail: 'narrativa' }))}
                   >
                     🎬 Cutscenes
+                  </button>
+                </Tooltip>
+                <Tooltip label="Acervo Pixabay" description="Buscar cenários, fundos e vídeos">
+                  <button
+                    className="theater-qbtn blue"
+                    style={{ background: 'rgba(56,189,248,0.15)', borderColor: 'rgba(56,189,248,0.35)', color: '#38bdf8' }}
+                    onClick={() => window.dispatchEvent(new CustomEvent('theater-open-pixabay', { detail: { query: 'epic fantasy', tab: 'image' } }))}
+                  >
+                    ✨ Pixabay
                   </button>
                 </Tooltip>
               </div>

@@ -12,7 +12,7 @@ Acrobacia: 0
 Furtividade: 0
 Atletismo: 0
 Percepcao: 0
-pv: 85
+pv: 55
 pv_max: 85
 xp: 240
 nivel: 4
@@ -25,7 +25,7 @@ ataque: 22
 status: jogador
 usos_cura: 3
 saqueado: false
-ativo: false
+ativo: true
 status_efeitos: []
 imagem: https://i.ibb.co/7qfpgfW/9e9c9c0846b2.jpg
 inventario:
@@ -83,7 +83,18 @@ inCombat: true
 visionRadius: 200
 Ouro: 0
 riquezas: 0
+HP: 55
 ---
+
+
+
+
+
+
+
+
+
+
 
 
 

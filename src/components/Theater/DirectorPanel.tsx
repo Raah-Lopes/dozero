@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Plus, Film, Users, Target, BookOpen, Trash2, 
-  EyeOff, Swords, Shield, Sparkles, Upload, FolderArchive
+  EyeOff, Swords, Shield, Sparkles, Upload, FolderArchive, ExternalLink
 } from 'lucide-react';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
@@ -35,7 +35,9 @@ interface Props {
 
 export const DirectorPanel: React.FC<Props> = ({ 
   onClose, 
-  initialTab = 'ambiente' 
+  initialTab = 'ambiente',
+  floatingPanels = [],
+  onToggleFloat
 }) => {
   const { scenes, currentScene, setCurrentScene, createScene, deleteScene } = useSceneState();
   const { npcs } = useCastData();
@@ -78,15 +80,29 @@ export const DirectorPanel: React.FC<Props> = ({
             </span>
           </div>
         </div>
-        <Tooltip label="Fechar Painel (ESC)">
-          <button
-            onClick={onClose}
-            className="theater-drawer-close-btn"
-            aria-label="Fechar"
-          >
-            <X size={16} />
-          </button>
-        </Tooltip>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {onToggleFloat && tab !== 'acervo' && (
+            <Tooltip label={floatingPanels.includes(tab) ? 'Fechar janela destacada' : 'Destacar esta aba em janela flutuante'}>
+              <button
+                onClick={() => onToggleFloat(tab)}
+                className={`theater-drawer-close-btn ${floatingPanels.includes(tab) ? 'active' : ''}`}
+                style={floatingPanels.includes(tab) ? { background: 'rgba(168,85,247,0.2)', color: '#c084fc', borderColor: 'rgba(168,85,247,0.5)' } : {}}
+                aria-label="Destacar Janela"
+              >
+                <ExternalLink size={14} />
+              </button>
+            </Tooltip>
+          )}
+          <Tooltip label="Fechar Painel (ESC)">
+            <button
+              onClick={onClose}
+              className="theater-drawer-close-btn"
+              aria-label="Fechar"
+            >
+              <X size={16} />
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {/* Main Category Tabs */}

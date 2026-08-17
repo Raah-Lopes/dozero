@@ -177,10 +177,18 @@ export const SceneCluesModal: React.FC<Props> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="theater-clues-overlay" onClick={onClose}>
+    <div 
+      className="theater-clues-overlay" 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div 
         className="theater-clues-modal" 
         onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="theater-clues-header">
