@@ -22,6 +22,7 @@ export const TheaterAssetVault: React.FC<Props> = ({ onClose }) => {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<AssetCategory>('all');
   const [isAdding, setIsAdding] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newType, setNewType] = useState<SceneAsset['type']>('npc');
@@ -40,17 +41,22 @@ export const TheaterAssetVault: React.FC<Props> = ({ onClose }) => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setIsUploading(true);
     try {
-      toast.info('Carregando imagem no acervo...');
-      const { base64 } = await convertImageToWebP(file, 0.9, 1920);
-      const cloudUrl = await saveImageToCloud(base64, `vault_${Date.now()}.webp`);
+      toast.info('Processando e otimizando imagem...');
+      const { base64, filename } = await convertImageToWebP(file, 0.85, 1600);
+      const cloudUrl = await saveImageToCloud(base64, filename || `vault_${Date.now()}.webp`);
       setNewUrl(cloudUrl || base64);
       if (!newTitle) {
         setNewTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
       }
-      toast.success('Imagem pronta!');
-    } catch {
+      toast.success('Imagem carregada!');
+    } catch (err: any) {
+      console.error('[TheaterAssetVault] Erro no upload:', err);
       toast.error('Erro ao processar imagem.');
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -108,9 +114,38 @@ export const TheaterAssetVault: React.FC<Props> = ({ onClose }) => {
     toast.info(`"${asset.title}" projetado no centro do palco!`);
   };
 
+  const handleAttachClueToScene = (asset: SceneAsset) => {
+    if (!currentScene) {
+      toast.warn('Nenhuma cena ativa para anexar.');
+      return;
+    }
+    const clues = currentScene.clues || [];
+    const alreadyExists = clues.some(c => c.url === asset.url || c.title === asset.title);
+    if (alreadyExists) {
+      toast.info(`"${asset.title}" já está anexada ao mural da cena atual.`);
+      return;
+    }
+    const newClue = {
+      id: `clue_${Date.now()}`,
+      title: asset.title,
+      url: asset.url,
+      description: asset.description || '',
+      discovered: true,
+    };
+    patchCurrentScene({ clues: [...clues, newClue] });
+    toast.success(`"${asset.title}" vinculada como Pista de "${currentScene.title}"!`);
+  };
+
   const handleSpotlight = (asset: SceneAsset) => {
+    const matchingClue = currentScene?.clues?.find(c => c.url === asset.url || c.title === asset.title);
     window.dispatchEvent(new CustomEvent('theater-spotlight-image', {
-      detail: { title: asset.title, url: asset.url, description: asset.description }
+      detail: { 
+        id: matchingClue?.id,
+        title: asset.title, 
+        url: asset.url, 
+        description: matchingClue?.description || asset.description,
+        redactedSections: matchingClue?.redactedSections,
+      }
     }));
   };
 
@@ -273,6 +308,17 @@ export const TheaterAssetVault: React.FC<Props> = ({ onClose }) => {
                       >
                         <Scroll size={13} />
                         <span>Pista</span>
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip label="Vincular como Pista na Cena Atual">
+                      <button 
+                        onClick={() => handleAttachClueToScene(asset)}
+                        className="theater-vault-action-btn attach"
+                        style={{ background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderColor: 'rgba(245,158,11,0.4)' }}
+                      >
+                        <Plus size={13} />
+                        <span>Cena</span>
                       </button>
                     </Tooltip>
                   </div>

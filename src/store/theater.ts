@@ -52,6 +52,22 @@ export interface StageProp {
 
 export type SceneTransition = 'none' | 'fade' | 'dissolve' | 'wipe';
 
+export interface ClueRedactedSection {
+  id: string;
+  label: string;
+  text: string;
+  revealed: boolean;
+}
+
+export interface TheaterClue {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  discovered: boolean;
+  redactedSections?: ClueRedactedSection[];
+}
+
 export interface TheaterScene {
   id: string;
   title: string;
@@ -72,14 +88,8 @@ export interface TheaterScene {
   transitionType?: SceneTransition;
   // Segredos do Mestre (exclusivo para o narrador)
   gmSecrets?: string;
-  // Pistas e Handouts vinculados à cena
-  clues?: Array<{
-    id: string;
-    title: string;
-    url: string;
-    description?: string;
-    discovered: boolean;
-  }>;
+  // Pistas e Handouts vinculados à cena com suporte a revelação progressiva
+  clues?: TheaterClue[];
 }
 
 export interface TheaterEnemy {
@@ -100,6 +110,49 @@ export interface DiaryEntry {
 }
 
 // ponytail: DistanceEntry removida — era código morto, TacticalRadar usa entityBands
+
+export interface DialogueChoice {
+  id: string;
+  label: string;
+  actionText?: string;
+  outcomeText?: string; // Fala de resposta do interlocutor após a escolha
+  nextStepId?: string;
+}
+
+export interface DialogueScriptStep {
+  id: string;
+  speakerName: string;
+  speakerTitle?: string;
+  speakerAvatar?: string;
+  text: string;
+  emotion?: 'neutral' | 'fury' | 'whisper' | 'panic' | 'joy' | 'mystic' | 'solemn';
+  choices?: DialogueChoice[];
+}
+
+export interface SavedDialogueScript {
+  id: string;
+  title: string;
+  description?: string;
+  steps: DialogueScriptStep[];
+  createdAt: number;
+}
+
+export interface TheaterDialogue {
+  id: string;
+  speakerName: string;
+  speakerTitle?: string;
+  speakerAvatar?: string;
+  text: string;
+  emotion?: 'neutral' | 'fury' | 'whisper' | 'panic' | 'joy' | 'mystic' | 'solemn';
+  choices?: DialogueChoice[];
+  timestamp: number;
+  
+  // Suporte a Mini-Roteiro Sequencial
+  scriptTitle?: string;
+  currentStepIndex?: number;
+  totalSteps?: number;
+  steps?: DialogueScriptStep[];
+}
 
 export interface TheaterNpcPresentation {
   name: string;
@@ -124,6 +177,12 @@ export interface TheaterStateData {
   vnModeActive?: boolean;
   globalAssets?: SceneAsset[];
   activeNpc?: TheaterNpcPresentation | null;
+  activeDialogue?: TheaterDialogue | null;
+  savedScripts?: SavedDialogueScript[];
+  showHeroCards?: boolean;
+  heroCardPositions?: Record<string, { x: number; y: number }>;
+  heroCardScales?: Record<string, 'small' | 'medium' | 'large'>;
+  heroCardCustomStatus?: Record<string, 'alive' | 'unconscious' | 'dead'>;
 }
 
 const THEATER_DEFAULT: TheaterStateData = {
@@ -141,6 +200,11 @@ const THEATER_DEFAULT: TheaterStateData = {
   vnModeActive: false,
   globalAssets: [],
   activeNpc: null,
+  activeDialogue: null,
+  showHeroCards: true,
+  heroCardPositions: {},
+  heroCardScales: {},
+  heroCardCustomStatus: {},
 };
 
 const THEATER_STORAGE_KEY = 'dozero_theater_state_v2';
@@ -313,4 +377,109 @@ export function updateCutscene(id: string, updates: Partial<Omit<SavedCutscene, 
 export function deleteCutscene(id: string) {
   const current = getTheaterState();
   state.theater.set('global', { ...current, cutscenes: (current.cutscenes ?? []).filter(c => c.id !== id) });
+}
+
+// ── Cinematic Dialogue ────────────────────────────────────────────────────────
+
+export function setActiveDialogue(dialogue: TheaterDialogue | null) {
+  updateTheaterState({ activeDialogue: dialogue });
+  if (dialogue) {
+    addTheaterDiaryEntry({
+      timestamp: dialogue.timestamp || Date.now(),
+      type: 'narrative',
+      text: `💬 **${dialogue.speakerName}**: "${dialogue.text}"`
+    });
+  }
+}
+
+export function advanceDialogueScript() {
+  const current = getTheaterState();
+  const dialogue = current.activeDialogue;
+  if (!dialogue || !dialogue.steps || dialogue.steps.length === 0) {
+    closeActiveDialogue();
+    return;
+  }
+
+  const currentIndex = dialogue.currentStepIndex ?? 0;
+  const nextIndex = currentIndex + 1;
+
+  if (nextIndex < dialogue.steps.length) {
+    const nextStep = dialogue.steps[nextIndex];
+    const updatedDialogue: TheaterDialogue = {
+      ...dialogue,
+      speakerName: nextStep.speakerName,
+      speakerTitle: nextStep.speakerTitle,
+      speakerAvatar: nextStep.speakerAvatar,
+      text: nextStep.text,
+      emotion: nextStep.emotion || 'neutral',
+      choices: nextStep.choices || [],
+      currentStepIndex: nextIndex,
+      timestamp: Date.now()
+    };
+    updateTheaterState({ activeDialogue: updatedDialogue });
+    addTheaterDiaryEntry({
+      timestamp: Date.now(),
+      type: 'narrative',
+      text: `💬 [${dialogue.scriptTitle || 'Roteiro'} ${nextIndex + 1}/${dialogue.steps.length}] **${nextStep.speakerName}**: "${nextStep.text}"`
+    });
+  } else {
+    closeActiveDialogue();
+  }
+}
+
+export function saveDialogueScript(script: Omit<SavedDialogueScript, 'id' | 'createdAt'>): string {
+  const current = getTheaterState();
+  const id = `script_${Date.now()}`;
+  const newScript: SavedDialogueScript = { ...script, id, createdAt: Date.now() };
+  const savedScripts = [...(current.savedScripts || []), newScript];
+  updateTheaterState({ savedScripts });
+  return id;
+}
+
+export function deleteDialogueScript(id: string) {
+  const current = getTheaterState();
+  const savedScripts = (current.savedScripts || []).filter(s => s.id !== id);
+  updateTheaterState({ savedScripts });
+}
+
+export function closeActiveDialogue() {
+  updateTheaterState({ activeDialogue: null });
+}
+
+// ── Hero Cards Management ───────────────────────────────────────────────────
+
+export function toggleShowHeroCards() {
+  const current = getTheaterState();
+  updateTheaterState({ showHeroCards: current.showHeroCards === false ? true : false });
+}
+
+export function updateHeroCardPosition(memberId: string, pos: { x: number; y: number } | null) {
+  const current = getTheaterState();
+  const heroCardPositions = { ...(current.heroCardPositions || {}) };
+  if (pos === null) {
+    delete heroCardPositions[memberId];
+  } else {
+    heroCardPositions[memberId] = pos;
+  }
+  updateTheaterState({ heroCardPositions });
+}
+
+export function updateHeroCardScale(memberId: string, scale: 'small' | 'medium' | 'large') {
+  const current = getTheaterState();
+  updateTheaterState({
+    heroCardScales: {
+      ...(current.heroCardScales || {}),
+      [memberId]: scale,
+    }
+  });
+}
+
+export function setHeroCustomStatus(memberId: string, status: 'alive' | 'unconscious' | 'dead') {
+  const current = getTheaterState();
+  updateTheaterState({
+    heroCardCustomStatus: {
+      ...(current.heroCardCustomStatus || {}),
+      [memberId]: status,
+    }
+  });
 }

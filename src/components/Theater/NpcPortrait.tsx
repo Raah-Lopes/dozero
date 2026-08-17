@@ -107,6 +107,19 @@ export const NpcPortrait: React.FC<Props> = ({
       {/* Speech Bubble / Dialogue if active */}
       {(dialogue || isEditingDialogue) && (
         <div className="theater-npc-speech-bubble">
+          {/* Botão de Fechar Fala no canto do balão */}
+          <button 
+            className="theater-npc-speech-close-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDialogue('');
+              setIsEditingDialogue(false);
+            }}
+            title="Remover fala do personagem"
+          >
+            <X size={13} />
+          </button>
+
           {isEditingDialogue ? (
             <div className="theater-npc-dialogue-edit">
               <input 
@@ -114,10 +127,23 @@ export const NpcPortrait: React.FC<Props> = ({
                 placeholder="O que este personagem diz para a cena?..." 
                 value={dialogue}
                 onChange={e => setDialogue(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') setIsEditingDialogue(false); }}
+                onKeyDown={e => { 
+                  if (e.key === 'Enter') setIsEditingDialogue(false);
+                  if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    setIsEditingDialogue(false);
+                  }
+                }}
                 autoFocus
               />
-              <button onClick={() => setIsEditingDialogue(false)}>OK</button>
+              <button onClick={() => setIsEditingDialogue(false)}>Salvar</button>
+              <button 
+                type="button"
+                className="cancel" 
+                onClick={() => { setDialogue(''); setIsEditingDialogue(false); }}
+              >
+                Limpar
+              </button>
             </div>
           ) : (
             <div 
@@ -137,6 +163,15 @@ export const NpcPortrait: React.FC<Props> = ({
         className="theater-npc-stage-card"
         style={{ borderColor: `${auraColor}50` }}
       >
+        {/* Botão Fechar Rápido no topo do Card */}
+        <button 
+          className="theater-npc-card-close-btn"
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          title="Fechar Apresentação (ESC)"
+        >
+          <X size={14} />
+        </button>
+
         {imageUrl ? (
           <img 
             src={imageUrl} 

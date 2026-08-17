@@ -5,6 +5,7 @@ import {
   ChevronUp, ChevronDown, X, Zap, BellRing
 } from 'lucide-react';
 import { useTheaterClocks } from './hooks/useTheaterClocks';
+import { useIsGM } from '../../store/user';
 import { 
   addTensionClock, 
   removeTensionClock, 
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export const StageClockOverlay: React.FC<Props> = ({ isOpen, onClose }) => {
+  const isGM = useIsGM();
   const clocks = useTheaterClocks();
   const [now, setNow] = useState(Date.now());
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -112,15 +114,17 @@ export const StageClockOverlay: React.FC<Props> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="theater-clock-overlay-tools">
-          <Tooltip label={isCreating ? "Ver Relógios" : "Novo Relógio"}>
-            <button 
-              onClick={() => setIsCreating(!isCreating)}
-              className={`theater-clock-tool-btn ${isCreating ? 'active' : ''}`}
-            >
-              <Plus size={14} />
-              <span>{isCreating ? 'Lista' : 'Novo'}</span>
-            </button>
-          </Tooltip>
+          {isGM && (
+            <Tooltip label={isCreating ? "Ver Relógios" : "Novo Relógio"}>
+              <button 
+                onClick={() => setIsCreating(!isCreating)}
+                className={`theater-clock-tool-btn ${isCreating ? 'active' : ''}`}
+              >
+                <Plus size={14} />
+                <span>{isCreating ? 'Lista' : 'Novo'}</span>
+              </button>
+            </Tooltip>
+          )}
 
           <Tooltip label={isCollapsed ? "Expandir" : "Minimizar"}>
             <button 
@@ -142,8 +146,8 @@ export const StageClockOverlay: React.FC<Props> = ({ isOpen, onClose }) => {
         </div>
       </div>
 
-      {/* Creation Box */}
-      {(isCreating || clocks.length === 0) && (
+      {/* Creation Box (GM Only) */}
+      {isGM && (isCreating || clocks.length === 0) && (
         <div className="theater-clock-create-box">
           <label className="theater-clock-field-label">Título do Evento / Perigo</label>
           <input 
@@ -230,51 +234,53 @@ export const StageClockOverlay: React.FC<Props> = ({ isOpen, onClose }) => {
                   />
                 </div>
 
-                {/* Clear, Big Controls */}
-                <div className="theater-clock-card-controls">
-                  <button 
-                    onClick={() => clock.isRunning ? pauseTensionClock(clock.id) : resumeTensionClock(clock.id)}
-                    className={`theater-clock-btn-action ${clock.isRunning ? 'pause' : 'play'}`}
-                    title={clock.isRunning ? "Pausar relógio" : "Continuar relógio"}
-                  >
-                    {clock.isRunning ? <Pause size={13} /> : <Play size={13} />}
-                    <span>{clock.isRunning ? 'Pausar' : 'Retomar'}</span>
-                  </button>
-
-                  <div className="theater-clock-time-adjusts">
+                {/* Clear, Big Controls (GM Only) */}
+                {isGM && (
+                  <div className="theater-clock-card-controls">
                     <button 
-                      onClick={() => addMinutesToClock(clock.id, -1)}
-                      className="theater-clock-btn-pill"
-                      title="Avançar 1 minuto (reduzir tempo restante)"
+                      onClick={() => clock.isRunning ? pauseTensionClock(clock.id) : resumeTensionClock(clock.id)}
+                      className={`theater-clock-btn-action ${clock.isRunning ? 'pause' : 'play'}`}
+                      title={clock.isRunning ? "Pausar relógio" : "Continuar relógio"}
                     >
-                      -1m
+                      {clock.isRunning ? <Pause size={13} /> : <Play size={13} />}
+                      <span>{clock.isRunning ? 'Pausar' : 'Retomar'}</span>
+                    </button>
+
+                    <div className="theater-clock-time-adjusts">
+                      <button 
+                        onClick={() => addMinutesToClock(clock.id, -1)}
+                        className="theater-clock-btn-pill"
+                        title="Avançar 1 minuto (reduzir tempo restante)"
+                      >
+                        -1m
+                      </button>
+
+                      <button 
+                        onClick={() => addMinutesToClock(clock.id, 1)}
+                        className="theater-clock-btn-pill"
+                        title="Adicionar 1 minuto extra"
+                      >
+                        +1m
+                      </button>
+                    </div>
+
+                    <button 
+                      onClick={() => resetTensionClock(clock.id)}
+                      className="theater-clock-btn-icon"
+                      title="Reiniciar relógio"
+                    >
+                      <RotateCcw size={13} />
                     </button>
 
                     <button 
-                      onClick={() => addMinutesToClock(clock.id, 1)}
-                      className="theater-clock-btn-pill"
-                      title="Adicionar 1 minuto extra"
+                      onClick={() => removeTensionClock(clock.id)}
+                      className="theater-clock-btn-icon delete"
+                      title="Concluir / Remover relógio"
                     >
-                      +1m
+                      <Trash2 size={13} />
                     </button>
                   </div>
-
-                  <button 
-                    onClick={() => resetTensionClock(clock.id)}
-                    className="theater-clock-btn-icon"
-                    title="Reiniciar relógio"
-                  >
-                    <RotateCcw size={13} />
-                  </button>
-
-                  <button 
-                    onClick={() => removeTensionClock(clock.id)}
-                    className="theater-clock-btn-icon delete"
-                    title="Concluir / Remover relógio"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
+                )}
               </div>
             );
           })}

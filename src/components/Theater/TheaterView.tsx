@@ -1,7 +1,8 @@
-import { toggleVnMode } from '../../store/theater';
+import { toggleVnMode, toggleShowHeroCards } from '../../store/theater';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { PanelLeft, Video, VideoOff, ChevronLeft, ChevronRight, PlusCircle, Bot, Sparkles, MessageSquare, DoorOpen, Scroll, Music, Lock, BookOpen, Clock } from 'lucide-react';
+import { PanelLeft, Video, VideoOff, ChevronLeft, ChevronRight, PlusCircle, Bot, Sparkles, MessageSquare, DoorOpen, Scroll, Music, Lock, BookOpen, Clock, Tv, Users } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
+import { useIsGM } from '../../store/user';
 import { MoodEngine } from './MoodEngine';
 import { DirectorPanel } from './DirectorPanel';
 import { StagePropsLayer } from './StagePropsLayer';
@@ -32,17 +33,22 @@ import { ScenePanel } from './ScenePanel';
 import { PropsPanel } from './PropsPanel';
 import { TheaterCommandPalette } from './TheaterCommandPalette';
 import { VisualNovelOverlay } from './VisualNovelOverlay';
+import { CinematicDialogueStudio } from './CinematicDialogueStudio';
 import './Theater.css';
 
 export const TheaterView: React.FC = () => {
+  const isGM = useIsGM();
   const { setViewMode } = useWindowManager();
   const { 
     mood, weather, currentScene, scenes, setCurrentScene, patchCurrentScene, 
     goToNextScene, goToPrevScene, linkAudioToScene, vnModeActive,
-    activeNpc, setActiveNpc
+    activeNpc, setActiveNpc, showHeroCards, activeDialogue
   } = useSceneState();
   const { members } = useCastData();
   const clocks = useTheaterClocks();
+
+  const [isTvMode, setIsTvMode] = useState(false);
+  const isPlayerView = !isGM || isTvMode;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState('cenas');
@@ -51,6 +57,7 @@ export const TheaterView: React.FC = () => {
   const [cluesOpen, setCluesOpen] = useState(false);
   const [secretsOpen, setSecretsOpen] = useState(false);
   const [clocksOpen, setClocksOpen] = useState(false);
+  const [dialogueStudioOpen, setDialogueStudioOpen] = useState(false);
   const [isCinematic, setIsCinematic] = useState(false);
   const [isAiActive, setIsAiActive] = useState(false);
   const [kenBurnsActive, setKenBurnsActive] = useState(true);
@@ -128,17 +135,20 @@ export const TheaterView: React.FC = () => {
     const onClues = () => setCluesOpen(true);
     const onSecrets = () => setSecretsOpen(true);
     const onClocks = () => setClocksOpen(true);
+    const onDialogueStudio = () => setDialogueStudioOpen(true);
 
     window.addEventListener('theater-open-soundscape', onSoundscape);
     window.addEventListener('theater-open-clues', onClues);
     window.addEventListener('theater-open-secrets', onSecrets);
     window.addEventListener('theater-open-clock-creator', onClocks);
+    window.addEventListener('theater-open-dialogue-studio', onDialogueStudio);
 
     return () => {
       window.removeEventListener('theater-open-soundscape', onSoundscape);
       window.removeEventListener('theater-open-clues', onClues);
       window.removeEventListener('theater-open-secrets', onSecrets);
       window.removeEventListener('theater-open-clock-creator', onClocks);
+      window.removeEventListener('theater-open-dialogue-studio', onDialogueStudio);
     };
   }, []);
 
@@ -162,28 +172,41 @@ export const TheaterView: React.FC = () => {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  // Determine the current background image
+  // Determine the current background image or video
   const bgImages = [
     ...(currentScene?.imageUrl ? [currentScene.imageUrl] : []),
     ...(currentScene?.assets?.filter(a => a.type === 'location').map(a => a.url) ?? []),
   ];
   const bgUrl = bgImages[activeBgIndex] ?? null;
+  const isVideoBg = !!bgUrl && (/\.(mp4|webm|ogg)($|\?)/i.test(bgUrl) || bgUrl.startsWith('data:video/'));
 
   const sceneIdx = scenes.findIndex(s => s.id === currentScene?.id);
   const hasPrev = sceneIdx > 0;
   const hasNext = sceneIdx < scenes.length - 1;
 
   return (
-    <StageProjectorDropzone>
+    <StageProjectorDropzone disabled={isPlayerView}>
       <MoodEngine
         mood={mood}
         weather={weather}
         bgElement={
           <div className="theater-stage">
-            <div
-              className={`theater-stage-bg ${kenBurnsActive ? 'theater-ken-burns' : ''}`}
-              style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : undefined }}
-            />
+            {isVideoBg ? (
+              <video
+                key={bgUrl}
+                src={bgUrl!}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className={`theater-stage-video ${kenBurnsActive ? 'theater-ken-burns' : ''}`}
+              />
+            ) : (
+              <div
+                className={`theater-stage-bg ${kenBurnsActive ? 'theater-ken-burns' : ''}`}
+                style={{ backgroundImage: bgUrl ? `url("${bgUrl}")` : undefined }}
+              />
+            )}
             <div className="theater-stage-vignette" />
             {/* Global Color Grading Filter based on Mood */}
             <div className={`theater-global-filter-overlay mood-filter-${mood}`} />
@@ -229,34 +252,46 @@ export const TheaterView: React.FC = () => {
           onClose={() => setCluesOpen(false)} 
         />
 
-        {/* ── GM Secrets Drawer ── */}
-        <GMSecretsDrawer 
-          isOpen={secretsOpen} 
-          onClose={() => setSecretsOpen(false)} 
-        />
+        {/* ── GM Secrets Drawer (GM Only) ── */}
+        {!isPlayerView && (
+          <GMSecretsDrawer 
+            isOpen={secretsOpen} 
+            onClose={() => setSecretsOpen(false)} 
+          />
+        )}
 
-        {/* ── Director panel (drawer) ── */}
-        <div 
-          className={`theater-drawer-overlay ${drawerOpen ? 'open' : ''}`}
-          onClick={() => setDrawerOpen(false)}
-        >
+        {/* ── Cinematic Dialogue Studio Modal (GM Only) ── */}
+        {!isPlayerView && (
+          <CinematicDialogueStudio
+            isOpen={dialogueStudioOpen}
+            onClose={() => setDialogueStudioOpen(false)}
+          />
+        )}
+
+        {/* ── Director panel (drawer) (GM Only) ── */}
+        {!isPlayerView && (
           <div 
-            className={`theater-drawer ${drawerOpen ? 'open' : ''}`}
-            onClick={e => e.stopPropagation()}
+            className={`theater-drawer-overlay ${drawerOpen ? 'open' : ''}`}
+            onClick={() => setDrawerOpen(false)}
           >
-            <DirectorPanel
-              onClose={() => setDrawerOpen(false)}
-              activeBgIndex={activeBgIndex}
-              onBgChange={setActiveBgIndex}
-              initialTab={drawerTab}
-              floatingPanels={floatingPanels}
-              onToggleFloat={toggleFloat}
-            />
+            <div 
+              className={`theater-drawer ${drawerOpen ? 'open' : ''}`}
+              onClick={e => e.stopPropagation()}
+            >
+              <DirectorPanel
+                onClose={() => setDrawerOpen(false)}
+                activeBgIndex={activeBgIndex}
+                onBgChange={setActiveBgIndex}
+                initialTab={drawerTab}
+                floatingPanels={floatingPanels}
+                onToggleFloat={toggleFloat}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* ── Floating Windows ── */}
-        {floatingPanels.map((tab, idx) => {
+        {/* ── Floating Windows (GM Only) ── */}
+        {!isPlayerView && floatingPanels.map((tab, idx) => {
           let content = null;
           let title = '';
           if (tab === 'ambiente') { 
@@ -336,35 +371,53 @@ export const TheaterView: React.FC = () => {
 
               <div className="theater-topbar-divider" />
 
-              <button
-                className={`theater-director-btn ${drawerOpen ? 'active' : ''}`}
-                onClick={() => setDrawerOpen(!drawerOpen)}
-                title="Abrir Painel do Diretor"
-              >
-                <PanelLeft size={15} />
-                <span>Diretor</span>
-              </button>
+              {!isPlayerView && (
+                <button
+                  className={`theater-director-btn ${drawerOpen ? 'active' : ''}`}
+                  onClick={() => setDrawerOpen(!drawerOpen)}
+                  title="Abrir Painel do Diretor"
+                >
+                  <PanelLeft size={15} />
+                  <span>Diretor</span>
+                </button>
+              )}
+
+              {isTvMode && isGM && (
+                <button
+                  className="theater-tv-badge"
+                  onClick={() => setIsTvMode(false)}
+                  title="Clique para voltar ao Modo Mestre"
+                >
+                  <Tv size={13} />
+                  <span>Modo Telão / Jogador (Sair)</span>
+                </button>
+              )}
             </div>
 
             {/* Center: Scene title & prev/next */}
             <div className="theater-topbar-center">
-              <button
-                className="theater-icon-btn"
-                onClick={goToPrevScene}
-                disabled={!hasPrev}
-                style={{ opacity: hasPrev ? 1 : 0.3 }}
-                title="Cena anterior"
-              >
-                <ChevronLeft size={16} />
-              </button>
+              {!isPlayerView && (
+                <button
+                  className="theater-icon-btn"
+                  onClick={goToPrevScene}
+                  disabled={!hasPrev}
+                  style={{ opacity: hasPrev ? 1 : 0.3 }}
+                  title="Cena anterior"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+              )}
 
               <div
                 className="theater-topbar-title-box"
                 onClick={() => {
-                  setDrawerTab('ambiente');
-                  setDrawerOpen(true);
+                  if (!isPlayerView) {
+                    setDrawerTab('ambiente');
+                    setDrawerOpen(true);
+                  }
                 }}
-                title="Clique para abrir detalhes da cena"
+                style={{ cursor: isPlayerView ? 'default' : 'pointer' }}
+                title={isPlayerView ? 'Cena Atual' : 'Clique para abrir detalhes da cena'}
               >
                 <span className="theater-topbar-title-text">
                   {currentScene?.title ?? 'Sem cena ativa'}
@@ -376,15 +429,17 @@ export const TheaterView: React.FC = () => {
                 )}
               </div>
 
-              <button
-                className="theater-icon-btn"
-                onClick={goToNextScene}
-                disabled={!hasNext}
-                style={{ opacity: hasNext ? 1 : 0.3 }}
-                title="Próxima cena"
-              >
-                <ChevronRight size={16} />
-              </button>
+              {!isPlayerView && (
+                <button
+                  className="theater-icon-btn"
+                  onClick={goToNextScene}
+                  disabled={!hasNext}
+                  style={{ opacity: hasNext ? 1 : 0.3 }}
+                  title="Próxima cena"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              )}
             </div>
 
             {/* Right: Quick Stage Mode Toggles & Narration Tools */}
@@ -416,13 +471,15 @@ export const TheaterView: React.FC = () => {
                 )}
               </button>
 
-              <button
-                className={`theater-icon-btn ${secretsOpen ? 'active' : ''}`}
-                onClick={() => setSecretsOpen(!secretsOpen)}
-                title="Segredos do Mestre (Confidencial)"
-              >
-                <Lock size={15} color={secretsOpen ? '#ef4444' : 'currentColor'} />
-              </button>
+              {!isPlayerView && (
+                <button
+                  className={`theater-icon-btn ${secretsOpen ? 'active' : ''}`}
+                  onClick={() => setSecretsOpen(!secretsOpen)}
+                  title="Segredos do Mestre (Confidencial)"
+                >
+                  <Lock size={15} color={secretsOpen ? '#ef4444' : 'currentColor'} />
+                </button>
+              )}
 
               <button
                 className={`theater-icon-btn ${chronicleOpen ? 'active' : ''}`}
@@ -442,21 +499,46 @@ export const TheaterView: React.FC = () => {
                 <Sparkles size={15} color={kenBurnsActive ? 'var(--accent-primary)' : 'currentColor'} />
               </button>
 
-              <button
-                className={`theater-icon-btn ${isAiActive ? 'active' : ''}`}
-                onClick={() => setIsAiActive(!isAiActive)}
-                title={isAiActive ? 'AI Auto Stage Manager Ativo' : 'Ativar AI Auto Stage Manager'}
-              >
-                <Bot size={15} color={isAiActive ? 'var(--accent-primary)' : 'currentColor'} />
-              </button>
+              {!isPlayerView && (
+                <button
+                  className={`theater-icon-btn ${isAiActive ? 'active' : ''}`}
+                  onClick={() => setIsAiActive(!isAiActive)}
+                  title={isAiActive ? 'AI Auto Stage Manager Ativo' : 'Ativar AI Auto Stage Manager'}
+                >
+                  <Bot size={15} color={isAiActive ? 'var(--accent-primary)' : 'currentColor'} />
+                </button>
+              )}
+
+              {!isPlayerView && (
+                <button
+                  className={`theater-icon-btn ${dialogueStudioOpen ? 'active' : ''}`}
+                  onClick={() => setDialogueStudioOpen(true)}
+                  title="Estúdio de Diálogo Cinematográfico (Falas & Visual Novel)"
+                >
+                  <MessageSquare size={15} color={dialogueStudioOpen ? '#a855f7' : 'currentColor'} />
+                </button>
+              )}
 
               <button
-                className={`theater-icon-btn ${vnModeActive ? 'active' : ''}`}
-                onClick={toggleVnMode}
-                title={vnModeActive ? 'Modo Visual Novel Ativo' : 'Ativar Modo Visual Novel'}
+                className={`theater-icon-btn ${showHeroCards ? 'active' : ''}`}
+                onClick={toggleShowHeroCards}
+                title={showHeroCards ? 'Ocultar Cards de Heróis' : 'Exibir Cards de Heróis'}
               >
-                <MessageSquare size={15} color={vnModeActive ? 'var(--accent-primary)' : 'currentColor'} />
+                <Users size={15} color={showHeroCards ? '#38bdf8' : 'currentColor'} />
               </button>
+
+              {isGM && (
+                <>
+                  <div className="theater-topbar-divider" />
+                  <button
+                    className={`theater-icon-btn ${isTvMode ? 'active' : ''}`}
+                    onClick={() => setIsTvMode(!isTvMode)}
+                    title={isTvMode ? 'Sair do Modo Telão (Voltar ao Mestre)' : 'Modo Telão / Pré-visualizar como Jogador'}
+                  >
+                    <Tv size={15} color={isTvMode ? '#38bdf8' : 'currentColor'} />
+                  </button>
+                </>
+              )}
 
               <div className="theater-topbar-divider" />
 
@@ -478,17 +560,20 @@ export const TheaterView: React.FC = () => {
               onClose={() => setClocksOpen(false)} 
             />
 
-            {/* Hero badges — bottom left */}
-            {members.length > 0 && (
+            {/* Hero Cards — Free Positioned / Party Strip */}
+            {members.length > 0 && showHeroCards && (
               <div className="theater-hero-strip">
-                {members.filter(m => m.status === 'jogador').slice(0, 6).map(m => (
-                  <HeroBadge key={m.caminhoArquivo} member={m} />
+                {(members.filter(m => m.status === 'jogador').length > 0 
+                  ? members.filter(m => m.status === 'jogador') 
+                  : members
+                ).slice(0, 8).map((m, idx) => (
+                  <HeroBadge key={m.caminhoArquivo} member={m} index={idx} />
                 ))}
               </div>
             )}
 
-            {/* Active Character Stage Presentation */}
-            {activeNpc && (
+            {/* Active Character Stage Presentation (Oculta se houver diálogo ativo para não sobrepor) */}
+            {activeNpc && !activeDialogue && (
               <NpcPortrait
                 name={activeNpc.name}
                 imageUrl={activeNpc.imageUrl}
@@ -500,10 +585,12 @@ export const TheaterView: React.FC = () => {
             )}
           </div>
 
-          {/* COCKPIT / Director bar */}
-          <div className="theater-cockpit-wrapper" style={{ flexShrink: 0 }}>
-            <DirectorBar />
-          </div>
+          {/* COCKPIT / Director bar (GM Only) */}
+          {!isPlayerView && (
+            <div className="theater-cockpit-wrapper" style={{ flexShrink: 0 }}>
+              <DirectorBar />
+            </div>
+          )}
         </div>
 
         {/* Cinematic exit hint */}

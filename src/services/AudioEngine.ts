@@ -1,5 +1,7 @@
+// src/services/AudioEngine.ts
 import type { AudioTrack, SoundboardItem } from '../utils/audioTypes';
 import { useAudioStore } from '../store/audioStore';
+import { proceduralAudio } from './ProceduralAudio';
 
 class AudioEngine {
   private nativeMusicAudio: HTMLAudioElement | null = null;
@@ -9,6 +11,8 @@ class AudioEngine {
   private currentAmbienceVolume: number = 0.4;
   private currentMusicTrack: AudioTrack | null = null;
   private currentAmbienceTrack: AudioTrack | null = null;
+  private isUsingSynthAmbience = false;
+  private isUsingSynthMusic = false;
 
   // Rastrear ObjectURLs criadas para revogá-las e evitar memory leak
   private activeMusicObjectUrl: string | null = null;
@@ -24,16 +28,25 @@ class AudioEngine {
     this.startProgressLoop();
   }
 
+  private emitState(updates: any) {
+    try {
+      useAudioStore.setState(updates);
+    } catch {
+      // Ignorar se a store ainda estiver inicializando
+    }
+    this.onStateChange?.(updates);
+  }
+
   private startProgressLoop() {
     this.progressInterval = setInterval(() => {
-      if (this.currentMusicTrack && this.nativeMusicAudio) {
+      if (this.currentMusicTrack && this.nativeMusicAudio && !this.isUsingSynthMusic) {
         const current = this.nativeMusicAudio.currentTime || 0;
         const duration = this.nativeMusicAudio.duration || 0;
         if (duration > 0 && Number.isFinite(duration)) {
           this.onProgressChange?.('music', current, duration);
         }
       }
-      if (this.currentAmbienceTrack && this.ambienceAudio) {
+      if (this.currentAmbienceTrack && this.ambienceAudio && !this.isUsingSynthAmbience) {
         const current = this.ambienceAudio.currentTime || 0;
         const duration = this.ambienceAudio.duration || 0;
         if (duration > 0 && Number.isFinite(duration)) {
@@ -46,7 +59,7 @@ class AudioEngine {
   private fadeAudio(audio: HTMLAudioElement, targetVolume: number, duration: number): Promise<void> {
     return new Promise((resolve) => {
       if (!audio) return resolve();
-      const safeTarget = Number.isFinite(targetVolume) ? targetVolume : 0;
+      const safeTarget = Number.isFinite(targetVolume) ? Math.max(0, Math.min(1, targetVolume)) : 0;
       if (duration <= 0) {
         audio.volume = safeTarget;
         return resolve();
@@ -73,7 +86,6 @@ class AudioEngine {
       try {
         const file = await track.fileHandle.getFile();
         const url = URL.createObjectURL(file);
-        // Revogar a URL anterior do mesmo canal antes de criar a nova
         if (type === 'music' && this.activeMusicObjectUrl) {
           URL.revokeObjectURL(this.activeMusicObjectUrl);
         } else if (type === 'ambience' && this.activeAmbienceObjectUrl) {
@@ -97,32 +109,74 @@ class AudioEngine {
     audio.src = '';
   }
 
-  async playMusic(track: AudioTrack, volume: number) {
+  async playMusic(
+    trackOrUrl: AudioTrack | string, 
+    volumeOrName?: number | string, 
+    nameOrId?: string, 
+    id?: string
+  ) {
+    let track: AudioTrack;
+    let volume = this.currentMusicVolume;
+
+    if (typeof trackOrUrl === 'string') {
+      const url = trackOrUrl;
+      const name = typeof volumeOrName === 'string' ? volumeOrName : (nameOrId || 'Música');
+      const trackId = typeof nameOrId === 'string' && nameOrId !== name ? nameOrId : (id || `music_${Date.now()}`);
+      if (typeof volumeOrName === 'number') volume = volumeOrName;
+
+      track = {
+        id: trackId,
+        name: name,
+        title: name,
+        url: url,
+        category: 'music',
+        duration: 0
+      };
+    } else {
+      track = trackOrUrl;
+      if (typeof volumeOrName === 'number') volume = volumeOrName;
+    }
+
     this.currentMusicVolume = volume;
     this.currentMusicTrack = track;
-    this.onStateChange?.({ currentMusicId: track.id, currentMusicTitle: track.name || track.title, isPlayingMusic: false });
+    this.emitState({ currentMusicId: track.id, currentMusicTitle: track.name || track.title, isPlayingMusic: false });
 
     const finalUrl = await this.resolveTrackUrl(track, 'music');
     if (!finalUrl) {
-      console.error('URL não pode ser resolvida:', track.title);
+      console.error('URL não pode ser resolvida para música:', track.title || track.name);
       return;
     }
 
-    // Parar o anterior de forma síncrona antes de iniciar o novo (sem race condition)
     this.killAudio(this.nativeMusicAudio, this.handleMusicEnded);
 
+    // Procedural Web Audio Synth somente quando explicitamente solicitado
+    if (finalUrl.startsWith('synth:') || finalUrl.startsWith('procedural:')) {
+      this.isUsingSynthMusic = true;
+      const synthType = finalUrl.replace(/^(synth:|procedural:)/, '');
+      proceduralAudio.startMusic(synthType || track.id, volume);
+      this.emitState({ isPlayingMusic: true, currentMusicId: track.id, currentMusicTitle: track.name || track.title });
+      return;
+    }
+
+    this.isUsingSynthMusic = false;
+    proceduralAudio.stopMusic();
+
     const audioEl = new Audio(finalUrl);
-    audioEl.volume = 0;
+    audioEl.volume = Math.max(0, Math.min(1, volume));
     audioEl.addEventListener('ended', this.handleMusicEnded);
-    audioEl.addEventListener('error', () => this.onStateChange?.({ isPlayingMusic: false }));
+    audioEl.addEventListener('error', (e) => {
+      console.warn('[AudioEngine] Erro ao carregar arquivo de música:', finalUrl, e);
+      this.emitState({ isPlayingMusic: false });
+    });
     this.nativeMusicAudio = audioEl;
 
-    audioEl.play()
-      .then(() => {
-        this.fadeAudio(audioEl, volume, 2000);
-        this.onStateChange?.({ isPlayingMusic: true });
-      })
-      .catch(() => this.onStateChange?.({ isPlayingMusic: false }));
+    try {
+      await audioEl.play();
+      this.emitState({ isPlayingMusic: true, currentMusicId: track.id, currentMusicTitle: track.name || track.title });
+    } catch (err) {
+      console.warn('[AudioEngine] Play de música bloqueado:', err);
+      this.emitState({ isPlayingMusic: false });
+    }
   }
 
   private handleMusicEnded = () => {
@@ -156,24 +210,34 @@ class AudioEngine {
   };
 
   pauseMusic() {
-    this.nativeMusicAudio?.pause();
-    this.onStateChange?.({ isPlayingMusic: false });
+    if (this.isUsingSynthMusic) {
+      proceduralAudio.stopMusic();
+    } else {
+      this.nativeMusicAudio?.pause();
+    }
+    this.emitState({ isPlayingMusic: false });
   }
 
   resumeMusic() {
-    this.nativeMusicAudio?.play().catch(() => {});
-    this.onStateChange?.({ isPlayingMusic: true });
+    if (this.isUsingSynthMusic && this.currentMusicTrack) {
+      const synthType = (this.currentMusicTrack.url || '').replace(/^(synth:|procedural:)/, '') || this.currentMusicTrack.id;
+      proceduralAudio.startMusic(synthType, this.currentMusicVolume);
+    } else {
+      this.nativeMusicAudio?.play().catch(() => {});
+    }
+    this.emitState({ isPlayingMusic: true });
   }
 
-  async stopMusic(fadeDuration = 2000) {
+  async stopMusic(fadeDuration = 500) {
     const old = this.nativeMusicAudio;
     this.currentMusicTrack = null;
     this.nativeMusicAudio = null;
-    this.onStateChange?.({ isPlayingMusic: false, currentMusicId: undefined, currentMusicTitle: undefined });
+    this.isUsingSynthMusic = false;
+    proceduralAudio.stopMusic();
+    this.emitState({ isPlayingMusic: false, currentMusicId: undefined, currentMusicTitle: undefined });
 
     if (old) {
       old.removeEventListener('ended', this.handleMusicEnded);
-      if (fadeDuration > 0) await this.fadeAudio(old, 0, fadeDuration).catch(() => {});
       old.pause();
       old.src = '';
       if (this.activeMusicObjectUrl) {
@@ -187,53 +251,106 @@ class AudioEngine {
     if (this.nativeMusicAudio) this.nativeMusicAudio.currentTime = seconds;
   }
 
-  async playAmbience(track: AudioTrack, volume: number) {
+  async playAmbience(
+    trackOrUrl: AudioTrack | string, 
+    volumeOrName?: number | string, 
+    nameOrId?: string, 
+    id?: string
+  ) {
+    let track: AudioTrack;
+    let volume = this.currentAmbienceVolume;
+
+    if (typeof trackOrUrl === 'string') {
+      const url = trackOrUrl;
+      const name = typeof volumeOrName === 'string' ? volumeOrName : (nameOrId || 'Ambiente');
+      const trackId = typeof nameOrId === 'string' && nameOrId !== name ? nameOrId : (id || `amb_${Date.now()}`);
+      if (typeof volumeOrName === 'number') volume = volumeOrName;
+
+      track = {
+        id: trackId,
+        name: name,
+        title: name,
+        url: url,
+        category: 'ambience',
+        duration: 0
+      };
+    } else {
+      track = trackOrUrl;
+      if (typeof volumeOrName === 'number') volume = volumeOrName;
+    }
+
     this.currentAmbienceVolume = volume;
     this.currentAmbienceTrack = track;
-    this.onStateChange?.({ currentAmbienceId: track.id, currentAmbienceTitle: track.name || track.title, isPlayingAmbience: false });
+    this.emitState({ currentAmbienceId: track.id, currentAmbienceTitle: track.name || track.title, isPlayingAmbience: false });
 
     const finalUrl = await this.resolveTrackUrl(track, 'ambience');
     if (!finalUrl) {
-      console.error('URL não pode ser resolvida para ambiente:', track.title);
+      console.error('URL não pode ser resolvida para ambiente:', track.title || track.name);
       return;
     }
 
-    // Parar o anterior de forma síncrona antes de iniciar o novo (sem race condition)
     this.killAudio(this.ambienceAudio, this.handleAmbienceEnded);
 
+    // Procedural Web Audio Synth somente quando explicitamente solicitado
+    if (finalUrl.startsWith('synth:') || finalUrl.startsWith('procedural:')) {
+      this.isUsingSynthAmbience = true;
+      const synthType = finalUrl.replace(/^(synth:|procedural:)/, '');
+      proceduralAudio.startAmbience(synthType || track.id, volume);
+      this.emitState({ isPlayingAmbience: true, currentAmbienceId: track.id, currentAmbienceTitle: track.name || track.title });
+      return;
+    }
+
+    this.isUsingSynthAmbience = false;
+    proceduralAudio.stopAmbience();
+
     const audioEl = new Audio(finalUrl);
-    audioEl.volume = 0;
+    audioEl.loop = true; // Ambientes são sempre em loop contínuo
+    audioEl.volume = Math.max(0, Math.min(1, volume));
     audioEl.addEventListener('ended', this.handleAmbienceEnded);
-    audioEl.addEventListener('error', () => this.onStateChange?.({ isPlayingAmbience: false }));
+    audioEl.addEventListener('error', (e) => {
+      console.warn('[AudioEngine] Erro ao carregar arquivo de som ambiente:', finalUrl, e);
+      this.emitState({ isPlayingAmbience: false });
+    });
     this.ambienceAudio = audioEl;
 
-    audioEl.play()
-      .then(() => {
-        this.fadeAudio(audioEl, volume, 2000);
-        this.onStateChange?.({ isPlayingAmbience: true });
-      })
-      .catch(() => this.onStateChange?.({ isPlayingAmbience: false }));
+    try {
+      await audioEl.play();
+      this.emitState({ isPlayingAmbience: true, currentAmbienceId: track.id, currentAmbienceTitle: track.name || track.title });
+    } catch (err) {
+      console.warn('[AudioEngine] Play de ambiente bloqueado:', err);
+      this.emitState({ isPlayingAmbience: false });
+    }
   }
 
   pauseAmbience() {
-    this.ambienceAudio?.pause();
-    this.onStateChange?.({ isPlayingAmbience: false });
+    if (this.isUsingSynthAmbience) {
+      proceduralAudio.stopAmbience();
+    } else {
+      this.ambienceAudio?.pause();
+    }
+    this.emitState({ isPlayingAmbience: false });
   }
 
   resumeAmbience() {
-    this.ambienceAudio?.play().catch(() => {});
-    this.onStateChange?.({ isPlayingAmbience: true });
+    if (this.isUsingSynthAmbience && this.currentAmbienceTrack) {
+      const synthType = (this.currentAmbienceTrack.url || '').replace(/^(synth:|procedural:)/, '') || this.currentAmbienceTrack.id;
+      proceduralAudio.startAmbience(synthType, this.currentAmbienceVolume);
+    } else {
+      this.ambienceAudio?.play().catch(() => {});
+    }
+    this.emitState({ isPlayingAmbience: true });
   }
 
-  async stopAmbience(fadeDuration = 1000) {
+  async stopAmbience(fadeDuration = 500) {
     const old = this.ambienceAudio;
     this.currentAmbienceTrack = null;
     this.ambienceAudio = null;
-    this.onStateChange?.({ isPlayingAmbience: false, currentAmbienceId: undefined, currentAmbienceTitle: undefined });
+    this.isUsingSynthAmbience = false;
+    proceduralAudio.stopAmbience();
+    this.emitState({ isPlayingAmbience: false, currentAmbienceId: undefined, currentAmbienceTitle: undefined });
 
     if (old) {
       old.removeEventListener('ended', this.handleAmbienceEnded);
-      if (fadeDuration > 0) await this.fadeAudio(old, 0, fadeDuration).catch(() => {});
       old.pause();
       old.src = '';
       if (this.activeAmbienceObjectUrl) {
@@ -250,7 +367,13 @@ class AudioEngine {
   private activeSfx: Map<string, HTMLAudioElement> = new Map();
 
   async playSFX(item: SoundboardItem) {
-    // Toggle: clique duplo para e repete
+    // Apenas se explicitamente configurado com synth:
+    if (item.url?.startsWith('synth:') || item.url?.startsWith('procedural:')) {
+      const synthType = (item.url || '').replace(/^(synth:|procedural:)/, '') || item.id;
+      proceduralAudio.playSFX(synthType, item.volume || 1);
+      return;
+    }
+
     if (this.activeSfx.has(item.id)) {
       const existing = this.activeSfx.get(item.id)!;
       existing.pause();
@@ -260,17 +383,18 @@ class AudioEngine {
         URL.revokeObjectURL(this.activeSfxUrls.get(item.id)!);
         this.activeSfxUrls.delete(item.id);
       }
-      return;
     }
 
     const finalUrl = await this.resolveTrackUrl(item, 'sfx');
-    if (!finalUrl) return;
+    if (!finalUrl) {
+      proceduralAudio.playSFX(item.id, item.volume || 1);
+      return;
+    }
 
-    // Rastrear se for ObjectURL
     if (finalUrl.startsWith('blob:')) this.activeSfxUrls.set(item.id, finalUrl);
 
     const sfx = new Audio(finalUrl);
-    sfx.volume = item.volume || 1;
+    sfx.volume = Math.max(0, Math.min(1, item.volume ?? 1));
     this.activeSfx.set(item.id, sfx);
 
     const cleanup = () => {
@@ -282,21 +406,35 @@ class AudioEngine {
     };
 
     sfx.addEventListener('ended', cleanup, { once: true });
-    sfx.addEventListener('error', cleanup, { once: true });
-    sfx.play().catch(cleanup);
+    sfx.addEventListener('error', (e) => {
+      console.warn('[AudioEngine] Erro no SFX, tentando procedural...', finalUrl, e);
+      cleanup();
+      proceduralAudio.playSFX(item.id, item.volume || 1);
+    }, { once: true });
+
+    try {
+      await sfx.play();
+    } catch {
+      cleanup();
+      proceduralAudio.playSFX(item.id, item.volume || 1);
+    }
   }
 
   setMusicVolume(val: number) {
     this.currentMusicVolume = val;
     if (this.nativeMusicAudio) this.nativeMusicAudio.volume = val;
-    this.onStateChange?.({ musicVolume: val });
+    proceduralAudio.setMusicVolume(val);
+    this.emitState({ musicVolume: val });
   }
 
   setAmbienceVolume(val: number) {
     this.currentAmbienceVolume = val;
     if (this.ambienceAudio) this.ambienceAudio.volume = val;
-    this.onStateChange?.({ ambienceVolume: val });
+    proceduralAudio.setAmbienceVolume(val);
+    this.emitState({ ambienceVolume: val });
   }
 }
 
 export const audioEngine = new AudioEngine();
+
+

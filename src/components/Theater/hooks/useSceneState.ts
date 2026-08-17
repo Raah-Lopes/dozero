@@ -54,21 +54,29 @@ export function useSceneState() {
       if (scene.musicPresetId || scene.ambiencePresetId) {
         import('../../../store/audioStore').then(({ useAudioStore }) => {
           const { scenePresets, localTracks, musicVolume, ambienceVolume } = useAudioStore.getState();
-          // Procurar primeiro por preset, depois por track ID direto
-          const preset = scenePresets.find(p => p.id === scene.musicPresetId);
-          if (preset) {
-            useAudioStore.getState().triggerMacro(preset.id);
-          } else {
-            // IDs diretos de track (sem preset intermediário)
+          // Procurar primeiro por preset de música
+          const musicPreset = scenePresets.find(p => p.id === scene.musicPresetId);
+          if (musicPreset) {
+            useAudioStore.getState().triggerMacro(musicPreset.id);
+          } else if (scene.musicPresetId) {
             import('../../../services/AudioEngine').then(({ audioEngine }) => {
-              if (scene.musicPresetId) {
-                const t = localTracks.find(t => t.id === scene.musicPresetId);
-                if (t) audioEngine.playMusic(t, musicVolume);
-              }
-              if (scene.ambiencePresetId) {
-                const t = localTracks.find(t => t.id === scene.ambiencePresetId);
-                if (t) audioEngine.playAmbience(t, ambienceVolume);
-              }
+              const t = localTracks.find(track => track.id === scene.musicPresetId);
+              if (t) audioEngine.playMusic(t, musicVolume);
+            });
+          }
+
+          // Tratar som ambiente (presets rápidos do Soundscape ou faixas locais)
+          if (scene.ambiencePresetId) {
+            import('../TheaterSoundscape').then(({ AMBIENT_PRESETS }) => {
+              const ambientPreset = AMBIENT_PRESETS.find(p => p.id === scene.ambiencePresetId);
+              import('../../../services/AudioEngine').then(({ audioEngine }) => {
+                if (ambientPreset) {
+                  audioEngine.playAmbience(ambientPreset.url, ambientPreset.name, ambientPreset.id);
+                } else {
+                  const t = localTracks.find(track => track.id === scene.ambiencePresetId);
+                  if (t) audioEngine.playAmbience(t, ambienceVolume);
+                }
+              });
             });
           }
         });
@@ -173,19 +181,17 @@ export function useSceneState() {
     const idx = theaterData.scenes.findIndex(s => s.id === theaterData.currentSceneId);
     if (idx < theaterData.scenes.length - 1) {
       const next = theaterData.scenes[idx + 1];
-      updateTheaterState({ currentSceneId: next.id });
-      addTheaterDiaryEntry({ timestamp: Date.now(), type: 'scene', text: `➡️ Avançou para: "${next.title}"` });
+      setCurrentScene(next.id);
     }
-  }, [theaterData]);
+  }, [theaterData, setCurrentScene]);
 
   const goToPrevScene = useCallback(() => {
     const idx = theaterData.scenes.findIndex(s => s.id === theaterData.currentSceneId);
     if (idx > 0) {
       const prev = theaterData.scenes[idx - 1];
-      updateTheaterState({ currentSceneId: prev.id });
-      addTheaterDiaryEntry({ timestamp: Date.now(), type: 'scene', text: `⬅️ Voltou para: "${prev.title}"` });
+      setCurrentScene(prev.id);
     }
-  }, [theaterData]);
+  }, [theaterData, setCurrentScene]);
 
   return {
     theaterData,
@@ -197,11 +203,16 @@ export function useSceneState() {
     diaryEntries: theaterData.diaryEntries,
     globalAssets: theaterData.globalAssets || [],
     activeNpc: theaterData.activeNpc || null,
+    activeDialogue: theaterData.activeDialogue || null,
     setActiveNpc: (npc: TheaterNpcPresentation | null) => updateTheaterState({ activeNpc: npc }),
     enemies: theaterData.enemies,
     castConditions: theaterData.castConditions,
     selectedCastMemberId: theaterData.selectedCastMemberId,
     vnModeActive: theaterData.vnModeActive,
+    showHeroCards: theaterData.showHeroCards !== false,
+    heroCardPositions: theaterData.heroCardPositions || {},
+    heroCardScales: theaterData.heroCardScales || {},
+    heroCardCustomStatus: theaterData.heroCardCustomStatus || {},
     setSelectedCastMemberId: (id: string) => updateTheaterState({ selectedCastMemberId: id }),
     setCurrentScene,
     createScene,

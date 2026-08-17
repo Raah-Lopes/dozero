@@ -13,13 +13,23 @@ interface PendingDrop {
   type: 'npc' | 'location' | 'prop' | 'monster' | 'other';
 }
 
-export const StageProjectorDropzone: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface Props {
+  children: React.ReactNode;
+  disabled?: boolean;
+}
+
+export const StageProjectorDropzone: React.FC<Props> = ({ children, disabled = false }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null);
   const [editableTitle, setEditableTitle] = useState('');
   const { patchCurrentScene, currentScene } = useSceneState();
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (disabled) return;
+    // Only respond to actual external file drops, ignore internal DOM dragging
+    const isFileDrag = e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files');
+    if (!isFileDrag) return;
+    
     e.preventDefault();
     e.stopPropagation();
     if (!isDragging) setIsDragging(true);
@@ -34,6 +44,7 @@ export const StageProjectorDropzone: React.FC<{ children: React.ReactNode }> = (
   };
 
   const handleDrop = async (e: React.DragEvent) => {
+    if (disabled) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);

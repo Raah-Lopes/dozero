@@ -18,6 +18,7 @@ export interface CastMember {
   avatar?: string;
   caminhoArquivo: string;
   ativo?: boolean;
+  classe?: string;
 }
 
 export function useCastData() {
@@ -48,9 +49,9 @@ export function useCastData() {
       let finalStatus: 'jogador' | 'npc' | 'inimigo' = 'npc';
       if (['jogador', 'npc', 'inimigo'].includes(rawStatus)) {
         finalStatus = rawStatus as 'jogador' | 'npc' | 'inimigo';
-      } else if (rawTipo === 'pc' || rawTipo === 'personagem') {
+      } else if (rawTipo === 'pc' || rawTipo === 'personagem' || e.path.includes('/jogadores/')) {
         finalStatus = 'jogador';
-      } else if (rawTipo === 'monstro' || rawTipo === 'inimigo') {
+      } else if (rawTipo === 'monstro' || rawTipo === 'inimigo' || e.path.includes('/monstros/')) {
         finalStatus = 'inimigo';
       }
 
@@ -66,6 +67,7 @@ export function useCastData() {
         defesa: Number(e.metadata.defesa) || Number(e.metadata.Defesa) || Number(e.metadata.A) || 0,
         armadura: Number(e.metadata.armadura) || Number(e.metadata.Armadura) || Number(e.metadata.A) || 0,
         velocidade: Number(e.metadata?.velocidade) || Number(e.metadata?.deslocamento) || 9,
+        classe: e.metadata?.classe || e.metadata?.Classe || e.metadata?.class || undefined,
         status: finalStatus,
         avatar: e.metadata?.avatar ?? e.metadata?.imagem ?? e.metadata?.imageUrl ?? undefined,
         ativo: e.metadata.ativo !== false && e.metadata.ativo !== 'false',

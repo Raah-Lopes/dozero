@@ -13,7 +13,7 @@ classe: Druida Bio-Hacker (Círculo da Biocorrupção)
 alinhamento: Neutro
 genero: Fluido
 nome_jogador: Mestre
-xp: 1200
+xp: 1250
 registro_aventura: Infiltrou-se nos galpões da Aethel-Corp e infectou os servidores de bio-dados com mofo sintético consciente.
 anotacoes: Visco constante com odor de ozônio e carcaça queimada. Quando sua sanidade cai, visões de um oceano negro com olhos vermelhos distorcem sua percepção visual.
 imagens: []
@@ -119,12 +119,12 @@ avatar: https://i.ibb.co/rfbvhDs9/Drougtot-1785592013203.webp
 imagem: https://i.ibb.co/rfbvhDs9/Drougtot-1785592013203.webp
 imageUrl: https://i.ibb.co/rfbvhDs9/Drougtot-1785592013203.webp
 sanidade: 44
-pv: 0
+pv: 23
 status_efeitos: []
-HP: 43
+HP: 23
 visionRadius: 200
 HP_max: 43
-PM: 0
+PM: 15
 PM_max: 0
 usos_cura_atual: 3
 saqueado: false
@@ -147,7 +147,55 @@ objetos_campanha: []
 Ouro: 0
 XP: 1200
 po: 356
+mana: 15
+titulo: Drougtot_
+nome: Drougtot_
+title: Drougtot_
 ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

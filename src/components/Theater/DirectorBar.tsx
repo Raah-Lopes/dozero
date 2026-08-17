@@ -1,6 +1,6 @@
 // src/components/Theater/DirectorBar.tsx
 import React, { useState } from 'react';
-import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, ArrowLeft, Bell, ChevronUp, ChevronDown, Palette, Dice5, Crosshair, BookOpen } from 'lucide-react';
+import { Swords, Shield, Target, Zap, Heart, Droplets, Star, CloudRain, Wind, Flame, Snowflake, Moon, Sun, Film, ArrowRight, ArrowLeft, Bell, ChevronUp, ChevronDown, Palette, Dice5, Crosshair, BookOpen, X } from 'lucide-react';
 import { setTheaterMood, setTheaterWeather, addTensionClock, addTheaterDiaryEntry, pushChatMessage, type MoodType, type WeatherType } from '../../store';
 import { useSceneState } from './hooks/useSceneState';
 import { useCastData } from './hooks/useCastData';
@@ -117,6 +117,19 @@ export const DirectorBar: React.FC = () => {
       {/* Submenu panel (opens above the bar) */}
       {activeSubmenu && !isCollapsed && (
         <div className="theater-submenu-panel">
+          <div className="theater-submenu-header">
+            <span className="theater-submenu-header-title">
+              {TABS.find(t => t.id === activeSubmenu)?.label}
+            </span>
+            <button 
+              className="theater-submenu-close" 
+              onClick={() => setActiveSubmenu(null)}
+              title="Fechar menu"
+            >
+              <X size={12} />
+            </button>
+          </div>
+
           {activeSubmenu === 'atmosfera' && (
             <>
               <div className="theater-submenu-section">
@@ -189,6 +202,15 @@ export const DirectorBar: React.FC = () => {
             <div className="theater-submenu-section">
               <span className="theater-submenu-label">Ferramentas Narrativas</span>
               <div className="theater-submenu-row">
+                <Tooltip label="Diálogo Cinematográfico" description="Abre o estúdio de falas e Visual Novel">
+                  <button
+                    className="theater-qbtn purple"
+                    style={{ boxShadow: '0 0 10px rgba(168,85,247,0.4)', background: 'rgba(168,85,247,0.25)', borderColor: '#a855f7' }}
+                    onClick={() => window.dispatchEvent(new CustomEvent('theater-open-dialogue-studio'))}
+                  >
+                    💬 Diálogo VN
+                  </button>
+                </Tooltip>
                 <Tooltip label="Nova Cena" description="Inicia uma página limpa na história"><button className="theater-qbtn purple" onClick={() => createScene()}><Film size={11} /> + Cena</button></Tooltip>
                 <Tooltip label="Relógio de Tensão" description="Adiciona um relógio temporizador global"><button className="theater-qbtn purple" onClick={addQuickClock}><Bell size={11} /> + Relógio</button></Tooltip>
                 <Tooltip label="Biblioteca de Cutscenes" description="Projete imagens cinematográficas flutuantes">

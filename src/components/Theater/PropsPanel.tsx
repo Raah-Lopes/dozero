@@ -159,6 +159,65 @@ export const PropsPanel: React.FC = () => {
           </div>
         )}
       </GlassAccordion>
+
+      {/* Pistas & Handouts vinculados à cena */}
+      <div style={{ marginTop: '12px' }}>
+        <GlassAccordion title={`Pistas & Handouts (${(currentScene.clues || []).length})`}>
+          {(currentScene.clues || []).length === 0 ? (
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', fontStyle: 'italic', padding: '8px 0' }}>
+              Nenhuma pista cadastrada nesta cena.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(currentScene.clues || []).map(clue => (
+                <div 
+                  key={clue.id}
+                  style={{ 
+                    background: 'rgba(0,0,0,0.3)', 
+                    border: '1px solid rgba(245,158,11,0.2)', 
+                    padding: '8px', 
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <img src={clue.url} style={{ width: 24, height: 24, objectFit: 'cover', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }} alt="clue" />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.7rem', color: '#fbbf24', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>
+                      {clue.title}
+                    </div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                      {clue.discovered ? '👁️ Descoberta' : '🔒 Oculta'} • {clue.redactedSections?.length || 0} trechos
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => window.dispatchEvent(new CustomEvent('theater-spotlight-image', { 
+                      detail: { 
+                        id: clue.id, 
+                        title: clue.title, 
+                        url: clue.url, 
+                        description: clue.description, 
+                        redactedSections: clue.redactedSections 
+                      } 
+                    }))}
+                    style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', padding: '4px 6px', fontSize: '0.65rem' }}
+                    title="Apresentar no Spotlight"
+                  >
+                    Apresentar
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent('theater-open-clues'))}
+            style={{ width: '100%', marginTop: '8px', padding: '6px', background: 'rgba(245,158,11,0.1)', border: '1px dashed rgba(245,158,11,0.3)', color: '#fbbf24', borderRadius: '4px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
+          >
+            📜 Gerenciar Mural de Pistas
+          </button>
+        </GlassAccordion>
+      </div>
     </div>
   );
 };

@@ -92,3 +92,89 @@ Se você for continuar este projeto em outra plataforma (Cursor, Windsurf, Devin
 2. **Sistema de Tokens no PixiJS:** O arquivo do Canvas é denso. Se houver queda de frames, a melhoria passa pela refatoração da forma que o PixiJS trata os *sprites* com *culling* (ocultar do render o que estiver fora da tela).
 3. **Gerador de Fichas Customizadas:** A integração do banco de dados (IndexDB via `y-indexeddb`) é perfeita para começar a guardar os templates de atributos dos personagens baseados no RPG que o grupo escolher.
 4. **Dependências IA:** Fique de olho nos limites dos tokens do Gemini AI. A chave da IA de texto e o banco de imagens estão rodando suave, mas requisições excessivas (como atualizar NPCs a cada turno) podem causar bloqueios por limite de uso (*Rate Limits*).
+
+# 🎭 Handoff & Roadmap — Teatro da Mente (VTT)
+
+## 📌 Status Atual do Projeto
+O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilidade e experiência do usuário (UX). Todas as pendências de persistência, menus travados e bloqueios de build/deploy na Vercel foram solucionadas.
+
+---
+
+## 🚀 O Que Foi Entregue e Consolidado
+
+### 1. 🌟 Destaque Central de Personagens e NPCs em Cena
+- Componente de apresentação teatral com entrada animada, badge de nome, função narrativa e barra de ações rápidas.
+- Posições flexíveis: Destaque Central (`center`) ou Lateral (`right`).
+- Ações rápidas de 1 clique: Remover da cena, trocar de roupa/avatar ou enviar para o Acervo.
+
+### 2. 📚 Acervo Global de Recursos da Campanha (`TheaterAssetVault.tsx`)
+- Central de mídias com categorização inteligente: **NPCs & Criaturas**, **Cenários & Locais**, **Pistas & Documentos**, **Monstros** e **Objetos/Props**.
+- Sistema de busca em tempo real e alteração rápida de tags e nomes sem modais chatos.
+- Projeção imediata no palco: Projete qualquer imagem como Fundo, Centro de Palco ou Pista com 1 clique.
+- Dropzone automática no palco: Imagens arrastadas para a tela são cadastradas no acervo e persistidas.
+
+### 3. 💾 Persistência Local-First com Zero Latência
+- Armazenamento em dobro: Camada síncrona `localStorage` (`dozero_theater_state_v2`) + sincronização distribuída via `IndexedDB (Yjs)`.
+- Imagens em cena, personagens ativos, pistas, trilhas e relógios sobrevivem a qualquer recarregamento de página (**F5**) sem atraso.
+
+### 4. ⏱️ Relógios Táticos de Tensão HUD (`StageClockOverlay.tsx`)
+- Overlay flutuante no palco com contagem regressiva em tempo real.
+- Botões grandes, táteis e acessíveis: Presets rápidos (`1m`, `3m`, `5m`, `10m`, `15m`), play/pause com texto, pílulas de `+1m` / `-1m`, reset e exclusão.
+- Disparo de consequências ao zerar:
+  - Alarme visual pulsante com banner no palco.
+  - Alerta automático enviado para o **Chat Global da Mesa** e registrado no **Diário da Sessão**.
+- 100% responsivo para telas pequenas e celulares (`@media (max-width: 768px)` em formato bottom drawer).
+
+### 5. 📜 Live Chronicle & Handout Theatrical Spotlight
+- **Feed da Crônica**: Histórico translúcido de rolagens, danos e eventos na lateral do palco.
+- **Spotlight de Documentos**: Zoom cinematográfico para cartas, pistas e mapas.
+
+### 6. 🌐 CI/CD & Deploy na Vercel Desbloqueado
+- Configuração de `.npmrc` com `legacy-peer-deps=true` e overrides no `package.json` para resolver conflitos de peer dependencies do React 19.
+- Repositório sincronizado na branch `main` (`e3476fac`).
+
+---
+
+## 🗺️ Mapa de Arquivos & Componentes Chave
+
+| Componente / Arquivo | Responsabilidade |
+| :--- | :--- |
+| [`src/components/Theater/TheaterView.tsx`](file:///d:/DOZERO/src/components/Theater/TheaterView.tsx) | Casca principal do Teatro da Mente, palco visual, topbar e orquestração de overlays. |
+| [`src/components/Theater/HeroBadge.tsx`](file:///d:/DOZERO/src/components/Theater/HeroBadge.tsx) | Cards estilo RPG antigo/vintage com drag-and-drop livre, PV, estados visuais (morto, envenenado, etc.) e menu de contexto portal. |
+| [`src/components/Theater/NpcPortrait.tsx`](file:///d:/DOZERO/src/components/Theater/NpcPortrait.tsx) | Spotlight de apresentação de personagens e monstros no palco, com balão de fala e controle de escala. |
+| [`src/components/Theater/VisualNovelOverlay.tsx`](file:///d:/DOZERO/src/components/Theater/VisualNovelOverlay.tsx) | Camada cinematográfica centralizada de diálogos estilo Visual Novel com typewriter, áudio, escolhas e avanço de roteiro. |
+| [`src/components/Theater/CinematicDialogueStudio.tsx`](file:///d:/DOZERO/src/components/Theater/CinematicDialogueStudio.tsx) | Estúdio de fala rápida e mini-roteiros sequenciais com gerador IA, biblioteca de presets e ramificações de escolhas. |
+| [`src/components/Theater/StageClockOverlay.tsx`](file:///d:/DOZERO/src/components/Theater/StageClockOverlay.tsx) | HUD flutuante de relógios de tensão, temporizador e alarmes no palco. |
+| [`src/components/Theater/TheaterAssetVault.tsx`](file:///d:/DOZERO/src/components/Theater/TheaterAssetVault.tsx) | Gerenciador do Acervo Global de imagens, busca, categorização e projeção. |
+| [`src/components/Theater/StageProjectorDropzone.tsx`](file:///d:/DOZERO/src/components/Theater/StageProjectorDropzone.tsx) | Captura de drag-and-drop de imagens direto na tela com auto-cadastro. |
+| [`src/components/Theater/DirectorBar.tsx`](file:///d:/DOZERO/src/components/Theater/DirectorBar.tsx) | Cockpit inferior de comando rápido do Mestre (Atmosfera, Dados, Alvo, Narrativa). |
+| [`src/components/Theater/DirectorPanel.tsx`](file:///d:/DOZERO/src/components/Theater/DirectorPanel.tsx) | Painel lateral avançado (Cenas, Acervo, Mecânicas, Anotações e Diário). |
+| [`src/store/theater.ts`](file:///d:/DOZERO/src/store/theater.ts) | Store do estado do Teatro da Mente, sincronização Yjs, persistência e helpers de roteiros e diálogos. |
+| [`src/store/clocks.ts`](file:///d:/DOZERO/src/store/clocks.ts) | Lógica de estado dos relógios de tensão, gatilhos de consequência e sincronia Yjs. |
+| [`src/components/Theater/Theater.css`](file:///d:/DOZERO/src/components/Theater/Theater.css) | Sistema de design, animações, temas escuros, transições e regras de responsividade mobile. |
+
+---
+
+## 🎯 Próximos Passos Recomendados (Roadmap Prioritário)
+
+```mermaid
+graph TD
+    A[Modo Espectador / Player View] --> B[Efeitos Atmosféricos & Partículas]
+    B --> C[Automação de Áudio por Cena]
+    C --> D[Pistas com Revelação Progressiva]
+```
+
+### 🥇 Passo 1: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
+* **Objetivo**: Permitir que os jogadores vejam apenas o palco limpo e imersivo (sem botões de controle do Mestre, sem abas de segredos e sem botões de edição).
+* **Benefício**: Perfeito para sessões presenciais em TV/Telão secundário ou para jogadores que entram via link no navegador.
+
+### 🥈 Passo 2: Efeitos Atmosféricos em Partículas (Chuva, Névoa, Brasas, Magia)
+* **Objetivo**: Conectar o menu de **Atmosfera** do Diretor a uma camada visual leve em Canvas/CSS com efeitos de partículas realistas (Chuva com relâmpagos, Neblina densa, Cinzas vulcânicas, Neve suave, Luzes mágicas).
+* **Benefício**: Eleva a imersão visual das cenas a nível cinematográfico sem sobrecarregar o processador.
+
+### 🥉 Passo 3: Automação Sonora por Cena (Soundscape Sync)
+* **Objetivo**: Ao trocar de cena no seletor de cenas, disparar automaticamente o som ambiente configurado para aquela cena (ex: Som de taverna, Chuva lá fora, Ecos de masmorra).
+* **Benefício**: O Mestre não precisa mudar o som manualmente a cada transição de local.
+
+### 🏅 Passo 4: Pistas Interativas com Revelação Progressiva (Fog-of-War Textual)
+* **Objetivo**: Permitir que o Mestre crie cartas e documentos com trechos ocultos que são revelados aos poucos conforme os jogadores passam em testes de investigação.

@@ -111,31 +111,39 @@ export async function openLocalFolder(path: string = ''): Promise<void> {
 }
 
 /**
- * Salva imagem com 3 frentes: ImgBB → Catbox.moe → local ANEXOS.
+ * Salva imagem: Local ANEXOS (no dev local) → ImgBB / Catbox.moe (na nuvem) → fallback.
  * Retorna a URL da imagem (nuvem ou local).
  */
 export async function saveImageToCloud(base64: string, filename: string): Promise<string> {
-  // Tenta nuvem primeiro (ImgBB ou Catbox)
-  const cloudUrl = await uploadImageToCloud(base64, filename);
-  if (cloudUrl) return cloudUrl;
+  // 1. Em desenvolvimento local, tenta salvar na pasta local ANEXOS (instantâneo e offline)
+  if (!import.meta.env.PROD) {
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+      const res = await fetchWithTimeout('/api/wiki/save-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoPath, filename, base64 })
+      }, 4000);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.url) return data.url as string;
+      }
+    } catch (e) {
+      console.warn('[saveImageToCloud] Falha ao salvar localmente no ANEXOS, tentando nuvem...', e);
+    }
+  }
 
-  // Fallback: salva local em ANEXOS (só funciona no dev local)
-  if (import.meta.env.PROD) {
-    console.warn('[saveImageToCloud] Modo Vercel: sem nuvem configurada, usando base64.');
-    return base64; // último recurso
+  // 2. Tenta nuvem (ImgBB ou Catbox com timeout de segurança)
+  try {
+    const cloudUrl = await uploadImageToCloud(base64, filename);
+    if (cloudUrl) return cloudUrl;
+  } catch (e) {
+    console.warn('[saveImageToCloud] Falha no upload para nuvem.', e);
   }
-  const config = getWikiConfig();
-  const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-  const res = await fetchWithTimeout('/api/wiki/save-image', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repoPath, filename, base64 })
-  });
-  if (res.ok) {
-    const data = await res.json();
-    return data.url as string;
-  }
-  return base64; // último recurso
+
+  // 3. Fallback final (base64 seguro)
+  return base64;
 }
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {

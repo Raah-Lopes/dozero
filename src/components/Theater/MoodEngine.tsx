@@ -28,44 +28,54 @@ const MOOD_CONFIGS: Record<MoodType, { tint: string; accent: string; particleCol
 // CSS animations as a static string — injected once, not per render
 const KEYFRAMES = `
   @keyframes theater-rain {
-    from { transform: translateY(-20px) rotate(12deg); opacity: 1; }
-    to   { transform: translateY(110vh) rotate(12deg); opacity: 0.3; }
+    from { transform: translateY(-30px) rotate(14deg); opacity: 0.9; }
+    to   { transform: translateY(115vh) rotate(14deg); opacity: 0.2; }
   }
   @keyframes theater-snow {
-    0%   { transform: translateY(-10px) translateX(0); opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: 0.8; }
-    100% { transform: translateY(110vh) translateX(30px); opacity: 0; }
+    0%   { transform: translateY(-10px) translateX(0) rotate(0deg); opacity: 0; }
+    15%  { opacity: 0.85; }
+    85%  { opacity: 0.75; }
+    100% { transform: translateY(110vh) translateX(40px) rotate(360deg); opacity: 0; }
   }
   @keyframes theater-fog {
-    0%   { transform: translateX(-5vw); opacity: 0; }
-    50%  { opacity: 1; }
-    100% { transform: translateX(15vw); opacity: 0; }
+    0%   { transform: translateX(-8vw) scale(1); opacity: 0; }
+    30%  { opacity: 0.45; }
+    70%  { opacity: 0.45; }
+    100% { transform: translateX(20vw) scale(1.15); opacity: 0; }
   }
   @keyframes theater-fire {
-    0%   { transform: scaleY(1) scaleX(1) translateY(0); opacity: 0.8; }
-    50%  { transform: scaleY(1.3) scaleX(0.8) translateY(-10vh); opacity: 0.6; }
-    100% { transform: scaleY(0.6) scaleX(1.1) translateY(-25vh); opacity: 0; }
+    0%   { transform: scale(0.6) translateY(0) translateX(0); opacity: 0; }
+    20%  { opacity: 0.9; transform: scale(1.1) translateY(-6vh) translateX(-8px); }
+    60%  { opacity: 0.7; transform: scale(0.9) translateY(-18vh) translateX(12px); }
+    100% { transform: scale(0.4) translateY(-32vh) translateX(-15px); opacity: 0; }
+  }
+  @keyframes theater-sparkle {
+    0%   { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
+    25%  { opacity: 0.85; transform: scale(1.2); }
+    75%  { opacity: 0.6; }
+    100% { transform: translateY(-20vh) translateX(15px) scale(0.3); opacity: 0; }
   }
   @keyframes theater-float {
     0%   { transform: translateY(0) translateX(0); opacity: 0; }
-    20%  { opacity: 1; }
-    80%  { opacity: 0.5; }
-    100% { transform: translateY(-15vh) translateX(5vw); opacity: 0; }
+    25%  { opacity: 0.8; }
+    75%  { opacity: 0.4; }
+    100% { transform: translateY(-18vh) translateX(8vw); opacity: 0; }
   }
   @keyframes theater-drip {
-    0%   { transform: translateY(0); opacity: 0.8; }
-    100% { transform: translateY(20vh); opacity: 0; }
+    0%   { transform: translateY(0); opacity: 0.85; }
+    80%  { opacity: 0.7; }
+    100% { transform: translateY(25vh); opacity: 0; }
   }
   @keyframes theater-darkness-pulse {
-    0%, 100% { opacity: 0.85; }
-    50%       { opacity: 0.97; }
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50%       { opacity: 0.98; transform: scale(1.02); }
   }
   @keyframes theater-lightning {
-    0%, 95%, 100% { opacity: 0; }
-    96%           { opacity: 0.6; }
-    97%           { opacity: 0; }
-    98%           { opacity: 0.4; }
+    0%, 94%, 100% { opacity: 0; }
+    95%           { opacity: 0.85; }
+    96%           { opacity: 0.1; }
+    97%           { opacity: 0.65; }
+    98%           { opacity: 0; }
   }
 `;
 
@@ -75,21 +85,23 @@ function buildParticles(count: number, color: string, mood: MoodType, weather: W
   const isFog = weather === 'fog';
   const isFire = weather === 'fire';
   const isSnow = weather === 'snow';
+  const isArcane = mood === 'mystery' || mood === 'adventure' || mood === 'victory';
 
   for (let i = 0; i < count; i++) {
     const left = Math.random() * 100;
-    const delay = Math.random() * 5;
-    const duration = isRain ? (0.3 + Math.random() * 0.5) : isFire ? (1.5 + Math.random() * 3) : (4 + Math.random() * 6);
+    const delay = Math.random() * 6;
+    const duration = isRain ? (0.25 + Math.random() * 0.45) 
+      : isFire ? (1.8 + Math.random() * 2.5) 
+      : isSnow ? (3.5 + Math.random() * 5)
+      : isFog ? (8 + Math.random() * 8)
+      : (3.5 + Math.random() * 5);
     
-    let size = 2 + Math.random() * 3;
-    if (isRain) size = 2;
+    let size = 3 + Math.random() * 4;
+    if (isRain) size = weather === 'storm' ? 3 : 2;
     if (isSnow) size = 4 + Math.random() * 6;
-    if (isFog) size = 150 + Math.random() * 200;
-    if (isFire) size = 10 + Math.random() * 25;
+    if (isFog) size = 180 + Math.random() * 220;
+    if (isFire) size = 4 + Math.random() * 8;
 
-    const opacity = isFog ? (0.15 + Math.random() * 0.2) : isFire ? (0.5 + Math.random() * 0.5) : (0.4 + Math.random() * 0.5);
-
-    let animationStr = `${duration}s linear ${delay}s infinite normal none running`;
     let style: React.CSSProperties = {
       position: 'absolute',
       left: `${left}%`,
@@ -97,21 +109,82 @@ function buildParticles(count: number, color: string, mood: MoodType, weather: W
     };
 
     if (isRain) {
-      style = { ...style, width: '2px', height: `${15 + Math.random() * 20}px`, background: `rgba(147,197,253,${0.5 + Math.random() * 0.4})`, top: '-30px', animation: `theater-rain ${animationStr}` };
+      const dropHeight = weather === 'storm' ? (25 + Math.random() * 30) : (18 + Math.random() * 20);
+      const rainOpacity = weather === 'storm' ? (0.6 + Math.random() * 0.4) : (0.4 + Math.random() * 0.35);
+      style = {
+        ...style,
+        width: '2px',
+        height: `${dropHeight}px`,
+        background: `linear-gradient(to bottom, transparent, rgba(186, 230, 253, ${rainOpacity}))`,
+        top: '-35px',
+        animation: `theater-rain ${duration}s linear ${delay}s infinite normal none running`,
+        filter: weather === 'storm' ? 'drop-shadow(0 0 2px rgba(186,230,253,0.5))' : 'none',
+      };
     } else if (isSnow) {
-      animationStr = `${duration}s ease-in-out ${delay}s infinite normal none running`;
-      style = { ...style, width: `${size}px`, height: `${size}px`, background: `rgba(255,255,255,${opacity})`, borderRadius: '50%', top: '-20px', animation: `theater-snow ${animationStr}`, boxShadow: '0 0 8px rgba(255,255,255,0.8)' };
+      const snowOpacity = 0.5 + Math.random() * 0.5;
+      style = {
+        ...style,
+        width: `${size}px`,
+        height: `${size}px`,
+        background: `radial-gradient(circle, rgba(255,255,255,${snowOpacity}) 0%, rgba(255,255,255,0.2) 70%, transparent 100%)`,
+        borderRadius: '50%',
+        top: '-20px',
+        animation: `theater-snow ${duration}s ease-in-out ${delay}s infinite normal none running`,
+        boxShadow: '0 0 6px rgba(255,255,255,0.7)',
+      };
     } else if (isFog) {
-      animationStr = `${duration}s ease-in-out ${delay}s infinite normal none running`;
-      style = { ...style, width: `${size}px`, height: `${size * 0.6}px`, background: `radial-gradient(ellipse, rgba(148,163,184,${opacity}), transparent 70%)`, borderRadius: '50%', top: `${50 + Math.random() * 50}%`, animation: `theater-fog ${animationStr}`, filter: 'blur(20px)' };
+      const fogOpacity = 0.12 + Math.random() * 0.18;
+      style = {
+        ...style,
+        width: `${size}px`,
+        height: `${size * 0.6}px`,
+        background: `radial-gradient(ellipse, rgba(148, 163, 184, ${fogOpacity}), transparent 70%)`,
+        borderRadius: '50%',
+        top: `${40 + Math.random() * 60}%`,
+        animation: `theater-fog ${duration}s ease-in-out ${delay}s infinite normal none running`,
+        filter: 'blur(30px)',
+      };
     } else if (isFire) {
-      animationStr = `${duration}s ease-in-out ${delay}s infinite normal none running`;
-      const fireHue = 10 + Math.random() * 25; // Oranges and reds
-      style = { ...style, width: `${size}px`, height: `${size * 1.5}px`, background: `hsl(${fireHue}, 100%, 60%)`, borderRadius: '50% 50% 20% 20%', bottom: '-20px', top: 'auto', opacity, filter: 'blur(4px)', animation: `theater-fire ${animationStr}`, boxShadow: `0 0 ${size}px hsl(${fireHue}, 100%, 50%)` };
+      const fireHue = 15 + Math.random() * 30; // Golden orange to crimson
+      const fireOpacity = 0.6 + Math.random() * 0.4;
+      style = {
+        ...style,
+        width: `${size}px`,
+        height: `${size}px`,
+        background: `radial-gradient(circle, hsl(${fireHue}, 100%, 70%) 0%, hsl(${fireHue}, 100%, 50%) 60%, transparent 100%)`,
+        borderRadius: '50%',
+        bottom: '-10px',
+        top: 'auto',
+        opacity: fireOpacity,
+        animation: `theater-fire ${duration}s ease-out ${delay}s infinite normal none running`,
+        boxShadow: `0 0 ${size * 2}px hsl(${fireHue}, 100%, 55%)`,
+      };
+    } else if (isArcane) {
+      const sparkOpacity = 0.5 + Math.random() * 0.5;
+      style = {
+        ...style,
+        width: `${size}px`,
+        height: `${size}px`,
+        background: `radial-gradient(circle, ${color} 0%, ${color}80 50%, transparent 100%)`,
+        borderRadius: '50%',
+        top: `${30 + Math.random() * 70}%`,
+        opacity: sparkOpacity,
+        animation: `theater-sparkle ${duration}s ease-in-out ${delay}s infinite normal none running`,
+        boxShadow: `0 0 10px ${color}`,
+      };
     } else {
-      animationStr = `${duration}s ease-in-out ${delay}s infinite normal none running`;
       const animName = mood === 'horror' ? 'theater-drip' : 'theater-float';
-      style = { ...style, width: `${size}px`, height: `${size}px`, background: color, borderRadius: '50%', top: `${Math.random() * 100}%`, opacity, animation: `${animName} ${animationStr}`, boxShadow: `0 0 6px ${color}` };
+      style = {
+        ...style,
+        width: `${size}px`,
+        height: `${size}px`,
+        background: color,
+        borderRadius: '50%',
+        top: `${Math.random() * 100}%`,
+        opacity: 0.6,
+        animation: `${animName} ${duration}s ease-in-out ${delay}s infinite normal none running`,
+        boxShadow: `0 0 6px ${color}`,
+      };
     }
 
     items.push(<div key={i} style={style} />);
