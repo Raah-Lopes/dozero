@@ -236,8 +236,8 @@ export function GMToolbar() {
               icon={<Globe size={20} />} 
               active={activeModal === 'lobby'} 
               onClick={() => setActiveModal('lobby')} 
-              tooltip="Lobby de Mesas (Campanhas)"
-              description="Gerencie suas campanhas na nuvem e alterne de mesa"
+              tooltip="Mural de Campanhas (Nuvem)"
+              description="Gerencie suas campanhas salvas na nuvem, crie novas mesas ou troque de aventura"
             />
             <ToolButton 
               icon={<Shield size={20} />} 
@@ -250,15 +250,8 @@ export function GMToolbar() {
               icon={<Users size={20} />} 
               active={activeModal === 'players'} 
               onClick={() => setActiveModal('players')} 
-              tooltip="Gerenciador da Sala (Convite & Cachê)"
-              description="Gerencie link de convite da sala atual, QR Code e bancos de dados locais"
-            />
-            <ToolButton 
-              icon={<Globe size={20} />} 
-              active={activeModal === 'lobby'} 
-              onClick={() => setActiveModal('lobby')} 
-              tooltip="Mural de Campanhas & Nuvem"
-              description="Alterne de campanha, crie novas mesas e gerencie progresso salvo na nuvem"
+              tooltip="Convidar Jogadores (Links & QR Code)"
+              description="Copie o link da Vercel da sala atual, exiba o QR Code ou gerencie dados locais"
             />
             <ToolButton 
               icon={<MessageSquare size={20} />} 
