@@ -119,12 +119,44 @@ indexeddbProvider.on('synced', () => {
   }
 
   // Limpeza de personagens de teste antigos
-  if (state.tokens.has('goblin_boss')) {
-    state.tokens.delete('goblin_boss');
+  if (state.tokens.has('goblin_boss')) state.tokens.delete('goblin_boss');
+  if (state.tokens.has('omega_sentinel')) state.tokens.delete('omega_sentinel');
+
+  // Se a mesa for novinha em folha, cria no MÁXIMO 2 personagens de exemplo (1 Herói + 1 Inimigo)
+  if (state.tokens.size === 0) {
+    const heroId = `token_exemplo_heroi`;
+    state.tokens.set(heroId, {
+      id: heroId,
+      name: 'Herói Exemplo',
+      hp: 20,
+      maxHp: 20,
+      ca: 15,
+      x: 450,
+      y: 350,
+      isPlayer: true,
+      tokenShape: 'circle',
+      borderColor: '#3b82f6',
+      showName: true,
+      imageUrl: ''
+    });
+
+    const enemyId = `token_exemplo_inimigo`;
+    state.tokens.set(enemyId, {
+      id: enemyId,
+      name: 'Inimigo Exemplo',
+      hp: 10,
+      maxHp: 10,
+      ca: 12,
+      x: 650,
+      y: 350,
+      isPlayer: false,
+      tokenShape: 'circle',
+      borderColor: '#ef4444',
+      showName: true,
+      imageUrl: ''
+    });
   }
-  if (state.tokens.has('omega_sentinel')) {
-    state.tokens.delete('omega_sentinel');
-  }
+
   if (!state.world.has('factions')) {
     state.world.set('factions', [
       { id: 'f1', name: 'A Coroa Imperial', power: 50, influence: 50 },

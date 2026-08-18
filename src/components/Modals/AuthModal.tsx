@@ -30,7 +30,7 @@ type AuthMode = 'login' | 'signup' | 'forgot';
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setAuthModalOpen } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('dozero_last_email') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -118,6 +118,9 @@ export const AuthModal: React.FC = () => {
     setLoading(true);
 
     try {
+      if (email) {
+        localStorage.setItem('dozero_last_email', email.trim());
+      }
       if (mode === 'signup') {
         const { error, data } = await supabase.auth.signUp({
           email,

@@ -52,6 +52,7 @@ export const WIDGET_REGISTRY: WidgetMeta[] = [
 
   // System
   { id: 'roommgr', cat: 'System', title: 'Gestor de Salas (Multiplayer)', description: 'Painel mestre de convites, expulsão de jogadores e controle de quem dita as regras', icon: Network, theme: 'theme-green', shadow: '0 0 10px rgba(34,197,94,0.4)', actionType: 'setActiveModal', actionPayload: 'players' },
+  { id: 'lobby', cat: 'System', title: 'Mural de Campanhas (Nuvem)', description: 'Troque de mesa, crie novas campanhas e gerencie dados na nuvem ou locais', icon: Globe, theme: 'theme-indigo', shadow: '0 0 10px rgba(99,102,241,0.4)', actionType: 'setActiveModal', actionPayload: 'lobby' },
   { id: 'themes', cat: 'System', title: 'Temas Visuais (Aparência)', description: 'Escolha paletas de cores, opacidades e modo noturno do sistema inteiro', icon: Palette, theme: 'theme-pink', shadow: '0 0 10px rgba(236,72,153,0.4)', actionType: 'setActiveModal', actionPayload: 'settings-aparencia' },
   { id: 'audiodir', cat: 'System', title: 'Audio Director', description: 'Mixer de canais para gerenciar músicas de fundo (BGM) e sons de ambiente (SFX)', icon: Sparkles, theme: 'theme-blue', actionType: 'toggleWindow', actionPayload: 'audioDirector' },
   { id: 'dlc', cat: 'System', title: 'Gerenciador de Complementos', description: 'Ative/desative DLCs, livros externos, compêndios caseiros (Homebrews)', icon: ToyBrick, theme: 'theme-orange', actionType: 'setActiveModal', actionPayload: 'settings-modulos' },

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { startTransition } from 'react';
 
 export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain';
-export type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
+export type ModalMode = 'none' | 'players' | 'lobby' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
 export type InteractionTool = 'CURSOR' | 'FOG' | 'RULER' | 'MEASURE';
 
 interface WindowManagerState {

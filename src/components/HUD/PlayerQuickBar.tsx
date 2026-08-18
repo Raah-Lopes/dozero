@@ -398,6 +398,57 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
         {open && (
           <div style={{ width: '230px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '85vh', overflowY: 'auto' }}>
 
+            {/* Conta do Usuário (Logado / Login) */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '6px 8px', borderRadius: '8px',
+              background: user ? 'rgba(16, 185, 129, 0.1)' : 'rgba(168, 85, 247, 0.1)',
+              border: `1px solid ${user ? 'rgba(16, 185, 129, 0.3)' : 'rgba(168, 85, 247, 0.25)'}`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                {user?.user_metadata?.custom_avatar || user?.user_metadata?.avatar_url ? (
+                  <img 
+                    src={user.user_metadata?.custom_avatar || user.user_metadata?.avatar_url} 
+                    alt="Avatar" 
+                    style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  <div style={{
+                    width: '22px', height: '22px', borderRadius: '50%',
+                    background: user ? '#10b981' : '#a855f7',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.65rem', fontWeight: 'bold', color: 'white'
+                  }}>
+                    {playerName.substring(0, 1).toUpperCase()}
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {playerName}
+                  </span>
+                  <span style={{ fontSize: '0.6rem', color: user ? '#86efac' : '#d8b4fe' }}>
+                    {user ? 'Autenticado' : 'Convidado'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  const { setAuthModalOpen, setProfileModalOpen } = useAuthStore.getState();
+                  if (user) setProfileModalOpen(true);
+                  else setAuthModalOpen(true);
+                }}
+                style={{
+                  padding: '3px 8px', borderRadius: '4px',
+                  background: user ? 'rgba(255,255,255,0.08)' : 'var(--accent-primary)',
+                  border: 'none', color: '#fff', fontSize: '0.65rem',
+                  fontWeight: '600', cursor: 'pointer'
+                }}
+              >
+                {user ? 'Perfil' : 'Entrar'}
+              </button>
+            </div>
+
             {/* Vinculação com Personagem / Token & Ficha */}
             <div style={{
               background: isLinkedToCharacter ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',

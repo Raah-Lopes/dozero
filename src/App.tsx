@@ -51,9 +51,10 @@ import { OfflineStatus } from './components/System/OfflineStatus';
 import { AuthModal } from './components/Modals/AuthModal';
 import { ProfileModal } from './components/Modals/ProfileModal';
 import { ResetPasswordModal } from './components/Modals/ResetPasswordModal';
+import { CampaignLobbyModal } from './components/Modals/CampaignLobbyModal';
 import { useAuthStore } from './store/authStore';
 
-type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
+type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby';
 
 function App() {
   const [isReady] = useState(true);
@@ -431,6 +432,7 @@ function App() {
         )}
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
+        <CampaignLobbyModal isOpen={activeModal === 'lobby'} onClose={() => setActiveModal('none')} />
         <AuthModal />
         <ProfileModal />
         <ResetPasswordModal />

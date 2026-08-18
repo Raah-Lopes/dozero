@@ -195,19 +195,22 @@ O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilida
 
 ```mermaid
 graph TD
-    A[Concluído: Autenticação Supabase & Avatares WebP] --> B[Passo 1: Lobby de Mesas & Gestão de Campanhas em Nuvem]
-    B --> C[Passo 2: Modo Espectador / Player View Refinado]
+    A[Concluído: Autenticação Supabase & Identidade] --> B[Concluído: Lobby de Mesas & Gestão de Campanhas em Nuvem]
+    B --> C[Passo 2 (Próximo): Modo Espectador / Player Theatrical View / TV Mode]
     C --> D[Passo 3: Efeitos Atmosféricos & Partículas Canvas]
     D --> E[Passo 4: Pistas com Revelação Progressiva]
 ```
 
-### 🥇 Passo 1: Lobby de Mesas & Gestão de Campanhas em Nuvem (`CampaignLobby` / Supabase DB)
-* **Objetivo**: Permitir que o usuário autenticado visualize sua lista de campanhas salvas na nuvem, crie novas mesas (com nome, sistema de RPG, imagem de capa e código de convite) e convide amigos com 1 clique diretamente pela Landing Page ou VTT.
-* **Benefício**: Entrega a experiência completa de plataforma SaaS, permitindo ao mestre alternar entre mesas e nunca perder o progresso.
+### ✅ Passo 1 (Concluído): Lobby de Mesas & Gestão de Campanhas em Nuvem (`CampaignLobbyModal` / `campaignCloudService`)
+* **Entregas**:
+  - Serviço híbrido Local-First + Supabase DB (`campaignCloudService.ts`).
+  - Modal completo de **Lobby de Mesas** (`CampaignLobbyModal.tsx`) com criação, exclusão, troca de capa, busca e cópia de link de convite.
+  - Integrado diretamente na **Landing Page** e na **GMToolbar** do VTT (ícone 🌐).
+  - Entrada parametrizada em salas dedicadas por URL (`?room=mesa-id&pass=...`).
 
 ---
 
-### 🥈 Passo 2: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
+### 🥈 Passo 2 (Próximo): Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
 * **Objetivo**: Permitir que os jogadores vejam apenas o palco limpo e imersivo (sem botões de controle do Mestre, sem abas de segredos e sem botões de edição).
 * **Benefício**: Perfeito para sessões presenciais em TV/Telão secundário ou para jogadores que entram via link no navegador.
 

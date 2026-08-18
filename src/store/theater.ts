@@ -207,7 +207,11 @@ const THEATER_DEFAULT: TheaterStateData = {
   heroCardCustomStatus: {},
 };
 
-const THEATER_STORAGE_KEY = 'dozero_theater_state_v2';
+function getTheaterStorageKey(): string {
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get('room') || 'default';
+  return `dozero_theater_state_v2_${room}`;
+}
 
 export function getTheaterState(): TheaterStateData {
   const current = state.theater.get('global');
@@ -215,7 +219,7 @@ export function getTheaterState(): TheaterStateData {
 
   // Instant local-first cache recovery if Yjs is still initializing
   try {
-    const cached = localStorage.getItem(THEATER_STORAGE_KEY);
+    const cached = localStorage.getItem(getTheaterStorageKey()) || localStorage.getItem('dozero_theater_state_v2');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed && typeof parsed === 'object') {
@@ -233,7 +237,7 @@ export function updateTheaterState(updates: Partial<TheaterStateData>) {
   const next = { ...current, ...updates };
   state.theater.set('global', next);
   try {
-    localStorage.setItem(THEATER_STORAGE_KEY, JSON.stringify(next));
+    localStorage.setItem(getTheaterStorageKey(), JSON.stringify(next));
   } catch {}
 }
 

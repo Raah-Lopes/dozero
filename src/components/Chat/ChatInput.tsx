@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Mic, MicOff, BarChart2, Send, BookOpen, Image as ImageIcon } from 'lucide-react';
+import { User, Mic, MicOff, BarChart2, Send, BookOpen, Image as ImageIcon, Palette, Check, X, Sparkles } from 'lucide-react';
 import { toast } from '../UI/Toast';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 
@@ -245,27 +245,150 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               <User size={15} />
             </button>
 
-            {/* POPUP DE IDENTIDADE (NOME & COR) */}
+            {/* POPUP DE IDENTIDADE (NOME & COR) REESTILIZADO */}
             {showIdentityPopup && (
-              <div style={{
-                position: 'absolute', bottom: '38px', left: 0,
-                background: 'var(--chat-bg-primary)', backdropFilter: 'blur(12px)',
-                border: '1px solid var(--chat-border)', borderRadius: '8px',
-                padding: '10px', boxShadow: '0 8px 25px rgba(0,0,0,0.6)', zIndex: 200,
-                display: 'flex', flexDirection: 'column', gap: '8px', width: '180px'
-              }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--chat-text-secondary)', fontWeight: 'bold' }}>Sua Identidade no Chat:</div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <input
-                    type="color" value={playerColor} onChange={(e) => setPlayerColor(e.target.value)} title="Cor do seu nome"
-                    style={{ width: '28px', height: '28px', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: '4px' }}
-                  />
-                  <input 
-                    value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="Seu nome"
-                    style={{ flex: 1, padding: '4px 6px', background: 'var(--chat-bg-secondary)', border: '1px solid var(--chat-border)', color: playerColor, borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}
-                  />
+              <div 
+                style={{
+                  position: 'absolute',
+                  bottom: '44px',
+                  left: 0,
+                  background: 'rgba(15, 17, 26, 0.98)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(168, 85, 247, 0.35)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  boxShadow: '0 12px 35px rgba(0,0,0,0.8), 0 0 20px rgba(168, 85, 247, 0.15)',
+                  zIndex: 250,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  width: '240px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '6px' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#e9d5ff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Sparkles size={13} color="#c084fc" /> Identidade no Chat
+                  </span>
+                  <button 
+                    onClick={() => setShowIdentityPopup(false)} 
+                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px', display: 'flex' }}
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
-                <button onClick={() => setShowIdentityPopup(false)} style={{ padding: '4px', background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.4)', borderRadius: '4px', color: '#a5b4fc', fontSize: '0.7rem', cursor: 'pointer' }}>Pronto</button>
+
+                {/* Campo de Nome com preview */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Nome de Exibição</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <User size={13} style={{ position: 'absolute', left: '8px', color: playerColor }} />
+                    <input 
+                      value={playerName} 
+                      onChange={(e) => setPlayerName(e.target.value)} 
+                      placeholder="Seu nome"
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        padding: '6px 8px 6px 26px',
+                        background: 'rgba(0,0,0,0.4)',
+                        border: `1px solid ${playerColor}60`,
+                        borderRadius: '6px',
+                        color: playerColor,
+                        fontSize: '0.85rem',
+                        fontWeight: 'bold',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Paleta de Cores Rápidas + Color Picker */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Palette size={11} /> Cor do Nome
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+                    {[
+                      '#a855f7', // Roxo
+                      '#3b82f6', // Azul
+                      '#10b981', // Verde
+                      '#f59e0b', // Amarelo
+                      '#ef4444', // Vermelho
+                      '#ec4899', // Rosa
+                      '#06b6d4', // Ciano
+                    ].map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setPlayerColor(c)}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: c,
+                          border: playerColor.toLowerCase() === c.toLowerCase() ? '2px solid #ffffff' : '1px solid rgba(255,255,255,0.2)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: 0,
+                          boxShadow: playerColor.toLowerCase() === c.toLowerCase() ? `0 0 8px ${c}` : 'none',
+                          transition: 'transform 0.15s'
+                        }}
+                      >
+                        {playerColor.toLowerCase() === c.toLowerCase() && <Check size={10} color="#fff" />}
+                      </button>
+                    ))}
+
+                    {/* Color Picker Personalizado */}
+                    <label 
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                      title="Escolher qualquer cor personalizada"
+                    >
+                      <input
+                        type="color"
+                        value={playerColor}
+                        onChange={(e) => setPlayerColor(e.target.value)}
+                        style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Botão de Concluir */}
+                <button 
+                  onClick={() => setShowIdentityPopup(false)} 
+                  style={{
+                    marginTop: '2px',
+                    padding: '6px',
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.4), rgba(99, 102, 241, 0.4))',
+                    border: '1px solid rgba(168, 85, 247, 0.4)',
+                    borderRadius: '6px',
+                    color: '#f5f3ff',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Check size={13} /> Salvar Alterações
+                </button>
               </div>
             )}
           </div>

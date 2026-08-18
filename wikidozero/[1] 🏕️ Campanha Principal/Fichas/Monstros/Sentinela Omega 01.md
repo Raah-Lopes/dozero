@@ -69,7 +69,7 @@ energia: 100
 sanidade: 100
 defesa: 13
 pv: 42
-sizeScale: 1.4
+sizeScale: 1
 showName: true
 tokenShape: circle
 pv_max: 42
@@ -143,6 +143,7 @@ Ouro: 5
 inCombat: true
 visionRadius: 200
 ---
+
 
 
 

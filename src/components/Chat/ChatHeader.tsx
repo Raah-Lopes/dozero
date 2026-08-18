@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, HelpCircle, Bell, BellOff, Trash2, X, Download, Shield } from 'lucide-react';
+import { Search, HelpCircle, Bell, BellOff, Trash2, X, Download, Shield, User as UserIcon, UserCheck } from 'lucide-react';
 import { state, useIsGM } from '../../store';
 import { updateGMChatConfig, getGMChatConfig, GMChatConfig } from '../../store/chat';
 import { toast } from '../UI/Toast';
+import { useAuthStore } from '../../store/authStore';
 
 interface ChatHeaderProps {
   tab: 'geral' | 'in-game' | 'sistema';
@@ -26,8 +27,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   isSelectMode, setIsSelectMode, selectedIds, setSelectedIds,
   chatSound, setChatSound, setClearedAt, setShowHelpModal
 }) => {
+  const { user, setAuthModalOpen, setProfileModalOpen } = useAuthStore();
   const [showGMChatMenu, setShowGMChatMenu] = useState(false);
   const [gmConfig, setGmConfig] = useState<GMChatConfig>(() => getGMChatConfig());
+
+  const userAvatar = user?.user_metadata?.custom_avatar || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const userName = user?.user_metadata?.full_name || (user?.email ? user.email.split('@')[0] : 'Convidado');
 
   useEffect(() => {
     const handler = () => setGmConfig(getGMChatConfig());
@@ -82,6 +87,45 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         
         {/* ACTIONS BAR - Flex shrink 0 so icons stay intact on narrow widths */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: 'auto', flexShrink: 0, flexWrap: 'wrap' }}>
+          
+          {/* USER ACCOUNT / PROFILE SHORTCUT */}
+          <button
+            onClick={() => {
+              if (user) {
+                setProfileModalOpen(true);
+              } else {
+                setAuthModalOpen(true);
+              }
+            }}
+            title={user ? `Meu Perfil (${userName})` : "Fazer Login / Criar Conta"}
+            style={{
+              padding: '3px 6px',
+              background: user ? 'rgba(16, 185, 129, 0.15)' : 'rgba(168, 85, 247, 0.15)',
+              border: `1px solid ${user ? 'rgba(16, 185, 129, 0.4)' : 'rgba(168, 85, 247, 0.3)'}`,
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              color: user ? '#86efac' : '#c084fc',
+              fontSize: '0.7rem',
+              fontWeight: 'bold'
+            }}
+          >
+            {userAvatar ? (
+              <img 
+                src={userAvatar} 
+                alt="Avatar" 
+                style={{ width: '14px', height: '14px', borderRadius: '50%', objectFit: 'cover' }} 
+              />
+            ) : user ? (
+              <UserCheck size={12} />
+            ) : (
+              <UserIcon size={12} />
+            )}
+            <span>{user ? userName.split(' ')[0] : 'Entrar'}</span>
+          </button>
+
           {/* BUSCA */}
           <button
             onClick={() => setShowSearch(!showSearch)}

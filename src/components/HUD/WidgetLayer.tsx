@@ -31,6 +31,7 @@ const GMNotesWidget = React.lazy(() => import('../Widgets/GameMaster/GMNotesWidg
 const StoryDiceWidget = React.lazy(() => import('../Widgets/Generators/StoryDiceWidget').then(m => ({ default: m.StoryDiceWidget })));
 const SSStoryDiceWidget = React.lazy(() => import('../Widgets/Generators/SSStoryDiceWidget').then(m => ({ default: m.StoryDiceWidget })));
 const StoryBilderDeckWidget = React.lazy(() => import('../Widgets/Generators/StoryBilderDeckWidget').then(m => ({ default: m.StoryBilderDeckWidget })));
+const RoomManagerWidget = React.lazy(() => import('../Widgets/System/RoomManagerWidget').then(m => ({ default: m.RoomManagerWidget })));
 
 const FallbackLoader = () => (
   <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15,23,42,0.9)', padding: '20px', borderRadius: '12px', color: '#fff', zIndex: 9999 }}>
@@ -89,6 +90,7 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.gmNotes && <GMNotesWidget onClose={() => closeWindow('gmNotes')} />}
           {openWindows.storyDice && <StoryDiceWidget onClose={() => closeWindow('storyDice')} />}
           {openWindows.ssStoryDice && <SSStoryDiceWidget onClose={() => closeWindow('ssStoryDice')} />}
+          {openWindows.roomManager && <RoomManagerWidget onClose={() => closeWindow('roomManager')} />}
         </ErrorBoundary>
       </Suspense>
     </>

@@ -1,0 +1,597 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  X, 
+  Plus, 
+  Play, 
+  Trash2, 
+  Copy, 
+  Check, 
+  Globe, 
+  Shield, 
+  Sparkles, 
+  BookOpen, 
+  Calendar, 
+  Image as ImageIcon,
+  Key,
+  ExternalLink,
+  Users,
+  Search,
+  Folder,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  Upload
+} from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import { getCampaigns, createOrUpdateCampaign, deleteCampaignCloud, CampaignCloudRecord } from '../../services/campaignCloudService';
+import { updateWikiConfig } from '../../store/wiki';
+import { WikiIndexer } from '../../services/wiki/WikiIndexer';
+import { toast } from '../UI/Toast';
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const DEFAULT_COVERS = [
+  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80'
+];
+
+export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
+  const { user } = useAuthStore();
+  const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  
+  // Criar / Editar Mesa
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [system, setSystem] = useState('D&D 5e / Fantasia Medieval');
+  const [description, setDescription] = useState('');
+  const [coverUrl, setCoverUrl] = useState(DEFAULT_COVERS[0]);
+  const [passCode, setPassCode] = useState('');
+  const [wikiPath, setWikiPath] = useState('D:/DOZERO/wikidozero');
+  const [isPublic, setIsPublic] = useState(true);
+  const [isClosed, setIsClosed] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadList();
+    }
+  }, [isOpen, user?.id]);
+
+  const loadList = async () => {
+    setLoading(true);
+    try {
+      const data = await getCampaigns(user?.id);
+      setCampaigns(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const handleOpenCreate = () => {
+    setEditingId(null);
+    setName('');
+    setSystem('D&D 5e / Fantasia Medieval');
+    setDescription('');
+    setCoverUrl(DEFAULT_COVERS[0]);
+    setPassCode('');
+    setWikiPath('D:/DOZERO/wikidozero');
+    setIsPublic(true);
+    setIsClosed(false);
+    setIsCreating(true);
+  };
+
+  const handleOpenEdit = (camp: CampaignCloudRecord, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingId(camp.id);
+    setName(camp.name);
+    setSystem(camp.system);
+    setDescription(camp.description || '');
+    setCoverUrl(camp.cover_url || DEFAULT_COVERS[0]);
+    setPassCode(camp.pass_code || '');
+    setWikiPath(camp.wiki_path || 'D:/DOZERO/wikidozero');
+    setIsPublic(camp.is_public !== false);
+    setIsClosed(camp.is_closed === true);
+    setIsCreating(true);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setCoverUrl(String(event.target.result));
+        toast.success("Imagem de capa local carregada!");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    try {
+      const newCamp = await createOrUpdateCampaign({
+        id: editingId || undefined,
+        name: name.trim(),
+        system: system.trim(),
+        description: description.trim(),
+        cover_url: coverUrl.trim(),
+        pass_code: passCode.trim(),
+        wiki_path: wikiPath.trim(),
+        is_public: isPublic,
+        is_closed: isClosed
+      }, user?.id);
+
+      toast.success(`Campanha "${newCamp.name}" salva com sucesso!`);
+      setIsCreating(false);
+      loadList();
+    } catch (err) {
+      toast.error('Erro ao salvar campanha.');
+    }
+  };
+
+  const handleDelete = async (id: string, campName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Tem certeza que deseja excluir a campanha "${campName}"?`)) {
+      await deleteCampaignCloud(id, user?.id);
+      toast.info(`Campanha "${campName}" removida.`);
+      loadList();
+    }
+  };
+
+  const handleCopyInvite = (camp: CampaignCloudRecord, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/vtt.html?room=${camp.room_code}${camp.pass_code ? `&pass=${encodeURIComponent(camp.pass_code)}` : ''}`;
+    navigator.clipboard.writeText(url);
+    setCopiedId(camp.id);
+    toast.success('Link de convite da mesa copiado!');
+    setTimeout(() => setCopiedId(null), 2500);
+  };
+
+  const handleEnterRoom = (camp: CampaignCloudRecord) => {
+    if (camp.is_closed) {
+      toast.error("Esta sala foi trancada/fechada pelo Mestre.");
+      return;
+    }
+
+    // Configura o repositório/pasta da Wiki apontado para a mesa
+    if (camp.wiki_path) {
+      updateWikiConfig({ repoUrl: camp.wiki_path });
+      WikiIndexer.clearCache();
+    }
+
+    const url = `/vtt.html?room=${camp.room_code}${camp.pass_code ? `&pass=${encodeURIComponent(camp.pass_code)}` : ''}`;
+    window.location.href = url;
+  };
+
+  const filteredCampaigns = campaigns.filter(c => 
+    (c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.system.toLowerCase().includes(search.toLowerCase())) &&
+    (c.is_public !== false || c.owner_id === user?.id)
+  );
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 99999,
+      background: 'rgba(20, 14, 10, 0.85)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '850px',
+        maxHeight: '92vh',
+        background: 'linear-gradient(180deg, #261911 0%, #1a110b 100%)',
+        border: '2px solid #5a4234',
+        borderRadius: '24px',
+        boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 35px rgba(164, 104, 48, 0.25)',
+        padding: '24px',
+        color: '#fdfaf5',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box'
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '2px solid #3b281d' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ padding: '10px', borderRadius: '14px', background: '#a46830', color: '#fff', border: '1px solid #c49a6c' }}>
+              <Globe size={22} />
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#fdfaf5', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Mural de Campanhas & Gerenciador de Mesas
+                <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: '6px', background: user ? 'rgba(56, 102, 65, 0.3)' : 'rgba(164, 104, 48, 0.3)', color: user ? '#86efac' : '#fde047', border: `1px solid ${user ? '#386641' : '#a46830'}` }}>
+                  {user ? 'Nuvem Supabase' : 'Offline / Local'}
+                </span>
+              </h2>
+              <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#d7c9b8' }}>
+                Gerencie nomes, capas locais, pastas de wiki e visibilidade pública de suas mesas de RPG.
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose}
+            style={{ background: '#3b281d', border: '1px solid #5a4234', color: '#d7c9b8', cursor: 'pointer', padding: '8px', borderRadius: '10px' }}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Top Actions & Search */}
+        {!isCreating && (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', margin: '16px 0 12px' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#8c6e5a' }} />
+              <input
+                type="text"
+                placeholder="Buscar campanha por nome ou sistema..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '9px 12px 9px 34px',
+                  borderRadius: '12px',
+                  background: '#1a110b',
+                  border: '1px solid #4a3528',
+                  color: '#fdfaf5',
+                  fontSize: '0.82rem',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <button
+              onClick={handleOpenCreate}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '9px 18px',
+                background: 'linear-gradient(135deg, #a46830 0%, #8b5220 100%)',
+                border: '1px solid #c49a6c',
+                borderRadius: '12px',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(164, 104, 48, 0.4)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Plus size={16} /> Nova Campanha
+            </button>
+          </div>
+        )}
+
+        {/* Form de Criação / Edição */}
+        {isCreating ? (
+          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px', overflowY: 'auto', paddingRight: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
+                  Nome da Campanha *
+                </label>
+                <input
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Ex: A Maldição de Strahd"
+                  style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
+                  Sistema de RPG
+                </label>
+                <input
+                  value={system}
+                  onChange={e => setSystem(e.target.value)}
+                  placeholder="Ex: D&D 5e, Call of Cthulhu, Tormenta20"
+                  style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
+                Sinopse / Descrição Curta
+              </label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Breve resumo da aventura ou premissa..."
+                rows={2}
+                style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', resize: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            {/* Configuração Centralizada da Pasta da Wiki */}
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 600, color: '#fde047', marginBottom: '4px' }}>
+                <Folder size={14} /> Pasta Local da Wiki (Personagens & Lore)
+              </label>
+              <input
+                value={wikiPath}
+                onChange={e => setWikiPath(e.target.value)}
+                placeholder="Ex: D:/DOZERO/wikidozero ou /minha-pasta-wiki"
+                style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #c49a6c', borderRadius: '8px', color: '#c49a6c', fontSize: '0.82rem', fontFamily: 'monospace', boxSizing: 'border-box' }}
+              />
+              <span style={{ fontSize: '0.65rem', color: '#a1a1aa', marginTop: '2px', display: 'block' }}>
+                Ao abrir esta mesa, os personagens, locais e itens serão automaticamente carregados desta pasta.
+              </span>
+            </div>
+
+            {/* Imagem de Capa (URL ou Upload Local) */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
+                Imagem de Capa da Mesa
+              </label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                <input
+                  value={coverUrl}
+                  onChange={e => setCoverUrl(e.target.value)}
+                  placeholder="Cole a URL da imagem ou escolha um arquivo..."
+                  style={{ flex: 1, padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', boxSizing: 'border-box' }}
+                />
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', background: '#3b281d', border: '1px solid #5a4234', borderRadius: '8px', color: '#d7c9b8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <Upload size={14} /> Enviar Foto Local
+                  <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.65rem', color: '#a1a1aa' }}>Sugestões rápidas:</span>
+                {DEFAULT_COVERS.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt="Capa"
+                    onClick={() => setCoverUrl(url)}
+                    style={{ width: '38px', height: '24px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: coverUrl === url ? '2px solid #a46830' : '1px solid rgba(255,255,255,0.2)' }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Opções de Visibilidade & Status */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginTop: '4px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
+                  Senha da Sala
+                </label>
+                <input
+                  type="password"
+                  value={passCode}
+                  onChange={e => setPassCode(e.target.value)}
+                  placeholder="Senha opcional"
+                  style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
+                  Visibilidade no Lobby
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsPublic(!isPublic)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: isPublic ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', border: `1px solid ${isPublic ? '#22c55e' : '#ef4444'}`, color: isPublic ? '#4ade80' : '#f87171', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  {isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
+                  {isPublic ? 'Pública (Visível)' : 'Oculta (Privada)'}
+                </button>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
+                  Status da Mesa
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsClosed(!isClosed)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: isClosed ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', border: `1px solid ${isClosed ? '#ef4444' : '#3b82f6'}`, color: isClosed ? '#f87171' : '#60a5fa', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  {isClosed ? <Lock size={14} /> : <Unlock size={14} />}
+                  {isClosed ? 'Fechada / Trancada' : 'Aberta para Jogar'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setIsCreating(false)}
+                style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #5a4234', borderRadius: '8px', color: '#d7c9b8', fontSize: '0.8rem', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #a46830 0%, #8b5220 100%)', border: '1px solid #c49a6c', borderRadius: '8px', color: '#fff', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+              >
+                {editingId ? 'Salvar Alterações' : 'Criar Mesa & Salvar'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Grid de Campanhas */
+          <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', marginTop: '6px' }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '3rem 0', color: '#a1a1aa', fontSize: '0.85rem' }}>
+                Carregando suas campanhas...
+              </div>
+            ) : filteredCampaigns.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '3rem 1rem',
+                border: '2px dashed #5a4234',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <BookOpen size={40} color="#8c6e5a" />
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#fdfaf5' }}>Nenhuma campanha encontrada</h3>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#d7c9b8', maxWidth: '320px' }}>
+                  Crie sua primeira campanha para salvar seus mapas, tokens, wikis e histórico de sessão.
+                </p>
+                <button
+                  onClick={handleOpenCreate}
+                  style={{
+                    marginTop: '6px',
+                    padding: '8px 16px',
+                    background: '#a46830',
+                    border: '1px solid #c49a6c',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  + Criar Minha Primeira Mesa
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '14px' }}>
+                {filteredCampaigns.map(camp => (
+                  <div
+                    key={camp.id}
+                    onClick={() => handleEnterRoom(camp)}
+                    style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid #4a3528',
+                      borderRadius: '14px',
+                      overflow: 'hidden',
+                      cursor: camp.is_closed ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'transform 0.2s, border 0.2s, box-shadow 0.2s',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.4)',
+                      opacity: camp.is_closed ? 0.7 : 1
+                    }}
+                  >
+                    {/* Capa */}
+                    <div style={{ position: 'relative', width: '100%', height: '110px', background: '#000' }}>
+                      <img 
+                        src={camp.cover_url || DEFAULT_COVERS[0]} 
+                        alt={camp.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: camp.is_closed ? 0.4 : 0.8 }} 
+                      />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.8) 100%)' }} />
+                      <span style={{
+                        position: 'absolute', top: '8px', left: '8px',
+                        fontSize: '0.62rem', fontWeight: 700, padding: '2px 6px',
+                        borderRadius: '4px', background: 'rgba(0,0,0,0.7)',
+                        color: '#fde047', border: '1px solid #a46830'
+                      }}>
+                        {camp.system}
+                      </span>
+
+                      {camp.is_closed && (
+                        <span style={{
+                          position: 'absolute', top: '8px', right: '8px',
+                          fontSize: '0.62rem', fontWeight: 700, padding: '2px 6px',
+                          borderRadius: '4px', background: 'rgba(239,68,68,0.8)',
+                          color: '#fff', display: 'flex', alignItems: 'center', gap: '3px'
+                        }}>
+                          <Lock size={10} /> Fechada
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Conteúdo */}
+                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#fdfaf5' }}>
+                        {camp.name}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '0.7rem', color: '#d7c9b8', lineClamp: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {camp.description || 'Sem descrição definida.'}
+                      </p>
+
+                      {camp.wiki_path && (
+                        <div style={{ fontSize: '0.65rem', color: '#c49a6c', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                          <Folder size={11} /> {camp.wiki_path}
+                        </div>
+                      )}
+
+                      {/* Rodapé do Card com Ações */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #3b281d' }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button
+                            onClick={(e) => handleCopyInvite(camp, e)}
+                            title="Copiar Link de Convite"
+                            style={{ padding: '5px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', border: '1px solid #5a4234', color: copiedId === camp.id ? '#86efac' : '#d7c9b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            {copiedId === camp.id ? <Check size={13} /> : <Copy size={13} />}
+                          </button>
+                          <button
+                            onClick={(e) => handleOpenEdit(camp, e)}
+                            title="Editar Dados da Mesa"
+                            style={{ padding: '5px', borderRadius: '6px', background: 'rgba(164,104,48,0.2)', border: '1px solid #c49a6c', color: '#fde047', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Folder size={13} />
+                          </button>
+                          <button
+                            onClick={(e) => handleDelete(camp.id, camp.name, e)}
+                            title="Excluir Campanha"
+                            style={{ padding: '5px', borderRadius: '6px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleEnterRoom(camp)}
+                          disabled={camp.is_closed}
+                          style={{
+                            padding: '4px 10px',
+                            background: camp.is_closed ? '#5a4234' : 'linear-gradient(135deg, #a46830 0%, #8b5220 100%)',
+                            border: '1px solid #c49a6c',
+                            borderRadius: '6px',
+                            color: '#fff',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            cursor: camp.is_closed ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Play size={11} fill="#fff" /> {camp.is_closed ? 'Trancada' : 'Entrar'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
