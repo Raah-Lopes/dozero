@@ -60,9 +60,10 @@ export interface Token {
   wikiPath?: string;
   caminhoArquivo?: string;
   
-  // Server-side only
-  isPlayer?: boolean;
-  
+  // Ownership & Permissions
+  ownerId?: string;
+  ownerName?: string;
+
   // Extensible for RPG systems
   [key: string]: any;
 }
@@ -172,6 +173,26 @@ export const Tokens = {
    */
   isTarget(id: string): boolean {
     return localState.targets.has(id);
+  },
+
+  /**
+   * Check if a user or GM has permission to control/move/edit this token
+   */
+  canControl(tokenOrId: string | Token, userId?: string | null, userName?: string | null, isGM?: boolean): boolean {
+    if (isGM) return true;
+    const token = typeof tokenOrId === 'string' ? this.getById(tokenOrId) : tokenOrId;
+    if (!token) return false;
+
+    // Se o token não tiver dono explícito atribuído, qualquer jogador tem permissão
+    if (!token.ownerId && !token.ownerName) return true;
+
+    // Checa vínculo por ID do usuário logado (Supabase)
+    if (userId && token.ownerId && token.ownerId === userId) return true;
+
+    // Checa vínculo por Nome do jogador
+    if (userName && token.ownerName && token.ownerName.trim().toLowerCase() === userName.trim().toLowerCase()) return true;
+
+    return false;
   },
 
   // ========================================================================

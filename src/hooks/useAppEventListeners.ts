@@ -213,7 +213,30 @@ export const useAppEventListeners = ({
     window.addEventListener('open-sheet-by-wiki', handleOpenSheetByWiki);
     window.addEventListener('spawn-token-from-wiki', handleSpawnTokenFromWiki);
 
+    // 3. Sincronização em tempo real de comandos do Mestre via Yjs (roomSettings)
+    const observeRoomSettings = () => {
+      const lastGmAction = state.roomSettings.get('last_gm_action') as any;
+      if (!lastGmAction || !lastGmAction.timestamp) return;
+      
+      const now = Date.now();
+      // Executa apenas eventos recentes (menos de 5 segundos)
+      if (now - lastGmAction.timestamp > 5000) return;
+
+      if (lastGmAction.type === 'summon_camera') {
+        if (lastGmAction.tokenId) {
+          window.dispatchEvent(new CustomEvent('canvas-focus-token', { detail: { tokenId: lastGmAction.tokenId } }));
+        } else if (typeof lastGmAction.x === 'number' && typeof lastGmAction.y === 'number') {
+          window.dispatchEvent(new CustomEvent('canvas-focus-point', { detail: { x: lastGmAction.x, y: lastGmAction.y, scale: lastGmAction.scale } }));
+        }
+      } else if (lastGmAction.type === 'request_roll') {
+        window.dispatchEvent(new CustomEvent('gm-request-roll', { detail: lastGmAction }));
+      }
+    };
+
+    state.roomSettings.observe(observeRoomSettings);
+
     return () => {
+      state.roomSettings.unobserve(observeRoomSettings);
       window.removeEventListener('theater-cutscene', handleCutscene);
       window.removeEventListener('open-wiki-doc', handleOpenWikiDoc);
       window.removeEventListener('token-dblclick', handleDblClick);

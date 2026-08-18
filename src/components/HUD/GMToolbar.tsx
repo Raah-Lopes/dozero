@@ -1,5 +1,5 @@
 import React from 'react';
-import { Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload, User as UserIcon, UserCheck } from 'lucide-react';
+import { Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Shield } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
@@ -233,11 +233,18 @@ export function GMToolbar() {
             <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
             
             <ToolButton 
+              icon={<Shield size={20} />} 
+              active={openWindows.playerManager} 
+              onClick={() => toggleWindow('playerManager')} 
+              tooltip="Controle de Jogadores (GM)"
+              description="Gerencie conexões ativas, fichas/tokens, puxar visão e solicitar rolagens"
+            />
+            <ToolButton 
               icon={<Users size={20} />} 
               active={activeModal === 'players'} 
               onClick={() => setActiveModal('players')} 
-              tooltip="Convidar Jogadores"
-              description="Gerencie as permissões e veja quem está conectado na mesa"
+              tooltip="Convidar Jogadores (Link)"
+              description="Gerencie link de convite da sala e permissões de entrada"
             />
             <ToolButton 
               icon={<MessageSquare size={20} />} 

@@ -26,7 +26,7 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
       setLabel(existingClock.label || 'Relógio');
       setMinutes(Math.floor(existingClock.durationMs / 60000).toString());
       setSeconds(Math.floor((existingClock.durationMs % 60000) / 1000).toString());
-      setHpMod(existingClock.hpMod || '0');
+      setHpMod(existingClock.hpMod || '-50%');
       setMpMod(existingClock.mpMod || '0');
     } else {
       setLabel('Bomba Mágica');
@@ -35,7 +35,7 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
       setHpMod('-50%');
       setMpMod('0');
     }
-  }, [existingClock]);
+  }, [existingClock?.id]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -10,6 +10,7 @@ import { state } from '../../services/yjs';
 import { toast } from '../UI/Toast';
 import { syncTokenFieldToWiki, syncMultipleFieldsToWiki } from '../../services/wiki/syncWiki';
 import { Tooltip } from '../UI/Tooltip';
+import { useAuthStore } from '../../store/authStore';
 
 // ponytail: Rolagem customizada, vinculação com token e sincronização de ficha markdown no Yjs/Wiki
 
@@ -37,6 +38,8 @@ interface TokenItem {
   wikiPath?: string;
   imageUrl?: string;
   isPlayer?: boolean;
+  ownerId?: string;
+  ownerName?: string;
 }
 
 const CONDICOES_DISPONIVEIS = [
@@ -174,8 +177,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
   // Rolagem Personalizada (Fórmula Livre ex: 1d20+2d100-30)
   const [customFormula, setCustomFormula] = useState('1d20+2d100-30');
 
-  // Vincular com Personagem/Token
-  const [isLinkedToCharacter, setIsLinkedToCharacter] = useState(false);
+  const { user } = useAuthStore();
+  const [isLinkedToCharacter, setIsLinkedToCharacter] = useState(true);
   const [selectedTokenId, setSelectedTokenId] = useState<string>('');
   const [availableTokens, setAvailableTokens] = useState<TokenItem[]>([]);
   const [showEffectMenu, setShowEffectMenu] = useState(false);
@@ -193,18 +196,29 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
         status_efeitos: Array.isArray(t.status_efeitos) ? t.status_efeitos : [],
         wikiPath: t.wikiPath || t.caminhoArquivo,
         imageUrl: t.imageUrl,
-        isPlayer: t.isPlayer
+        isPlayer: t.isPlayer,
+        ownerId: t.ownerId,
+        ownerName: t.ownerName
       }));
       setAvailableTokens(tokensList);
-      if (tokensList.length > 0 && !selectedTokenId) {
-        setSelectedTokenId(tokensList[0].id);
+
+      // Prioriza selecionar o token que pertence ao jogador autenticado/nome
+      if (tokensList.length > 0) {
+        setSelectedTokenId(prev => {
+          if (prev && tokensList.some(t => t.id === prev)) return prev;
+          const myToken = tokensList.find(t => 
+            (user?.id && t.ownerId === user.id) ||
+            (playerName && t.ownerName && t.ownerName.toLowerCase() === playerName.toLowerCase())
+          );
+          return myToken ? myToken.id : tokensList[0].id;
+        });
       }
     };
 
     state.tokens.observe(updateTokens);
     updateTokens();
     return () => state.tokens.unobserve(updateTokens);
-  }, []);
+  }, [user?.id, playerName]);
 
   const activeToken = availableTokens.find(t => t.id === selectedTokenId);
 
@@ -240,6 +254,24 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
       toast.info(`Rolagem de Dano (${total}). Clique no histórico abaixo para aplicar no HP/Ficha de ${activeToken.name}.`);
     }
   }, [bonus, isLinkedToCharacter, activeToken, playerName]);
+
+  // Listener para rolagem requisitada pelo Mestre
+  useEffect(() => {
+    const handleGmRollRequest = (e: any) => {
+      const { targetPlayerName, targetUserId, label, formula, isDamage } = e?.detail || {};
+      const matchesUser = targetUserId && user?.id && targetUserId === user.id;
+      const matchesName = targetPlayerName && playerName && targetPlayerName.toLowerCase() === playerName.toLowerCase();
+      const isForMe = matchesUser || matchesName || (!targetPlayerName && !targetUserId);
+
+      if (isForMe && formula) {
+        toast.info(`🎲 O Mestre solicitou um teste: ${label || formula}!`);
+        executeRoll(label || 'Teste Solicitado', '🎲', formula, !!isDamage);
+      }
+    };
+
+    window.addEventListener('gm-request-roll', handleGmRollRequest);
+    return () => window.removeEventListener('gm-request-roll', handleGmRollRequest);
+  }, [user?.id, playerName, executeRoll]);
 
   // Aplica dano/cura direto no Token no Yjs E na Ficha Markdown (.md) da Wiki
   const handleApplyDamageToToken = async (amount: number, isHeal: boolean = false) => {

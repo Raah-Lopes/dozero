@@ -35,7 +35,7 @@ import { TheaterView } from './components/Theater/TheaterView';
 import { WidgetLayer } from './components/HUD/WidgetLayer';
 import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
-import { state, addTensionClock, updateTensionClockProps } from './store';
+import { state, addTensionClock, updateTensionClockProps, pushChatMessage } from './store';
 import type { TensionClock } from './store';
 import { MobileBottomNav } from './components/HUD/MobileBottomNav';
 import { MobileQuickActions } from './components/HUD/MobileQuickActions';
@@ -269,20 +269,23 @@ function App() {
                   const current = state.clocks.get(editingClockId) as TensionClock;
                   if (current) {
                     const now = Date.now();
+                    const durationChanged = current.durationMs !== config.durationMs;
+                    const newEndTime = durationChanged ? now + config.durationMs : current.endTime;
+                    const newPausedRemaining = durationChanged ? undefined : current.pausedRemainingMs;
+
                     updateTensionClockProps(editingClockId, {
                       label: config.label,
                       durationMs: config.durationMs,
-                      endTime: now + config.durationMs,
-                      pausedRemainingMs: undefined,
-                      isRunning: true,
+                      endTime: newEndTime,
+                      pausedRemainingMs: newPausedRemaining,
                       hpMod: config.hpMod,
                       mpMod: config.mpMod
                     });
-                    state.chat.push([{ text: `RELÓGIO MODIFICADO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
+                    pushChatMessage(`⏱️ Relógio "${config.label}" foi atualizado.`);
                   }
                 } else {
                   const id = 'clock_' + Date.now();
-                  state.chat.push([{ text: `CRIANDO RELÓGIO (HUD): ${config.label}`, timestamp: Date.now(), isCritical: false, isFailure: false }]);
+                  pushChatMessage(`⏱️ Relógio de Tensão "${config.label}" criado.`);
                   addTensionClock({
                     id,
                     x: 0,

@@ -3,6 +3,8 @@ import { Tokens, Config, FogOfWar } from '../store/modules';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture, FillGradient } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
+import { toast } from '../components/UI/Toast';
+import { useAuthStore } from '../store/authStore';
 
 import { hexRound, euclideanDistance, pixelToHex, hexToPixel, snapToGrid } from './utils/gridUtils';
 import { renderGrid } from './renderers/gridRenderer';
@@ -338,11 +340,36 @@ export const GameCanvas: React.FC = () => {
         }
       };
 
+      const handleCanvasFocusToken = (e: any) => {
+        const tokenId = e?.detail?.tokenId;
+        if (!tokenId) return;
+        const ts = tokenSprites[tokenId];
+        if (ts && ts.container) {
+          const targetX = ts.container.x;
+          const targetY = ts.container.y;
+          const targetScale = e?.detail?.scale || 1.2;
+          viewport.scale.set(targetScale);
+          viewport.x = window.innerWidth / 2 - targetX * targetScale;
+          viewport.y = window.innerHeight / 2 - targetY * targetScale;
+        }
+      };
+
+      const handleCanvasFocusPoint = (e: any) => {
+        const { x, y, scale } = e?.detail || {};
+        if (typeof x !== 'number' || typeof y !== 'number') return;
+        const targetScale = scale || viewport.scale.x || 1;
+        viewport.scale.set(targetScale);
+        viewport.x = window.innerWidth / 2 - x * targetScale;
+        viewport.y = window.innerHeight / 2 - y * targetScale;
+      };
+
       window.addEventListener('canvas-zoom', handleCanvasZoom);
       window.addEventListener('canvas-reset-view', handleCanvasResetView);
       window.addEventListener('canvas-center-map', handleCanvasCenterMap);
       window.addEventListener('canvas-focus-selected', handleCanvasFocusSelected);
       window.addEventListener('canvas-fit-all', handleCanvasFitAll);
+      window.addEventListener('canvas-focus-token', handleCanvasFocusToken);
+      window.addEventListener('canvas-focus-point', handleCanvasFocusPoint);
 
       canvasEl.addEventListener('wheel', (e) => {
         e.preventDefault();
@@ -2013,11 +2040,22 @@ export const GameCanvas: React.FC = () => {
          }
          if (hitTokenId) {
             e.stopPropagation();
-            if (isDoubleClick) window.dispatchEvent(new CustomEvent('token-dblclick', { detail: { tokenId: hitTokenId } }));
-            
-            // Set up instant drag if not locked
             const tData = state.tokens.get(hitTokenId) as any;
-            if (!tData || !tData.locked) {
+            const isGM = localStorage.getItem('isGM') === 'true';
+            const curUser = useAuthStore.getState().user;
+            const curPlayerName = localStorage.getItem('playerName') || 'Jogador';
+            const canControl = Tokens.canControl(tData, curUser?.id, curPlayerName, isGM);
+
+            if (isDoubleClick) {
+               if (canControl) {
+                 window.dispatchEvent(new CustomEvent('token-dblclick', { detail: { tokenId: hitTokenId } }));
+               } else {
+                 toast.info(`Personagem atribuído a ${tData?.ownerName || 'outro jogador'}.`);
+               }
+            }
+            
+            // Set up instant drag if not locked and has control permission
+            if (canControl && (!tData || !tData.locked)) {
                draggingTokenId = hitTokenId;
                tokenDragOffsets = {};
                tokenStartPositions = {};

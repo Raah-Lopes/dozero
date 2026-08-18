@@ -42,7 +42,10 @@ interface Props {
   onOpenPlayerQuickBar: () => void;
 }
 
+import { useIsGM } from '../../store/user';
+
 export const WidgetHubModal: React.FC<Props> = (props) => {
+  const isGM = useIsGM();
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState<string[]>(
     () => JSON.parse(localStorage.getItem('dozero_hub_favorites') || '[]')
@@ -120,9 +123,14 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
     return { ...w, action: actionFn };
   });
 
-  const categories = ['Game Master', 'Player Tools', 'Generators & AI', 'System'];
+  const categories = isGM 
+    ? ['Game Master', 'Player Tools', 'Generators & AI', 'System']
+    : ['Player Tools', 'Generators & AI', 'System'];
   
-  const filteredWidgets = widgets.filter(w => w.title.toLowerCase().includes(search.toLowerCase()));
+  const filteredWidgets = widgets.filter(w => {
+    if (!isGM && w.cat === 'Game Master') return false;
+    return w.title.toLowerCase().includes(search.toLowerCase());
+  });
 
   return (
     <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '100%', maxWidth: '800px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>

@@ -962,6 +962,38 @@ export const NPCPanel: React.FC = () => {
                             </label>
                           )}
                         </div>
+
+                        {/* Jogador Atribuído (Dono / Permissão) */}
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Jogador Atribuído (Dono)</label>
+                          <select
+                            value={t.ownerName || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (!val) {
+                                Tokens.update(t.id, { ownerId: undefined, ownerName: undefined });
+                              } else {
+                                const playerEntry = Array.from(state.players.values() as Iterable<any>).find((p: any) => p.name === val);
+                                Tokens.update(t.id, { 
+                                  ownerName: val, 
+                                  ownerId: playerEntry?.userId || undefined 
+                                });
+                              }
+                            }}
+                            style={{
+                              background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                              borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
+                              height: '24px', outline: 'none'
+                            }}
+                          >
+                            <option value="">Livre / Qualquer Jogador</option>
+                            {Array.from(state.players.values() as Iterable<any>).map((p: any, pIdx: number) => (
+                              <option key={p.userId || p.name || pIdx} value={p.name}>
+                                👤 {p.name} {p.userId ? '(Autenticado)' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                         
                         {/* Status/Conditions */}
                         <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1353,6 +1385,38 @@ export const NPCPanel: React.FC = () => {
                               </select>
                             </label>
                           )}
+                        </div>
+
+                        {/* Jogador Atribuído (Dono / Permissão) */}
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Jogador Atribuído (Dono)</label>
+                          <select
+                            value={t.ownerName || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (!val) {
+                                Tokens.update(t.id, { ownerId: undefined, ownerName: undefined });
+                              } else {
+                                const playerEntry = Array.from(state.players.values() as Iterable<any>).find((p: any) => p.name === val);
+                                Tokens.update(t.id, { 
+                                  ownerName: val, 
+                                  ownerId: playerEntry?.userId || undefined 
+                                });
+                              }
+                            }}
+                            style={{
+                              background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                              borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
+                              height: '24px', outline: 'none'
+                            }}
+                          >
+                            <option value="">Livre / Qualquer Jogador</option>
+                            {Array.from(state.players.values() as Iterable<any>).map((p: any, pIdx: number) => (
+                              <option key={p.userId || p.name || pIdx} value={p.name}>
+                                👤 {p.name} {p.userId ? '(Autenticado)' : ''}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                         
                         {/* Status/Conditions */}

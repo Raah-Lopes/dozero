@@ -12,8 +12,19 @@ interface Props {
 }
 
 export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => {
-  const [remaining, setRemaining] = useState(() => Math.max(0, clock.endTime - Date.now()));
+  const [remaining, setRemaining] = useState(() => {
+    return clock.isRunning 
+      ? Math.max(0, clock.endTime - Date.now())
+      : (clock.pausedRemainingMs ?? Math.max(0, clock.endTime - Date.now()));
+  });
   const [showAnimation, setShowAnimation] = useState(false);
+
+  useEffect(() => {
+    const currentRem = clock.isRunning 
+      ? Math.max(0, clock.endTime - Date.now())
+      : (clock.pausedRemainingMs ?? Math.max(0, clock.endTime - Date.now()));
+    setRemaining(currentRem);
+  }, [clock.endTime, clock.pausedRemainingMs, clock.isRunning, clock.durationMs]);
 
   useEffect(() => {
     if (!clock.isRunning) return;
@@ -129,8 +140,9 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
       }}>
         
         <div 
-          onClick={onEdit}
-          title="Clique para editar este relógio"
+          onClick={isGM ? onEdit : undefined}
+          title={isGM ? "Clique para editar este relógio" : undefined}
+          className="interactive-area"
           style={{
             position: 'relative',
             width: '144px',
@@ -139,11 +151,11 @@ export const TensionClockWidget: React.FC<Props> = ({ clock, isGM, onEdit }) => 
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '1rem',
-            cursor: 'pointer',
+            cursor: isGM ? 'pointer' : 'default',
             transition: 'transform 0.2s'
           }}
-          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseOver={(e) => { if (isGM) e.currentTarget.style.transform = 'scale(1.05)'; }}
+          onMouseOut={(e) => { if (isGM) e.currentTarget.style.transform = 'scale(1)'; }}
         >
           {/* Anel de fundo */}
           <svg style={{

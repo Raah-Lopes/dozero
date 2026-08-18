@@ -144,10 +144,13 @@ export function applyDamageToToken(tokenId: string, damage: number) {
 
 export function addTokenFromMarkdown(tokenData: any) {
   const id = `token_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const curPlayerName = localStorage.getItem('playerName') || 'Jogador';
+  
   state.tokens.set(id, {
     id,
     x: window.innerWidth / 2,
     y: window.innerHeight / 2,
+    ownerName: tokenData.ownerName || curPlayerName,
     ...tokenData
   });
   pushChatMessage(`⚡ <b>${tokenData.name || 'Entidade Desconhecida'}</b> foi forjado(a) e adicionado(a) à mesa!`, true, false);
