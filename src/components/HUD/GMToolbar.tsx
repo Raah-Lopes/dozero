@@ -128,7 +128,10 @@ export function GMToolbar() {
       className={`hud-sidebar-container ${isExpanded ? '' : 'collapsed'}`}
     >
       <div className="hud-glass" style={{
-        flex: 1,
+        flex: '1 1 0%',
+        minHeight: 0,
+        height: '100%',
+        maxHeight: '100%',
         display: 'flex',
         flexDirection: 'column',
         gap: '0.5rem',
@@ -136,12 +139,12 @@ export function GMToolbar() {
         borderTopRightRadius: '16px',
         borderBottomRightRadius: '16px',
         borderLeft: 'none',
-        overflowX: 'visible',
-        overflowY: 'visible',
+        overflow: 'hidden',
         pointerEvents: 'auto',
+        boxSizing: 'border-box'
       }}>
         {/* Logo Details / Menu Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', height: '50px', position: 'relative', marginBottom: '8px', paddingLeft: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: '50px', position: 'relative', marginBottom: '8px', paddingLeft: '8px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', opacity: isOpen ? 1 : 0, transition: 'opacity 0.3s', pointerEvents: isOpen ? 'auto' : 'none' }}>
             <Layers size={24} color="var(--accent-primary)" />
             <span style={{ color: 'white', fontWeight: 600, fontSize: '18px', marginLeft: '12px' }}>Menu DOZERO</span>
@@ -163,7 +166,7 @@ export function GMToolbar() {
             <Menu size={24} />
           </button>
         </div>
-        <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+        <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0', flexShrink: 0 }} />
 
         <div 
           className="gm-tools-scroll-area"
@@ -171,14 +174,15 @@ export function GMToolbar() {
             display: 'flex', 
             flexDirection: 'column', 
             gap: '8px', 
-            flex: 1, 
+            flex: '1 1 0%', 
+            minHeight: 0,
             overflowY: 'auto', 
-            overflowX: 'visible',
+            overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            paddingBottom: '20px'
+            overscrollBehavior: 'contain',
+            paddingBottom: '50px',
+            boxSizing: 'border-box'
           }}
         >
         {activeFolder === 'root' && (

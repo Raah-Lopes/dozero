@@ -234,10 +234,14 @@ h1, h2, h3, h4, h5, h6 {
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   width: 240px; /* expanded width */
   display: flex;
   flex-direction: column;
   z-index: 9999999;
+  overflow: hidden;
+  box-sizing: border-box;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -247,12 +251,37 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 768px) {
+  .hud-sidebar-container {
+    height: 100dvh;
+    max-height: 100dvh;
+    width: min(280px, 85vw);
+  }
   .hud-sidebar-container.collapsed {
+    width: 54px;
     transform: translateX(0);
   }
   .hud-sidebar-trigger {
     display: none;
   }
+}
+
+.gm-tools-scroll-area {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 154, 108, 0.4) transparent;
+}
+.gm-tools-scroll-area::-webkit-scrollbar {
+  width: 4px;
+}
+.gm-tools-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(196, 154, 108, 0.4);
+  border-radius: 4px;
 }
 
 .hud-sidebar-container:not(.collapsed) .tt-popup {
