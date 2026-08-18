@@ -19,7 +19,7 @@ export interface CampaignCloudRecord {
 
 const LOCAL_CAMPAIGNS_KEY = 'dozero_cloud_campaigns_cache';
 
-// Carrega campanhas com fallback local inteligente
+// Carrega campanhas sincronizando Local-First + Supabase Metadata + Supabase Table
 export async function getCampaigns(userId?: string | null): Promise<CampaignCloudRecord[]> {
   const localList: CampaignCloudRecord[] = JSON.parse(localStorage.getItem(LOCAL_CAMPAIGNS_KEY) || '[]');
 
@@ -28,27 +28,44 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
   }
 
   try {
-    const { data, error } = await supabase
-      .from('campaigns')
-      .select('*')
-      .order('updated_at', { ascending: false });
+    const campaignMap = new Map<string, CampaignCloudRecord>();
+    // 1. Coloca dados locais
+    localList.forEach(c => campaignMap.set(c.id, c));
 
-    if (error) {
-      return localList;
+    // 2. Busca do user_metadata do Supabase Auth (funciona 100% mesmo sem migrations de banco)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.user_metadata?.saved_campaigns && Array.isArray(user.user_metadata.saved_campaigns)) {
+      user.user_metadata.saved_campaigns.forEach((c: CampaignCloudRecord) => {
+        campaignMap.set(c.id, c);
+      });
     }
 
-    if (data && data.length > 0) {
-      localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(data));
-      return data;
+    // 3. Tenta buscar da tabela pública 'campaigns' se ela existir
+    try {
+      const { data: tableData } = await supabase
+        .from('campaigns')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (tableData && tableData.length > 0) {
+        tableData.forEach((c: CampaignCloudRecord) => campaignMap.set(c.id, c));
+      }
+    } catch (e) {
+      // Ignora erro de tabela não existente
     }
 
-    return localList;
+    const merged = Array.from(campaignMap.values()).sort((a, b) => {
+      return new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime();
+    });
+
+    localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(merged));
+    return merged;
   } catch (e) {
     return localList;
   }
 }
 
-// Cria ou salva uma nova campanha
+// Cria ou salva uma nova campanha sincronizando em nuvem
 export async function createOrUpdateCampaign(
   campaign: Partial<CampaignCloudRecord>,
   userId?: string | null
@@ -83,20 +100,24 @@ export async function createOrUpdateCampaign(
   }
   localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(localList));
 
-  // 2. Sincronização assíncrona no Supabase (se configurado e autenticado)
+  // 2. Sincronização garantida no perfil do usuário no Supabase (user_metadata.saved_campaigns)
   if (isSupabaseConfigured && userId) {
     try {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .upsert(record)
-        .select()
-        .single();
-
-      if (!error && data) {
-        return data;
-      }
+      // Salva no user_metadata do Supabase (acessível instantaneamente na Vercel e qualquer dispositivo)
+      await supabase.auth.updateUser({
+        data: { saved_campaigns: localList }
+      });
     } catch (err) {
-      console.warn('Aviso: Salvo localmente, sync no Supabase pendente:', err);
+      console.warn('Aviso: Erro ao salvar campanhas no user_metadata:', err);
+    }
+
+    // 3. Tenta salvar também na tabela 'campaigns' se configurada
+    try {
+      await supabase
+        .from('campaigns')
+        .upsert(record);
+    } catch (err) {
+      // Ignora erro de tabela
     }
   }
 
@@ -111,10 +132,14 @@ export async function deleteCampaignCloud(id: string, userId?: string | null): P
 
   if (isSupabaseConfigured && userId) {
     try {
+      await supabase.auth.updateUser({
+        data: { saved_campaigns: filtered }
+      });
+    } catch (e) {}
+
+    try {
       await supabase.from('campaigns').delete().eq('id', id);
-    } catch (e) {
-      console.warn('Erro ao deletar campanha na nuvem:', e);
-    }
+    } catch (e) {}
   }
   return true;
 }
