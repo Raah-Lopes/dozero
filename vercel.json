@@ -1,0 +1,9 @@
+{
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/vtt.html", "destination": "/vtt.html" },
+    { "source": "/vtt", "destination": "/vtt.html" },
+    { "source": "/api/wiki/(.*)", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
