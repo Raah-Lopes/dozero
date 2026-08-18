@@ -154,12 +154,13 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleCopyInvite = (camp: CampaignCloudRecord, e: React.MouseEvent) => {
+  const handleCopyInvite = (camp: CampaignCloudRecord, e: React.MouseEvent, type: 'vercel' | 'local' = 'vercel') => {
     e.stopPropagation();
-    const url = `${window.location.origin}/vtt.html?room=${camp.room_code}${camp.pass_code ? `&pass=${encodeURIComponent(camp.pass_code)}` : ''}`;
+    const domain = type === 'vercel' ? 'https://dozero-vert.vercel.app' : window.location.origin;
+    const url = `${domain}/vtt.html?room=${camp.room_code}${camp.pass_code ? `&pass=${encodeURIComponent(camp.pass_code)}` : ''}`;
     navigator.clipboard.writeText(url);
-    setCopiedId(camp.id);
-    toast.success('Link de convite da mesa copiado!');
+    setCopiedId(`${camp.id}_${type}`);
+    toast.success(type === 'vercel' ? 'Link Vercel da mesa copiado (Para jogadores na Web)!' : 'Link Local copiado!');
     setTimeout(() => setCopiedId(null), 2500);
   };
 
@@ -542,16 +543,17 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #3b281d' }}>
                         <div style={{ display: 'flex', gap: '4px' }}>
                           <button
-                            onClick={(e) => handleCopyInvite(camp, e)}
-                            title="Copiar Link de Convite"
-                            style={{ padding: '5px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', border: '1px solid #5a4234', color: copiedId === camp.id ? '#86efac' : '#d7c9b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            onClick={(e) => handleCopyInvite(camp, e, 'vercel')}
+                            title="Copiar Link Online (Vercel) para Jogadores"
+                            style={{ padding: '5px 8px', borderRadius: '6px', background: 'rgba(164,104,48,0.25)', border: '1px solid #c49a6c', color: copiedId === `${camp.id}_vercel` ? '#86efac' : '#fde047', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', fontWeight: 700 }}
                           >
-                            {copiedId === camp.id ? <Check size={13} /> : <Copy size={13} />}
+                            <Globe size={12} />
+                            {copiedId === `${camp.id}_vercel` ? 'Copiado!' : 'Link Vercel'}
                           </button>
                           <button
                             onClick={(e) => handleOpenEdit(camp, e)}
                             title="Editar Dados da Mesa"
-                            style={{ padding: '5px', borderRadius: '6px', background: 'rgba(164,104,48,0.2)', border: '1px solid #c49a6c', color: '#fde047', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            style={{ padding: '5px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', border: '1px solid #5a4234', color: '#d7c9b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <Folder size={13} />
                           </button>

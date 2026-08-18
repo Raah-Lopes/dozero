@@ -115,14 +115,15 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
     }
   };
 
-  const baseUrl = window.location.origin.includes('localhost') ? 'https://dozero-vert.vercel.app' : window.location.origin;
-  const inviteLink = `${baseUrl}/vtt.html?room=${currentRoom}${currentPass ? `&pass=${encodeURIComponent(currentPass)}` : ''}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteLink)}`;
+  const vercelLink = `https://dozero-vert.vercel.app/vtt.html?room=${currentRoom}${currentPass ? `&pass=${encodeURIComponent(currentPass)}` : ''}`;
+  const localLink = `${window.location.origin}/vtt.html?room=${currentRoom}${currentPass ? `&pass=${encodeURIComponent(currentPass)}` : ''}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(vercelLink)}`;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(inviteLink);
+  const handleCopy = (type: 'vercel' | 'local' = 'vercel') => {
+    const url = type === 'vercel' ? vercelLink : localLink;
+    navigator.clipboard.writeText(url);
     setCopied(true);
-    toast.success("Link de convite copiado!");
+    toast.success(type === 'vercel' ? "Link da Vercel (Online) copiado!" : "Link Local copiado!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -263,16 +264,24 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
         <div style={{ display: 'flex', gap: '8px' }}>
           <button 
             className="btn-primary" 
-            onClick={handleCopy}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px', fontSize: '0.8rem' }}
+            onClick={() => handleCopy('vercel')}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px', fontSize: '0.8rem', background: 'linear-gradient(135deg, #a46830 0%, #8b5220 100%)', border: '1px solid #c49a6c' }}
           >
-            <Copy size={15} />
-            {copied ? 'Copiado!' : 'Copiar Convite Direct'}
+            <Globe size={15} />
+            {copied ? 'Copiado!' : 'Copiar Link Vercel (Online)'}
+          </button>
+          <button 
+            className="btn-secondary" 
+            onClick={() => handleCopy('local')}
+            title="Copiar Link Local"
+            style={{ padding: '9px 12px', fontSize: '0.75rem' }}
+          >
+            Local
           </button>
           <button 
             className="btn-icon" 
             onClick={() => setShowQR(!showQR)}
-            title="Mostrar QR Code"
+            title="Mostrar QR Code da Vercel"
             style={{ padding: '9px' }}
           >
             <QrCode size={18} />

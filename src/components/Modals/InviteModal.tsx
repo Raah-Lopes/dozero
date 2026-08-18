@@ -84,17 +84,41 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
         {/* TAB CONTENT: INVITE */}
         {activeTab === 'invite' && (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* VERCEL CLOUD SECTION */}
+            <div style={{ background: 'linear-gradient(135deg, rgba(164,104,48,0.2) 0%, rgba(38,25,17,0.4) 100%)', padding: '1rem', borderRadius: '8px', border: '1px solid #c49a6c' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#fde047', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🚀 Online na Nuvem (Link da Vercel)
+              </h3>
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#d7c9b8' }}>
+                Link direto hospedado na nuvem. Funciona em qualquer celular, tablet ou PC de amigos sem precisar de Wi-Fi compartilhado.
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'center', background: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                <QRCodeSVG value={`https://dozero-vert.vercel.app/vtt.html${window.location.search}`} size={150} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input readOnly value={`https://dozero-vert.vercel.app/vtt.html${window.location.search}`} style={{ flex: 1, padding: '0.5rem', background: 'rgba(0,0,0,0.5)', border: '1px solid #c49a6c', color: '#c49a6c', borderRadius: '4px', fontSize: '0.82rem', fontFamily: 'monospace' }} />
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://dozero-vert.vercel.app/vtt.html${window.location.search}`);
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  }} 
+                  style={{ padding: '0.5rem 1rem', background: '#a46830', border: '1px solid #c49a6c', borderRadius: '4px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}
+                >
+                  {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+                  {copiedLink ? 'Copiado' : 'Copiar'}
+                </button>
+              </div>
+            </div>
+
             {/* LAN SECTION */}
             <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
               <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--accent-secondary)', fontSize: '1.1rem' }}>🌐 Presencial (Mesmo Wi-Fi)</h3>
               <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Peça para seus jogadores escanearem o código ou acessarem o link abaixo. 
-                <br/><br/><b>Atenção:</b> Se não carregar, permita o "Node.js" no <b>Firewall do Windows</b>.
+                Link da rede local. Útil se estiver jogando presencialmente no mesmo roteador.
               </p>
-
-              <div style={{ display: 'flex', justifyContent: 'center', background: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                <QRCodeSVG value={inviteLink} size={150} />
-              </div>
 
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <input readOnly value={inviteLink} style={{ flex: 1, padding: '0.5rem', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }} />
@@ -102,33 +126,6 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                   {copiedLink ? <Check size={16} /> : <Copy size={16} />}
                 </button>
               </div>
-            </div>
-
-            {/* INTERNET SECTION */}
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-              <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--accent-primary)', fontSize: '1.1rem' }}>🌍 Pela Internet (Ngrok)</h3>
-              <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Abra um <b>novo terminal</b> na pasta do projeto e execute o comando abaixo para criar um túnel público:
-              </p>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <code style={{ flex: 1, background: 'rgba(0,0,0,0.5)', padding: '0.5rem', borderRadius: '4px', color: '#a855f7', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
-                  npx ngrok http 5174
-                </code>
-                <button 
-                  onClick={handleCopyNgrok} 
-                  className="btn-icon theme-purple"
-                  title="Copiar Código Ngrok"
-                  style={{ padding: '0.5rem' }}
-                >
-                  {copiedNgrok ? <Check size={16} /> : <Copy size={16} />}
-                </button>
-              </div>
-
-              <ol style={{ margin: '0', paddingLeft: '1.2rem', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                <li>Copie o link gerado (<i>https://...ngrok-free.app</i>) e mande pros jogadores.</li>
-                <li style={{ color: '#ff9800' }}>Os jogadores verão uma tela azul de segurança. Eles <b>DEVEM</b> clicar no botão azul "Visit Site", senão a mesa não conecta!</li>
-              </ol>
             </div>
           </div>
         )}
