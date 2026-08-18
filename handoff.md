@@ -143,12 +143,32 @@ O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilida
 - **Resiliência Total com Síntese Procedural**: Se qualquer áudio local ou remoto for bloqueado pelo navegador ou falhar na rede, o motor Web Audio API sintetiza o som equivalente proceduralmente com 0ms de latência.
 - **Mixer Global & Importador**: Suporte completo a importação de pastas locais do PC no `AudioDirectorWidget` e transmissão de links diretos/YouTube para toda a mesa.
 
+### 8. 🛡️ Sistema de Autenticação & Nuvem Supabase (`authStore.ts` & `supabase.ts`)
+- **Arquitetura Híbrida (Local-first + Nuvem)**: A partida e os combates rodam via Yjs/IndexedDB com custo zero de infraestrutura. O Supabase cuida da identidade do usuário, login social e backup.
+- **Provedores Sociais (OAuth)**: Suporte completo a autenticação rápida via **Google**, **Discord** e **Facebook**, além do método tradicional com **E-mail e Senha**.
+- **Redefinição de Senha Segura**: Fluxo nativo com token de recuperação por e-mail e modal de atualização de senha (`ResetPasswordModal.tsx`).
+- **Otimização & Upload WebP de Avatares**: Conversão e compressão automática no navegador (`imageUtils.ts` -> WebP 256x256 @ 80% de qualidade) enviada diretamente para o bucket `avatars` do Supabase Storage.
+- **Persistência de Identidade**: Chave `custom_avatar` persistente que impede que provedores OAuth (como o Google) sobrescrevam o avatar personalizado do usuário ao relogar.
+- **Modo Convidado / Anônimo**: Acesso rápido sem cadastro com 1 clique para sessões expressas.
+- **Modais Integrados**:
+  - `AuthModal.tsx`: Login, Cadastro, Recuperação de Senha e Provedores Sociais com alternância visual e revelação de senha (`Eye`/`EyeOff`).
+  - `ProfileModal.tsx`: Gerenciamento de apelido, avatar com upload WebP, data de criação da conta e logout.
+  - `ResetPasswordModal.tsx`: Atualização segura de nova senha pós-link de recuperação.
+
 ---
 
 ## 🗺️ Mapa de Arquivos & Componentes Chave
 
 | Componente / Arquivo | Responsabilidade |
 | :--- | :--- |
+| [`src/services/supabase.ts`](file:///d:/DOZERO/src/services/supabase.ts) | Cliente oficial inicializado com as credenciais seguras do Supabase. |
+| [`src/store/authStore.ts`](file:///d:/DOZERO/src/store/authStore.ts) | Store Zustand para sessão, listeners de auth, perfil do usuário e upload de avatar. |
+| [`src/components/Modals/AuthModal.tsx`](file:///d:/DOZERO/src/components/Modals/AuthModal.tsx) | Modal completo de Login/Cadastro/Recuperação com OAuth (Google, Discord, Facebook). |
+| [`src/components/Modals/ProfileModal.tsx`](file:///d:/DOZERO/src/components/Modals/ProfileModal.tsx) | Modal de gerenciamento de perfil, avatar com upload e status da conta. |
+| [`src/components/Modals/ResetPasswordModal.tsx`](file:///d:/DOZERO/src/components/Modals/ResetPasswordModal.tsx) | Modal de redefinição de senha para usuários vindos de link de e-mail. |
+| [`src/components/LandingPage/LandingPage.tsx`](file:///d:/DOZERO/src/components/LandingPage/LandingPage.tsx) | Landing page principal com card de usuário logado, status online e abertura de modais de auth. |
+| [`src/components/HUD/GMToolbar.tsx`](file:///d:/DOZERO/src/components/HUD/GMToolbar.tsx) | Barra de ferramentas do mestre com botão dinâmico de perfil/avatar. |
+| [`src/utils/imageUtils.ts`](file:///d:/DOZERO/src/utils/imageUtils.ts) | Utilitários de conversão e compressão WebP de imagens/avatares. |
 | [`src/components/Theater/TheaterView.tsx`](file:///d:/DOZERO/src/components/Theater/TheaterView.tsx) | Casca principal do Teatro da Mente, palco visual, topbar e orquestração de overlays. |
 | [`src/services/AudioEngine.ts`](file:///d:/DOZERO/src/services/AudioEngine.ts) | Gerenciador de reprodução de áudio, canais de música/ambiente e fallback procedural. |
 | [`src/services/ProceduralAudio.ts`](file:///d:/DOZERO/src/services/ProceduralAudio.ts) | Sintetizador de áudio procedural Web Audio API (100% offline, zero dependência de arquivos). |
@@ -175,22 +195,29 @@ O **Teatro da Mente** atingiu um novo patamar de maturidade técnica, estabilida
 
 ```mermaid
 graph TD
-    A[Concluído: Integração Pixabay] --> B[Passo 2: Modo Espectador / Player View Refinado]
-    B --> C[Passo 3: Efeitos Atmosféricos & Partículas Canvas]
-    C --> D[Passo 4: Pistas com Revelação Progressiva]
+    A[Concluído: Autenticação Supabase & Avatares WebP] --> B[Passo 1: Lobby de Mesas & Gestão de Campanhas em Nuvem]
+    B --> C[Passo 2: Modo Espectador / Player View Refinado]
+    C --> D[Passo 3: Efeitos Atmosféricos & Partículas Canvas]
+    D --> E[Passo 4: Pistas com Revelação Progressiva]
 ```
 
-### 🥇 Passo 2: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
+### 🥇 Passo 1: Lobby de Mesas & Gestão de Campanhas em Nuvem (`CampaignLobby` / Supabase DB)
+* **Objetivo**: Permitir que o usuário autenticado visualize sua lista de campanhas salvas na nuvem, crie novas mesas (com nome, sistema de RPG, imagem de capa e código de convite) e convide amigos com 1 clique diretamente pela Landing Page ou VTT.
+* **Benefício**: Entrega a experiência completa de plataforma SaaS, permitindo ao mestre alternar entre mesas e nunca perder o progresso.
+
+---
+
+### 🥈 Passo 2: Modo Espectador para Jogadores (`Player Theatrical View` / TV Mode)
 * **Objetivo**: Permitir que os jogadores vejam apenas o palco limpo e imersivo (sem botões de controle do Mestre, sem abas de segredos e sem botões de edição).
 * **Benefício**: Perfeito para sessões presenciais em TV/Telão secundário ou para jogadores que entram via link no navegador.
 
 ---
 
-### 🥈 Passo 3: Efeitos Atmosféricos em Partículas (Chuva, Névoa, Brasas, Magia)
+### 🥉 Passo 3: Efeitos Atmosféricos em Partículas (Chuva, Névoa, Brasas, Magia)
 * **Objetivo**: Conectar o menu de **Atmosfera** do Diretor a uma camada visual leve em Canvas/CSS com efeitos de partículas realistas (Chuva com relâmpagos, Neblina densa, Cinzas vulcânicas, Neve suave, Luzes mágicas).
 * **Benefício**: Eleva a imersão visual das cenas a nível cinematográfico sem sobrecarregar o processador.
 
 ---
 
-### 🥉 Passo 4: Pistas Interativas com Revelação Progressiva (Fog-of-War Textual)
+### 🏅 Passo 4: Pistas Interativas com Revelação Progressiva (Fog-of-War Textual)
 * **Objetivo**: Permitir que o Mestre crie cartas e documentos com trechos ocultos que são revelados aos poucos conforme os jogadores passam em testes de investigação.

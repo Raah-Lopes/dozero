@@ -48,12 +48,21 @@ import { Toaster, ConfirmDialog } from './components/UI/Toast';
 import { useAppEventListeners } from './hooks/useAppEventListeners';
 import { ErrorBoundary } from './components/UI/ErrorBoundary';
 import { OfflineStatus } from './components/System/OfflineStatus';
+import { AuthModal } from './components/Modals/AuthModal';
+import { ProfileModal } from './components/Modals/ProfileModal';
+import { ResetPasswordModal } from './components/Modals/ResetPasswordModal';
+import { useAuthStore } from './store/authStore';
 
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets';
 
 function App() {
   const [isReady] = useState(true);
+  const { initialize: initAuth } = useAuthStore();
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
+
+  React.useEffect(() => {
+    initAuth();
+  }, [initAuth]);
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
 
@@ -419,6 +428,9 @@ function App() {
         )}
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
+        <AuthModal />
+        <ProfileModal />
+        <ResetPasswordModal />
       </>
     </div>
   );

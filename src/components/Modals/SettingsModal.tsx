@@ -13,6 +13,7 @@ import { DLCManagerTab } from './DLCManagerTab';
 import { MapSettingsPanel } from '../HUD/MapSettingsPanel';
 import { Bot, ToyBrick, Map } from 'lucide-react';
 import { GMPasswordModal } from '../Auth/GMPasswordModal';
+import { useAuthStore } from '../../store/authStore';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -208,6 +209,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // ── State ──
+  const { user, setAuthModalOpen, signOut } = useAuthStore();
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const { currentEngineId, setEngine, engines } = useRulesEngine();
   const { isGM, setIsGM } = useUserStore();
@@ -246,6 +248,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   // ── Tab Content ────────────────────────────────────────────────────────────
   const renderGeral = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+      {/* Conta / Supabase */}
+      <Field label="Conta & Sincronização em Nuvem" icon={<User size={13} />} hint="Conecte-se com sua conta Supabase para salvar e sincronizar campanhas.">
+        <div style={{
+          padding: '12px 14px', borderRadius: '12px',
+          background: 'rgba(0,0,0,0.25)', border: '1px solid var(--glass-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+        }}>
+          <div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {user ? user.email : 'Não conectado'}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', opacity: 0.7 }}>
+              {user ? 'Sessão ativa no Supabase' : 'Faça login para habilitar nuvem'}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (user) {
+                if (window.confirm('Deseja sair da sua conta?')) signOut();
+              } else {
+                setAuthModalOpen(true);
+              }
+            }}
+            style={{
+              padding: '8px 14px', borderRadius: '8px', border: 'none',
+              background: user ? 'rgba(239, 68, 68, 0.2)' : 'linear-gradient(135deg, #9333ea, #6366f1)',
+              color: user ? '#fca5a5' : '#ffffff',
+              fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+            }}
+          >
+            {user ? 'Desconectar' : 'Entrar / Cadastrar'}
+          </button>
+        </div>
+      </Field>
 
       {/* GM Mode */}
       <div style={{

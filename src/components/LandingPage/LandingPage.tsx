@@ -1,18 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Bot, Dices, Play, Sparkles, MapPin, Box, Layers, Map as MapIcon, 
     CheckCircle, Network, Film, Crown, Swords, Timer, Clock, ScrollText, 
     Notebook, Shield, Crosshair, Users, ShoppingBag, TrendingUp, MessageCircle, 
     ServerOff, WifiOff, ShieldCheck, Code, ChevronDown, X, RotateCw, Info, 
-    Rocket, FileText, MessageSquare, BookOpen 
+    Rocket, FileText, MessageSquare, BookOpen, User as UserIcon, LogIn, LogOut
 } from 'lucide-react';
 import './LandingPage.css';
 import './landing-tailwind.css';
+import { useAuthStore } from '../../store/authStore';
+import { AuthModal } from '../Modals/AuthModal';
+import { ProfileModal } from '../Modals/ProfileModal';
+import { ResetPasswordModal } from '../Modals/ResetPasswordModal';
 
 export function LandingPage() {
+    const { user, initialize, setAuthModalOpen, setProfileModalOpen, signOut } = useAuthStore();
     const [isDiceModalOpen, setIsDiceModalOpen] = useState(false);
     const [isLauncherModalOpen, setIsLauncherModalOpen] = useState(false);
     const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+    useEffect(() => {
+        initialize();
+    }, [initialize]);
 
     const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
         e.preventDefault();
@@ -103,8 +112,52 @@ export function LandingPage() {
                         <button onClick={() => setIsDiceModalOpen(true)} className="hidden sm:flex px-3.5 py-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all items-center gap-1.5 shadow-sm hover:scale-105 transform">
                             <Dices className="w-4 h-4 text-amber-700" /> Rolar d20
                         </button>
-                        <button onClick={() => setIsLauncherModalOpen(true)} className="px-5 py-2.5 bg-slate-900 text-amber-300 text-sm font-bold sketch-border hover:bg-slate-800 transition-all hover:scale-105 transform shadow-md flex items-center gap-2">
-                            <Play className="w-4 h-4 fill-amber-300" /> Criar Mesa (Grátis)
+
+                        {user ? (
+                            <div 
+                                onClick={() => setProfileModalOpen(true)}
+                                className="flex items-center gap-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 rounded-xl px-2.5 py-1.5 shadow-sm cursor-pointer transition-all"
+                                title="Clique para gerenciar seu perfil"
+                            >
+                                {user.user_metadata?.custom_avatar || user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
+                                    <img
+                                        src={user.user_metadata.custom_avatar || user.user_metadata.avatar_url || user.user_metadata.picture}
+                                        alt="Avatar"
+                                        className="w-7 h-7 rounded-lg object-cover border border-purple-400/40"
+                                    />
+                                ) : (
+                                    <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 font-bold text-xs">
+                                        {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                                    </div>
+                                )}
+                                <div className="hidden sm:block text-left">
+                                    <div className="text-xs font-bold text-slate-200 leading-none truncate max-w-[130px]">
+                                        {user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0]}
+                                    </div>
+                                    <div className="text-[10px] text-emerald-400 font-medium">Online (Supabase)</div>
+                                </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        signOut();
+                                    }}
+                                    title="Desconectar da conta"
+                                    className="ml-1 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-md transition-colors"
+                                >
+                                    <LogOut className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setAuthModalOpen(true)}
+                                className="px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                            >
+                                <LogIn className="w-3.5 h-3.5 text-slate-600" /> Entrar
+                            </button>
+                        )}
+
+                        <button onClick={() => setIsLauncherModalOpen(true)} className="px-4 sm:px-5 py-2.5 bg-slate-900 text-amber-300 text-sm font-bold sketch-border hover:bg-slate-800 transition-all hover:scale-105 transform shadow-md flex items-center gap-2">
+                            <Play className="w-4 h-4 fill-amber-300" /> Criar Mesa
                         </button>
                     </div>
                 </div>
@@ -543,6 +596,66 @@ export function LandingPage() {
                 </div>
             </section>
 
+            {/* SECTION: CLOUD CAMPAIGNS & LOBBY TEASER */}
+            <section id="cloud-lobby" className="py-16 relative z-10 mx-4 md:mx-12 mb-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="relative overflow-hidden rounded-3xl p-8 sm:p-12 text-white sketch-border shadow-2xl" style={{ background: 'linear-gradient(135deg, #09090b 0%, #18181b 50%, #2e1065 100%)' }}>
+                        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+                        <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center">
+                            <div className="lg:col-span-8">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/20 border border-purple-400/30 rounded-full text-xs font-bold text-purple-300 mb-4">
+                                    <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Sincronização Supabase Cloud
+                                </div>
+                                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sketch-font tracking-tight">
+                                    Suas Campanhas e Mesas,<br />
+                                    <span className="text-purple-400">Em Qualquer Dispositivo.</span>
+                                </h2>
+                                <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mb-6">
+                                    Conecte sua conta para salvar suas mesas, tokens e histórico com segurança na nuvem. Compartilhe links de convite diretos e jogue com seu grupo em tempo real.
+                                </p>
+                                <div className="flex flex-wrap gap-4 items-center">
+                                    {user ? (
+                                        <button 
+                                            onClick={() => setIsLauncherModalOpen(true)}
+                                            className="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl sketch-border flex items-center gap-2 shadow-lg hover:scale-105 transition-all text-sm"
+                                        >
+                                            <Play className="w-4 h-4 fill-slate-950" /> Criar ou Entrar em uma Mesa
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => setAuthModalOpen(true)}
+                                            className="px-6 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg hover:scale-105 transition-all text-sm"
+                                        >
+                                            <LogIn className="w-4 h-4" /> Criar Conta Gratuita
+                                        </button>
+                                    )}
+                                    <span className="text-xs text-slate-400 font-medium">⚡ 100% Gratuito • Sem limite de jogadores P2P</span>
+                                </div>
+                            </div>
+                            <div className="lg:col-span-4 bg-black/40 border border-white/10 p-5 rounded-2xl backdrop-blur-md">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                                    <Crown className="w-4 h-4 text-amber-400" /> Painel do Mestre
+                                </h4>
+                                <div className="space-y-2.5 text-xs text-slate-300">
+                                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                                        <span>Campanhas Ativas</span>
+                                        <span className="font-bold text-emerald-400">Pronto</span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                                        <span>Login Social & OAuth</span>
+                                        <span className="font-bold text-purple-400">Ativo</span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                                        <span>Storage de Avatares</span>
+                                        <span className="font-bold text-cyan-400">WebP 256px</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* SECTION: FAQ ACCORDION */}
             <section id="faq" className="py-16 relative z-10">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -688,6 +801,11 @@ export function LandingPage() {
                     </div>
                 </div>
             )}
+
+            {/* Modal de Autenticação Supabase */}
+            <AuthModal />
+            <ProfileModal />
+            <ResetPasswordModal />
         </div>
     );
 }

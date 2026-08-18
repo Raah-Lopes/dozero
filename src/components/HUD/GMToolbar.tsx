@@ -1,6 +1,7 @@
 import React from 'react';
-import { Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload } from 'lucide-react';
+import { Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload, User as UserIcon, UserCheck } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
+import { useAuthStore } from '../../store/authStore';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
 import { setActiveTool as setGlobalActiveTool, setFogMode as setGlobalFogMode, localState } from '../../store';
@@ -8,8 +9,26 @@ import { Tooltip } from '../UI/Tooltip';
 import { toast } from '../UI/Toast';
 import type { FogConfig } from '../../store/modules/configModule';
 
+function UserCheckIcon({ user }: { user: any }) {
+  if (user) {
+    const avatarUrl = user.user_metadata?.custom_avatar || user.user_metadata?.avatar_url || user.user_metadata?.picture;
+    if (avatarUrl) {
+      return (
+        <img 
+          src={avatarUrl} 
+          alt="Avatar" 
+          style={{ width: '20px', height: '20px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #10b981' }} 
+        />
+      );
+    }
+    return <UserCheck size={20} className="text-emerald-400" />;
+  }
+  return <UserIcon size={20} />;
+}
+
 export function GMToolbar() {
   const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors, openWindows, toggleWindow, viewMode, setViewMode } = useWindowManager();
+  const { user, isAuthModalOpen, isProfileModalOpen, setAuthModalOpen, setProfileModalOpen } = useAuthStore();
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
   React.useEffect(() => {
     const h = () => setIsMobile(window.innerWidth <= 768);
@@ -243,6 +262,19 @@ export function GMToolbar() {
               onClick={() => setActiveModal('settings')} 
               tooltip="Configurações Globais"
               description="Ajuste atalhos de hardware, desempenho e volume"
+            />
+            <ToolButton 
+              icon={<UserCheckIcon user={user} />} 
+              active={isAuthModalOpen || isProfileModalOpen} 
+              onClick={() => {
+                if (user) {
+                  setProfileModalOpen(true);
+                } else {
+                  setAuthModalOpen(true);
+                }
+              }} 
+              tooltip={user ? `Meu Perfil (${user.user_metadata?.full_name || user.email})` : "Login / Criar Conta"}
+              description={user ? "Clique para gerenciar seu perfil, avatar ou desconectar" : "Entre com sua conta Supabase para sincronizar suas mesas"}
             />
             {isLocalhost && (
               <ToolButton 

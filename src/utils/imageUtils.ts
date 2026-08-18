@@ -65,3 +65,56 @@ export const convertImageToWebP = async (
     img.src = objectUrl;
   });
 };
+
+/**
+ * Converte qualquer arquivo de imagem para um Blob WebP comprimido (ideal para avatares)
+ */
+export const convertImageToWebPBlob = async (
+  file: File,
+  quality: number = 0.8,
+  maxDimension: number = 256
+): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { naturalWidth: width, naturalHeight: height } = img;
+      
+      // Ajusta para proporção quadrada centralizada no avatar ou redimensiona
+      if (width > maxDimension || height > maxDimension) {
+        const ratio = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, width);
+      canvas.height = Math.max(1, height);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas indisponível'));
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Falha ao gerar blob WebP'));
+          }
+        },
+        'image/webp',
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Falha ao carregar imagem para conversão'));
+    };
+
+    img.src = objectUrl;
+  });
+};
