@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { wikiLocalApi } from './vite-plugins/wiki-api'
 import { youtubeLocalApi } from './vite-plugins/youtube-api'
 import { pollinationsProxy } from './vite-plugins/pollinations-proxy'
@@ -25,6 +26,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(), 
     wikiLocalApi(), 
     youtubeLocalApi(), 

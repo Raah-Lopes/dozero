@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { LandingPage } from './components/LandingPage/LandingPage'
-import './components/LandingPage/landing-tailwind.css'
 import App from './App'
 import './index.css'
 import './transitions.css'
