@@ -47,6 +47,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       supabase.auth.onAuthStateChange((event, session) => {
         set({ session, user: session?.user ?? null, loading: false });
+        if (event === 'SIGNED_IN') {
+          const target = typeof window !== 'undefined' ? sessionStorage.getItem('dozero_auth_redirect_target') : null;
+          if (target && target !== window.location.href) {
+            sessionStorage.removeItem('dozero_auth_redirect_target');
+            window.location.href = target;
+          }
+        }
         if (event === 'PASSWORD_RECOVERY') {
           set({ isResetPasswordModalOpen: true });
         }
