@@ -81,13 +81,15 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
     // 1. Coloca dados locais
     localList.forEach(c => campaignMap.set(c.id, c));
 
-    // 2. Busca do user_metadata do Supabase Auth (funciona 100% mesmo sem tabela no banco)
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.user_metadata?.saved_campaigns && Array.isArray(user.user_metadata.saved_campaigns)) {
-      user.user_metadata.saved_campaigns.forEach((c: CampaignCloudRecord) => {
-        campaignMap.set(c.id, c);
-      });
-    }
+    // 2. Busca do user_metadata do Supabase Auth se houver rede
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.user_metadata?.saved_campaigns && Array.isArray(user.user_metadata.saved_campaigns)) {
+        user.user_metadata.saved_campaigns.forEach((c: CampaignCloudRecord) => {
+          campaignMap.set(c.id, c);
+        });
+      }
+    } catch (uErr) {}
 
     // 3. Tenta buscar da tabela pública 'campaigns' se disponível
     if (isCampaignsTableAvailable) {
@@ -98,9 +100,7 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
           .order('updated_at', { ascending: false });
 
         if (error) {
-          if (error.code === 'PGRST116' || error.code === '42P01' || (error as any).status === 404) {
-            isCampaignsTableAvailable = false;
-          }
+          isCampaignsTableAvailable = false;
         } else if (tableData && tableData.length > 0) {
           tableData.forEach((c: CampaignCloudRecord) => campaignMap.set(c.id, c));
         }
