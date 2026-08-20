@@ -18,20 +18,33 @@ const roomName = urlParams.get('room') || 'dozero-mesa-principal-v2';
 export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 
 // =========================================================================
-// REAL-TIME CLOUD SYNC & MULTIPLAYER (Central Cloud WebSocket)
+// REAL-TIME SYNC (WebSocket local dev + Supabase Realtime produção)
 // =========================================================================
+import { SupabaseRealtimeProvider } from './supabaseRealtimeProvider';
+
 const customWsServer = urlParams.get('ws');
 let websocketProvider: WebsocketProvider | any = null;
-try {
-  const wsServer = customWsServer || 'wss://demos.yjs.dev';
-  websocketProvider = new WebsocketProvider(wsServer, `dozero_rpg_${roomName}`, doc, {
-    connect: true
-  });
-} catch (error) {
-  console.warn("Cloud WebSocket Provider falhou em iniciar", error);
+
+// WebSocket: só conecta se tiver servidor customizado ou estiver em localhost
+if (customWsServer) {
+  try {
+    websocketProvider = new WebsocketProvider(customWsServer, roomName, doc);
+  } catch (error) {
+    console.warn("WebSocket Provider falhou:", error);
+  }
+} else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  try {
+    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    websocketProvider = new WebsocketProvider(`${wsProto}//${window.location.host}/yjs`, roomName, doc);
+  } catch (error) {
+    console.warn("Local WebSocket Provider falhou:", error);
+  }
 }
 export const wsProvider = websocketProvider;
-// ponytail: wss://demos.yjs.dev is a free public Yjs demo server; upgrade to self-hosted y-websocket on Fly.io/Railway when >10 concurrent players
+
+// Supabase Realtime: funciona em qualquer lugar (Vercel, localhost, mobile)
+// ponytail: Supabase Realtime Broadcast é o sync universal; WebSocket local é bonus pra dev
+export const supabaseRealtime = new SupabaseRealtimeProvider(roomName, doc);
 
 export const state = {
   tokens: doc.getMap('tokens'),
