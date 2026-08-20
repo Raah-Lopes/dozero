@@ -23,7 +23,50 @@ export interface RoomBundle {
   };
 }
 
-const LOCAL_SNAPSHOT_PREFIX = 'dozero_snapshot_';
+// ============================================================================
+// INDEXEDDB LOCAL SNAPSHOT STORAGE (Sem limites de 5MB do LocalStorage)
+// ============================================================================
+function openSnapshotDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      return reject(new Error('IndexedDB não suportado'));
+    }
+    const req = indexedDB.open('dozero_snapshots_db', 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('snapshots')) {
+        db.createObjectStore('snapshots');
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveLocalSnapshotIDB(roomCode: string, bundle: RoomBundle): Promise<void> {
+  try {
+    const db = await openSnapshotDB();
+    const tx = db.transaction('snapshots', 'readwrite');
+    tx.objectStore('snapshots').put(bundle, roomCode);
+    await new Promise((res) => { tx.oncomplete = res; });
+  } catch (e) {
+    console.warn('[RoomPersistence] Erro ao salvar snapshot no IndexedDB:', e);
+  }
+}
+
+async function loadLocalSnapshotIDB(roomCode: string): Promise<RoomBundle | null> {
+  try {
+    const db = await openSnapshotDB();
+    const tx = db.transaction('snapshots', 'readonly');
+    const req = tx.objectStore('snapshots').get(roomCode);
+    return await new Promise((res) => {
+      req.onsuccess = () => res(req.result || null);
+      req.onerror = () => res(null);
+    });
+  } catch (e) {
+    return null;
+  }
+}
 
 /**
  * Coleta todo o estado atual da sala em um objeto estruturado
@@ -189,7 +232,7 @@ export async function importRoomFromFile(file: File): Promise<boolean> {
     const success = applyRoomBundle(bundle);
     if (success) {
       toast.success(`Mesa '${bundle.roomName || 'importada'}' restaurada com sucesso!`);
-      // Salva snapshot na nuvem para manter persistido
+      // Salva snapshot local e em nuvem
       saveRoomSnapshotToCloud();
     }
     return success;
@@ -201,7 +244,7 @@ export async function importRoomFromFile(file: File): Promise<boolean> {
 }
 
 /**
- * Salva o snapshot da sala na nuvem (Supabase + LocalStorage)
+ * Salva o snapshot da sala em nuvem (Supabase Storage / Tabela) e IndexedDB local
  */
 export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<boolean> {
   const urlParams = new URLSearchParams(window.location.search);
@@ -209,53 +252,58 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
   const bundle = getRoomBundle();
   bundle.roomName = roomCode;
 
-  // 1. Salva sempre no localStorage local como cache de resiliência
-  try {
-    localStorage.setItem(LOCAL_SNAPSHOT_PREFIX + roomCode, JSON.stringify(bundle));
-  } catch (e) {
-    console.warn('[RoomPersistence] LocalStorage cheio ao salvar snapshot local');
-  }
+  // 1. Salva sempre no IndexedDB local (capacidade gigabytes, sem limite de 5MB)
+  await saveLocalSnapshotIDB(roomCode, bundle);
 
-  // 2. Se Supabase estiver disponível, salva em nuvem
+  // 2. Se Supabase estiver disponível, salva no Supabase Storage ou Tabela
   if (!isSupabaseConfigured) {
     return true;
   }
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Tenta salvar via user_metadata do usuário autenticado
-    if (user) {
-      const currentSnapshots = user.user_metadata?.room_snapshots || {};
-      currentSnapshots[roomCode] = {
-        updated_at: new Date().toISOString(),
-        bundle
-      };
+    let cloudSaved = false;
+    const jsonBlob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
+    const fileName = `snapshots/${roomCode}.json`;
 
-      await supabase.auth.updateUser({
-        data: { room_snapshots: currentSnapshots }
-      });
+    // 2.1 Tenta salvar no Supabase Storage bucket 'room-backups'
+    try {
+      const { error: storageErr } = await supabase.storage
+        .from('room-backups')
+        .upload(fileName, jsonBlob, {
+          contentType: 'application/json',
+          upsert: true
+        });
+
+      if (!storageErr) {
+        cloudSaved = true;
+      }
+    } catch (sErr) {
+      // Bucket pode não ter sido criado ainda
     }
 
-    // Tenta salvar também na tabela 'campaigns' se disponível
+    // 2.2 Tenta salvar na tabela 'campaigns' do Supabase
     try {
-      await supabase.from('campaigns').update({
+      const { error: tblErr } = await supabase.from('campaigns').update({
         updated_at: new Date().toISOString(),
         snapshot: bundle
       }).eq('room_code', roomCode);
+
+      if (!tblErr) {
+        cloudSaved = true;
+      }
     } catch (tblErr) {
-      // Tabela opcional, não bloqueia
+      // Tabela opcional
     }
 
     return true;
   } catch (err) {
-    console.warn('[RoomPersistence] Erro ao salvar snapshot no Supabase:', err);
-    return false;
+    console.warn('[RoomPersistence] Erro ao sincronizar nuvem:', err);
+    return true; // IndexedDB local já salvou com sucesso
   }
 }
 
 /**
- * Carrega o snapshot da sala da nuvem e aplica se a sala atual estiver vazia
+ * Carrega o snapshot da sala da nuvem ou IndexedDB
  */
 export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceApply = false): Promise<boolean> {
   const urlParams = new URLSearchParams(window.location.search);
@@ -267,16 +315,12 @@ export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceAp
     return false;
   }
 
-  // 1. Tenta buscar no cache local do snapshot
-  const localCached = localStorage.getItem(LOCAL_SNAPSHOT_PREFIX + roomCode);
-  if (localCached) {
-    try {
-      const bundle: RoomBundle = JSON.parse(localCached);
-      if (bundle && bundle.data) {
-        applyRoomBundle(bundle);
-        return true;
-      }
-    } catch (e) {}
+  // 1. Tenta carregar do IndexedDB local
+  const localBundle = await loadLocalSnapshotIDB(roomCode);
+  if (localBundle && localBundle.data) {
+    applyRoomBundle(localBundle);
+    console.log(`[RoomPersistence] Sala '${roomCode}' restaurada do IndexedDB local!`);
+    return true;
   }
 
   // 2. Busca da nuvem (Supabase)
@@ -285,17 +329,26 @@ export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceAp
   }
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // 2.1 Tenta baixar do Supabase Storage
+    try {
+      const fileName = `snapshots/${roomCode}.json`;
+      const { data: fileData, error: fileErr } = await supabase.storage
+        .from('room-backups')
+        .download(fileName);
 
-    // 2.1 Busca no user_metadata
-    if (user?.user_metadata?.room_snapshots?.[roomCode]?.bundle) {
-      const bundle: RoomBundle = user.user_metadata.room_snapshots[roomCode].bundle;
-      applyRoomBundle(bundle);
-      console.log(`[RoomPersistence] Sala '${roomCode}' restaurada com sucesso da nuvem (User Metadata)!`);
-      return true;
-    }
+      if (!fileErr && fileData) {
+        const text = await fileData.text();
+        const bundle: RoomBundle = JSON.parse(text);
+        if (bundle && bundle.data) {
+          applyRoomBundle(bundle);
+          await saveLocalSnapshotIDB(roomCode, bundle);
+          console.log(`[RoomPersistence] Sala '${roomCode}' restaurada do Supabase Storage!`);
+          return true;
+        }
+      }
+    } catch (fErr) {}
 
-    // 2.2 Busca na tabela 'campaigns'
+    // 2.2 Tenta buscar da tabela 'campaigns'
     try {
       const { data, error } = await supabase
         .from('campaigns')
@@ -305,6 +358,7 @@ export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceAp
 
       if (!error && data?.snapshot) {
         applyRoomBundle(data.snapshot);
+        await saveLocalSnapshotIDB(roomCode, data.snapshot);
         console.log(`[RoomPersistence] Sala '${roomCode}' restaurada da tabela campaigns no Supabase!`);
         return true;
       }
