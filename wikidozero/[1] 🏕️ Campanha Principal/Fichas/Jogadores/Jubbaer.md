@@ -33,7 +33,7 @@ tags:
 ativo: false
 origem: Cidade Subterrânea
 Localizacao: Barrio de Hidromel
-HP: 0
+HP: 10
 HP_max: 20
 PM: 100
 PM_max: 100
@@ -80,7 +80,7 @@ imageUrl: https://i.ibb.co/h1mzxVHd/Jubbaer-1784596674823.webp
 tokenShape: circle
 titulo: Jubbaer
 title: Jubbaer
-pv: 0
+pv: 10
 pv_max: 20
 usos_cura_atual: 3
 saqueado: false
@@ -115,7 +115,7 @@ objetos_campanha:
     efeito: chave_portal
     descricao: Abre fechaduras mágicas ancestrais.
 hasVision: true
-sizeScale: 1.1
+sizeScale: 0.5
 mana: 100
 mana_max: 100
 borderColor: '#ffb3f9'
@@ -153,9 +153,17 @@ constituicao: 20
 inteligencia: 10
 sabedoria: 10
 carisma: 10
-visionRadius: 119
+visionRadius: 45
 Ouro: 5
 ---
+
+
+
+
+
+
+
+
 
 > \[!quote]- Interpretação e Lore
 > **Nome Completo:** Jubbaer, a Guerreira Bebada | **Imagem:**

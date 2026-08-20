@@ -15,6 +15,7 @@ import { toast } from '../UI/Toast';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onOpenAudioDirector?: () => void;
 }
 
 type SoundTab = 'ambience' | 'music' | 'sfx';
@@ -49,7 +50,7 @@ export const SFX_PRESETS = [
   { id: 'sfx_dice', name: 'Rolagem de Dados', icon: <Disc size={14} />, color: '#94a3b8', url: '/audio/sfx/dice.mp3' },
 ];
 
-export const TheaterSoundscape: React.FC<Props> = ({ isOpen, onClose }) => {
+export const TheaterSoundscape: React.FC<Props> = ({ isOpen, onClose, onOpenAudioDirector }) => {
   const [activeTab, setActiveTab] = useState<SoundTab>('ambience');
   const [customUrl, setCustomUrl] = useState('');
   const [customName, setCustomName] = useState('');
@@ -198,9 +199,37 @@ export const TheaterSoundscape: React.FC<Props> = ({ isOpen, onClose }) => {
             <Radio size={16} color="#ec4899" />
             <h3>Jukebox & Soundscape do Teatro</h3>
           </div>
-          <button onClick={onClose} className="theater-soundscape-close">
-            <X size={16} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                if (onOpenAudioDirector) onOpenAudioDirector();
+                else window.dispatchEvent(new CustomEvent('theater-open-audio-director'));
+              }}
+              style={{
+                background: 'rgba(236, 72, 153, 0.15)',
+                border: '1px solid rgba(236, 72, 153, 0.4)',
+                color: '#f472b6',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                transition: 'all 0.2s ease'
+              }}
+              title="Abrir a ferramenta completa de mixagem e áudio (Audio Director)"
+            >
+              <Sliders size={13} />
+              <span>Mesa de Áudio Pro</span>
+            </button>
+            <button onClick={onClose} className="theater-soundscape-close" title="Fechar Jukebox">
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Master Mixers (Live Audio Controls) */}

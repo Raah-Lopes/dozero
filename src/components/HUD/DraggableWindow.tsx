@@ -79,7 +79,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   const dragStartPos = useRef({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
 
-  const snapThreshold = 20;
+  const snapThreshold = 8;
 
   const bringToFront = () => {
     if (isPopout) return;
@@ -187,6 +187,10 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     });
     (windowRef.current as any).__cachedSiblings = cachedSiblings;
     (windowRef.current as any).__cachedPinned = cachedPinned;
+    if (windowRef.current) {
+      windowRef.current.style.willChange = 'left, top';
+    }
+
     try {
       if (e.currentTarget.hasPointerCapture(e.pointerId)) return;
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -220,19 +224,13 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     const siblings = (windowRef.current as any).__cachedSiblings as DOMRect[] || [];
     siblings.forEach((sRect) => {
       // Check X alignment
-      // Align our left to their right
       if (Math.abs(newX - sRect.right) < snapThreshold && newY + rect.height > sRect.top && newY < sRect.bottom) newX = sRect.right;
-      // Align our right to their left
       if (Math.abs(newX + rect.width - sRect.left) < snapThreshold && newY + rect.height > sRect.top && newY < sRect.bottom) newX = sRect.left - rect.width;
-      // Align left-to-left
       if (Math.abs(newX - sRect.left) < snapThreshold) newX = sRect.left;
 
       // Check Y alignment
-      // Align our top to their bottom
       if (Math.abs(newY - sRect.bottom) < snapThreshold && newX + rect.width > sRect.left && newX < sRect.right) newY = sRect.bottom;
-      // Align our bottom to their top
       if (Math.abs(newY + rect.height - sRect.top) < snapThreshold && newX + rect.width > sRect.left && newX < sRect.right) newY = sRect.top - rect.height;
-      // Align top-to-top
       if (Math.abs(newY - sRect.top) < snapThreshold) newY = sRect.top;
     });
 
@@ -271,6 +269,10 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     setIsDragging(false);
     e.currentTarget.releasePointerCapture(e.pointerId);
     
+    if (windowRef.current) {
+      windowRef.current.style.willChange = 'auto';
+    }
+
     const dx = e.clientX - dragStartPos.current.x;
     const dy = e.clientY - dragStartPos.current.y;
     if (isMinimized && Math.abs(dx) < 5 && Math.abs(dy) < 5) {

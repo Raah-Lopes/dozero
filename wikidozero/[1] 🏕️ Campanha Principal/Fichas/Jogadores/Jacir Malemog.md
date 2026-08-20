@@ -66,7 +66,7 @@ macros:
     descricao: 'Jacir estica um membro para um ataque surpresa. Dano: 1d8 + 3 (blunt). Gasta 2 PM.'
 avatar: https://i.ibb.co/GSCV9hY/Jacir-Malemog-1784596069500.webp
 imageUrl: https://i.ibb.co/GSCV9hY/Jacir-Malemog-1784596069500.webp
-sizeScale: 1.4
+sizeScale: 0.8
 showName: true
 energia: 30
 mana_max: 27
@@ -74,7 +74,7 @@ mana: 27
 energiaMax: 20
 pv: 24
 sanidade: 100
-tokenShape: hexagon
+tokenShape: circle
 borderColor: '#66a1ff'
 titulo: Jacir Malemog
 title: Jacir Malemog
@@ -141,6 +141,11 @@ ouro: 145
 Ouro: 145
 hasVision: true
 ---
+
+
+
+
+
 
 
 

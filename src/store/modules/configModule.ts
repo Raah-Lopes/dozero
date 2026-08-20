@@ -330,6 +330,13 @@ export const Config = {
   },
 
   /**
+   * Enable or disable fog of war
+   */
+  setFogEnabled(enabled: boolean): void {
+    this.updateFog({ enabled });
+  },
+
+  /**
    * Enable fog of war
    */
   enableFog(): void {

@@ -9,7 +9,7 @@ import { toast } from '../UI/Toast';
 import { Tooltip } from '../UI/Tooltip';
 
 export function TokenContextHUD() {
-  const { setShowActors } = useWindowManager();
+  const { setShowActors, setActiveModal, setEditingTokenId } = useWindowManager();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [tokenData, setTokenData] = useState<any | null>(null);
   const [isTargeted, setIsTargeted] = useState(false);
@@ -229,9 +229,15 @@ export function TokenContextHUD() {
         </button>
       </Tooltip>
 
-      <Tooltip label="Abrir Biblioteca de Atores" position="top">
-        <button onClick={() => setShowActors(true)} style={actionButtonStyle}>
-          <Settings size={18} color="rgba(255,255,255,0.7)" />
+      <Tooltip label="Configurações do Token" position="top">
+        <button 
+          onClick={() => {
+            setEditingTokenId(tokenData.id);
+            setActiveModal('tokenConfig');
+          }} 
+          style={{ ...actionButtonStyle, background: 'rgba(168, 85, 247, 0.2)', border: '1px solid rgba(168, 85, 247, 0.4)' }}
+        >
+          <Settings size={18} color="#c084fc" />
         </button>
       </Tooltip>
 

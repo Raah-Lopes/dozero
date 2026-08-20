@@ -14,22 +14,29 @@ interface CharacterRosterWidgetProps {
 }
 
 export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ onClose }) => {
-  // Hook centralizado — elimina a lógica duplicada que existia aqui antes
+  // Hook centralizado
   const { personagens, carregando } = usePersonagens(false);
   const { index } = useWiki();
-  const [filtro, setFiltro] = useState<'todos' | 'jogador' | 'npc' | 'inimigo' | 'ativos'>('ativos');
+  const [filtro, setFiltro] = useState<'todos' | 'ativos' | 'inativos' | 'jogador' | 'npc' | 'inimigo'>('todos');
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [localActiveOverrides, setLocalActiveOverrides] = useState<Record<string, boolean>>({});
   const [processandoLote, setProcessandoLote] = useState(false);
   const [uploadingPath, setUploadingPath] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 'ativos' agora funciona como o Painel Mestre (mostra todos, permitindo ligar/desligar)
-  // as outras abas filtram para mostrar APENAS os personagens que estão ativos.
-  const personagensFiltrados = filtro === 'ativos'
-    ? personagens // Mostra todo mundo (ativos e inativos)
-    : filtro === 'todos'
-    ? personagens.filter(p => p.ativo) // Aba 'Todos' mostra apenas os ativos
-    : personagens.filter(p => p.ativo && p.status === filtro); // Abas específicas mostram apenas os ativos daquele tipo
+  // Lista com estado otimista imediato (sem lag e sem tela piscando)
+  const personagensResolvidos = personagens.map(p => ({
+    ...p,
+    ativo: localActiveOverrides[p.caminhoArquivo] !== undefined ? localActiveOverrides[p.caminhoArquivo] : p.ativo
+  }));
+
+  const personagensFiltrados = filtro === 'todos'
+    ? personagensResolvidos
+    : filtro === 'ativos'
+    ? personagensResolvidos.filter(p => p.ativo)
+    : filtro === 'inativos'
+    ? personagensResolvidos.filter(p => !p.ativo)
+    : personagensResolvidos.filter(p => p.status === filtro);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -61,13 +68,17 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
   };
 
   const handleToggleActive = async (e: React.MouseEvent, caminhoArquivo: string, currentAtivo: boolean) => {
-    e.stopPropagation(); // Evita que o card seja clicado (abrindo a ficha)
+    e.stopPropagation(); // Evita abrir a ficha
+    const nextVal = !currentAtivo;
+    
+    // Atualização otimista imediata na UI
+    setLocalActiveOverrides(prev => ({ ...prev, [caminhoArquivo]: nextVal }));
     
     // Inverte o estado atual e salva na wiki
-    const success = await syncTokenFieldToWiki(caminhoArquivo, 'ativo', !currentAtivo);
+    const success = await syncTokenFieldToWiki(caminhoArquivo, 'ativo', nextVal);
     if (success) {
-      WikiIndexer.clearCache(); // Força a re-indexação imediata
-      window.dispatchEvent(new Event('wiki-updated')); // Atualiza as UI dependentes
+      WikiIndexer.clearCache(); // Força a re-indexação
+      window.dispatchEvent(new Event('wiki-updated')); // Atualiza as UIs dependentes
     }
   };
 
@@ -81,14 +92,21 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
 
   const handleBulkToggle = async (tornarAtivo: boolean) => {
     setProcessandoLote(true);
+    const paths = Array.from(selecionados);
+    
+    // Atualização otimista imediata
+    setLocalActiveOverrides(prev => {
+      const updated = { ...prev };
+      paths.forEach(p => { updated[p] = tornarAtivo; });
+      return updated;
+    });
+
     try {
-      const paths = Array.from(selecionados);
-      // Processa todos em paralelo para ser rápido
+      // Processa todos em paralelo
       await Promise.all(paths.map(path => syncTokenFieldToWiki(path, 'ativo', tornarAtivo)));
-      
       setSelecionados(new Set()); // Limpa seleção
       WikiIndexer.clearCache();
-      window.dispatchEvent(new Event('wiki-updated')); // Atualiza a UI uma única vez!
+      window.dispatchEvent(new Event('wiki-updated'));
     } finally {
       setProcessandoLote(false);
     }
@@ -156,24 +174,30 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
         />
 
         {/* Filtros */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexShrink: 0 }}>
-          {(['ativos', 'todos', 'jogador', 'npc', 'inimigo'] as const).map((status) => (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexShrink: 0, overflowX: 'auto', paddingBottom: '4px' }}>
+          {(['todos', 'ativos', 'inativos', 'jogador', 'npc', 'inimigo'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setFiltro(status)}
               style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
+                padding: '6px 14px',
+                borderRadius: '8px',
                 border: filtro === status ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
-                background: filtro === status ? 'rgba(168,85,247,0.2)' : 'rgba(15,23,42,0.6)',
+                background: filtro === status ? 'rgba(168,85,247,0.25)' : 'rgba(15,23,42,0.6)',
                 color: filtro === status ? '#f0abfc' : '#cbd5e1',
                 cursor: 'pointer',
                 fontSize: '0.85rem',
+                fontWeight: filtro === status ? 600 : 400,
                 textTransform: 'capitalize',
                 transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
               }}
             >
-              {status}
+              {status === 'todos' ? 'Todos' :
+               status === 'ativos' ? '👁 Ativos' :
+               status === 'inativos' ? '👁‍🗨 Inativos' :
+               status === 'jogador' ? 'Jogadores' :
+               status === 'npc' ? 'NPCs' : 'Inimigos'}
             </button>
           ))}
         </div>

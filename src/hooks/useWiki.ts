@@ -12,7 +12,9 @@ export function useWiki() {
   useEffect(() => {
     async function init() {
       try {
-        setIsLoading(true);
+        if (index.length === 0) {
+          setIsLoading(true);
+        }
         const builtIndex = await WikiIndexer.buildIndex();
         setIndex(builtIndex);
         setError(null);

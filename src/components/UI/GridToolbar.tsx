@@ -519,32 +519,101 @@ export const GridToolbar: React.FC = () => {
 
           {/* TAB: GRID & FOW */}
           {activeConfigTab === 'grid' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* 1. Geometria */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tipo do Grid</span>
+                <span style={{ fontSize: '11px', color: C.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  📐 Geometria do Grid
+                </span>
                 <select
                   value={mapConfig.gridType}
                   onChange={e => updateMapConfig({ gridType: e.target.value as any })}
-                  style={{ background: 'rgba(0,0,0,0.4)', border: `1px solid ${C.surfBrd}`, color: C.textPri, padding: '6px', borderRadius: '6px', fontSize: '12px' }}
+                  style={{ background: 'rgba(0,0,0,0.5)', border: `1px solid ${C.surfBrd}`, color: C.textPri, padding: '6px', borderRadius: '6px', fontSize: '12px' }}
                 >
-                  <option value="square">Quadrados</option>
+                  <option value="square">Quadrados (D&D / PF2e)</option>
                   <option value="hex_v">Hexágonos (Verticais)</option>
                   <option value="hex_h">Hexágonos (Horizontais)</option>
                   <option value="dots_square">Pontos (Quadrado)</option>
+                  <option value="dots_hex">Pontos (Hexagonal)</option>
                 </select>
               </div>
 
+              {/* 2. Tamanho e Presets */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600 }}>Tamanho do Grid ({mapConfig.gridSize}px)</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: C.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    📏 Tamanho da Célula
+                  </span>
+                  <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold' }}>{mapConfig.gridSize}px</span>
+                </div>
                 <input
-                  type="range" min="20" max="200" step="10" value={mapConfig.gridSize}
+                  type="range" min="20" max="200" step="5" value={mapConfig.gridSize}
                   onChange={e => updateMapConfig({ gridSize: parseInt(e.target.value) })}
+                  style={{ width: '100%' }}
+                />
+                <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+                  {[50, 70, 100, 140].map(sz => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => updateMapConfig({ gridSize: sz })}
+                      style={{
+                        flex: 1, padding: '3px 0', fontSize: '10px', borderRadius: '4px',
+                        border: mapConfig.gridSize === sz ? `1px solid ${C.accent}` : `1px solid ${C.surfBrd}`,
+                        background: mapConfig.gridSize === sz ? C.accentBg : C.surfHov,
+                        color: mapConfig.gridSize === sz ? C.accent : C.textSec,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {sz === 70 ? '70 (VTT)' : `${sz}px`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Estilização de Cores e Opacidade */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', color: C.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  🎨 Estilo & Opacidade
+                </span>
+                
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                  {['#ffffff', '#06b6d4', '#f59e0b', '#ef4444', '#1e293b', '#64748b'].map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      title={c}
+                      onClick={() => updateMapConfig({ gridColor: c })}
+                      style={{
+                        width: '20px', height: '20px', borderRadius: '50%', background: c,
+                        border: (mapConfig.gridColor || '#1e293b').toLowerCase() === c.toLowerCase() ? `2px solid ${C.accent}` : '1px solid rgba(255,255,255,0.3)',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={mapConfig.gridColor || '#1e293b'}
+                    onChange={e => updateMapConfig({ gridColor: e.target.value })}
+                    title="Cor personalizada de linha"
+                    style={{ width: '22px', height: '22px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', marginLeft: 'auto' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                  <span style={{ fontSize: '11px', color: C.textMut }}>Opacidade do Grid</span>
+                  <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 'bold' }}>{Math.round((mapConfig.gridAlpha ?? 1) * 100)}%</span>
+                </div>
+                <input
+                  type="range" min="0" max="1" step="0.05" value={mapConfig.gridAlpha ?? 1}
+                  onChange={e => updateMapConfig({ gridAlpha: parseFloat(e.target.value) })}
                   style={{ width: '100%' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px' }}>
-                <span style={{ fontSize: '12px', color: C.textSec }}>Névoa de Guerra (FOW)</span>
+              {/* 4. Névoa de Guerra */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '4px', borderTop: `1px solid ${C.surfBrd}` }}>
+                <span style={{ fontSize: '12px', color: C.textPri, fontWeight: 600 }}>Névoa de Guerra (FOW)</span>
                 <button
                   onClick={() => updateMapConfig({ fogOfWar: !mapConfig.fogOfWar })}
                   style={{
@@ -554,7 +623,7 @@ export const GridToolbar: React.FC = () => {
                     borderRadius: '6px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer'
                   }}
                 >
-                  {mapConfig.fogOfWar ? 'Ativada' : 'Desativada'}
+                  {mapConfig.fogOfWar ? 'Ativada 👁' : 'Desativada 🚫'}
                 </button>
               </div>
             </div>

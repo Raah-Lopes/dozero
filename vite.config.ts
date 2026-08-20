@@ -90,6 +90,22 @@ export default defineConfig({
     port: 5174,
     strictPort: true, // Force it to use 5174, so we bypass any old Service Workers on 5173
     allowedHosts: true, // true desativa o bloqueio de Host no Vite (permite qualquer túnel)
+    watch: {
+      ignored: [
+        '**/wikidozero/**',
+        '**/template_wiki/**',
+        '**/ANEXOS/**',
+        '**/MapasMentais/**',
+        '**/*.md',
+        '**/stats.html',
+        '**/.agents/**',
+        '**/.archive/**',
+        '**/dist/**',
+        '**/*.bat',
+        '**/docs/**',
+        '**/signaling-server/**',
+      ],
+    },
   },
   define: {
     'import.meta.env.VITE_LOCAL_IP': JSON.stringify(getLocalIP())

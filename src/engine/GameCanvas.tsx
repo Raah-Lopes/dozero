@@ -1084,10 +1084,13 @@ export const GameCanvas: React.FC = () => {
       // Fog of War Overlay System
       const fogContainer = new Container();
       fogContainer.zIndex = 500;
+      fogContainer.eventMode = 'none';
+      fogContainer.interactiveChildren = false;
       fogContainer.filters = [new AlphaFilter({ alpha: 1 })]; // Forces it to render to an offscreen texture, allowing ERASE blend mode to work safely
       viewport.addChild(fogContainer);
 
       const fogOverlay = new Graphics();
+      fogOverlay.eventMode = 'none';
       fogContainer.addChild(fogOverlay);
 
       // Ruler Graphics
@@ -1567,16 +1570,18 @@ export const GameCanvas: React.FC = () => {
           if (!tokenSprites[id]) {
             const token = new Container();
             
-            // Base background and border
-            const tokenBorder = new Graphics();
-            drawTokenShape(tokenBorder, shape, 26, true, 0x020617);
-            drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9);
-            if (shape === 'standee') {
-              tokenBorder.ellipse(0, 26 * 1.3, 26 * 0.9, 26 * 0.2);
-              tokenBorder.fill(0x020617);
+            // Base background and border (Ignorado no modo "figure" / boneco recortado)
+            if (shape !== 'figure') {
+              const tokenBorder = new Graphics();
+              drawTokenShape(tokenBorder, shape, 26, true, 0x020617);
               drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9);
+              if (shape === 'standee') {
+                tokenBorder.ellipse(0, 26 * 1.3, 26 * 0.9, 26 * 0.2);
+                tokenBorder.fill(0x020617);
+                drawTokenShape(tokenBorder, shape, 26, false, borderCol, 3, 0.9);
+              }
+              token.addChild(tokenBorder);
             }
-            token.addChild(tokenBorder);
 
             // Async load portrait image (Support custom imageUrl)
             let imgPath = t.imageUrl ? t.imageUrl : (id === 'omega_sentinel' ? '/omega_sentinel.png' : '/vite.svg');
@@ -1600,29 +1605,48 @@ export const GameCanvas: React.FC = () => {
                 sprite.width = 44;
                 sprite.height = 66;
                 sprite.y = -2;
+              } else if (shape === 'figure') {
+                // Modo Boneco: Mantém proporção e escala sem recortar com máscara
+                const maxDim = Math.max(img.width || 1, img.height || 1);
+                const targetSize = 56;
+                const aspect = (img.width || 1) / (img.height || 1);
+                if (aspect >= 1) {
+                  sprite.width = targetSize;
+                  sprite.height = targetSize / aspect;
+                } else {
+                  sprite.height = targetSize;
+                  sprite.width = targetSize * aspect;
+                }
+                sprite.y = 0;
               } else {
                 sprite.width = 50;
                 sprite.height = 50;
                 sprite.y = 0;
               }
               
-              const mask = new Graphics();
-              drawTokenShape(mask, shape, 24, true, 0xffffff);
-              sprite.mask = mask;
+              // No modo figure não aplica máscara de recorte
+              if (shape !== 'figure') {
+                const mask = new Graphics();
+                drawTokenShape(mask, shape, 24, true, 0xffffff);
+                sprite.mask = mask;
+                token.addChild(mask);
+              }
 
-              token.addChild(mask);
               token.addChild(sprite);
             };
             img.src = imgPath;
 
-            // Pulsing Neon Glow
-            const glow = new Graphics();
-            drawTokenShape(glow, shape, 30, false, glowCol, 6, 1);
-            if (shape === 'standee') {
-              glow.ellipse(0, 30 * 1.3, 30 * 0.9, 30 * 0.2);
-              glow.stroke({ width: 6, color: glowCol, alpha: 1 });
+            // Pulsing Neon Glow (Ignorado no modo figure)
+            let glow: Graphics | null = null;
+            if (shape !== 'figure') {
+              glow = new Graphics();
+              drawTokenShape(glow, shape, 30, false, glowCol, 6, 1);
+              if (shape === 'standee') {
+                glow.ellipse(0, 30 * 1.3, 30 * 0.9, 30 * 0.2);
+                glow.stroke({ width: 6, color: glowCol, alpha: 1 });
+              }
+              token.addChild(glow);
             }
-            token.addChild(glow);
 
             // Attached Mini HP Bar
             const hpBarY = shape === 'standee' ? 48 : 35;
@@ -3338,18 +3362,20 @@ export const GameCanvas: React.FC = () => {
             isCurrentTurn = participants[turnIndex].tokenId === id;
           }
 
-          // Pulse glow effect
-          const isChronicles = document.documentElement.getAttribute('data-theme')?.startsWith('chronicles');
-          if (isChronicles) {
-            tokenData.glow.visible = false;
-          } else {
-            tokenData.glow.visible = true;
-            if (isCurrentTurn) {
-              tokenData.glow.tint = 0xeab308;
-              tokenData.glow.alpha = 0.6 + Math.abs(Math.sin(Date.now() / 200)) * 0.4;
+          // Pulse glow effect (apenas se o token tiver glow)
+          if (tokenData.glow) {
+            const isChronicles = document.documentElement.getAttribute('data-theme')?.startsWith('chronicles');
+            if (isChronicles) {
+              tokenData.glow.visible = false;
             } else {
-              tokenData.glow.tint = 0xffffff; // Reset tint
-              tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
+              tokenData.glow.visible = true;
+              if (isCurrentTurn) {
+                tokenData.glow.tint = 0xeab308;
+                tokenData.glow.alpha = 0.6 + Math.abs(Math.sin(Date.now() / 200)) * 0.4;
+              } else {
+                tokenData.glow.tint = 0xffffff; // Reset tint
+                tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
+              }
             }
           }
             

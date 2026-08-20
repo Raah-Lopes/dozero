@@ -53,7 +53,7 @@ export function extractWallSegments(fogOps: any[]): Segment[] {
       }
     } else if (op.type === 'circle') {
       const geom = op.geom as any;
-      const segments = 16;
+      const segments = 32;
       for (let i = 0; i < segments; i++) {
         const a1 = (i / segments) * Math.PI * 2;
         const a2 = ((i + 1) / segments) * Math.PI * 2;
@@ -93,7 +93,7 @@ export function visibilityPolygon(px: number, py: number, segs: Segment[], radiu
     }
   }
 
-  const circleSegments = 64; // Increased for smoother circles
+  const circleSegments = 128; // Alta precisão para contorno circular suave sem quinas
   for (let i = 0; i < circleSegments; i++) {
     angles.push((i * Math.PI * 2) / circleSegments);
   }

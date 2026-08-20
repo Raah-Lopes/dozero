@@ -97,7 +97,7 @@ title: Mr. Goma
 tokenShape: square
 borderColor: '#ff00ae'
 showName: true
-sizeScale: 1
+sizeScale: 0.7
 hpBarMode: always
 ativo: false
 mana_max: 99
@@ -131,7 +131,7 @@ magias_preparadas:
 macros: []
 avatar: https://i.ibb.co/wrQ2T74M/Goma-1784596188828.webp
 des: 11
-visionRadius: 200
+visionRadius: 100
 hasVision: false
 inCombat: true
 status: inimigo
@@ -145,6 +145,11 @@ loja:
       quantidade: 1
       descricao: Causa dano de fogo em área a múltiplos alvos.
 ---
+
+
+
+
+
 
 
 

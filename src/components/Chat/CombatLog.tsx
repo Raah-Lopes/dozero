@@ -240,9 +240,24 @@ export const CombatLog: React.FC = () => {
       </div>
 
       {/* Message Feed */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.3rem', paddingRight: '0.4rem', paddingTop: '0.5rem', fontFamily: 'monospace', width: '100%', boxSizing: 'border-box' }}>
+      <div 
+        ref={scrollRef} 
+        style={{ 
+          flex: 1, 
+          overflowY: 'auto', 
+          overflowX: 'hidden',
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '0.45rem', 
+          padding: '0.5rem 0.25rem 0.5rem 0', 
+          width: '100%', 
+          boxSizing: 'border-box' 
+        }}
+      >
         {mensagensFiltradas.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>[ Registros de combate vazios ]</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic', textAlign: 'center', margin: 'auto 0', opacity: 0.7 }}>
+            [ Nenhum registro encontrado ]
+          </p>
         ) : (
           mensagensFiltradas.map((msg, index) => {
             const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -252,28 +267,35 @@ export const CombatLog: React.FC = () => {
                 key={index} 
                 className="animate-fade-in"
                 style={{ 
-                  padding: '0.25rem 0.4rem', 
+                  padding: '0.45rem 0.6rem', 
                   display: 'flex',
-                  gap: '0.5rem',
-                  fontSize: '0.75rem',
-                  lineHeight: '1.4',
-                  borderLeft: `2px solid ${msg.isCritical ? '#10b981' : msg.isFailure ? '#ef4444' : 'transparent'}`,
-                  background: msg.isCritical ? 'rgba(16, 185, 129, 0.08)' : msg.isFailure ? 'rgba(239, 68, 68, 0.08)' : 'transparent',
-                  borderBottom: '1px dotted rgba(255,255,255,0.06)',
-                  alignItems: 'flex-start',
-                  maxWidth: '100%',
-                  overflow: 'hidden'
+                  flexDirection: 'column',
+                  gap: '0.2rem',
+                  fontSize: '0.82rem',
+                  lineHeight: '1.45',
+                  borderRadius: '6px',
+                  borderLeft: `3px solid ${msg.isCritical ? '#10b981' : msg.isFailure ? '#ef4444' : 'rgba(168, 85, 247, 0.4)'}`,
+                  background: msg.isCritical ? 'rgba(16, 185, 129, 0.12)' : msg.isFailure ? 'rgba(239, 68, 68, 0.12)' : 'rgba(255, 255, 255, 0.03)',
+                  borderTop: '1px solid rgba(255,255,255,0.04)',
+                  borderRight: '1px solid rgba(255,255,255,0.04)',
+                  borderBottom: '1px solid rgba(255,255,255,0.06)',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
+                  flexShrink: 0
                 }}
               >
-                <span style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', whiteSpace: 'nowrap', opacity: 0.7, flexShrink: 0 }}>[{time}]</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', opacity: 0.65, fontSize: '0.65rem' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{time}</span>
+                  {msg.isCritical && <span style={{ color: '#34d399', fontWeight: 'bold' }}>CRÍTICO</span>}
+                  {msg.isFailure && <span style={{ color: '#f87171', fontWeight: 'bold' }}>FALHA</span>}
+                </div>
                 <div 
                   dangerouslySetInnerHTML={{ __html: msg.text }} 
                   style={{ 
-                    color: msg.isCritical ? '#a7f3d0' : msg.isFailure ? '#fca5a5' : '#cbd5e1', 
-                    fontFamily: 'Inter, sans-serif',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'anywhere',
-                    flex: 1,
+                    color: msg.isCritical ? '#d1fae5' : msg.isFailure ? '#fee2e2' : 'var(--text-primary)', 
+                    fontFamily: 'Inter, system-ui, sans-serif',
                     minWidth: 0
                   }} 
                 />

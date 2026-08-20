@@ -35,6 +35,8 @@ import { TheaterCommandPalette } from './TheaterCommandPalette';
 import { VisualNovelOverlay } from './VisualNovelOverlay';
 import { CinematicDialogueStudio } from './CinematicDialogueStudio';
 import { PixabayMediaPickerModal } from '../Modals/PixabayMediaPickerModal';
+import { CharacterRosterWidget } from '../Widgets/PlayerTools/CharacterRosterWidget';
+import { AudioDirectorWidget } from '../Widgets/System/AudioDirectorWidget';
 import './Theater.css';
 
 export const TheaterView: React.FC = () => {
@@ -53,8 +55,10 @@ export const TheaterView: React.FC = () => {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState('cenas');
+  const [rosterOpen, setRosterOpen] = useState(false);
   const [chronicleOpen, setChronicleOpen] = useState(false);
   const [soundscapeOpen, setSoundscapeOpen] = useState(false);
+  const [audioDirectorOpen, setAudioDirectorOpen] = useState(false);
   const [cluesOpen, setCluesOpen] = useState(false);
   const [secretsOpen, setSecretsOpen] = useState(false);
   const [clocksOpen, setClocksOpen] = useState(false);
@@ -136,9 +140,14 @@ export const TheaterView: React.FC = () => {
   // Quick modals listeners
   useEffect(() => {
     const onSoundscape = () => setSoundscapeOpen(true);
+    const onAudioDirector = () => {
+      setSoundscapeOpen(false);
+      setAudioDirectorOpen(prev => !prev);
+    };
     const onClues = () => setCluesOpen(true);
     const onSecrets = () => setSecretsOpen(true);
     const onClocks = () => setClocksOpen(true);
+    const onRoster = () => setRosterOpen(prev => !prev);
     const onDialogueStudio = () => setDialogueStudioOpen(true);
     const onPixabay = (e: Event) => {
       const detail = (e as CustomEvent<{ query?: string; tab?: 'image' | 'video' | 'portrait' }>).detail || {};
@@ -148,17 +157,21 @@ export const TheaterView: React.FC = () => {
     };
 
     window.addEventListener('theater-open-soundscape', onSoundscape);
+    window.addEventListener('theater-open-audio-director', onAudioDirector);
     window.addEventListener('theater-open-clues', onClues);
     window.addEventListener('theater-open-secrets', onSecrets);
     window.addEventListener('theater-open-clock-creator', onClocks);
+    window.addEventListener('theater-open-roster', onRoster);
     window.addEventListener('theater-open-dialogue-studio', onDialogueStudio);
     window.addEventListener('theater-open-pixabay', onPixabay);
 
     return () => {
       window.removeEventListener('theater-open-soundscape', onSoundscape);
+      window.removeEventListener('theater-open-audio-director', onAudioDirector);
       window.removeEventListener('theater-open-clues', onClues);
       window.removeEventListener('theater-open-secrets', onSecrets);
       window.removeEventListener('theater-open-clock-creator', onClocks);
+      window.removeEventListener('theater-open-roster', onRoster);
       window.removeEventListener('theater-open-dialogue-studio', onDialogueStudio);
       window.removeEventListener('theater-open-pixabay', onPixabay);
     };
@@ -256,13 +269,27 @@ export const TheaterView: React.FC = () => {
         <TheaterSoundscape 
           isOpen={soundscapeOpen} 
           onClose={() => setSoundscapeOpen(false)} 
+          onOpenAudioDirector={() => {
+            setSoundscapeOpen(false);
+            setAudioDirectorOpen(true);
+          }}
         />
+
+        {/* ── Audio Director Pro Modal ── */}
+        {audioDirectorOpen && (
+          <AudioDirectorWidget onClose={() => setAudioDirectorOpen(false)} />
+        )}
 
         {/* ── Scene Clues / Handouts Modal ── */}
         <SceneCluesModal 
           isOpen={cluesOpen} 
           onClose={() => setCluesOpen(false)} 
         />
+
+        {/* ── Character Roster Modal (Ativar/Desativar Personagens) ── */}
+        {rosterOpen && (
+          <CharacterRosterWidget onClose={() => setRosterOpen(false)} />
+        )}
 
         {/* ── GM Secrets Drawer (GM Only) ── */}
         {!isPlayerView && (
@@ -456,6 +483,14 @@ export const TheaterView: React.FC = () => {
 
             {/* Right: Quick Stage Mode Toggles & Narration Tools */}
             <div className="theater-topbar-right">
+              <button
+                className={`theater-icon-btn ${rosterOpen ? 'active' : ''}`}
+                onClick={() => setRosterOpen(!rosterOpen)}
+                title="Lista de Personagens (Ativar/Desativar na Mesa e Teatro)"
+              >
+                <Users size={15} color={rosterOpen ? 'var(--accent-primary)' : 'currentColor'} />
+              </button>
+
               <button
                 className={`theater-icon-btn ${soundscapeOpen ? 'active' : ''}`}
                 onClick={() => setSoundscapeOpen(!soundscapeOpen)}

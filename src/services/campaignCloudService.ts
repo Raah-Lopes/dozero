@@ -32,6 +32,8 @@ export function getLobbyStats(campaigns: CampaignCloudRecord[]) {
   };
 }
 
+let isCampaignsTableAvailable = true;
+
 // Carrega campanhas sincronizando Local-First + Supabase Metadata + Supabase Table
 export async function getCampaigns(userId?: string | null): Promise<CampaignCloudRecord[]> {
   const localList: CampaignCloudRecord[] = JSON.parse(localStorage.getItem(LOCAL_CAMPAIGNS_KEY) || '[]');
@@ -79,7 +81,7 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
     // 1. Coloca dados locais
     localList.forEach(c => campaignMap.set(c.id, c));
 
-    // 2. Busca do user_metadata do Supabase Auth (funciona 100% mesmo sem migrations de banco)
+    // 2. Busca do user_metadata do Supabase Auth (funciona 100% mesmo sem tabela no banco)
     const { data: { user } } = await supabase.auth.getUser();
     if (user?.user_metadata?.saved_campaigns && Array.isArray(user.user_metadata.saved_campaigns)) {
       user.user_metadata.saved_campaigns.forEach((c: CampaignCloudRecord) => {
@@ -87,18 +89,24 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
       });
     }
 
-    // 3. Tenta buscar da tabela pública 'campaigns' se ela existir
-    try {
-      const { data: tableData } = await supabase
-        .from('campaigns')
-        .select('*')
-        .order('updated_at', { ascending: false });
+    // 3. Tenta buscar da tabela pública 'campaigns' se disponível
+    if (isCampaignsTableAvailable) {
+      try {
+        const { data: tableData, error } = await supabase
+          .from('campaigns')
+          .select('*')
+          .order('updated_at', { ascending: false });
 
-      if (tableData && tableData.length > 0) {
-        tableData.forEach((c: CampaignCloudRecord) => campaignMap.set(c.id, c));
+        if (error) {
+          if (error.code === 'PGRST116' || error.code === '42P01' || (error as any).status === 404) {
+            isCampaignsTableAvailable = false;
+          }
+        } else if (tableData && tableData.length > 0) {
+          tableData.forEach((c: CampaignCloudRecord) => campaignMap.set(c.id, c));
+        }
+      } catch (e) {
+        isCampaignsTableAvailable = false;
       }
-    } catch (e) {
-      // Ignora erro de tabela não existente
     }
 
     const merged = Array.from(campaignMap.values()).sort((a, b) => {
@@ -165,24 +173,29 @@ export async function createOrUpdateCampaign(
         });
       }
 
-      // 3. Tenta salvar na tabela 'campaigns' do Supabase
-      try {
-        await supabase.from('campaigns').upsert({
-          id: record.id,
-          name: record.name,
-          system: record.system,
-          description: record.description,
-          cover_url: record.cover_url,
-          room_code: record.room_code,
-          pass_code: record.pass_code,
-          wiki_path: record.wiki_path,
-          is_public: record.is_public,
-          is_closed: record.is_closed,
-          owner_id: userId,
-          updated_at: record.updated_at
-        });
-      } catch (errTable) {
-        // Tabela opcional
+      // 3. Tenta salvar na tabela 'campaigns' do Supabase se disponível
+      if (isCampaignsTableAvailable) {
+        try {
+          const { error } = await supabase.from('campaigns').upsert({
+            id: record.id,
+            name: record.name,
+            system: record.system,
+            description: record.description,
+            cover_url: record.cover_url,
+            room_code: record.room_code,
+            pass_code: record.pass_code,
+            wiki_path: record.wiki_path,
+            is_public: record.is_public,
+            is_closed: record.is_closed,
+            owner_id: userId,
+            updated_at: record.updated_at
+          });
+          if (error && ((error as any).status === 404 || error.code === '42P01')) {
+            isCampaignsTableAvailable = false;
+          }
+        } catch (errTable) {
+          isCampaignsTableAvailable = false;
+        }
       }
     } catch (e) {
       console.warn('Erro ao sincronizar campanha com nuvem:', e);
@@ -209,10 +222,12 @@ export async function deleteCampaignCloud(id: string, userId?: string | null): P
         });
       }
 
-      try {
-        await supabase.from('campaigns').delete().eq('id', id);
-      } catch (err) {
-        // Ignore
+      if (isCampaignsTableAvailable) {
+        try {
+          await supabase.from('campaigns').delete().eq('id', id);
+        } catch (err) {
+          isCampaignsTableAvailable = false;
+        }
       }
     } catch (e) {
       console.warn('Erro ao deletar da nuvem:', e);

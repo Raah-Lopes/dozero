@@ -25,7 +25,7 @@ ataque: 35
 status: inimigo
 usos_cura: 3
 saqueado: false
-ativo: false
+ativo: true
 status_efeitos: []
 imagem: https://i.ibb.co/9kFGjkvY/d493fb50475f.jpg
 inventario: []
@@ -86,12 +86,20 @@ constituicao: 14
 inteligencia: 10
 sabedoria: 10
 carisma: 10
-sizeScale: 0.5
-visionRadius: 50
-hasVision: true
+sizeScale: 1.6
+visionRadius: 200
+hasVision: false
 inCombat: false
-hpBarMode: hidden
+hpBarMode: always
+borderColor: '#672ed1'
 ---
+
+
+
+
+
+
+
 
 
 

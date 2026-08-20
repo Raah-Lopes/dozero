@@ -43,9 +43,11 @@ function getSharedLightMask(): Texture {
   
   const center = size / 2;
   const g = ctx.createRadialGradient(center, center, 0, center, center, center);
-  g.addColorStop(0, "rgba(255,255,255,1)");
-  g.addColorStop(0.6, "rgba(255,255,255,0.7)");
-  g.addColorStop(1, "rgba(255,255,255,0)");
+  g.addColorStop(0, "rgba(255,255,255,1.0)");
+  g.addColorStop(0.55, "rgba(255,255,255,1.0)");
+  g.addColorStop(0.75, "rgba(255,255,255,0.70)");
+  g.addColorStop(0.90, "rgba(255,255,255,0.30)");
+  g.addColorStop(1.0, "rgba(255,255,255,0.0)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, size, size);
   
@@ -87,11 +89,13 @@ export function renderFogOfWar(
   const getGfx = (mode: string) => {
     if (poolIdx >= pool.length) {
        const newGfx = new Graphics();
+       newGfx.eventMode = 'none';
        pool.push(newGfx);
        fogContainer.addChild(newGfx);
     }
     const g = pool[poolIdx];
     g.visible = true;
+    g.eventMode = 'none';
     g.blendMode = mode as any;
     poolIdx++;
     return g;
@@ -127,19 +131,13 @@ export function renderFogOfWar(
         const visionStyle = (t as any).visionStyle || 'gradient';
         const tokenGfx = getGfx('erase');
         
-        if (visionStyle === 'gradient') {
-           tokenGfx.filters = [new BlurFilter({ strength: 24, quality: 3 })];
-        } else {
-           tokenGfx.filters = null;
-        }
-
+        // Iluminação / Visão de névoa sólida nativa (Zero vazamentos)
         tokenGfx.moveTo(poly[0].x, poly[0].y);
         for (let i = 1; i < poly.length; i++) {
           tokenGfx.lineTo(poly[i].x, poly[i].y);
         }
         tokenGfx.lineTo(poly[0].x, poly[0].y);
-        
-        tokenGfx.fill({ color: 0xffffff });
+        tokenGfx.fill({ color: 0xffffff, alpha: 1.0 });
       }
     });
   }
@@ -201,32 +199,30 @@ export function renderFogOfWar(
          }
       }
     } else {
-      // 'hide' ops act purely as invisible walls that block light. 
-      // They do NOT paint explicit black areas on top of tokens (so tokens inside them can illuminate them).
-      // However, we draw a very faint stroke on the erase layer so players see a subtle outline of the wall.
-      const maskGfx = getGfx('erase');
-      if (op.type === 'circle') {
-        const geom = op.geom as FogGeomCircle;
-        maskGfx.circle(geom.x, geom.y, geom.r);
-      } else if (op.type === 'square') {
-        const geom = op.geom as FogGeomSquare;
-        maskGfx.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
-      } else if (op.type === 'polygon' || op.type === 'path') {
-        const geom = op.geom as any;
-        if (geom.points && geom.points.length > 0) {
-          maskGfx.moveTo(geom.points[0].x, geom.points[0].y);
-          for (let i = 1; i < geom.points.length; i++) maskGfx.lineTo(geom.points[i].x, geom.points[i].y);
-          if (op.type === 'polygon') maskGfx.lineTo(geom.points[0].x, geom.points[0].y);
-        }
-      }
-      maskGfx.stroke({ color: 0xffffff, width: 2, alpha: 0.15 });
-
+      // 'hide' ops agem puramente como paredes que bloqueiam a passagem de raios de luz (Raycasting)
+      // Linhas de parede desenhadas apenas para o Mestre
       if (gmGfx) {
-        if (op.type === 'path') {
-          gmGfx.stroke({ color: 0x475569, alpha: 0.8, width: 2, cap: 'round', join: 'round' });
-        } else {
-          gmGfx.stroke({ width: 2, color: 0x475569, alpha: 0.8 });
+        if (op.type === 'circle') {
+          const geom = op.geom as FogGeomCircle;
+          gmGfx.circle(geom.x, geom.y, geom.r);
+        } else if (op.type === 'square') {
+          const geom = op.geom as FogGeomSquare;
+          gmGfx.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
+        } else if (op.type === 'polygon') {
+          const geom = op.geom as FogGeomPolygon;
+          if (geom.points && geom.points.length > 2) {
+            gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
+            for (let i = 1; i < geom.points.length; i++) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
+            gmGfx.lineTo(geom.points[0].x, geom.points[0].y);
+          }
+        } else if (op.type === 'path') {
+          const geom = op.geom as any;
+          if (geom.points && geom.points.length > 1) {
+            gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
+            for (let i = 1; i < geom.points.length; i++) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
+          }
         }
+        gmGfx.stroke({ width: 2, color: 0xef4444, alpha: 0.6 });
       }
     }
   });

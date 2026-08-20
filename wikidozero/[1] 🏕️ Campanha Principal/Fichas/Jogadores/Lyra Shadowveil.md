@@ -23,7 +23,7 @@ defesa: 16
 velocidade: 14
 ataque: 14
 status: jogador
-imagem: https://i.ibb.co/gMNLNwnN/678e26cca200.jpg
+imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Shadowveil_1787239382477.webp
 usos_cura: 3
 status_efeitos: []
 saqueado: false
@@ -89,7 +89,15 @@ magias_preparadas:
     max: 0
 macros: []
 showName: true
+visionRadius: 200
+hasVision: true
+avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Shadowveil_1787239382477.webp
+imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Shadowveil_1787239382477.webp
 ---
+
+
+
+
 
 # Lyra Shadowveil 🌙
 

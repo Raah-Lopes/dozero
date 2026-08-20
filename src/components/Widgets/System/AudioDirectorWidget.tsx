@@ -319,6 +319,7 @@ export const AudioDirectorWidget: React.FC<{ onClose: () => void }> = ({ onClose
       height={windowHeight}
       onClose={onClose}
       variant="glass"
+      dragAnywhere={false}
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#e5e5e5', overflow: 'hidden', background: '#0a0a0a' }}>
 

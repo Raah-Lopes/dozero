@@ -258,61 +258,144 @@ export const MapSettingsPanel: React.FC = () => {
       )}
 
       {activeTab === 'grid' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
           
-          <details className="glass-accordion" open>
-            <summary><div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><Grid size={16} /> Configurações do Grid</div></summary>
-            <div className="accordion-content">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Tipo Geométrico</span>
-                <select 
-                  value={mapConfig.gridType} 
-                  onChange={e => Config.updateMap({ gridType: e.target.value as MapConfig['gridType'] })}
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.8rem', width:'100%' }}
+          {/* 1. GEOMETRIA DO GRID */}
+          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+              📐 Geometria do Grid
+            </span>
+            <select 
+              value={mapConfig.gridType} 
+              onChange={e => Config.updateMap({ gridType: e.target.value as MapConfig['gridType'] })}
+              style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '6px', fontSize: '0.85rem', width:'100%' }}
+            >
+              <option value="square">Quadrados (Padrão D&D / Pathfinder)</option>
+              <option value="hex_v">Hexágonos (Verticais)</option>
+              <option value="hex_h">Hexágonos (Horizontais)</option>
+              <option value="dots_square">Pontos (Grade de Pontos)</option>
+              <option value="dots_hex">Pontos (Grade Hexagonal)</option>
+            </select>
+          </div>
+
+          {/* 2. TAMANHO E PRESETS RÁPIDOS */}
+          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                📏 Dimensões da Célula
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#93c5fd', fontWeight: 'bold' }}>{mapConfig.gridSize}px</span>
+            </div>
+            
+            <input 
+              type="range" min="20" max="200" step="5" value={mapConfig.gridSize} 
+              onChange={e => Config.setGridSize(parseInt(e.target.value))}
+              style={{ width: '100%', marginBottom: '8px' }}
+            />
+
+            {/* Presets Rápidos */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[
+                { label: '50px', size: 50 },
+                { label: '70px (VTT)', size: 70 },
+                { label: '100px', size: 100 },
+                { label: '140px', size: 140 },
+              ].map(preset => (
+                <button
+                  key={preset.size}
+                  type="button"
+                  onClick={() => Config.setGridSize(preset.size)}
+                  style={{
+                    flex: 1, padding: '4px 6px', fontSize: '0.7rem', borderRadius: '4px',
+                    border: mapConfig.gridSize === preset.size ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
+                    background: mapConfig.gridSize === preset.size ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.05)',
+                    color: mapConfig.gridSize === preset.size ? '#38bdf8' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
                 >
-                  <option value="square">Quadrados</option>
-                  <option value="hex_v">Hexágonos (Verticais)</option>
-                  <option value="hex_h">Hexágonos (Horizontais)</option>
-                  <option value="dots_square">Pontos (Quadrado)</option>
-                  <option value="dots_hex">Pontos (Hexagonal)</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Tamanho ({mapConfig.gridSize}px)</span>
-                <input 
-                  type="range" min="20" max="200" step="10" value={mapConfig.gridSize} 
-                  onChange={e => Config.setGridSize(parseInt(e.target.value))}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor das Linhas</span>
-                  <input 
-                    type="color" value={mapConfig.gridColor} 
-                    onChange={e => Config.setGridColor(e.target.value)}
-                    style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. ESTILIZAÇÃO VISUAL & CORES */}
+          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>
+              🎨 Estilização Visual
+            </span>
+
+            {/* Cores pré-definidas */}
+            <div style={{ marginBottom: '10px' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Cores Rápidas de Linha</span>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {['#ffffff', '#06b6d4', '#f59e0b', '#ef4444', '#1e293b', '#64748b'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    title={c}
+                    onClick={() => Config.setGridColor(c)}
+                    style={{
+                      width: '24px', height: '24px', borderRadius: '50%', background: c,
+                      border: mapConfig.gridColor.toLowerCase() === c.toLowerCase() ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.3)',
+                      cursor: 'pointer',
+                      boxShadow: mapConfig.gridColor.toLowerCase() === c.toLowerCase() ? '0 0 8px rgba(56,189,248,0.6)' : 'none'
+                    }}
                   />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Cor de Fundo da Mesa</span>
-                  <input 
-                    type="color" value={mapConfig.mapBackgroundColor || '#000000'} 
-                    onChange={e => Config.setMapBackground(e.target.value)}
-                    style={{ width: '100%', height: '30px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Opacidade do Grid ({Math.round(mapConfig.gridAlpha * 100)}%)</span>
+                ))}
                 <input 
-                  type="range" min="0" max="1" step="0.1" value={mapConfig.gridAlpha} 
-                  onChange={e => Config.setGridAlpha(parseFloat(e.target.value))}
-                  style={{ width: '100%' }}
+                  type="color" value={mapConfig.gridColor} 
+                  onChange={e => Config.setGridColor(e.target.value)}
+                  title="Cor personalizada de linha"
+                  style={{ width: '28px', height: '28px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: '4px', marginLeft: 'auto' }}
                 />
               </div>
             </div>
-          </details>
+
+            {/* Cor de fundo e Opacidade */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginTop: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Fundo da Mesa</span>
+                <input 
+                  type="color" value={mapConfig.mapBackgroundColor || '#000000'} 
+                  onChange={e => Config.setMapBackground(e.target.value)}
+                  style={{ width: '100%', height: '28px', padding: '0', border: '1px solid var(--glass-border)', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Opacidade</span>
+                  <span style={{ fontSize: '0.7rem', color: '#93c5fd', fontWeight: 'bold' }}>{Math.round(mapConfig.gridAlpha * 100)}%</span>
+                </div>
+                <input 
+                  type="range" min="0" max="1" step="0.05" value={mapConfig.gridAlpha} 
+                  onChange={e => Config.setGridAlpha(parseFloat(e.target.value))}
+                  style={{ width: '100%', marginTop: '4px' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 4. NÉVOA DE GUERRA (FOW) */}
+          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                🌫️ Névoa de Guerra
+              </span>
+              <button
+                type="button"
+                onClick={() => Config.setFogEnabled(!fogConfig.enabled)}
+                style={{
+                  padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                  background: fogConfig.enabled ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+                  border: fogConfig.enabled ? '1px solid #10b981' : '1px solid #ef4444',
+                  color: fogConfig.enabled ? 'var(--success)' : 'var(--danger)'
+                }}
+              >
+                {fogConfig.enabled ? 'Ativada 👁' : 'Desativada 🚫'}
+              </button>
+            </div>
+          </div>
 
         </div>
       )}

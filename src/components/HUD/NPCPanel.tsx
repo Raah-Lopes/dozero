@@ -1217,7 +1217,30 @@ export const NPCPanel: React.FC = () => {
                           </button>
 
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Nome do Token</label>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Nome do Token</label>
+                              <button
+                                onClick={() => {
+                                  useWindowManager.getState().setEditingTokenId(t.id);
+                                  useWindowManager.getState().setActiveModal('tokenConfig');
+                                }}
+                                style={{
+                                  background: 'rgba(168, 85, 247, 0.2)',
+                                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                                  borderRadius: '4px',
+                                  color: '#f0abfc',
+                                  fontSize: '0.6rem',
+                                  padding: '1px 5px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '2px'
+                                }}
+                                title="Abrir painel completo de configuração do token"
+                              >
+                                ⚙️ Painel Completo
+                              </button>
+                            </div>
                             <input
                               type="text"
                               value={t.name || ''}
@@ -1250,6 +1273,7 @@ export const NPCPanel: React.FC = () => {
                               <option value="circle">Círculo</option>
                               <option value="square">Quadrado</option>
                               <option value="hexagon">Hexágono</option>
+                              <option value="figure">Boneco (Transparente)</option>
                               <option value="standee">Standee (Silhueta)</option>
                             </select>
                           </div>
@@ -1366,23 +1390,10 @@ export const NPCPanel: React.FC = () => {
                                 value={t.visionRadius || 200}
                                 onChange={(e) => handleUpdateTokenProp(t, 'visionRadius', parseInt(e.target.value) || 200)}
                                 style={{
-                                  width: '40px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                  width: '46px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
                                   borderRadius: '4px', color: 'white', padding: '1px 2px', fontSize: '0.65rem'
                                 }}
                               />
-                              <select
-                                value={t.visionStyle || 'gradient'}
-                                onChange={(e) => Tokens.update(t.id, { visionStyle: e.target.value })}
-                                style={{
-                                  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                  borderRadius: '4px', color: 'white', padding: '1px 2px', fontSize: '0.65rem',
-                                  outline: 'none', cursor: 'pointer'
-                                }}
-                                title="Estilo da luz na Névoa"
-                              >
-                                <option value="solid">Luz Sólida</option>
-                                <option value="gradient">Luz Suave</option>
-                              </select>
                             </label>
                           )}
                         </div>

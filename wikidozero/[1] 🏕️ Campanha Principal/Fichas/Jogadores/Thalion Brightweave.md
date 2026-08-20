@@ -67,7 +67,9 @@ magias_preparadas:
     max: 0
 poderes: []
 macros: []
+sizeScale: 1
 ---
+
 # Thalion Brightweave ✨
 
 > *"A magia não é poder. É responsabilidade que queima por dentro."*

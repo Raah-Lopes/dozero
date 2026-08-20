@@ -30,6 +30,13 @@ if (customWsServer) {
   } catch (error) {
     console.warn("WebSocket Provider falhou em iniciar", error);
   }
+} else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  try {
+    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    websocketProvider = new WebsocketProvider(`${wsProto}//${window.location.host}/yjs`, roomName, doc);
+  } catch (error) {
+    console.warn("Local WebSocket Provider falhou em iniciar", error);
+  }
 }
 export const wsProvider = websocketProvider;
 
@@ -38,11 +45,15 @@ export const wsProvider = websocketProvider;
 // =========================================================================
 let webrtcProvider: WebrtcProvider | any = null;
 try {
+  const signalingServers = ['wss://dozero.onrender.com'];
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    signalingServers.unshift(`${wsProto}//${window.location.host}/yjs`);
+  }
+
   webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
-    signaling: [
-      'wss://dozero.onrender.com'
-    ]
+    signaling: signalingServers
   });
 } catch (error) {
   console.warn("WebRTC Provider falhou em iniciar", error);
@@ -109,7 +120,7 @@ export function disconnectProvider() {
   provider.disconnect();
 }
 
-// Initialize mock state ONLY if the database is truly empty after loading
+// Initialize mock state ONLY on first-ever room initialization
 indexeddbProvider.on('synced', () => {
   // Inicializa mapa de combate se vazio
   if (!state.combat.has('isActive')) {
@@ -122,8 +133,14 @@ indexeddbProvider.on('synced', () => {
   if (state.tokens.has('goblin_boss')) state.tokens.delete('goblin_boss');
   if (state.tokens.has('omega_sentinel')) state.tokens.delete('omega_sentinel');
 
-  // Se a mesa for novinha em folha, cria no MÁXIMO 2 personagens de exemplo (1 Herói + 1 Inimigo)
-  if (state.tokens.size === 0) {
+  const seedKey = `dozero_seeded_${roomName}`;
+  const isAlreadySeeded = state.roomSettings.get('is_seeded') === true || localStorage.getItem(seedKey) === 'true';
+
+  // Se a mesa for novinha em folha E nunca foi criada antes
+  if (!isAlreadySeeded && state.tokens.size === 0) {
+    state.roomSettings.set('is_seeded', true);
+    try { localStorage.setItem(seedKey, 'true'); } catch (e) {}
+
     const heroId = `token_exemplo_heroi`;
     state.tokens.set(heroId, {
       id: heroId,
@@ -155,6 +172,9 @@ indexeddbProvider.on('synced', () => {
       showName: true,
       imageUrl: ''
     });
+  } else if (!isAlreadySeeded && state.tokens.size > 0) {
+    state.roomSettings.set('is_seeded', true);
+    try { localStorage.setItem(seedKey, 'true'); } catch (e) {}
   }
 
   if (!state.world.has('factions')) {

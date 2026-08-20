@@ -7,6 +7,8 @@ import { setupWikiInterceptor } from './services/wiki/wikiInterceptor';
 import * as Sentry from "@sentry/react";
 import { reportWebVitals } from './services/analytics';
 
+import { ErrorBoundary } from './components/UI/ErrorBoundary';
+
 if (import.meta.env.PROD) {
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -20,7 +22,9 @@ setupWikiInterceptor();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary componentName="Aplicação Principal">
+      <App />
+    </ErrorBoundary>
   </StrictMode>
 )
 

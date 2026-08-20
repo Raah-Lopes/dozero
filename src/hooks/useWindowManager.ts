@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { startTransition } from 'react';
 
 export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain';
-export type ModalMode = 'none' | 'players' | 'lobby' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager';
+export type ModalMode = 'none' | 'players' | 'lobby' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager' | 'tokenConfig';
 export type InteractionTool = 'CURSOR' | 'FOG' | 'RULER' | 'MEASURE';
 
 interface WindowManagerState {
@@ -39,6 +39,8 @@ interface WindowManagerState {
   setWikiInitialFile: (file: string | null) => void;
   editingClockId: string | null;
   setEditingClockId: (id: string | null) => void;
+  editingTokenId: string | null;
+  setEditingTokenId: (id: string | null) => void;
 }
 
 let openWindowsTimeout: ReturnType<typeof setTimeout>;
@@ -72,7 +74,13 @@ export const useWindowManager = create<WindowManagerState>((set) => ({
     set({ openWindows: {} });
   },
 
-  viewMode: (localStorage.getItem('dozero_viewMode') as ViewMode) || 'canvas',
+  viewMode: (() => {
+    const urlView = new URLSearchParams(window.location.search).get('view') as ViewMode;
+    if (urlView && ['canvas', 'wiki', 'theater', 'brain'].includes(urlView)) {
+      return urlView;
+    }
+    return (localStorage.getItem('dozero_viewMode') as ViewMode) || 'canvas';
+  })(),
   setViewMode: (mode) => {
     localStorage.setItem('dozero_viewMode', mode);
     startTransition(() => {
@@ -107,4 +115,7 @@ export const useWindowManager = create<WindowManagerState>((set) => ({
 
   editingClockId: null,
   setEditingClockId: (id) => set({ editingClockId: id }),
+
+  editingTokenId: null,
+  setEditingTokenId: (id) => set({ editingTokenId: id }),
 }));
