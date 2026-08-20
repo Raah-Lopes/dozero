@@ -22,6 +22,8 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
+let isAuthInitialized = false;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
@@ -36,28 +38,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setProfileModalOpen: (open) => set({ isProfileModalOpen: open }),
   setResetPasswordModalOpen: (open) => set({ isResetPasswordModalOpen: open }),
   initialize: async () => {
+    if (isAuthInitialized) return;
+    isAuthInitialized = true;
+
     if (!isSupabaseConfigured) {
       set({ loading: false });
       return;
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      set({ session, user: session?.user ?? null, loading: false });
-
+      // 1. Escuta mudanças de auth em tempo real
       supabase.auth.onAuthStateChange((event, session) => {
         set({ session, user: session?.user ?? null, loading: false });
-        if (event === 'SIGNED_IN') {
-          const target = typeof window !== 'undefined' ? sessionStorage.getItem('dozero_auth_redirect_target') : null;
-          if (target && target !== window.location.href) {
-            sessionStorage.removeItem('dozero_auth_redirect_target');
-            window.location.href = target;
-          }
-        }
         if (event === 'PASSWORD_RECOVERY') {
           set({ isResetPasswordModalOpen: true });
         }
       });
+
+      // 2. Obtém a sessão inicial
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        set({ session, user: session.user ?? null, loading: false });
+      } else {
+        set({ loading: false });
+      }
     } catch (err) {
       console.error('Erro ao inicializar Supabase Auth:', err);
       set({ loading: false });
