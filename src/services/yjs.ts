@@ -45,15 +45,17 @@ export const wsProvider = websocketProvider;
 // =========================================================================
 let webrtcProvider: WebrtcProvider | any = null;
 try {
-  const signalingServers = [
-    'wss://signaling.yjs.dev',
-    'wss://y-webrtc-signaling-eu.herokuapp.com',
-    'wss://y-webrtc-signaling-us.herokuapp.com'
-  ];
+  // Conecta sinalização WebRTC customizada se fornecida via URL ou fallback seguro
+  const customSignaling = urlParams.get('signaling');
+  const signalingServers: string[] = [];
+  if (customSignaling) {
+    signalingServers.push(customSignaling);
+  }
 
   webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
-    signaling: signalingServers
+    signaling: signalingServers,
+    filterBcConns: false // Permite broadcast channel entre abas locais
   });
 } catch (error) {
   console.warn("WebRTC Provider falhou em iniciar", error);
