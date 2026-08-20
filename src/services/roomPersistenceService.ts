@@ -281,12 +281,16 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
       // Bucket pode não ter sido criado ainda
     }
 
-    // 2.2 Tenta salvar na tabela 'campaigns' do Supabase
+    // 2.2 Salva ou atualiza na tabela 'campaigns' do Supabase
     try {
-      const { error: tblErr } = await supabase.from('campaigns').update({
+      const { error: tblErr } = await supabase.from('campaigns').upsert({
+        id: roomCode,
+        name: roomCode,
+        system: 'Custom VTT',
+        room_code: roomCode,
         updated_at: new Date().toISOString(),
         snapshot: bundle
-      }).eq('room_code', roomCode);
+      }, { onConflict: 'room_code' });
 
       if (!tblErr) {
         cloudSaved = true;
