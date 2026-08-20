@@ -52,14 +52,10 @@ export const AuthModal: React.FC = () => {
     setSocialLoading(provider);
 
     try {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('dozero_auth_redirect_target', window.location.href);
-      }
-      const redirectUrl = `${window.location.origin}/vtt.html`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: window.location.origin,
         },
       });
 
