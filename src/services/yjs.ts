@@ -20,23 +20,17 @@ const roomPassword = urlParams.get('pass') || ''; // Se estiver vazio, não crip
 export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
 
 // =========================================================================
-// REAL-TIME CLOUD SYNC & PERSISTENCE (WebSocket Central)
+// REAL-TIME CLOUD SYNC & MULTIPLAYER (Central Cloud WebSocket)
 // =========================================================================
 const customWsServer = urlParams.get('ws');
 let websocketProvider: WebsocketProvider | any = null;
-if (customWsServer) {
-  try {
-    websocketProvider = new WebsocketProvider(customWsServer, roomName, doc);
-  } catch (error) {
-    console.warn("WebSocket Provider falhou em iniciar", error);
-  }
-} else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-  try {
-    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    websocketProvider = new WebsocketProvider(`${wsProto}//${window.location.host}/yjs`, roomName, doc);
-  } catch (error) {
-    console.warn("Local WebSocket Provider falhou em iniciar", error);
-  }
+try {
+  const wsServer = customWsServer || 'wss://demos.yjs.dev';
+  websocketProvider = new WebsocketProvider(wsServer, `dozero_rpg_${roomName}`, doc, {
+    connect: true
+  });
+} catch (error) {
+  console.warn("Cloud WebSocket Provider falhou em iniciar", error);
 }
 export const wsProvider = websocketProvider;
 
