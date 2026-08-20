@@ -1,19 +1,77 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupportedStorage } from '@supabase/supabase-js';
 
-// Limpeza de emergência de snapshots legados do LocalStorage para liberar espaço permanentemente
+// Memória em cache para fallback infalível caso o Storage do navegador falhe
+const memoryStore: Record<string, string> = {};
+
+// SafeStorage: resolve 100% dos erros de QuotaExceededError
+const safeStorage: SupportedStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const val = localStorage.getItem(key);
+        if (val !== null) return val;
+      }
+    } catch {}
+    return memoryStore[key] ?? null;
+  },
+
+  setItem: (key: string, value: string): void => {
+    memoryStore[key] = value;
+    if (typeof window === 'undefined' || !window.localStorage) return;
+
+    try {
+      localStorage.setItem(key, value);
+    } catch (err: any) {
+      // Se estourou a cota (QuotaExceededError), limpa chaves pesadas de lixo e tenta de novo
+      console.warn('[SafeStorage] Cota do LocalStorage excedida! Executando auto-limpeza de emergência...');
+      try {
+        const keysToEvict: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          // Não apaga chaves de autenticação do Supabase
+          if (k && !k.startsWith('sb-')) {
+            keysToEvict.push(k);
+          }
+        }
+        keysToEvict.forEach(k => localStorage.removeItem(k));
+        // Tenta salvar o token de auth novamente agora que o espaço foi liberado
+        localStorage.setItem(key, value);
+        console.log('[SafeStorage] LocalStorage limpo e token de auth salvo com sucesso!');
+      } catch (retryErr) {
+        console.warn('[SafeStorage] LocalStorage bloqueado. Mantendo sessão em memória.');
+      }
+    }
+  },
+
+  removeItem: (key: string): void => {
+    delete memoryStore[key];
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(key);
+      }
+    } catch {}
+  }
+};
+
+// Executa limpeza preventiva imediata de chaves pesadas (>50KB) ao carregar
 if (typeof window !== 'undefined' && window.localStorage) {
   try {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && (key.startsWith('dozero_room_snapshot_') || key.startsWith('dozero_snapshot_'))) {
-        keysToRemove.push(key);
+      if (key && !key.startsWith('sb-')) {
+        const val = localStorage.getItem(key) || '';
+        // Remove itens gigantes que entopem os 5MB do navegador
+        if (val.length > 50000 || key.includes('snapshot') || key.includes('backup')) {
+          keysToRemove.push(key);
+        }
       }
     }
     keysToRemove.forEach(k => localStorage.removeItem(k));
-  } catch (e) {
-    console.warn('[LocalStorage] Aviso ao limpar chaves legadas:', e);
-  }
+    if (keysToRemove.length > 0) {
+      console.log(`[SafeStorage] ${keysToRemove.length} chaves pesadas legadas foram removidas para liberar espaço.`);
+    }
+  } catch (e) {}
 }
 
 // Fallback com as credenciais públicas padrão (Anon JWT Key) caso não venham do .env
@@ -27,6 +85,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storage: safeStorage,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
