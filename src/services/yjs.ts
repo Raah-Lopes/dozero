@@ -45,11 +45,11 @@ export const wsProvider = websocketProvider;
 // =========================================================================
 let webrtcProvider: WebrtcProvider | any = null;
 try {
-  const signalingServers = ['wss://dozero.onrender.com'];
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    signalingServers.unshift(`${wsProto}//${window.location.host}/yjs`);
-  }
+  const signalingServers = [
+    'wss://signaling.yjs.dev',
+    'wss://y-webrtc-signaling-eu.herokuapp.com',
+    'wss://y-webrtc-signaling-us.herokuapp.com'
+  ];
 
   webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
@@ -135,12 +135,13 @@ indexeddbProvider.on('synced', () => {
 
   const seedKey = `dozero_seeded_${roomName}`;
   const isAlreadySeeded = state.roomSettings.get('is_seeded') === true || localStorage.getItem(seedKey) === 'true';
+  const isDefaultRoom = roomName === 'dozero-mesa-principal-v2';
 
   // Tenta restaurar da nuvem primeiro se o estado local estiver vazio
   if (state.tokens.size === 0 && state.backgrounds.size === 0) {
     import('./roomPersistenceService').then(({ loadRoomSnapshotFromCloud }) => {
       loadRoomSnapshotFromCloud(roomName).then((restored) => {
-        if (!restored && !isAlreadySeeded && state.tokens.size === 0) {
+        if (!restored && isDefaultRoom && !isAlreadySeeded && state.tokens.size === 0) {
           state.roomSettings.set('is_seeded', true);
           try { localStorage.setItem(seedKey, 'true'); } catch (e) {}
 
