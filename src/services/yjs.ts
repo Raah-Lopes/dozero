@@ -136,41 +136,47 @@ indexeddbProvider.on('synced', () => {
   const seedKey = `dozero_seeded_${roomName}`;
   const isAlreadySeeded = state.roomSettings.get('is_seeded') === true || localStorage.getItem(seedKey) === 'true';
 
-  // Se a mesa for novinha em folha E nunca foi criada antes
-  if (!isAlreadySeeded && state.tokens.size === 0) {
-    state.roomSettings.set('is_seeded', true);
-    try { localStorage.setItem(seedKey, 'true'); } catch (e) {}
+  // Tenta restaurar da nuvem primeiro se o estado local estiver vazio
+  if (state.tokens.size === 0 && state.backgrounds.size === 0) {
+    import('./roomPersistenceService').then(({ loadRoomSnapshotFromCloud }) => {
+      loadRoomSnapshotFromCloud(roomName).then((restored) => {
+        if (!restored && !isAlreadySeeded && state.tokens.size === 0) {
+          state.roomSettings.set('is_seeded', true);
+          try { localStorage.setItem(seedKey, 'true'); } catch (e) {}
 
-    const heroId = `token_exemplo_heroi`;
-    state.tokens.set(heroId, {
-      id: heroId,
-      name: 'Herói Exemplo',
-      hp: 20,
-      maxHp: 20,
-      ca: 15,
-      x: 450,
-      y: 350,
-      isPlayer: true,
-      tokenShape: 'circle',
-      borderColor: '#3b82f6',
-      showName: true,
-      imageUrl: ''
-    });
+          const heroId = `token_exemplo_heroi`;
+          state.tokens.set(heroId, {
+            id: heroId,
+            name: 'Herói Exemplo',
+            hp: 20,
+            maxHp: 20,
+            ca: 15,
+            x: 450,
+            y: 350,
+            isPlayer: true,
+            tokenShape: 'circle',
+            borderColor: '#3b82f6',
+            showName: true,
+            imageUrl: ''
+          });
 
-    const enemyId = `token_exemplo_inimigo`;
-    state.tokens.set(enemyId, {
-      id: enemyId,
-      name: 'Inimigo Exemplo',
-      hp: 10,
-      maxHp: 10,
-      ca: 12,
-      x: 650,
-      y: 350,
-      isPlayer: false,
-      tokenShape: 'circle',
-      borderColor: '#ef4444',
-      showName: true,
-      imageUrl: ''
+          const enemyId = `token_exemplo_inimigo`;
+          state.tokens.set(enemyId, {
+            id: enemyId,
+            name: 'Inimigo Exemplo',
+            hp: 10,
+            maxHp: 10,
+            ca: 12,
+            x: 650,
+            y: 350,
+            isPlayer: false,
+            tokenShape: 'circle',
+            borderColor: '#ef4444',
+            showName: true,
+            imageUrl: ''
+          });
+        }
+      });
     });
   } else if (!isAlreadySeeded && state.tokens.size > 0) {
     state.roomSettings.set('is_seeded', true);

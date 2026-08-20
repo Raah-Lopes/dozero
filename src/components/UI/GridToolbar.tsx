@@ -9,10 +9,12 @@ import {
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
   Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan, X,
-  Wrench, RefreshCcw, Lasso, Paintbrush
+  Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from './Tooltip';
+import { exportRoomToFile, importRoomFromFile, saveRoomSnapshotToCloud } from '../../services/roomPersistenceService';
+import { toast } from './Toast';
 
 // ============================================================================
 // DESIGN TOKENS — single source of truth for the toolbar palette
@@ -145,7 +147,9 @@ export const GridToolbar: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1257);
   const [showMapToolsMenu, setShowMapToolsMenu] = useState(false);
+  const [isSavingCloud, setIsSavingCloud] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const backupFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 1257);
@@ -299,6 +303,24 @@ export const GridToolbar: React.FC = () => {
     e.target.value = '';
   };
 
+  const handleBackupUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await importRoomFromFile(file);
+    e.target.value = '';
+  };
+
+  const handleCloudSave = async () => {
+    setIsSavingCloud(true);
+    const ok = await saveRoomSnapshotToCloud();
+    setIsSavingCloud(false);
+    if (ok) {
+      toast.success('Mesa salva na nuvem com sucesso! Sincronizada para o Vercel.');
+    } else {
+      toast.error('Falha ao salvar na nuvem.');
+    }
+  };
+
   // Build tools array
   let tools = [
     { id: 'select', icon: MousePointer2 },
@@ -358,6 +380,13 @@ export const GridToolbar: React.FC = () => {
         accept=".png,.jpg,.jpeg,.webp,.gif,.svg,image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
         style={{ display: 'none' }}
         onChange={handleImageUpload}
+      />
+      <input
+        type="file"
+        ref={backupFileInputRef}
+        accept=".json,.vtt"
+        style={{ display: 'none' }}
+        onChange={handleBackupUpload}
       />
 
       {/* FLOATING INTEGRATED CONFIG MENU (Mapas, Grid & FOW, Objetos) */}
@@ -523,6 +552,83 @@ export const GridToolbar: React.FC = () => {
                   ))}
                 </div>
               )}
+
+              {/* SEÇÃO: PERSISTÊNCIA & BACKUP DA MESA */}
+              <div style={{ marginTop: '8px', paddingTop: '10px', borderTop: `1px solid rgba(255,255,255,0.1)`, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', color: C.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ☁️ Persistência & Backup da Mesa
+                </span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <Tooltip label="Salvar Mesa na Nuvem" description="Sincroniza tokens, mapas e desenhos com o Supabase/Vercel">
+                    <button
+                      type="button"
+                      disabled={isSavingCloud}
+                      onClick={handleCloudSave}
+                      style={{
+                        flex: 1,
+                        background: isSavingCloud ? 'rgba(14,165,233,0.3)' : C.accentBg,
+                        border: `1px solid ${C.accentBrd}`,
+                        color: C.accent,
+                        borderRadius: '8px',
+                        padding: '6px 8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: isSavingCloud ? 'wait' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <CloudUpload size={14} /> {isSavingCloud ? 'Salvando...' : 'Salvar Nuvem'}
+                    </button>
+                  </Tooltip>
+                  <Tooltip label="Exportar Backup (.vtt)" description="Baixe o arquivo completo com todos os dados da sala">
+                    <button
+                      type="button"
+                      onClick={() => exportRoomToFile()}
+                      style={{
+                        background: C.surfItem,
+                        border: `1px solid ${C.surfBrd}`,
+                        color: C.textSec,
+                        borderRadius: '8px',
+                        padding: '6px 8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <Download size={13} /> Exportar
+                    </button>
+                  </Tooltip>
+                  <Tooltip label="Restaurar Backup (.vtt)" description="Carregue um arquivo .vtt.json para esta mesa">
+                    <button
+                      type="button"
+                      onClick={() => backupFileInputRef.current?.click()}
+                      style={{
+                        background: C.surfItem,
+                        border: `1px solid ${C.surfBrd}`,
+                        color: C.textSec,
+                        borderRadius: '8px',
+                        padding: '6px 8px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <Upload size={13} /> Restaurar
+                    </button>
+                  </Tooltip>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1329,6 +1435,29 @@ export const GridToolbar: React.FC = () => {
                     }}
                   >
                     <ImageIcon size={13} /> Imagem
+                  </button>
+                </Tooltip>
+
+                <Tooltip label="Salvar Mesa na Nuvem" description="Sincroniza para o Vercel e outros navegadores" position="top">
+                  <button
+                    disabled={isSavingCloud}
+                    onClick={handleCloudSave}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      padding: '6px 8px',
+                      borderRadius: '8px',
+                      background: isSavingCloud ? 'rgba(14,165,233,0.3)' : C.accentBg,
+                      border: `1px solid ${C.accentBrd}`,
+                      color: C.accent,
+                      cursor: isSavingCloud ? 'wait' : 'pointer',
+                      fontSize: '11px',
+                      fontWeight: 600
+                    }}
+                  >
+                    <CloudUpload size={13} /> {isSavingCloud ? '...' : 'Salvar'}
                   </button>
                 </Tooltip>
 
