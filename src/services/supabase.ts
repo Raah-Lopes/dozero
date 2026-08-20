@@ -41,9 +41,9 @@ const indexedDBStorage: SupportedStorage = {
   }
 };
 
-// Fallback com as credenciais públicas padrão (Publishable Anon Key) caso não venham do .env
+// Fallback com as credenciais públicas padrão (Anon JWT Key) caso não venham do .env
 const defaultUrl = 'https://pgyvtcgpaqzqqwwawixf.supabase.co';
-const defaultKey = 'sb_publishable_JtxS6nfk5GuGshVxLgQPIQ__uuUrGbq';
+const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBneXZ0Y2dwYXF6cXF3d2F3aXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMDUyNzQsImV4cCI6MjEwMjU4MTI3NH0.yp_srt5UOBUt2HM6NU-BqYM4zqIoeZqS6XSN26qmrMo';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || defaultUrl;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || defaultKey;
