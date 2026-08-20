@@ -41,11 +41,13 @@ if (customWsServer) {
 export const wsProvider = websocketProvider;
 
 // =========================================================================
-// REAL-TIME REMOTE MULTIPLAYER (WebRTC P2P Fallback)
+// REAL-TIME REMOTE MULTIPLAYER (Supabase Realtime Broadcast & WebRTC)
 // =========================================================================
+import { SupabaseRealtimeProvider } from './supabaseRealtimeProvider';
+export const supabaseRealtime = new SupabaseRealtimeProvider(roomName, doc);
+
 let webrtcProvider: WebrtcProvider | any = null;
 try {
-  // Conecta sinalização WebRTC customizada se fornecida via URL ou fallback seguro
   const customSignaling = urlParams.get('signaling');
   const signalingServers: string[] = [];
   if (customSignaling) {
@@ -55,7 +57,7 @@ try {
   webrtcProvider = new WebrtcProvider(roomName, doc, {
     password: roomPassword || undefined,
     signaling: signalingServers,
-    filterBcConns: false // Permite broadcast channel entre abas locais
+    filterBcConns: false
   });
 } catch (error) {
   console.warn("WebRTC Provider falhou em iniciar", error);
