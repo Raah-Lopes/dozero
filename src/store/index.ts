@@ -6,7 +6,7 @@ export * from './combat';
 export * from './clocks';
 export * from './map';
 export * from './theater';
-export * from './campaign';
+export * from './questLog';
 export * from './wiki';
 export * from './world';
 export * from './mapTexts';

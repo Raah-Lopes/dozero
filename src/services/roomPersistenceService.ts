@@ -266,6 +266,8 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
 
     // 2.1 Tenta salvar no Supabase Storage bucket 'room-backups'
     try {
+      const fileName = `snapshots/${roomCode}.json`;
+      const jsonBlob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
       const { error: storageErr } = await supabase.storage
         .from('room-backups')
         .upload(fileName, jsonBlob, {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, Copy, Check, Users, Database } from 'lucide-react';
 import { RoomManagerWidget } from '../Widgets/System/RoomManagerWidget';
+import { getVercelRoomUrl, getCurrentRoomCode } from '../../utils/roomUrl';
 
 interface InviteModalProps {
   onClose: () => void;
@@ -93,15 +94,21 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                 Link direto hospedado na nuvem. Funciona em qualquer celular, tablet ou PC de amigos sem precisar de Wi-Fi compartilhado.
               </p>
 
+            {(() => {
+              const roomCode = getCurrentRoomCode();
+              const passCode = new URLSearchParams(window.location.search).get('pass') || undefined;
+              const vercelUrl = getVercelRoomUrl(roomCode, passCode);
+              return (
+              <>
               <div style={{ display: 'flex', justifyContent: 'center', background: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                <QRCodeSVG value={`https://dozero-vert.vercel.app/vtt.html${window.location.search}`} size={150} />
+                <QRCodeSVG value={vercelUrl} size={150} />
               </div>
 
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input readOnly value={`https://dozero-vert.vercel.app/vtt.html${window.location.search}`} style={{ flex: 1, padding: '0.5rem', background: 'rgba(0,0,0,0.5)', border: '1px solid #c49a6c', color: '#c49a6c', borderRadius: '4px', fontSize: '0.82rem', fontFamily: 'monospace' }} />
+                <input readOnly value={vercelUrl} style={{ flex: 1, padding: '0.5rem', background: 'rgba(0,0,0,0.5)', border: '1px solid #c49a6c', color: '#c49a6c', borderRadius: '4px', fontSize: '0.82rem', fontFamily: 'monospace' }} />
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText(`https://dozero-vert.vercel.app/vtt.html${window.location.search}`);
+                    navigator.clipboard.writeText(vercelUrl);
                     setCopiedLink(true);
                     setTimeout(() => setCopiedLink(false), 2000);
                   }} 
@@ -111,6 +118,9 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                   {copiedLink ? 'Copiado' : 'Copiar'}
                 </button>
               </div>
+              </>
+              );
+            })()}
             </div>
 
             {/* LAN SECTION */}

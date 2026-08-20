@@ -17,6 +17,7 @@ import {
   CampaignCloudRecord 
 } from '../../services/campaignCloudService';
 import { toast } from '../UI/Toast';
+import { navigateToRoom, getRoomUrl } from '../../utils/roomUrl';
 
 // ─── inline style helpers ───────────────────────────────────────────────────
 const S = {
@@ -174,7 +175,7 @@ export function LandingPage() {
         setPromptRoom(camp); setEnteredPass(''); return;
       }
     }
-    window.location.href = `/?room=${encodeURIComponent(camp.room_code)}`;
+    navigateToRoom(camp.room_code);
   };
 
   const handleConfirmPasswordJoin = (e: React.FormEvent) => {
@@ -183,7 +184,7 @@ export function LandingPage() {
     if (enteredPass.trim() === promptRoom.pass_code?.trim()) {
       const target = promptRoom.room_code;
       setPromptRoom(null);
-      window.location.href = `/?room=${encodeURIComponent(target)}`;
+      navigateToRoom(target);
     } else {
       toast.error('Senha incorreta!');
     }
@@ -191,7 +192,7 @@ export function LandingPage() {
 
   const handleCopyLink = (camp: CampaignCloudRecord, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(`${window.location.origin}/?room=${camp.room_code}`);
+    navigator.clipboard.writeText(getRoomUrl(camp.room_code));
     setCopiedId(camp.id);
     toast.success('Link copiado!');
     setTimeout(() => setCopiedId(null), 2500);

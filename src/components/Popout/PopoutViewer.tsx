@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { WidgetLayer } from '../HUD/WidgetLayer';
-import { connectProvider } from '../../services/yjs';
 
 // Import specific standalones that aren't in WidgetLayer
 import { ChatWindow } from '../Chat/ChatWindow';
@@ -17,8 +16,7 @@ interface PopoutViewerProps {
 
 export const PopoutViewer: React.FC<PopoutViewerProps> = ({ widgetId }) => {
   useEffect(() => {
-    // Ensure Yjs is connected so data flows perfectly
-    connectProvider();
+    // ponytail: wsProvider auto-connects, no manual call needed
     
     // Set a global class on body for any specific CSS overrides needed in popout mode
     document.body.classList.add('is-popout');

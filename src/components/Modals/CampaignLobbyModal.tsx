@@ -28,6 +28,7 @@ import { getCampaigns, createOrUpdateCampaign, deleteCampaignCloud, CampaignClou
 import { updateWikiConfig } from '../../store/wiki';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { toast } from '../UI/Toast';
+import { navigateToRoom, getVercelRoomUrl, getRoomUrl } from '../../utils/roomUrl';
 
 interface Props {
   isOpen: boolean;
@@ -156,8 +157,7 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   const handleCopyInvite = (camp: CampaignCloudRecord, e: React.MouseEvent, type: 'vercel' | 'local' = 'vercel') => {
     e.stopPropagation();
-    const domain = type === 'vercel' ? 'https://dozero-vert.vercel.app' : window.location.origin;
-    const url = `${domain}/vtt.html?room=${camp.room_code}${camp.pass_code ? `&pass=${encodeURIComponent(camp.pass_code)}` : ''}`;
+    const url = type === 'vercel' ? getVercelRoomUrl(camp.room_code, camp.pass_code || undefined) : getRoomUrl(camp.room_code, camp.pass_code || undefined);
     navigator.clipboard.writeText(url);
     setCopiedId(`${camp.id}_${type}`);
     toast.success(type === 'vercel' ? 'Link Vercel da mesa copiado (Para jogadores na Web)!' : 'Link Local copiado!');
@@ -176,8 +176,7 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
       WikiIndexer.clearCache();
     }
 
-    const url = `/vtt.html?room=${camp.room_code}${camp.pass_code ? `&pass=${encodeURIComponent(camp.pass_code)}` : ''}`;
-    window.location.href = url;
+    navigateToRoom(camp.room_code, camp.pass_code || undefined);
   };
 
   const filteredCampaigns = campaigns.filter(c => 

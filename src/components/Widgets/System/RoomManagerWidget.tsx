@@ -7,6 +7,7 @@ import { getWikiConfig, updateWikiConfig } from '../../../store/wiki';
 import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 import { createOrUpdateCampaign, getCampaigns, CampaignCloudRecord } from '../../../services/campaignCloudService';
 import { useAuthStore } from '../../../store/authStore';
+import { navigateToRoom, getVercelRoomUrl, getRoomUrl } from '../../../utils/roomUrl';
 
 interface RoomManagerWidgetProps {
   onClose?: () => void;
@@ -115,8 +116,8 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
     }
   };
 
-  const vercelLink = `https://dozero-vert.vercel.app/vtt.html?room=${currentRoom}${currentPass ? `&pass=${encodeURIComponent(currentPass)}` : ''}`;
-  const localLink = `${window.location.origin}/vtt.html?room=${currentRoom}${currentPass ? `&pass=${encodeURIComponent(currentPass)}` : ''}`;
+  const vercelLink = getVercelRoomUrl(currentRoom, currentPass || undefined);
+  const localLink = getRoomUrl(currentRoom, currentPass || undefined);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(vercelLink)}`;
 
   const handleCopy = (type: 'vercel' | 'local' = 'vercel') => {
@@ -130,11 +131,8 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
   const handleCreateRoom = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRoom.trim()) return;
-    const params = new URLSearchParams();
-    params.set('room', newRoom.trim());
-    if (newPass.trim()) params.set('pass', newPass.trim());
     toast.info(`Trocando de sala: ${newRoom.trim()}...`);
-    window.location.href = `/vtt.html?${params.toString()}`;
+    navigateToRoom(newRoom.trim(), newPass.trim() || undefined);
   };
 
   const handleRandomRoom = () => {
@@ -375,7 +373,7 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
                   {r !== currentRoom && (
                     <button 
                       className="btn-icon theme-blue" 
-                      onClick={() => window.location.href = `/vtt.html?room=${r}`}
+                      onClick={() => navigateToRoom(r)}
                       title="Entrar nesta sala"
                       style={{ padding: '6px' }}
                     >

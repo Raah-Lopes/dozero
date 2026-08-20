@@ -1,5 +1,4 @@
 import * as Y from 'yjs';
-import { WebrtcProvider } from 'y-webrtc';
 import { WebsocketProvider } from 'y-websocket';
 import { IndexeddbPersistence } from 'y-indexeddb';
 
@@ -12,7 +11,6 @@ export const doc = new Y.Doc();
 const urlParams = new URLSearchParams(window.location.search);
 // Default unique room to prevent global collisions on public signaling servers
 const roomName = urlParams.get('room') || 'dozero-mesa-principal-v2';
-const roomPassword = urlParams.get('pass') || ''; // Se estiver vazio, não criptografa
 
 // =========================================================================
 // OFFLINE STORAGE (INDEXEDDB)
@@ -33,30 +31,7 @@ try {
   console.warn("Cloud WebSocket Provider falhou em iniciar", error);
 }
 export const wsProvider = websocketProvider;
-
-// =========================================================================
-// REAL-TIME REMOTE MULTIPLAYER (Supabase Realtime Broadcast & WebRTC)
-// =========================================================================
-import { SupabaseRealtimeProvider } from './supabaseRealtimeProvider';
-export const supabaseRealtime = new SupabaseRealtimeProvider(roomName, doc);
-
-let webrtcProvider: WebrtcProvider | any = null;
-try {
-  const customSignaling = urlParams.get('signaling');
-  const signalingServers: string[] = [];
-  if (customSignaling) {
-    signalingServers.push(customSignaling);
-  }
-
-  webrtcProvider = new WebrtcProvider(roomName, doc, {
-    password: roomPassword || undefined,
-    signaling: signalingServers,
-    filterBcConns: false
-  });
-} catch (error) {
-  console.warn("WebRTC Provider falhou em iniciar", error);
-}
-export const provider = webrtcProvider;
+// ponytail: wss://demos.yjs.dev is a free public Yjs demo server; upgrade to self-hosted y-websocket on Fly.io/Railway when >10 concurrent players
 
 export const state = {
   tokens: doc.getMap('tokens'),
@@ -108,14 +83,6 @@ if (typeof window !== 'undefined') {
   window.addEventListener('canvas-redo', () => {
     undoManager.redo();
   });
-}
-
-export function connectProvider() {
-  provider.connect();
-}
-
-export function disconnectProvider() {
-  provider.disconnect();
 }
 
 // Initialize mock state ONLY on first-ever room initialization
