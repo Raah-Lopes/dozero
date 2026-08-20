@@ -8,7 +8,8 @@ import type { BackgroundData, MapConfig } from '../../store';
 import { 
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
-  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan, X
+  Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan, X,
+  Wrench, RefreshCcw, Lasso, Paintbrush
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from './Tooltip';
@@ -42,16 +43,21 @@ const C = {
 // TOOL DESCRIPTIONS — used for rich tooltips
 // ============================================================================
 const TOOL_META: Record<string, { label: string; desc: string; shortcut?: string }> = {
-  select:      { label: 'Selecionar',         desc: 'Selecione e mova tokens e objetos', shortcut: 'V ou 1' },
-  pan:         { label: 'Mão',                desc: 'Arraste para navegar pelo mapa',     shortcut: 'Espaço ou 2' },
-  pen:         { label: 'Caneta',             desc: 'Desenhe linhas livres no mapa',      shortcut: 'P ou 3' },
-  shape:       { label: 'Formas',             desc: 'Crie retângulos, círculos e triângulos', shortcut: 'R ou 4' },
-  arrow:       { label: 'Seta Tática',        desc: 'Desenhe setas para indicar direções', shortcut: 'A ou 5' },
-  text:        { label: 'Texto',              desc: 'Insira textos e anotações no mapa',  shortcut: 'T ou 6' },
-  ruler:       { label: 'Régua',              desc: 'Meça distâncias entre dois pontos',  shortcut: '7' },
-  eraser:      { label: 'Borracha',           desc: 'Apague desenhos clicando neles',     shortcut: '8' },
-  fog_brush:   { label: 'Névoa (Pincel)',     desc: 'Revele ou esconda áreas da névoa' },
-  fog_polygon: { label: 'Névoa (Polígono)',   desc: 'Crie áreas poligonais de névoa' },
+  select:       { label: 'Selecionar',            desc: 'Selecione e mova tokens e objetos', shortcut: 'V ou 1' },
+  pan:          { label: 'Mão',                   desc: 'Arraste para navegar pelo mapa',     shortcut: 'Espaço ou 2' },
+  pen:          { label: 'Caneta',                desc: 'Desenhe linhas livres no mapa',      shortcut: 'P ou 3' },
+  shape:        { label: 'Formas',                desc: 'Crie retângulos, círculos e triângulos', shortcut: 'R ou 4' },
+  arrow:        { label: 'Seta Tática',           desc: 'Desenhe setas para indicar direções', shortcut: 'A ou 5' },
+  text:         { label: 'Texto',                 desc: 'Insira textos e anotações no mapa',  shortcut: 'T ou 6' },
+  ruler:        { label: 'Régua',                 desc: 'Meça distâncias entre dois pontos',  shortcut: '7' },
+  eraser:       { label: 'Borracha',              desc: 'Apague desenhos clicando neles',     shortcut: '8' },
+  fog_brush:    { label: 'Névoa (Pincel)',        desc: 'Desenhe à mão livre para revelar ou esconder névoa' },
+  fog_rect:     { label: 'Névoa (Retângulo)',     desc: 'Revele ou esconda salas retangulares' },
+  fog_circle:   { label: 'Névoa (Círculo)',       desc: 'Revele ou esconda áreas circulares' },
+  fog_triangle: { label: 'Névoa (Cone)',          desc: 'Revele ou esconda cones de visão ou iluminação' },
+  fog_polygon:  { label: 'Névoa (Polígono)',      desc: 'Crie áreas poligonais ponto a ponto' },
+  fog_lasso:    { label: 'Névoa (Laço Livre)',    desc: 'Contorne grandes áreas de névoa livremente' },
+  fog_erase:    { label: 'Névoa (Borracha)',      desc: 'Apague formas individuais desenhadas na névoa' },
 };
 
 // ============================================================================
@@ -138,7 +144,7 @@ export const GridToolbar: React.FC = () => {
   const [selectedBatch, setSelectedBatch] = useState<Set<string>>(new Set());
   const [isVisible, setIsVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1257);
-  const [showDrawTools, setShowDrawTools] = useState(false);
+  const [showMapToolsMenu, setShowMapToolsMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -148,10 +154,11 @@ export const GridToolbar: React.FC = () => {
     const handleTool = () => {
       setActiveToolState(localState.activeTool);
       setFogModeState(localState.fogMode);
-      if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
+      if (['pen', 'shape', 'arrow', 'text', 'eraser', 'fog_brush', 'fog_polygon', 'fog_rect', 'fog_circle', 'fog_triangle', 'fog_lasso', 'fog_erase'].includes(localState.activeTool)) {
         setShowStyleInspector(true);
-        setShowLayersMenu(true);
-        setShowDrawTools(true);
+        if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
+          setShowLayersMenu(true);
+        }
       } else {
         setShowStyleInspector(false);
         setShowLayersMenu(false);
@@ -235,6 +242,7 @@ export const GridToolbar: React.FC = () => {
     window.addEventListener('toggle-config-menu', handleToggleConfig);
     window.addEventListener('toggle-layers-menu', handleToggleLayers);
     window.addEventListener('trigger-image-upload', handleImageUploadTrigger);
+    window.addEventListener('config-changed', handleMapConfig);
 
     handleMapConfig();
     handleBgs();
@@ -255,6 +263,7 @@ export const GridToolbar: React.FC = () => {
       window.removeEventListener('toggle-config-menu', handleToggleConfig);
       window.removeEventListener('toggle-layers-menu', handleToggleLayers);
       window.removeEventListener('trigger-image-upload', handleImageUploadTrigger);
+      window.removeEventListener('config-changed', handleMapConfig);
     };
   }, []);
 
@@ -1012,52 +1021,341 @@ export const GridToolbar: React.FC = () => {
         boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
         pointerEvents: 'auto'
       }}>
-        {/* Drawing Tools Toggle */}
+        {/* Ferramentas do Mapa & Desenho */}
         <div style={{ position: 'relative' }}>
-          <Tooltip label={showDrawTools ? 'Fechar Desenho' : 'Ferramentas de Desenho'} description="Caneta, formas, texto e mais" shortcut="P">
+          <Tooltip 
+            label={showMapToolsMenu ? 'Fechar Ferramentas' : 'Ferramentas do Mapa'} 
+            description="Desenho, Névoa de Guerra (FOW), Camadas e Ações" 
+            position="top"
+          >
             <button
-              className={`tldraw-tool-btn${showDrawTools || !['select','pan'].includes(activeTool) ? ' active' : ''}`}
-              onClick={() => setShowDrawTools(v => !v)}
+              className={`tldraw-tool-btn${showMapToolsMenu || !['select','pan'].includes(activeTool) ? ' active' : ''}`}
+              onClick={() => setShowMapToolsMenu(v => !v)}
             >
-              <Pen size={18} color={showDrawTools || !['select','pan'].includes(activeTool) ? C.accent : C.textSec} />
+              <Wrench size={18} color={showMapToolsMenu || !['select','pan'].includes(activeTool) ? C.accent : C.textSec} />
             </button>
           </Tooltip>
 
-        {/* Drawing Tools (collapsible, floating above) */}
-        {showDrawTools && (
-          <div style={{
-            position: 'absolute',
-            bottom: 'calc(100% + 12px)',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            padding: '4px',
-            background: 'rgba(20, 20, 25, 0.95)',
-            backdropFilter: 'blur(24px)',
-            border: `1px solid rgba(255,255,255,0.1)`,
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-          }}>
-            {tools.filter(t => t.id !== 'select' && t.id !== 'pan').map(tool => {
-              const Icon = tool.icon;
-              const meta = TOOL_META[tool.id] || { label: tool.id, desc: '' };
-              const isActive = activeTool === tool.id;
-              return (
-                <Tooltip key={tool.id} label={meta.label} description={meta.desc} shortcut={meta.shortcut} position="right">
+          {/* Menu Flutuante de Ferramentas do Mapa */}
+          {showMapToolsMenu && (
+            <div 
+              style={{
+                position: 'absolute',
+                bottom: 'calc(100% + 12px)',
+                left: isMobile ? '-20px' : '50%',
+                transform: isMobile ? 'none' : 'translateX(-50%)',
+                width: isMobile ? '280px' : '310px',
+                background: C.surfBg,
+                backdropFilter: 'blur(24px)',
+                border: `1px solid rgba(255,255,255,0.15)`,
+                borderRadius: '16px',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.75)',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                zIndex: 1000,
+                pointerEvents: 'auto'
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header do Menu */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: C.textPri, display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.03em' }}>
+                  <Wrench size={14} color={C.accent} /> Ferramentas do Mapa
+                </span>
+                <button
+                  onClick={() => setShowMapToolsMenu(false)}
+                  style={{ background: 'transparent', border: 'none', color: C.textMut, cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', borderRadius: '4px' }}
+                  title="Fechar"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {/* 1. SEÇÃO DE NÉVOA DE GUERRA (FOG OF WAR) */}
+              <div style={{ 
+                background: C.surfItem, 
+                border: `1px solid ${mapConfig.fogOfWar ? C.accentBrd : C.surfBrd}`, 
+                borderRadius: '10px', 
+                padding: '8px 10px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '8px',
+                transition: 'border-color 0.2s ease'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <CloudFog size={16} color={mapConfig.fogOfWar ? C.accent : C.textMut} />
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: mapConfig.fogOfWar ? C.textPri : C.textSec }}>
+                      Névoa de Guerra
+                    </span>
+                  </div>
+                  
+                  {/* Toggle switch para FOW */}
                   <button
-                    className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
-                    onClick={() => setActiveTool(tool.id as any)}
+                    onClick={() => {
+                      const nextState = !mapConfig.fogOfWar;
+                      updateMapConfig({ fogOfWar: nextState });
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '3px 9px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      background: mapConfig.fogOfWar ? C.accentBg : 'rgba(255,255,255,0.05)',
+                      border: mapConfig.fogOfWar ? `1px solid ${C.accent}` : '1px solid rgba(255,255,255,0.1)',
+                      color: mapConfig.fogOfWar ? C.accent : C.textDim,
+                    }}
+                    title={mapConfig.fogOfWar ? 'Clique para desativar a névoa' : 'Clique para ativar a névoa'}
                   >
-                    <Icon size={18} color={isActive ? C.accent : C.textSec} />
+                    {mapConfig.fogOfWar ? (
+                      <>
+                        <Eye size={12} /> Ativada
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff size={12} /> Desativada
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Se a névoa estiver ativa, mostra as ferramentas e opções da névoa */}
+                {mapConfig.fogOfWar && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    {/* Modo Revelar/Esconder + Ações */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                      <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
+                        <button
+                          type="button"
+                          onClick={() => setFogMode('reveal')}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            padding: '3px 6px',
+                            height: '26px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            background: fogMode === 'reveal' ? C.successBg : 'transparent',
+                            border: fogMode === 'reveal' ? `1px solid ${C.successBrd}` : '1px solid rgba(255,255,255,0.08)',
+                            color: fogMode === 'reveal' ? C.success : C.textDim
+                          }}
+                        >
+                          <Eye size={12} /> Revelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFogMode('hide')}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            padding: '3px 6px',
+                            height: '26px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            background: fogMode === 'hide' ? C.dangerBg : 'transparent',
+                            border: fogMode === 'hide' ? `1px solid ${C.dangerBrd}` : '1px solid rgba(255,255,255,0.08)',
+                            color: fogMode === 'hide' ? C.danger : C.textDim
+                          }}
+                        >
+                          <EyeOff size={12} /> Esconder
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        <Tooltip label="Desfazer Névoa" description="Desfaz a última alteração na névoa" position="bottom">
+                          <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new CustomEvent('canvas-undo'))}
+                            style={{ background: 'transparent', border: 'none', color: C.textMut, cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
+                          >
+                            <Undo2 size={13} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Refazer Névoa" description="Refaz a alteração desfeita" position="bottom">
+                          <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new CustomEvent('canvas-redo'))}
+                            style={{ background: 'transparent', border: 'none', color: C.textMut, cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
+                          >
+                            <Redo2 size={13} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Resetar Névoa" description="Preenche o mapa com névoa novamente" position="bottom">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Deseja resetar toda a névoa do mapa (preencher com escuridão)?')) {
+                                clearFogOps();
+                              }
+                            }}
+                            style={{ background: 'transparent', border: 'none', color: C.warn, cursor: 'pointer', padding: '4px', borderRadius: '4px' }}
+                          >
+                            <RefreshCcw size={13} />
+                          </button>
+                        </Tooltip>
+                      </div>
+                    </div>
+
+                    {/* Ferramentas de Desenho na Névoa (Formas & Pincel) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+                      {[
+                        { id: 'fog_brush', icon: Paintbrush, label: 'Pincel de Névoa' },
+                        { id: 'fog_rect', icon: Square, label: 'Retângulo' },
+                        { id: 'fog_circle', icon: Circle, label: 'Círculo' },
+                        { id: 'fog_triangle', icon: Triangle, label: 'Cone / Triângulo' },
+                        { id: 'fog_polygon', icon: Hexagon, label: 'Polígono' },
+                        { id: 'fog_lasso', icon: Lasso, label: 'Laço Livre' },
+                        { id: 'fog_erase', icon: Eraser, label: 'Borracha FOG' },
+                      ].map(tool => {
+                        const Icon = tool.icon;
+                        const meta = TOOL_META[tool.id] || { label: tool.label, desc: '' };
+                        const isActive = activeTool === tool.id;
+                        return (
+                          <Tooltip key={tool.id} label={meta.label} description={meta.desc} position="bottom">
+                            <button
+                              type="button"
+                              className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
+                              style={{ width: '100%', height: '28px', borderRadius: '6px' }}
+                              onClick={() => setActiveTool(tool.id as any)}
+                            >
+                              <Icon size={14} color={isActive ? C.accent : C.textSec} />
+                            </button>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. SEÇÃO DE FERRAMENTAS DE DESENHO */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: C.textMut, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Ferramentas de Desenho
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+                  {[
+                    { id: 'pen', icon: Pen, label: 'Caneta', shortcut: 'P' },
+                    { id: 'shape', icon: Square, label: 'Formas', shortcut: 'R' },
+                    { id: 'arrow', icon: ArrowRight, label: 'Seta Tática', shortcut: 'A' },
+                    { id: 'text', icon: Type, label: 'Texto', shortcut: 'T' },
+                    { id: 'ruler', icon: Ruler, label: 'Régua', shortcut: '7' },
+                    { id: 'eraser', icon: Eraser, label: 'Borracha', shortcut: '8' },
+                  ].map(tool => {
+                    const Icon = tool.icon;
+                    const meta = TOOL_META[tool.id] || { label: tool.label, desc: '' };
+                    const isActive = activeTool === tool.id;
+                    return (
+                      <Tooltip key={tool.id} label={meta.label} description={meta.desc} shortcut={meta.shortcut || tool.shortcut} position="top">
+                        <button
+                          className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
+                          style={{ width: '100%', height: '34px' }}
+                          onClick={() => {
+                            setActiveTool(tool.id as any);
+                          }}
+                        >
+                          <Icon size={16} color={isActive ? C.accent : C.textSec} />
+                        </button>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. ATALHOS / UTILIDADES (Camadas, Imagem, Configuração) */}
+              <div style={{ display: 'flex', gap: '6px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <Tooltip label="Camadas de Desenho" description="Gerenciar camadas, visibilidade e travas" position="top">
+                  <button
+                    onClick={() => {
+                      setShowLayersMenu(v => {
+                        if (!v) setIsLayersMinimized(false);
+                        return !v;
+                      });
+                    }}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '6px',
+                      borderRadius: '8px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      background: showLayersMenu ? C.accentBg : C.surfItem,
+                      border: showLayersMenu ? `1px solid ${C.accentBrd}` : `1px solid ${C.surfBrd}`,
+                      color: showLayersMenu ? C.accent : C.textSec,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Layers size={13} /> Camadas
                   </button>
                 </Tooltip>
-              );
-            })}
-          </div>
-        )}
 
+                <Tooltip label="Adicionar Imagem" description="Inserir imagem no canvas como desenho" position="top">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      padding: '6px',
+                      borderRadius: '8px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      background: C.surfItem,
+                      border: `1px solid ${C.surfBrd}`,
+                      color: C.textSec,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <ImageIcon size={13} /> Imagem
+                  </button>
+                </Tooltip>
+
+                <Tooltip label="Configurações do Mapa" description="Grade, mapas de fundo e objetos" position="top">
+                  <button
+                    onClick={() => {
+                      setShowConfigMenu(v => !v);
+                      setShowMapToolsMenu(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '6px 8px',
+                      borderRadius: '8px',
+                      background: showConfigMenu ? C.accentBg : C.surfItem,
+                      border: showConfigMenu ? `1px solid ${C.accentBrd}` : `1px solid ${C.surfBrd}`,
+                      color: showConfigMenu ? C.accent : C.textSec,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Settings size={13} />
+                  </button>
+                </Tooltip>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Divider */}

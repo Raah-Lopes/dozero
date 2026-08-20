@@ -25,7 +25,7 @@ ataque: 35
 status: inimigo
 usos_cura: 3
 saqueado: false
-ativo: true
+ativo: false
 status_efeitos: []
 imagem: https://i.ibb.co/9kFGjkvY/d493fb50475f.jpg
 inventario: []
@@ -93,6 +93,7 @@ inCombat: false
 hpBarMode: always
 borderColor: '#672ed1'
 ---
+
 
 
 

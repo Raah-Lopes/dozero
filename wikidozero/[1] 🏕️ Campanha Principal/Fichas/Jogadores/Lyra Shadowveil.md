@@ -27,7 +27,7 @@ imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Sha
 usos_cura: 3
 status_efeitos: []
 saqueado: false
-ativo: false
+ativo: true
 inventario:
   - id: pocao_1
     nome: Poção de Vida P
@@ -93,7 +93,11 @@ visionRadius: 200
 hasVision: true
 avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Shadowveil_1787239382477.webp
 imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Shadowveil_1787239382477.webp
+titulo: Lyra Shadowveil
+title: Lyra Shadowveil
 ---
+
+
 
 
 
