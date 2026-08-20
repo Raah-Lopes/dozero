@@ -261,9 +261,8 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
   }
 
   try {
-    let cloudSaved = false;
-    const jsonBlob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
-    const fileName = `snapshots/${roomCode}.json`;
+    let storageSaved = false;
+    let tableSaved = false;
 
     // 2.1 Tenta salvar no Supabase Storage bucket 'room-backups'
     try {
@@ -275,10 +274,13 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
         });
 
       if (!storageErr) {
-        cloudSaved = true;
+        storageSaved = true;
+        console.log('[RoomPersistence] Snapshot salvo no Supabase Storage!');
+      } else {
+        console.warn('[RoomPersistence] Storage bucket aviso:', storageErr.message);
       }
-    } catch (sErr) {
-      // Bucket pode não ter sido criado ainda
+    } catch (sErr: any) {
+      console.warn('[RoomPersistence] Storage exceção:', sErr.message);
     }
 
     // 2.2 Salva ou atualiza na tabela 'campaigns' do Supabase
@@ -293,16 +295,23 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
       }, { onConflict: 'room_code' });
 
       if (!tblErr) {
-        cloudSaved = true;
+        tableSaved = true;
+        console.log('[RoomPersistence] Snapshot salvo na tabela campaigns do Supabase!');
+      } else {
+        console.warn('[RoomPersistence] Campaigns table aviso:', tblErr.message);
       }
-    } catch (tblErr) {
-      // Tabela opcional
+    } catch (tblErr: any) {
+      console.warn('[RoomPersistence] Campaigns exceção:', tblErr.message);
+    }
+
+    if (!storageSaved && !tableSaved) {
+      console.warn('[RoomPersistence] A nuvem do Supabase não aceitou o snapshot (RLS ou tabela inexistente). Use Exportar/Restaurar para transferir entre máquinas.');
     }
 
     return true;
   } catch (err) {
-    console.warn('[RoomPersistence] Erro ao sincronizar nuvem:', err);
-    return true; // IndexedDB local já salvou com sucesso
+    console.warn('[RoomPersistence] Erro geral ao sincronizar nuvem:', err);
+    return true;
   }
 }
 
