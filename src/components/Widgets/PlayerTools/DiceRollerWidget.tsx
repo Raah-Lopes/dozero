@@ -313,10 +313,10 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
       <div className="panel-neon-red" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         
         {/* HEADER: Tema */}
-        <div className="drag-handle" style={{ padding: '0.6rem 1rem', background: 'linear-gradient(135deg, #13101f, #0a0a14)', borderBottom: `1px solid ${colors.primary}30`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="drag-handle" style={{ padding: '0.6rem 1rem', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="text-gold" style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>🎲 Rolador DOZERO</span>
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.65rem', color: '#666' }}>Tema:</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Tema:</span>
             {(['purple', 'crimson', 'gold'] as DiceTheme[]).map(t => (
               <button key={t} onClick={() => setTheme(t)} style={{
                 width: '16px', height: '16px', borderRadius: '50%',
@@ -325,7 +325,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 cursor: 'pointer'
               }} />
             ))}
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', color: '#888', cursor: 'pointer', marginLeft: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.65rem', color: 'var(--text-secondary)', cursor: 'pointer', marginLeft: '0.5rem' }}>
                 <input type="checkbox" checked={sendToChat} onChange={e => {
                    setSendToChat(e.target.checked);
                    localStorage.setItem('diceSendToChat', String(e.target.checked));
@@ -336,11 +336,11 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         </div>
 
         {/* SELETOR DE DADOS */}
-        <div style={{ padding: '0.75rem 1rem', borderBottom: `1px solid #1a1a2e` }}>
-          <div style={{ fontSize: '0.65rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--glass-border)' }}>
+          <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Adicionar Dados à Pilha</span>
             {poolEntries.length > 0 && (
-              <button onClick={clearPool} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: '0.65rem', cursor: 'pointer', textDecoration: 'underline' }}>
+              <button onClick={clearPool} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', fontSize: '0.65rem', cursor: 'pointer', textDecoration: 'underline' }}>
                 Limpar Pilha
               </button>
             )}
@@ -354,12 +354,12 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   onContextMenu={(e) => handleDieRemove(e, d)}
                   style={{
                     position: 'relative',
-                    background: qty > 0 ? `linear-gradient(135deg, ${colors.primary}40, ${colors.primary}20)` : 'rgba(255,255,255,0.03)',
-                    border: `1.5px solid ${qty > 0 ? colors.primary : '#2a2a3e'}`,
+                    background: qty > 0 ? `linear-gradient(135deg, ${colors.primary}40, ${colors.primary}20)` : 'var(--bg-tertiary)',
+                    border: `1.5px solid ${qty > 0 ? colors.primary : 'var(--glass-border)'}`,
                     borderRadius: '8px',
                     padding: '0.4rem',
                     cursor: 'pointer',
-                    color: qty > 0 ? colors.text : '#666',
+                    color: qty > 0 ? colors.text : 'var(--text-secondary)',
                     boxShadow: qty > 0 ? `0 0 10px ${colors.glow}` : 'none',
                   }}>
                   {qty > 0 && (
@@ -367,31 +367,31 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                       {qty}
                     </div>
                   )}
-                  <DieIcon sides={d} size={28} color={qty > 0 ? colors.primary : '#444'} />
+                  <DieIcon sides={d} size={28} color={qty > 0 ? colors.primary : 'var(--text-secondary)'} />
                   <div style={{ fontSize: '0.55rem', textAlign: 'center', marginTop: '2px', fontWeight: 700 }}>D{d}</div>
                 </button>
               );
             })}
           </div>
-          <div style={{ fontSize: '0.55rem', color: '#555', textAlign: 'center', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.55rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.5rem' }}>
             Clique para adicionar • Botão direito para remover
           </div>
         </div>
 
         {/* MODIFICADOR E EXPRESSÃO */}
-        <div style={{ padding: '0.6rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid #1a1a2e', justifyContent: 'center' }}>
+        <div style={{ padding: '0.6rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', justifyContent: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-            <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Modificador</div>
+            <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Modificador</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button onClick={() => setModifier(m => m - 1)} style={{ background: '#1a1a2e', border: `1px solid #2a2a3e`, color: '#aaa', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: modifier === 0 ? '#555' : modifier > 0 ? '#6ee7b7' : '#fca5a5', minWidth: '3ch', textAlign: 'center' }}>
+              <button onClick={() => setModifier(m => m - 1)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: modifier === 0 ? 'var(--text-secondary)' : modifier > 0 ? 'var(--success)' : 'var(--danger)', minWidth: '3ch', textAlign: 'center' }}>
                 {modifier > 0 ? `+${modifier}` : modifier}
               </span>
-              <button onClick={() => setModifier(m => m + 1)} style={{ background: '#1a1a2e', border: `1px solid #2a2a3e`, color: '#aaa', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+              <button onClick={() => setModifier(m => m + 1)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
             </div>
           </div>
           <div style={{ textAlign: 'center', flex: 1 }}>
-            <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Expressão Total</div>
+            <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Expressão Total</div>
             <span style={{ fontSize: '0.9rem', fontWeight: 700, color: colors.text }}>
               {diceExpression || 'Vazio'}
             </span>
@@ -482,10 +482,10 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         )}
 
         {/* MACROS */}
-        <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid #1a1a2e' }}>
+        <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase' }}>Macros de Atalho</div>
-            <button onClick={() => setShowMacroEditor(!showMacroEditor)} style={{ background: 'none', border: `1px solid #2a2a3e`, color: '#666', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.6rem' }}>
+            <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', letterSpacing: '1px', textTransform: 'uppercase' }}>Macros de Atalho</div>
+            <button onClick={() => setShowMacroEditor(!showMacroEditor)} style={{ background: 'none', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.6rem' }}>
               {showMacroEditor ? '✕ Cancelar' : '+ Novo'}
             </button>
           </div>
@@ -496,7 +496,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 value={newMacroLabel}
                 onChange={e => setNewMacroLabel(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addMacro()}
-                style={{ flex: 1, background: '#111', border: '1px solid #2a2a3e', borderRadius: '4px', color: 'var(--text-primary)', padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}
+                style={{ flex: 1, background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-primary)', padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}
               />
               <button onClick={addMacro} style={{ background: colors.primary, border: 'none', borderRadius: '4px', color: 'var(--text-primary)', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.75rem' }}>Salvar</button>
             </div>
@@ -522,7 +522,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 >
                   {macro.label}
                 </button>
-                <button onClick={() => removeMacro(macro.id)} style={{ background: 'none', border: 'none', color: '#333', cursor: 'pointer', fontSize: '0.65rem', padding: '0 2px' }} title="Remover macro">✕</button>
+                <button onClick={() => removeMacro(macro.id)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.65rem', padding: '0 2px' }} title="Remover macro">✕</button>
               </div>
             ))}
           </div>
@@ -530,9 +530,9 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
 
         {/* HISTÓRICO */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.6rem 1rem' }}>
-          <div style={{ fontSize: '0.6rem', color: '#555', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Histórico da Sessão</div>
+          <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Histórico da Sessão</div>
           {history.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#333', fontSize: '0.8rem', paddingTop: '0.5rem' }}>Nenhuma rolagem ainda</div>
+            <div style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', paddingTop: '0.5rem' }}>Nenhuma rolagem ainda</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
               {history.map((h, idx) => (
@@ -540,8 +540,8 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   key={h.id}
                   onClick={() => handleRoll()}
                   style={{
-                    background: idx === 0 ? `${colors.primary}12` : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${idx === 0 ? colors.primary + '30' : '#1a1a2e'}`,
+                    background: idx === 0 ? `${colors.primary}12` : 'var(--bg-secondary)',
+                    border: `1px solid ${idx === 0 ? colors.primary + '30' : 'var(--glass-border)'}`,
                     borderRadius: '6px',
                     padding: '0.35rem 0.7rem',
                     display: 'flex',
@@ -553,10 +553,10 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                   }}
                   title="Clique para re-rolar"
                 >
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: idx === 0 ? colors.text : '#666' }}>{h.dice}</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: idx === 0 ? colors.text : 'var(--text-secondary)' }}>{h.dice}</span>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.65rem', color: '#444' }}>{h.rolls.join(', ')}{h.modifier !== 0 ? ` ${h.modifier > 0 ? '+' : ''}${h.modifier}` : ''}</span>
-                    <span style={{ fontSize: '1rem', fontWeight: 900, color: idx === 0 ? '#fff' : '#888', textShadow: idx === 0 ? `0 0 8px ${colors.primary}` : 'none' }}>{h.total}</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{h.rolls.join(', ')}{h.modifier !== 0 ? ` ${h.modifier > 0 ? '+' : ''}${h.modifier}` : ''}</span>
+                    <span style={{ fontSize: '1rem', fontWeight: 900, color: idx === 0 ? '#fff' : 'var(--text-primary)', textShadow: idx === 0 ? `0 0 8px ${colors.primary}` : 'none' }}>{h.total}</span>
                   </div>
                 </div>
               ))}
