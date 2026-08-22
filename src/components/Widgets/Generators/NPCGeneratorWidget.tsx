@@ -275,7 +275,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
           <select 
             value={filterRaca} 
             onChange={e => setFilterRaca(e.target.value)}
-            style={{ padding: '6px 10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', outline: 'none', fontSize: '0.8rem' }}
+            style={{ padding: '6px 10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', outline: 'none', fontSize: '0.8rem' }}
           >
             <option value="Aleatório">🎲 Raça: Aleatória</option>
             {RACAS_DISPONIVEIS.map(r => (
@@ -286,7 +286,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
           <select 
             value={filterAmeaca} 
             onChange={e => setFilterAmeaca(e.target.value)}
-            style={{ padding: '6px 10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', outline: 'none', fontSize: '0.8rem' }}
+            style={{ padding: '6px 10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', outline: 'none', fontSize: '0.8rem' }}
           >
             <option value="Aleatório">🎲 Ameaça: Aleatória</option>
             <option value="Nv 1 (Aldeão)">Nv 1 (Aldeão)</option>
@@ -304,9 +304,9 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
         disabled={isGenerating}
         style={{ 
           padding: '12px 16px', 
-          background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', 
+          background: 'var(--accent-primary)', 
           color: '#ffffff', 
-          border: '1px solid #4ade80', 
+          border: '1px solid var(--glass-border-highlight)', 
           borderRadius: '8px', 
           cursor: isGenerating ? 'not-allowed' : 'pointer',
           display: 'flex', 
@@ -317,7 +317,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
           fontWeight: 'bold',
           transition: 'all 0.2s',
           transform: isGenerating ? 'scale(0.98)' : 'scale(1)',
-          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.35)',
+          boxShadow: '0 4px 15px var(--accent-glow)',
           flexShrink: 0
         }}
       >
@@ -331,22 +331,22 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
       {/* Visualização Direta do NPC Forjado */}
       {currentNPC ? (
         <div style={{
-          background: 'rgba(0, 0, 0, 0.4)',
-          border: '1px solid rgba(34, 197, 94, 0.35)',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--glass-border)',
           borderRadius: '10px',
           padding: '14px',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          boxShadow: 'inset 0 0 15px rgba(34, 197, 94, 0.08)'
+          boxShadow: 'var(--glass-shadow)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '1.2rem' }}>{currentNPC.racaEmoji}</span>
-              <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#4ade80' }}>{currentNPC.nome}</span>
+              <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--accent-primary)' }}>{currentNPC.nome}</span>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>({currentNPC.racaReal} • {currentNPC.papel})</span>
             </div>
-            <span style={{ fontSize: '0.72rem', background: 'rgba(34, 197, 94, 0.2)', color: '#86efac', padding: '3px 8px', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+            <span style={{ fontSize: '0.72rem', background: 'var(--accent-glow)', color: 'var(--text-primary)', padding: '3px 8px', borderRadius: '12px', border: '1px solid var(--accent-primary)' }}>
               HP: {currentNPC.hp} | {currentNPC.ameaca}
             </span>
           </div>
@@ -359,12 +359,12 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
 
             <div>
               <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>🤝 Disposição & Vibe: </span>
-              <span style={{ color: '#fbbf24' }}>{currentNPC.disposicao}</span>
+              <span style={{ color: 'var(--warning)' }}>{currentNPC.disposicao}</span>
             </div>
 
             <div>
               <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>🧬 Marca Racial & Físico: </span>
-              <span style={{ color: '#c084fc' }}>{currentNPC.marcaRacial}</span> • <span>{currentNPC.fisico}</span>
+              <span style={{ color: 'var(--accent-primary)' }}>{currentNPC.marcaRacial}</span> • <span>{currentNPC.fisico}</span>
             </div>
 
             <div>
@@ -372,9 +372,9 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
               <span style={{ color: 'var(--text-primary)' }}>{currentNPC.estilo} ({currentNPC.psicologico})</span>
             </div>
 
-            <div style={{ marginTop: '4px', padding: '8px 10px', background: 'rgba(239, 68, 68, 0.1)', borderLeft: '3px solid #ef4444', borderRadius: '4px' }}>
-              <div style={{ color: '#fca5a5', fontWeight: 700 }}>🎯 Motivação: <span style={{ color: '#fecaca', fontWeight: 400 }}>{currentNPC.motivacao}</span></div>
-              <div style={{ color: '#fca5a5', fontWeight: 700, marginTop: '2px' }}>🕵️ Segredo: <span style={{ color: '#fecaca', fontWeight: 400 }}>{currentNPC.segredo}</span></div>
+            <div style={{ marginTop: '4px', padding: '8px 10px', background: 'rgba(239, 68, 68, 0.1)', borderLeft: '3px solid var(--danger)', borderRadius: '4px' }}>
+              <div style={{ color: 'var(--danger)', fontWeight: 700 }}>🎯 Motivação: <span style={{ color: 'var(--text-primary)', fontWeight: 400 }}>{currentNPC.motivacao}</span></div>
+              <div style={{ color: 'var(--danger)', fontWeight: 700, marginTop: '2px' }}>🕵️ Segredo: <span style={{ color: 'var(--text-primary)', fontWeight: 400 }}>{currentNPC.segredo}</span></div>
             </div>
           </div>
 
@@ -384,7 +384,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
               onClick={() => (window as any).rollLootForNPC(currentNPC.nome, currentNPC.ameaca)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', background: '#fbbf24', border: 'none',
+                padding: '6px 12px', background: 'var(--warning)', border: 'none',
                 borderRadius: '6px', color: '#000', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 700
               }}
             >
@@ -394,7 +394,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
               onClick={() => shareToChat(currentNPC)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--glass-border)',
+                padding: '6px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
                 borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600
               }}
             >
@@ -404,7 +404,7 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
               onClick={() => saveNPCToWiki(currentNPC)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', background: '#22c55e', border: 'none',
+                padding: '6px 12px', background: 'var(--success)', border: 'none',
                 borderRadius: '6px', color: '#fff', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 700
               }}
             >
@@ -419,17 +419,17 @@ export const NPCGeneratorWidget: React.FC<NPCGeneratorWidgetProps> = ({ onClose,
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'rgba(0, 0, 0, 0.2)',
-          border: '1px dashed rgba(255,255,255,0.1)',
+          background: 'var(--bg-tertiary)',
+          border: '1px dashed var(--glass-border)',
           borderRadius: '10px',
           padding: '24px',
           color: 'var(--text-secondary)',
           textAlign: 'center',
           gap: '8px'
         }}>
-          <UserPlus size={28} color="rgba(255,255,255,0.2)" />
+          <UserPlus size={28} style={{ opacity: 0.4 }} />
           <span style={{ fontSize: '0.85rem' }}>Nenhum NPC sintetizado ainda nesta sessão.</span>
-          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>Escolha os filtros acima e clique em "Forjar Novo NPC".</span>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Escolha os filtros acima e clique em "Forjar Novo NPC".</span>
         </div>
       )}
 

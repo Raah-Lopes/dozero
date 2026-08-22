@@ -518,7 +518,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
     borderRadius: '8px',
     border: 'none',
     background: activeTab === tab ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
-    color: '#fff',
+    color: 'var(--text-primary)',
     cursor: 'pointer',
     fontFamily: 'var(--font-display)',
     fontWeight: 'bold',
@@ -540,10 +540,10 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
       onClose={onClose}
       variant="glass"
     >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0a0914', color: '#e2e8f0', fontFamily: 'var(--font-main)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
         
         {/* TOP TABS */}
-        <div style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid var(--glass-border)' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--glass-border)' }}>
           <button style={getStyleTab('doar')} onClick={() => setActiveTab('doar')}>
             <Gift size={15} /> Doações
           </button>
@@ -565,7 +565,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
             <select 
               value={senderPath} 
               onChange={e => setSenderPath(e.target.value)} 
-              style={{ width: '100%', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', padding: '0.4rem', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', outline: 'none' }}
+              style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.4rem', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
             >
               {personagens.map(p => (
                 <option key={p.caminhoArquivo} value={p.caminhoArquivo}>
@@ -581,7 +581,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
               <select 
                 value={receiverPath} 
                 onChange={e => setReceiverPath(e.target.value)}
-                style={{ width: '100%', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', padding: '0.4rem', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', outline: 'none' }}
+                style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.4rem', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
               >
                 {personagens.filter(p => p.caminhoArquivo !== senderPath).map(p => (
                   <option key={p.caminhoArquivo} value={p.caminhoArquivo}>
@@ -597,7 +597,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
               <select 
                 value={selectedNpcMerchantPath} 
                 onChange={e => setSelectedNpcMerchantPath(e.target.value)}
-                style={{ width: '100%', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', padding: '0.4rem', borderRadius: '6px', color: '#fff', fontSize: '0.8rem', outline: 'none' }}
+                style={{ width: '100%', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.4rem', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
               >
                 <option value="">-- Escolha um NPC Mercador --</option>
                 {personagens.filter(p => p.status === 'npc').map(p => (
@@ -619,19 +619,19 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
               <div className="grid-responsive-2" style={{ gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.3rem' }}>Doar Moedas (PO):</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', padding: '2px 8px' }}>
                     <Coins size={14} color="var(--warning)" />
                     <input 
                       type="number" 
                       value={donateGold}
                       onChange={e => setDonateGold(Math.max(0, parseInt(e.target.value) || 0))}
-                      style={{ border: 'none', background: 'transparent', width: '100%', color: '#fff', padding: '0.4rem', outline: 'none', fontSize: '0.8rem' }}
+                      style={{ border: 'none', background: 'transparent', width: '100%', color: 'var(--text-primary)', padding: '0.4rem', outline: 'none', fontSize: '0.8rem' }}
                     />
                   </div>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', marginBottom: '0.3rem', color: 'var(--accent-primary)' }}>💎 Doar Gemas Astrais:</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(192,132,252,0.3)', borderRadius: '6px', padding: '2px 8px', boxShadow: 'inset 0 0 5px rgba(192,132,252,0.1)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'var(--bg-secondary)', border: '1px solid rgba(192,132,252,0.3)', borderRadius: '6px', padding: '2px 8px', boxShadow: 'inset 0 0 5px rgba(192,132,252,0.1)' }}>
                     <span style={{ fontSize: '12px' }}>💎</span>
                     <input 
                       type="number" 
@@ -675,7 +675,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
               <button 
                 onClick={handleDoar}
                 style={{
-                  width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff',
+                  width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'var(--text-primary)',
                   border: 'none', padding: '0.6rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem'
                 }}
@@ -696,7 +696,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                   {incomingTrades.map(trade => {
                     const fromChar = personagens.find(p => p.caminhoArquivo === trade.senderPath);
                     return (
-                      <div key={trade.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#100f1c', border: '1px solid rgba(255,255,255,0.08)', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem' }}>
+                      <div key={trade.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem' }}>
                         <div>
                           <span>Proposta de <b>{fromChar?.nome || 'Alguém'}</b>:</span>
                           <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
@@ -705,10 +705,10 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.4rem' }}>
-                          <button onClick={() => handleAceitarTroca(trade)} style={{ background: '#10b981', border: 'none', color: '#fff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}>
+                          <button onClick={() => handleAceitarTroca(trade)} style={{ background: '#10b981', border: 'none', color: 'var(--text-primary)', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}>
                             Aceitar
                           </button>
-                          <button onClick={() => handleRecusarTroca(trade)} style={{ background: '#ef4444', border: 'none', color: '#fff', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}>
+                          <button onClick={() => handleRecusarTroca(trade)} style={{ background: '#ef4444', border: 'none', color: 'var(--text-primary)', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}>
                             Recusar
                           </button>
                         </div>
@@ -723,14 +723,14 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                 {/* O que eu ofereço */}
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>O que você OFERECE:</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px', margin: '0.5rem 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', padding: '2px 8px', margin: '0.5rem 0' }}>
                     <Coins size={12} color="var(--warning)" />
                     <input 
                       type="number" 
                       placeholder="Moedas de ouro..."
                       value={tradeOfferGold}
                       onChange={e => setTradeOfferGold(Math.max(0, parseInt(e.target.value) || 0))}
-                      style={{ border: 'none', background: 'transparent', width: '100%', color: '#fff', padding: '0.3rem', outline: 'none', fontSize: '0.75rem' }}
+                      style={{ border: 'none', background: 'transparent', width: '100%', color: 'var(--text-primary)', padding: '0.3rem', outline: 'none', fontSize: '0.75rem' }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '120px', overflowY: 'auto' }}>
@@ -756,14 +756,14 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                 {/* O que eu peço */}
                 <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>O que você PEDE:</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '2px 8px', margin: '0.5rem 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', padding: '2px 8px', margin: '0.5rem 0' }}>
                     <Coins size={12} color="var(--warning)" />
                     <input 
                       type="number" 
                       placeholder="Moedas de ouro..."
                       value={tradeDemandGold}
                       onChange={e => setTradeDemandGold(Math.max(0, parseInt(e.target.value) || 0))}
-                      style={{ border: 'none', background: 'transparent', width: '100%', color: '#fff', padding: '0.3rem', outline: 'none', fontSize: '0.75rem' }}
+                      style={{ border: 'none', background: 'transparent', width: '100%', color: 'var(--text-primary)', padding: '0.3rem', outline: 'none', fontSize: '0.75rem' }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '120px', overflowY: 'auto' }}>
@@ -790,7 +790,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
               <button 
                 onClick={handleProporTroca}
                 style={{
-                  width: '100%', background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: '#fff',
+                  width: '100%', background: 'linear-gradient(135deg, #a855f7, #6366f1)', color: 'var(--text-primary)',
                   border: 'none', padding: '0.6rem', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem'
                 }}
@@ -823,31 +823,31 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
 
                   {/* FORMULÁRIO DO GM PARA ADICIONAR ITEM */}
                   {showShopConfig && (
-                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>Novo Item na Vitrine:</span>
                       <div className="grid-responsive-3" style={{ gap: '0.5rem' }}>
                         <input 
                           type="text" placeholder="Nome do Item" 
                           value={newShopItem.nome} onChange={e => setNewShopItem({...newShopItem, nome: e.target.value})}
-                          style={{ background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem', borderRadius: '4px', color: '#fff', fontSize: '0.75rem' }}
+                          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.3rem', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.75rem' }}
                         />
                         <input 
                           type="number" placeholder="Preço (PO)" 
                           value={newShopItem.custo} onChange={e => setNewShopItem({...newShopItem, custo: Math.max(0, parseInt(e.target.value) || 0)})}
-                          style={{ background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem', borderRadius: '4px', color: '#fff', fontSize: '0.75rem' }}
+                          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.3rem', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.75rem' }}
                         />
                         <input 
                           type="number" placeholder="Estoque" 
                           value={newShopItem.quantidade} onChange={e => setNewShopItem({...newShopItem, quantidade: Math.max(1, parseInt(e.target.value) || 0)})}
-                          style={{ background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem', borderRadius: '4px', color: '#fff', fontSize: '0.75rem' }}
+                          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.3rem', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.75rem' }}
                         />
                       </div>
                       <input 
                         type="text" placeholder="Descrição rápida (opcional)" 
                         value={newShopItem.descricao} onChange={e => setNewShopItem({...newShopItem, descricao: e.target.value})}
-                        style={{ background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem', borderRadius: '4px', color: '#fff', fontSize: '0.75rem' }}
+                        style={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', padding: '0.3rem', borderRadius: '4px', color: 'var(--text-primary)', fontSize: '0.75rem' }}
                       />
-                      <button onClick={handleAddShopItem} style={{ background: 'var(--accent-primary)', border: 'none', color: '#fff', padding: '0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                      <button onClick={handleAddShopItem} style={{ background: 'var(--accent-primary)', border: 'none', color: 'var(--text-primary)', padding: '0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>
                         Adicionar Item à Loja
                       </button>
                     </div>
@@ -863,7 +863,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '0.5rem', borderRadius: '6px', fontSize: '0.8rem' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <b style={{ color: '#fff' }}>{item.nome}</b>
+                              <b style={{ color: 'var(--text-primary)' }}>{item.nome}</b>
                               <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', background: 'rgba(56,189,248,0.1)', color: '#38bdf8' }}>x{item.quantidade}</span>
                             </div>
                             <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{item.descricao || 'Sem descrição'}</span>
@@ -875,7 +875,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                               onClick={() => handleComprarDoNpc(item, idx)}
                               disabled={item.quantidade <= 0}
                               style={{
-                                background: item.quantidade > 0 ? '#10b981' : '#334155', border: 'none', color: '#fff',
+                                background: item.quantidade > 0 ? '#10b981' : '#334155', border: 'none', color: 'var(--text-primary)',
                                 borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: item.quantidade > 0 ? 'pointer' : 'not-allowed',
                                 display: 'flex', alignItems: 'center', gap: '3px'
                               }}
@@ -883,7 +883,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                               <ShoppingBag size={12} /> Comprar
                             </button>
                             {showShopConfig && (
-                              <button onClick={() => handleRemoveShopItem(idx)} style={{ background: '#ef4444', border: 'none', color: '#fff', borderRadius: '4px', padding: '4px', cursor: 'pointer' }}>
+                              <button onClick={() => handleRemoveShopItem(idx)} style={{ background: '#ef4444', border: 'none', color: 'var(--text-primary)', borderRadius: '4px', padding: '4px', cursor: 'pointer' }}>
                                 <Trash2 size={12} />
                               </button>
                             )}
@@ -913,7 +913,7 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                                   <span style={{ color: '#f59e0b', fontSize: '0.7rem' }}>Venda: {sellPrice} PO</span>
                                   <button 
                                     onClick={() => handleVenderParaNpc(item, idx)}
-                                    style={{ background: '#3b82f6', border: 'none', color: '#fff', borderRadius: '3px', padding: '3px 8px', cursor: 'pointer', fontSize: '0.7rem' }}
+                                    style={{ background: '#3b82f6', border: 'none', color: 'var(--text-primary)', borderRadius: '3px', padding: '3px 8px', cursor: 'pointer', fontSize: '0.7rem' }}
                                   >
                                     Vender
                                   </button>
@@ -934,18 +934,18 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
           {/* TAB 4: PAGAR RÁPIDO */}
           {activeTab === 'pagar' && sender && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: '#100f1c', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#f87171' }}>Despesas, Tavernas e Subornos</span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Deduza o ouro diretamente da sua ficha sem precisar de um recebedor para interpretar gastos na cidade.</span>
                 
                 <label style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>Valor a Pagar (PO):</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#12111d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', padding: '4px 8px' }}>
                   <Coins size={16} color="#f87171" />
                   <input 
                     type="number" 
                     value={payAmount}
                     onChange={e => setPayAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    style={{ border: 'none', background: 'transparent', width: '100%', color: '#fff', outline: 'none' }}
+                    style={{ border: 'none', background: 'transparent', width: '100%', color: 'var(--text-primary)', outline: 'none' }}
                   />
                 </div>
 
@@ -955,12 +955,12 @@ export const TradeShopWidget: React.FC<TradeShopWidgetProps> = ({ onClose }) => 
                   value={payReason}
                   onChange={e => setPayReason(e.target.value)}
                   placeholder="Ex: Pernoite na taverna, Gorjeta..."
-                  style={{ border: '1px solid rgba(255,255,255,0.1)', background: '#12111d', color: '#fff', padding: '0.5rem', borderRadius: '6px', outline: 'none' }}
+                  style={{ border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '6px', outline: 'none' }}
                 />
 
                 <button 
                   onClick={handlePagarRapido}
-                  style={{ background: '#ef4444', border: 'none', color: '#fff', fontWeight: 'bold', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                  style={{ background: '#ef4444', border: 'none', color: 'var(--text-primary)', fontWeight: 'bold', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
                   <Coins size={16} /> Pagar {payAmount > 0 ? `${payAmount} PO` : ''}
                 </button>

@@ -189,9 +189,9 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
         disabled={isGenerating}
         style={{ 
           padding: '12px 16px', 
-          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', 
+          background: 'var(--accent-primary)', 
           color: '#ffffff', 
-          border: '1px solid #60a5fa', 
+          border: '1px solid var(--glass-border-highlight)', 
           borderRadius: '8px', 
           cursor: isGenerating ? 'not-allowed' : 'pointer',
           display: 'flex', 
@@ -202,7 +202,7 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
           fontWeight: 'bold',
           transition: 'all 0.2s',
           transform: isGenerating ? 'scale(0.98)' : 'scale(1)',
-          boxShadow: '0 4px 15px rgba(59, 130, 246, 0.35)',
+          boxShadow: '0 4px 15px var(--accent-glow)',
           flexShrink: 0
         }}
       >
@@ -216,21 +216,21 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
       {/* Exibição do Local Forjado Dentro do Widget */}
       {currentLocation ? (
         <div style={{
-          background: 'rgba(0, 0, 0, 0.4)',
-          border: '1px solid rgba(59, 130, 246, 0.35)',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--glass-border)',
           borderRadius: '10px',
           padding: '14px',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          boxShadow: 'inset 0 0 15px rgba(59, 130, 246, 0.08)'
+          boxShadow: 'var(--glass-shadow)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '1.2rem' }}>🏰</span>
-              <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#60a5fa' }}>{currentLocation.nome}</span>
+              <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--accent-primary)' }}>{currentLocation.nome}</span>
             </div>
-            <span style={{ fontSize: '0.72rem', background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', padding: '3px 8px', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+            <span style={{ fontSize: '0.72rem', background: 'var(--accent-glow)', color: 'var(--text-primary)', padding: '3px 8px', borderRadius: '12px', border: '1px solid var(--accent-primary)' }}>
               {currentLocation.tamanho}
             </span>
           </div>
@@ -238,7 +238,7 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', lineHeight: '1.45' }}>
             <div>
               <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>⚠️ Ameaça & Perigo: </span>
-              <span style={{ color: '#fbbf24' }}>{currentLocation.perigo}</span>
+              <span style={{ color: 'var(--warning)' }}>{currentLocation.perigo}</span>
             </div>
 
             <div>
@@ -251,9 +251,9 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
               <span style={{ color: 'var(--text-primary)' }}>{currentLocation.marcos}</span>
             </div>
 
-            <div style={{ marginTop: '4px', padding: '8px 10px', background: 'rgba(239, 68, 68, 0.1)', borderLeft: '3px solid #ef4444', borderRadius: '4px' }}>
-              <span style={{ color: '#fca5a5', fontWeight: 700 }}>🕵️ Segredo / Gancho: </span>
-              <span style={{ color: '#fecaca' }}>{currentLocation.segredo}</span>
+            <div style={{ marginTop: '4px', padding: '8px 10px', background: 'rgba(239, 68, 68, 0.1)', borderLeft: '3px solid var(--danger)', borderRadius: '4px' }}>
+              <span style={{ color: 'var(--danger)', fontWeight: 700 }}>🕵️ Segredo / Gancho: </span>
+              <span style={{ color: 'var(--text-primary)' }}>{currentLocation.segredo}</span>
             </div>
           </div>
 
@@ -263,7 +263,7 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
               onClick={() => shareToChat(currentLocation)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--glass-border)',
+                padding: '6px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
                 borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600
               }}
             >
@@ -273,7 +273,7 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
               onClick={() => saveLocationToWiki(currentLocation)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 12px', background: '#3b82f6', border: 'none',
+                padding: '6px 12px', background: 'var(--accent-primary)', border: 'none',
                 borderRadius: '6px', color: '#fff', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 700
               }}
             >
@@ -288,17 +288,17 @@ export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = (
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'rgba(0, 0, 0, 0.2)',
-          border: '1px dashed rgba(255,255,255,0.1)',
+          background: 'var(--bg-tertiary)',
+          border: '1px dashed var(--glass-border)',
           borderRadius: '10px',
           padding: '24px',
           color: 'var(--text-secondary)',
           textAlign: 'center',
           gap: '8px'
         }}>
-          <MapPin size={28} color="rgba(255,255,255,0.2)" />
+          <MapPin size={28} style={{ opacity: 0.4 }} />
           <span style={{ fontSize: '0.85rem' }}>Nenhum local forjado ainda nesta sessão.</span>
-          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>Clique no botão "Forjar Novo Local" acima para sintetizar um cenário com atmosfera e segredos.</span>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Clique no botão "Forjar Novo Local" acima para sintetizar um cenário com atmosfera e segredos.</span>
         </div>
       )}
 
