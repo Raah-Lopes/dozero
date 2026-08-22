@@ -217,8 +217,8 @@
 .dozero-mdx, .dark-theme, .mdxeditor {
   --mdxeditor-bg-color: var(--bg-secondary) !important;
   --mdxeditor-text-color: var(--text-primary) !important;
-  --mdxeditor-toolbar-bg: rgba(0, 0, 0, 0.3) !important;
-  --mdxeditor-toolbar-text-color: var(--text-secondary) !important;
+  --mdxeditor-toolbar-bg: var(--bg-tertiary) !important;
+  --mdxeditor-toolbar-text-color: var(--text-primary) !important;
   background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
 }
@@ -232,6 +232,7 @@
 }
 
 .dozero-mdx .mdxeditor-toolbar {
-  background: rgba(0, 0, 0, 0.4) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-tertiary) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  color: var(--text-primary) !important;
 }
