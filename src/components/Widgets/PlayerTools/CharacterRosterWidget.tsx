@@ -265,9 +265,9 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
               const pvPercentual = calcularPVPercentual(p.pv, p.pv_max);
               return (
                 <div key={p.caminhoArquivo} style={{
-                  background: 'rgba(15, 23, 42, 0.4)',
+                  background: 'var(--bg-secondary)',
                   backdropFilter: 'blur(8px)',
-                  border: `1px solid ${selecionados.has(p.caminhoArquivo) ? '#3b82f6' : p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'rgba(255, 255, 255, 0.05)'}`,
+                  border: `1px solid ${selecionados.has(p.caminhoArquivo) ? 'var(--accent-primary)' : p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'var(--glass-border)'}`,
                   borderRadius: '10px',
                   padding: '10px 14px',
                   display: 'flex',
@@ -277,7 +277,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                   cursor: 'pointer',
                   opacity: p.ativo ? 1 : 0.6,
                   transition: 'all 0.2s ease',
-                  boxShadow: selecionados.has(p.caminhoArquivo) ? '0 0 12px rgba(59, 130, 246, 0.4)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  boxShadow: selecionados.has(p.caminhoArquivo) ? '0 0 12px var(--accent-glow)' : 'var(--glass-shadow)',
                 }}
                 onClick={() => window.dispatchEvent(new CustomEvent('open-sheet-by-wiki', { detail: p.caminhoArquivo }))}
                 onMouseEnter={(e) => {
@@ -290,8 +290,8 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'none';
                   if (!selecionados.has(p.caminhoArquivo)) {
-                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-                    e.currentTarget.style.borderColor = p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
+                    e.currentTarget.style.borderColor = p.ativo ? getStatusColor(p.status).replace('0.2', '0.4') : 'var(--glass-border)';
                   }
                 }}
                 title="Abrir Ficha do Personagem"
@@ -308,7 +308,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                       type="checkbox" 
                       checked={selecionados.has(p.caminhoArquivo)} 
                       readOnly 
-                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#3b82f6' }}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--accent-primary)' }}
                     />
                   </div>
 
@@ -318,7 +318,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     onClick={(e) => handleAvatarClick(p.caminhoArquivo, e)}
                     title="Clique para alterar a imagem"
                   >
-                    <div style={{ width: '64px', height: '64px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${getStatusColor(p.status).replace('0.2', '0.8')}` }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '8px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${getStatusColor(p.status).replace('0.2', '0.8')}` }}>
                       {getStatusIcon(p.status)}
                     </div>
                     {p.avatar && (
@@ -359,7 +359,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                           background: p.ativo ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                           border: `1px solid ${p.ativo ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
                           borderRadius: '6px',
-                          color: p.ativo ? '#10b981' : '#ef4444',
+                          color: p.ativo ? 'var(--success)' : 'var(--danger)',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           display: 'flex',
@@ -384,7 +384,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem' }}>
                       <span style={{ 
                         background: getStatusColor(p.status).replace('0.2', '0.1'),
-                        color: p.status === 'jogador' ? '#6ee7b7' : p.status === 'npc' ? '#93c5fd' : '#fda4af',
+                        color: p.status === 'jogador' ? 'var(--success)' : p.status === 'npc' ? 'var(--mana)' : 'var(--danger)',
                         padding: '1px 6px', borderRadius: '4px', border: `1px solid ${getStatusColor(p.status).replace('0.2', '0.4')}`,
                         textTransform: 'uppercase', fontWeight: 600, fontSize: '0.65rem'
                       }}>
@@ -395,11 +395,11 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     
                     {/* PV/HP bar */}
                     <div style={{ marginTop: '4px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#cbd5e1', marginBottom: '2px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: '2px' }}>
                         <span>HP/PV</span>
                         <span>{p.pv}/{p.pv_max}</span>
                       </div>
-                      <div style={{ height: '5px', background: 'rgba(0,0,0,0.4)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '5px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{
                           width: `${pvPercentual}%`,
                           height: '100%',
@@ -415,25 +415,25 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                     display: 'grid', 
                     gridTemplateColumns: 'repeat(2, minmax(75px, 1fr))', 
                     gap: '4px 8px', 
-                    borderLeft: '1px solid rgba(255,255,255,0.08)', 
+                    borderLeft: '1px solid var(--glass-border)', 
                     paddingLeft: '12px',
                     flexShrink: 0
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#fda4af' }}>
-                      <Sword size={11} /> <span style={{ color: '#cbd5e1' }}>Atq:</span> <b>{p.ataque}</b>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--danger)' }}>
+                      <Sword size={11} /> <span style={{ color: 'var(--text-secondary)' }}>Atq:</span> <b>{p.ataque}</b>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--mana)' }}>
-                      <Shield size={11} /> <span style={{ color: '#cbd5e1' }}>Def:</span> <b>{p.defesa}</b>
+                      <Shield size={11} /> <span style={{ color: 'var(--text-secondary)' }}>Def:</span> <b>{p.defesa}</b>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--warning)' }}>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>$</span> <span style={{ color: '#cbd5e1' }}>Ouro:</span> <b>{p.ouro}</b>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>$</span> <span style={{ color: 'var(--text-secondary)' }}>Ouro:</span> <b>{p.ouro}</b>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#f0abfc' }}>
-                      <Star size={11} /> <span style={{ color: '#cbd5e1' }}>XP:</span> <b>{p.xp}</b>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--accent-primary)' }}>
+                      <Star size={11} /> <span style={{ color: 'var(--text-secondary)' }}>XP:</span> <b>{p.xp}</b>
                     </div>
                     {p.mana_max > 0 && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#38bdf8', gridColumn: 'span 2' }}>
-                        <Zap size={11} /> <span style={{ color: '#cbd5e1' }}>Mana:</span> <b>{p.mana}/{p.mana_max}</b>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--mana)', gridColumn: 'span 2' }}>
+                        <Zap size={11} /> <span style={{ color: 'var(--text-secondary)' }}>Mana:</span> <b>{p.mana}/{p.mana_max}</b>
                       </div>
                     )}
                   </div>
@@ -447,7 +447,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
         <div style={{
           marginTop: '16px',
           paddingTop: '12px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderTop: '1px solid var(--glass-border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -465,9 +465,9 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
             style={{
               padding: '4px 12px',
               borderRadius: '4px',
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#cbd5e1',
+              border: '1px solid var(--glass-border)',
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
               cursor: carregando ? 'not-allowed' : 'pointer',
               opacity: carregando ? 0.5 : 1,
               fontSize: '0.75rem',
