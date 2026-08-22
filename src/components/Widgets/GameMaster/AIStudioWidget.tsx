@@ -339,21 +339,21 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
     <>
       <style>{`
         .ai-tab { padding: 5px 10px; border-radius: 6px 6px 0 0; font-size: 0.65rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; border: none; transition: all 0.2s; white-space: nowrap; }
-        .ai-tab.active { background: rgba(255,255,255,0.08); }
+        .ai-tab.active { background: var(--bg-tertiary); color: var(--text-primary); }
         .ai-provider-pill { padding: 3px 10px; border-radius: 20px; font-size: 0.6rem; font-weight: 700; cursor: pointer; border: 1px solid; transition: all 0.15s; }
-        .ai-output { font-family: 'Fira Code', monospace; font-size: 0.72rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
-        .ai-chat-bubble-user { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); border-radius: 12px 12px 4px 12px; padding: 8px 12px; margin-left: 20%; }
-        .ai-chat-bubble-ai { background: rgba(30,30,50,0.7); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px 12px 12px 4px; padding: 8px 12px; margin-right: 20%; white-space: pre-wrap; font-size: 0.75rem; line-height: 1.6; }
-        .ai-field-label { font-size: 0.6rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
-        .ai-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 7px 10px; font-size: 0.78rem; color: #e2e8f0; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
-        .ai-input:focus { border-color: ${currentColor}66; }
+        .ai-output { font-family: 'Fira Code', monospace; font-size: 0.72rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); }
+        .ai-chat-bubble-user { background: var(--accent-glow); border: 1px solid var(--accent-primary); border-radius: 12px 12px 4px 12px; padding: 8px 12px; margin-left: 20%; color: var(--text-primary); }
+        .ai-chat-bubble-ai { background: var(--bg-tertiary); border: 1px solid var(--glass-border); border-radius: 12px 12px 12px 4px; padding: 8px 12px; margin-right: 20%; white-space: pre-wrap; font-size: 0.75rem; line-height: 1.6; color: var(--text-primary); }
+        .ai-field-label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .ai-input { width: 100%; background: var(--bg-secondary); border: 1px solid var(--glass-border); border-radius: 6px; padding: 7px 10px; font-size: 0.78rem; color: var(--text-primary); outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+        .ai-input:focus { border-color: var(--accent-primary); }
         .ai-btn { display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
       `}</style>
 
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'rgba(5,5,15,0.95)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--bg-secondary)' }}>
 
         {/* ── HEADER BARRA ─────────────────────────────────────────────── */}
-        <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
           {/* Provedor */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             {(['groq', 'gemini', 'openrouter', 'pollinations', 'ollama'] as AIProviderType[]).map(p => (
@@ -362,9 +362,9 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
                 className="ai-provider-pill"
                 onClick={() => setProvider(p)}
                 style={{
-                  background: provider === p ? `${p === 'groq' ? '#f97316' : p === 'gemini' ? '#4285f4' : p === 'openrouter' ? '#a855f7' : p === 'pollinations' ? '#22c55e' : '#64748b'}22` : 'transparent',
-                  borderColor: provider === p ? (p === 'groq' ? '#f97316' : p === 'gemini' ? '#4285f4' : p === 'openrouter' ? '#a855f7' : p === 'pollinations' ? '#22c55e' : '#64748b') : 'rgba(255,255,255,0.12)',
-                  color: provider === p ? 'white' : '#64748b',
+                  background: provider === p ? 'var(--accent-glow)' : 'transparent',
+                  borderColor: provider === p ? 'var(--accent-primary)' : 'var(--glass-border)',
+                  color: provider === p ? 'var(--text-primary)' : 'var(--text-secondary)',
                 }}
               >
                 {p === 'pollinations' ? '🔓 Pollinations' : p === 'ollama' ? '💻 Ollama' : PROVIDER_LABELS[p]}

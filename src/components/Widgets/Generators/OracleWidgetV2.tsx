@@ -231,11 +231,11 @@ export function OracleWidgetV2({ onClose, embedded }: { onClose?: () => void; em
           onClick={() => rollQuick('sim-nao-5050')}
           style={{
             display: 'flex', alignItems: 'center', gap: '5px',
-            padding: '6px 10px', background: 'rgba(168, 85, 247, 0.25)', border: '1px solid rgba(168, 85, 247, 0.5)',
-            borderRadius: '6px', color: '#e9d5ff', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+            padding: '6px 10px', background: 'var(--accent-glow)', border: '1px solid var(--accent-primary)',
+            borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
           }}
         >
-          <Sparkles size={13} color="#c084fc" /> Sim / Não (50/50)
+          <Sparkles size={13} color="var(--accent-primary)" /> Sim / Não (50/50)
         </button>
 
         <button
@@ -244,11 +244,11 @@ export function OracleWidgetV2({ onClose, embedded }: { onClose?: () => void; em
           onClick={() => rollQuick('acoes-temas')}
           style={{
             display: 'flex', alignItems: 'center', gap: '5px',
-            padding: '6px 10px', background: 'rgba(59, 130, 246, 0.25)', border: '1px solid rgba(59, 130, 246, 0.5)',
-            borderRadius: '6px', color: '#bfdbfe', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+            padding: '6px 10px', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid var(--mana)',
+            borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
           }}
         >
-          <Zap size={13} color="#60a5fa" /> Ação Narrativa
+          <Zap size={13} color="var(--mana)" /> Ação Narrativa
         </button>
 
         <button
@@ -257,11 +257,11 @@ export function OracleWidgetV2({ onClose, embedded }: { onClose?: () => void; em
           onClick={() => rollQuick('reviravolta-narrativa')}
           style={{
             display: 'flex', alignItems: 'center', gap: '5px',
-            padding: '6px 10px', background: 'rgba(239, 68, 68, 0.25)', border: '1px solid rgba(239, 68, 68, 0.5)',
-            borderRadius: '6px', color: '#fecaca', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+            padding: '6px 10px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid var(--danger)',
+            borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
           }}
         >
-          <Flame size={13} color="#f87171" /> Reviravolta
+          <Flame size={13} color="var(--danger)" /> Reviravolta
         </button>
 
         <button
@@ -270,11 +270,11 @@ export function OracleWidgetV2({ onClose, embedded }: { onClose?: () => void; em
           onClick={() => rollQuick('complicacao-falha')}
           style={{
             display: 'flex', alignItems: 'center', gap: '5px',
-            padding: '6px 10px', background: 'rgba(249, 115, 22, 0.25)', border: '1px solid rgba(249, 115, 22, 0.5)',
-            borderRadius: '6px', color: '#fed7aa', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+            padding: '6px 10px', background: 'rgba(249, 115, 22, 0.2)', border: '1px solid var(--warning)',
+            borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
           }}
         >
-          <ShieldAlert size={13} color="#fb923c" /> Complicação
+          <ShieldAlert size={13} color="var(--warning)" /> Complicação
         </button>
 
         <button
@@ -283,11 +283,11 @@ export function OracleWidgetV2({ onClose, embedded }: { onClose?: () => void; em
           onClick={() => rollQuick('clima-metereologia')}
           style={{
             display: 'flex', alignItems: 'center', gap: '5px',
-            padding: '6px 10px', background: 'rgba(6, 182, 212, 0.25)', border: '1px solid rgba(6, 182, 212, 0.5)',
-            borderRadius: '6px', color: '#a5f3fc', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+            padding: '6px 10px', background: 'rgba(6, 182, 212, 0.2)', border: '1px solid rgba(6, 182, 212, 0.5)',
+            borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
           }}
         >
-          <CloudSun size={13} color="#22d3ee" /> Clima
+          <CloudSun size={13} color="#06b6d4" /> Clima
         </button>
 
         <button
@@ -296,18 +296,18 @@ export function OracleWidgetV2({ onClose, embedded }: { onClose?: () => void; em
           onClick={() => rollQuick('disposicao-npc')}
           style={{
             display: 'flex', alignItems: 'center', gap: '5px',
-            padding: '6px 10px', background: 'rgba(34, 197, 94, 0.25)', border: '1px solid rgba(34, 197, 94, 0.5)',
-            borderRadius: '6px', color: '#bbf7d0', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+            padding: '6px 10px', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid var(--success)',
+            borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
           }}
         >
-          <UserCheck size={13} color="#4ade80" /> Disposição NPC
+          <UserCheck size={13} color="var(--success)" /> Disposição NPC
         </button>
       </div>
 
       {/* Header / Barra de Pesquisa */}
       <div 
         data-no-drag="true"
-        style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}
+        style={{ padding: '8px 12px', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}
       >
         <div style={{ position: 'relative' }}>
           <Search size={14} color="var(--text-secondary)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />

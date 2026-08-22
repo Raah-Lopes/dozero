@@ -388,8 +388,8 @@ export const StoryBilderDeckWidget = ({ onClose, embedded }: Props) => {
 
         /* BACK OF THE CARD (Face Down) */
         .sbd-card-back {
-          background: linear-gradient(135deg, #1e293b, #0f172a);
-          border: 2px solid rgba(168, 85, 247, 0.3);
+          background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+          border: 2px solid var(--accent-primary);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -397,7 +397,7 @@ export const StoryBilderDeckWidget = ({ onClose, embedded }: Props) => {
         .sbd-card-back-pattern {
           width: 90%;
           height: 90%;
-          border: 1px dashed rgba(255,255,255,0.1);
+          border: 1px dashed var(--glass-border);
           border-radius: 12px;
           display: flex;
           flex-direction: column;
@@ -415,8 +415,9 @@ export const StoryBilderDeckWidget = ({ onClose, embedded }: Props) => {
 
         /* FRONT OF THE CARD (Face Up) */
         .sbd-card-front {
-          background: #1e293b;
-          border: 1px solid rgba(255,255,255,0.1);
+          background: var(--bg-secondary);
+          border: 1px solid var(--glass-border);
+          color: var(--text-primary);
           transform: rotateY(180deg);
           display: flex;
           flex-direction: column;
@@ -435,11 +436,12 @@ export const StoryBilderDeckWidget = ({ onClose, embedded }: Props) => {
           width: 44px;
           height: 44px;
           border-radius: 50%;
-          background: rgba(0,0,0,0.4);
+          background: var(--bg-tertiary);
+          border: 1px solid var(--glass-border);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+          box-shadow: var(--glass-shadow);
           margin-bottom: 12px;
           z-index: 2;
         }
@@ -451,11 +453,12 @@ export const StoryBilderDeckWidget = ({ onClose, embedded }: Props) => {
           text-transform: uppercase;
           z-index: 2;
           text-align: center;
+          color: var(--text-primary);
         }
 
         .sbd-card-content {
           flex: 1;
-          background: rgba(15, 23, 42, 0.9);
+          background: var(--bg-tertiary);
           padding: 12px;
           display: flex;
           align-items: center;
@@ -463,9 +466,9 @@ export const StoryBilderDeckWidget = ({ onClose, embedded }: Props) => {
           text-align: center;
           font-size: 13px;
           line-height: 1.4;
-          color: #e2e8f0;
+          color: var(--text-primary);
           font-weight: 500;
-          border-top: 1px solid rgba(255,255,255,0.05);
+          border-top: 1px solid var(--glass-border);
           overflow-y: auto;
         }
         
