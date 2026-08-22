@@ -47,17 +47,17 @@ const CombatParticipantRow = React.memo(({ p, index, isActive, turnIndex, isGM, 
       {isCurrentTurn && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }} />}
       {isNextTurn && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '3px', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6', animation: 'pprPulse 1.5s ease-in-out infinite' }} />}
 
-      <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `2px solid ${isCurrentTurn ? '#fbbf24' : isNextTurn ? '#3b82f6' : 'var(--text-secondary)'}`, boxShadow: isNextTurn ? '0 0 10px rgba(59,130,246,0.4)' : 'none' }}>
+      <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `2px solid ${isCurrentTurn ? 'var(--warning)' : isNextTurn ? 'var(--mana)' : 'var(--text-secondary)'}`, boxShadow: isNextTurn ? '0 0 10px var(--accent-glow)' : 'none' }}>
         <img loading="lazy" decoding="async" src={p.imageUrl || '/vite.svg'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
       
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontWeight: 'bold', color: isCurrentTurn ? '#fbbf24' : isNextTurn ? '#60a5fa' : 'white', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ fontWeight: 'bold', color: isCurrentTurn ? 'var(--warning)' : isNextTurn ? 'var(--mana)' : 'var(--text-primary)', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {p.name}
             {isNextTurn && <span style={{ fontSize: '0.65rem', marginLeft: '6px', color: 'var(--mana)', fontWeight: 600 }}>EM ESPERA</span>}
           </span>
-          <span style={{ fontWeight: '900', fontSize: '1.2rem', color: isCurrentTurn ? '#fbbf24' : 'var(--text-primary)', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{p.initiative}</span>
+          <span style={{ fontWeight: '900', fontSize: '1.2rem', color: isCurrentTurn ? 'var(--warning)' : 'var(--text-primary)', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{p.initiative}</span>
         </div>
 
         {isMinion ? (
@@ -65,7 +65,7 @@ const CombatParticipantRow = React.memo(({ p, index, isActive, turnIndex, isGM, 
             <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>LACAIO</span>
             <div style={{ display: 'flex', gap: '3px' }}>
               {Array.from({ length: p.minionMaxHits! }).map((_, i) => (
-                <div key={i} style={{ width: '14px', height: '14px', borderRadius: '50%', background: i < (p.minionHits ?? 0) ? '#ef4444' : 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: i < (p.minionHits ?? 0) ? '0 0 6px rgba(239,68,68,0.5)' : 'none', transition: 'all 0.3s' }} />
+                <div key={i} style={{ width: '14px', height: '14px', borderRadius: '50%', background: i < (p.minionHits ?? 0) ? 'var(--danger)' : 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', boxShadow: i < (p.minionHits ?? 0) ? '0 0 6px var(--danger)' : 'none', transition: 'all 0.3s' }} />
               ))}
             </div>
             {isGM && (p.minionHits ?? 0) > 0 && (
@@ -82,9 +82,9 @@ const CombatParticipantRow = React.memo(({ p, index, isActive, turnIndex, isGM, 
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} style={{
                     width: '12px', height: '12px', transform: 'rotate(45deg)', cursor: 'pointer',
-                    background: i < (p.actionsRemaining ?? 3) ? '#f59e0b' : 'rgba(255,255,255,0.1)',
-                    border: `1px solid ${i < (p.actionsRemaining ?? 3) ? '#fbbf24' : 'rgba(255,255,255,0.2)'}`,
-                    boxShadow: i < (p.actionsRemaining ?? 3) ? '0 0 5px rgba(245,158,11,0.5)' : 'none',
+                    background: i < (p.actionsRemaining ?? 3) ? 'var(--warning)' : 'var(--bg-tertiary)',
+                    border: `1px solid ${i < (p.actionsRemaining ?? 3) ? 'var(--warning)' : 'var(--glass-border)'}`,
+                    boxShadow: i < (p.actionsRemaining ?? 3) ? '0 0 5px var(--accent-glow)' : 'none',
                     transition: 'all 0.2s'
                   }} />
                 ))}
@@ -105,7 +105,7 @@ const CombatParticipantRow = React.memo(({ p, index, isActive, turnIndex, isGM, 
         {p.conditions && p.conditions.length > 0 && (
           <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
             {p.conditions.map((c: any) => (
-              <div key={c.id} style={{ fontSize: '0.7rem', background: c.type === 'damage' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: c.type === 'damage' ? '#fca5a5' : '#6ee7b7', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', border: c.type === 'damage' ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)' }}>
+              <div key={c.id} style={{ fontSize: '0.7rem', background: c.type === 'damage' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: c.type === 'damage' ? 'var(--danger)' : 'var(--success)', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', border: c.type === 'damage' ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(16,185,129,0.3)' }}>
                 {c.type === 'damage' ? '🩸' : '💚'} {c.name} ({c.durationTurns}t)
                 {isGM && <Tooltip label="Remover Condição"><button onClick={() => removeConditionFromParticipant(p.tokenId, c.id)} style={{ background: 'transparent', border: 'none', color: 'inherit', padding: 0, marginLeft: '2px', cursor: 'pointer' }}>×</button></Tooltip>}
               </div>
@@ -421,7 +421,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.4)', padding: '0.75rem', borderRadius: '12px', border: '1px solid var(--glass-border)', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '12px', border: '1px solid var(--glass-border)', justifyContent: 'space-between', alignItems: 'center' }}>
             <Tooltip label={isActive ? 'Parar Combate' : 'Iniciar Combate'}>
               <button onClick={handleToggleCombat} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', flex: 1, justifyContent: 'center', background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)', color: isActive ? 'var(--danger)' : 'var(--success)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', transition: 'all 0.2s' }}>
                 {isActive ? <><Square size={16} /> Parar</> : <><Play size={16} /> Iniciar</>}
@@ -429,14 +429,14 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
             </Tooltip>
             {isActive && (
               <Tooltip label="Passar Turno">
-                <button onClick={handleNextTurn} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', flex: 1, justifyContent: 'center', background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', boxShadow: '0 0 10px rgba(255,122,0, 0.4)' }}>
+                <button onClick={handleNextTurn} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', flex: 1, justifyContent: 'center', background: 'var(--accent-primary)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', boxShadow: '0 0 10px var(--accent-glow)' }}>
                   Passar <ChevronRight size={18} />
                 </button>
               </Tooltip>
             )}
             <div style={{ display: 'flex', gap: '4px' }}>
-              <Tooltip label="Re-rolar Tudo"><button onClick={handleRollAll} className="btn-icon" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '8px' }}><Dices size={18} color="var(--warning)" /></button></Tooltip>
-              <Tooltip label="Limpar Tudo"><button onClick={clearCombat} className="btn-icon" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '8px' }}><Trash2 size={18} color="var(--danger)" /></button></Tooltip>
+              <Tooltip label="Re-rolar Tudo"><button onClick={handleRollAll} className="btn-icon" style={{ background: 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px' }}><Dices size={18} color="var(--warning)" /></button></Tooltip>
+              <Tooltip label="Limpar Tudo"><button onClick={clearCombat} className="btn-icon" style={{ background: 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px' }}><Trash2 size={18} color="var(--danger)" /></button></Tooltip>
             </div>
           </div>
         </div>

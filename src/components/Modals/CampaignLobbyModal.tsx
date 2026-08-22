@@ -201,39 +201,39 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
         width: '100%',
         maxWidth: '850px',
         maxHeight: '92vh',
-        background: 'linear-gradient(180deg, #261911 0%, #1a110b 100%)',
-        border: '2px solid #5a4234',
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--glass-border)',
         borderRadius: '24px',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.8), 0 0 35px rgba(164, 104, 48, 0.25)',
+        boxShadow: 'var(--glass-shadow)',
         padding: '24px',
-        color: '#fdfaf5',
+        color: 'var(--text-primary)',
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box'
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '2px solid #3b281d' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img 
               src="/mascot/zye-head-smile.png" 
               alt="Zye" 
-              style={{ width: '42px', height: '42px', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(245, 158, 11, 0.4))' }} 
+              style={{ width: '42px', height: '42px', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px var(--accent-glow))' }} 
             />
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#fdfaf5', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 Mural de Campanhas & Gerenciador de Mesas
-                <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: '6px', background: user ? 'rgba(56, 102, 65, 0.3)' : 'rgba(164, 104, 48, 0.3)', color: user ? '#86efac' : '#fde047', border: `1px solid ${user ? '#386641' : '#a46830'}` }}>
+                <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: '6px', background: user ? 'rgba(56, 102, 65, 0.3)' : 'var(--bg-tertiary)', color: user ? 'var(--success)' : 'var(--warning)', border: `1px solid ${user ? 'var(--success)' : 'var(--glass-border)'}` }}>
                   {user ? 'Nuvem Supabase' : 'Offline / Local'}
                 </span>
               </h2>
-              <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#d7c9b8' }}>
+              <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                 Gerencie nomes, capas locais, pastas de wiki e visibilidade pública de suas mesas de RPG.
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            style={{ background: '#3b281d', border: '1px solid #5a4234', color: '#d7c9b8', cursor: 'pointer', padding: '8px', borderRadius: '10px' }}
+            style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '8px', borderRadius: '10px' }}
           >
             <X size={18} />
           </button>

@@ -155,27 +155,27 @@ export function TokenContextHUD() {
         display: 'flex',
         alignItems: 'center',
         gap: window.innerWidth <= 768 ? '0.5rem' : '1rem',
-        background: 'rgba(15, 23, 42, 0.75)',
-      backdropFilter: 'blur(16px)',
-      border: '1px solid rgba(255,255,255,0.15)',
-      padding: window.innerWidth <= 768 ? '0.5rem 0.75rem' : '0.75rem 1.5rem',
-      borderRadius: '24px',
-      boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-      zIndex: 100,
-      maxWidth: '95vw',
-      overflowX: 'auto',
-      animation: 'slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-    }}>
-      {/* Avatar & Name */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingRight: '1rem', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-        {tokenData.imageUrl && (
-          <img src={tokenData.imageUrl} alt={tokenData.name} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)' }} />
-        )}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#fff', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tokenData.name}</span>
-          <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{tokenData.status || 'NPC'}</span>
+        background: 'var(--glass-bg)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid var(--glass-border)',
+        padding: window.innerWidth <= 768 ? '0.5rem 0.75rem' : '0.75rem 1.5rem',
+        borderRadius: '24px',
+        boxShadow: 'var(--glass-shadow)',
+        zIndex: 100,
+        maxWidth: '95vw',
+        overflowX: 'auto',
+        animation: 'slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      }}>
+        {/* Avatar & Name */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingRight: '1rem', borderRight: '1px solid var(--glass-border)' }}>
+          {tokenData.imageUrl && (
+            <img src={tokenData.imageUrl} alt={tokenData.name} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--glass-border)' }} />
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-primary)', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tokenData.name}</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{tokenData.status || 'NPC'}</span>
+          </div>
         </div>
-      </div>
 
       {/* HP Control */}
       <StatControl 
@@ -258,8 +258,8 @@ export function TokenContextHUD() {
 }
 
 const actionButtonStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--glass-border)',
   borderRadius: '8px',
   width: '32px',
   height: '32px',
@@ -272,7 +272,7 @@ const actionButtonStyle: React.CSSProperties = {
 
 function StatControl({ icon, value, max, color, onMinus, onPlus }: any) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
       {icon}
       <button onClick={onMinus} style={miniBtnStyle}><Minus size={12} /></button>
       <span style={{ fontSize: '0.8rem', fontWeight: 800, color, minWidth: '36px', textAlign: 'center' }}>
@@ -284,14 +284,14 @@ function StatControl({ icon, value, max, color, onMinus, onPlus }: any) {
 }
 
 const miniBtnStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.1)',
-  border: 'none',
+  background: 'var(--bg-tertiary)',
+  border: '1px solid var(--glass-border)',
   borderRadius: '6px',
   width: '20px',
   height: '20px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: '#fff',
+  color: 'var(--text-primary)',
   cursor: 'pointer',
 };

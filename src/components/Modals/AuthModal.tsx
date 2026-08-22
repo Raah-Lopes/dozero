@@ -175,26 +175,26 @@ export const AuthModal: React.FC = () => {
         style={{
           width: '100%',
           maxWidth: '430px',
-          background: 'linear-gradient(180deg, #18181b 0%, #09090b 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--glass-border)',
           borderRadius: '18px',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(168, 85, 247, 0.15)',
+          boxShadow: 'var(--glass-shadow)',
           padding: '24px',
-          color: '#f4f4f5',
+          color: 'var(--text-primary)',
           fontFamily: 'var(--font-body, sans-serif)',
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '16px', borderBottom: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)', display: 'flex' }}>
+            <div style={{ padding: '8px', borderRadius: '10px', background: 'var(--accent-glow)', color: 'var(--accent-primary)', border: '1px solid var(--glass-border)', display: 'flex' }}>
               {mode === 'signup' ? <UserPlus size={18} /> : mode === 'forgot' ? <KeyRound size={18} /> : <LogIn size={18} />}
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#fafafa' }}>
+              <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {mode === 'signup' ? 'Criar Conta' : mode === 'forgot' ? 'Recuperar Senha' : 'Entrar no VTT'}
               </h2>
-              <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#a1a1aa' }}>
+              <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                 {mode === 'signup' ? 'Cadastre-se para sincronizar suas mesas' : mode === 'forgot' ? 'Enviaremos um link de redefinição' : 'Acesse suas campanhas e fichas'}
               </p>
             </div>
@@ -202,7 +202,7 @@ export const AuthModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setAuthModalOpen(false)}
-            style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex' }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex' }}
           >
             <X size={18} />
           </button>
