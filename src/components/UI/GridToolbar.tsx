@@ -20,25 +20,25 @@ import { toast } from './Toast';
 // DESIGN TOKENS — single source of truth for the toolbar palette
 // ============================================================================
 const C = {
-  accent:    '#0ea5e9',   // sky-500 — active/selected states
-  accentBg:  'rgba(14,165,233,0.15)',
-  accentBrd: 'rgba(14,165,233,0.3)',
-  success:   '#10b981',   // emerald — "add/create" actions only
+  accent:    'var(--accent-primary)',
+  accentBg:  'var(--accent-glow)',
+  accentBrd: 'var(--glass-border)',
+  success:   'var(--success)',
   successBg: 'rgba(16,185,129,0.15)',
-  successBrd:'rgba(16,185,129,0.3)',
-  danger:    '#ef4444',
+  successBrd:'var(--glass-border)',
+  danger:    'var(--danger)',
   dangerBg:  'rgba(239,68,68,0.1)',
-  dangerBrd: 'rgba(239,68,68,0.3)',
-  warn:      '#f59e0b',
-  textPri:   '#f1f5f9',   // slate-100
-  textSec:   '#cbd5e1',   // slate-300 — icons (good contrast)
-  textMut:   '#94a3b8',   // slate-400 — labels
-  textDim:   '#64748b',   // slate-500
-  textOff:   '#475569',   // slate-600
-  surfBg:    'rgba(15,23,42,0.95)',
-  surfBrd:   'rgba(255,255,255,0.12)',
-  surfHov:   'rgba(255,255,255,0.05)',
-  surfItem:  'rgba(255,255,255,0.03)',
+  dangerBrd: 'var(--glass-border)',
+  warn:      'var(--warning)',
+  textPri:   'var(--text-primary)',
+  textSec:   'var(--text-secondary)',
+  textMut:   'var(--text-secondary)',
+  textDim:   'var(--text-secondary)',
+  textOff:   'var(--text-secondary)',
+  surfBg:    'var(--bg-secondary)',
+  surfBrd:   'var(--glass-border)',
+  surfHov:   'var(--bg-tertiary)',
+  surfItem:  'var(--bg-tertiary)',
 };
 
 // ============================================================================
@@ -1281,11 +1281,11 @@ export const GridToolbar: React.FC = () => {
         alignItems: 'center',
         gap: '2px',
         padding: '4px 8px',
-        background: 'rgba(15, 23, 42, 0.92)',
+        background: 'var(--glass-bg)',
         backdropFilter: 'blur(20px)',
         border: `1px solid ${C.surfBrd}`,
         borderRadius: '16px',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        boxShadow: 'var(--glass-shadow)',
         pointerEvents: 'auto'
       }}>
         {/* Ferramentas do Mapa & Desenho */}

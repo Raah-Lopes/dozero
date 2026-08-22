@@ -99,14 +99,14 @@ export const MobileBottomNav: React.FC = () => {
           position: relative;
           width: 280px; /* Reduced to fit mobile */
           height: 60px;
-          background: rgba(15, 23, 42, 0.95);
+          background: var(--bg-secondary);
           backdrop-filter: blur(12px);
           display: flex;
           justify-content: center;
           align-items: center;
           border-radius: 10px;
-          box-shadow: 0 15px 25px rgba(0,0,0,0.5);
-          border: 1px solid rgba(255,255,255,0.05);
+          box-shadow: var(--glass-shadow);
+          border: 1px solid var(--glass-border);
           transition: width 0.3s, opacity 0.3s;
         }
 
@@ -133,7 +133,7 @@ export const MobileBottomNav: React.FC = () => {
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          color: white;
+          color: var(--text-primary);
           opacity: 0;
           transition: opacity 0.3s;
           pointer-events: none;
@@ -178,17 +178,17 @@ export const MobileBottomNav: React.FC = () => {
           position: relative;
           display: block;
           transition: 0.5s;
-          color: rgba(255,255,255,0.6);
+          color: var(--text-secondary);
         }
 
         .liquid-navigation ul li.active button .icon {
           transform: translateY(-28px);
-          color: #0f172a;
+          color: #ffffff;
         }
 
         .liquid-navigation ul li button .text {
           position: absolute;
-          color: #fff;
+          color: var(--text-primary);
           font-weight: 600;
           font-size: 0.6em;
           letter-spacing: 0.02em;
@@ -208,9 +208,9 @@ export const MobileBottomNav: React.FC = () => {
           top: -40%;
           width: 56px;
           height: 56px;
-          background: #cbd5e1; 
+          background: var(--accent-primary); 
           border-radius: 50%;
-          border: 6px solid #141e30; 
+          border: 6px solid var(--bg-secondary); 
           transition: 0.5s;
           left: 0; 
         }

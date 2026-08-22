@@ -135,7 +135,8 @@ export function GMToolbar() {
       <div style={{
         fontSize: '0.68rem',
         textTransform: 'uppercase',
-        color: 'rgba(255, 255, 255, 0.45)',
+        color: 'var(--text-secondary)',
+        opacity: 0.8,
         letterSpacing: '0.06em',
         fontWeight: 700,
         padding: '6px 8px 2px 8px',
@@ -178,10 +179,10 @@ export function GMToolbar() {
                 width: '32px', 
                 height: '32px', 
                 objectFit: 'contain', 
-                filter: 'drop-shadow(0 2px 8px rgba(250, 204, 21, 0.4))' 
+                filter: 'drop-shadow(0 2px 8px var(--accent-glow))' 
               }} 
             />
-            <span style={{ color: 'white', fontWeight: 800, fontSize: '15px', marginLeft: '8px', letterSpacing: '0.02em' }}>Menu DOZERO</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 800, fontSize: '15px', marginLeft: '8px', letterSpacing: '0.02em' }}>Menu DOZERO</span>
           </div>
           <button 
             onClick={() => setIsOpen(!isOpen)}
@@ -191,7 +192,7 @@ export function GMToolbar() {
               transform: isOpen ? 'none' : 'translateX(50%)', 
               background: 'transparent', 
               border: 'none', 
-              color: 'white', 
+              color: 'var(--text-primary)', 
               cursor: 'pointer', 
               transition: 'all 0.3s' 
             }}
@@ -201,7 +202,7 @@ export function GMToolbar() {
           </button>
         </div>
         
-        <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2px 0', flexShrink: 0 }} />
+        <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '2px 0', flexShrink: 0 }} />
 
         <div 
           className="gm-tools-scroll-area"

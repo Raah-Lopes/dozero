@@ -386,14 +386,14 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
         width: open ? '230px' : '0px',
         overflow: 'hidden',
         transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
-        background: 'rgba(10,15,30,0.95)',
+        background: 'var(--bg-secondary)',
         backdropFilter: 'blur(12px)',
-        borderTop: open ? '1px solid rgba(255,255,255,0.12)' : 'none',
-        borderBottom: open ? '1px solid rgba(255,255,255,0.12)' : 'none',
-        borderLeft: open ? '1px solid rgba(255,255,255,0.12)' : 'none',
+        borderTop: open ? '1px solid var(--glass-border)' : 'none',
+        borderBottom: open ? '1px solid var(--glass-border)' : 'none',
+        borderLeft: open ? '1px solid var(--glass-border)' : 'none',
         borderRight: 'none',
         borderRadius: '12px 0 0 12px',
-        boxShadow: open ? '-4px 0 24px rgba(0,0,0,0.6)' : 'none',
+        boxShadow: open ? 'var(--glass-shadow)' : 'none',
       }}>
         {open && (
           <div style={{ width: '230px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '85vh', overflowY: 'auto' }}>
@@ -402,8 +402,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '6px 8px', borderRadius: '8px',
-              background: user ? 'rgba(16, 185, 129, 0.1)' : 'rgba(168, 85, 247, 0.1)',
-              border: `1px solid ${user ? 'rgba(16, 185, 129, 0.3)' : 'rgba(168, 85, 247, 0.25)'}`
+              background: user ? 'rgba(16, 185, 129, 0.1)' : 'var(--accent-glow)',
+              border: `1px solid ${user ? 'rgba(16, 185, 129, 0.3)' : 'var(--glass-border)'}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
                 {user?.user_metadata?.custom_avatar || user?.user_metadata?.avatar_url ? (
@@ -415,7 +415,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                 ) : (
                   <div style={{
                     width: '22px', height: '22px', borderRadius: '50%',
-                    background: user ? '#10b981' : '#a855f7',
+                    background: user ? '#10b981' : 'var(--accent-primary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '0.65rem', fontWeight: 'bold', color: 'white'
                   }}>
@@ -423,10 +423,10 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                   </div>
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {playerName}
                   </span>
-                  <span style={{ fontSize: '0.6rem', color: user ? '#86efac' : '#d8b4fe' }}>
+                  <span style={{ fontSize: '0.6rem', color: user ? 'var(--success)' : 'var(--accent-primary)' }}>
                     {user ? 'Autenticado' : 'Convidado'}
                   </span>
                 </div>
@@ -440,8 +440,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                 }}
                 style={{
                   padding: '3px 8px', borderRadius: '4px',
-                  background: user ? 'rgba(255,255,255,0.08)' : 'var(--accent-primary)',
-                  border: 'none', color: '#fff', fontSize: '0.65rem',
+                  background: user ? 'var(--bg-tertiary)' : 'var(--accent-primary)',
+                  border: 'none', color: user ? 'var(--text-primary)' : '#fff', fontSize: '0.65rem',
                   fontWeight: '600', cursor: 'pointer'
                 }}
               >
@@ -743,24 +743,24 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
           style={{
             width: '28px',
             height: '72px',
-            background: 'rgba(10,15,30,0.95)',
+            background: 'var(--bg-secondary)',
             backdropFilter: 'blur(12px)',
-            borderTop: '1px solid rgba(255,255,255,0.12)',
-            borderBottom: '1px solid rgba(255,255,255,0.12)',
-            borderLeft: '1px solid rgba(255,255,255,0.12)',
+            borderTop: '1px solid var(--glass-border)',
+            borderBottom: '1px solid var(--glass-border)',
+            borderLeft: '1px solid var(--glass-border)',
             borderRight: 'none',
             borderRadius: '10px 0 0 10px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#6366f1',
-            boxShadow: '-2px 0 12px rgba(0,0,0,0.4)',
+            color: 'var(--accent-primary)',
+            boxShadow: 'var(--glass-shadow)',
             transition: 'background 0.2s',
             flexShrink: 0,
           }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.2)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(10,15,30,0.95)'; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent-glow)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-secondary)'; }}
         >
           {open ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
