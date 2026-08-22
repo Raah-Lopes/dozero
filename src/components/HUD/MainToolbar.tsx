@@ -80,7 +80,7 @@ export function MainToolbar() {
         <div style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 1000000, pointerEvents: 'auto' }}>
           <button 
             className="glass-panel"
-            style={{ width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '8px', cursor: 'pointer' }}
+            style={{ width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '8px', cursor: 'pointer' }}
             onClick={() => setIsMenuOpen(true)}
           >
             <Menu size={24} />
@@ -96,7 +96,7 @@ export function MainToolbar() {
                   alt="Zye" 
                   style={{ width: '36px', height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(250, 204, 21, 0.4))' }} 
                 />
-                <h2 className="text-gold" style={{ margin: 0 }}>Menu DOZERO</h2>
+                <h2 className="theme-text-gradient" style={{ margin: 0 }}>Menu DOZERO</h2>
               </div>
               <button onClick={() => setIsMenuOpen(false)} aria-label="Fechar Menu" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)' }}><X size={28} /></button>
             </div>
@@ -108,7 +108,7 @@ export function MainToolbar() {
                 placeholder="Pesquisar ferramentas..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ width: '100%', padding: '12px 12px 12px 35px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '1rem' }}
+                style={{ width: '100%', padding: '12px 12px 12px 35px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '1rem' }}
               />
             </div>
 
@@ -121,7 +121,7 @@ export function MainToolbar() {
                     setIsMenuOpen(false); // fechar o menu mobile ao clicar
                   }}
                   className={`glass-panel ${tool.isActive ? 'active' : ''}`}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px 5px', background: tool.isActive ? 'rgba(255,255,255,0.1)' : 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '12px', textAlign: 'center', width: '100%' }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px 5px', background: tool.isActive ? 'var(--accent-glow)' : 'var(--glass-bg)', border: tool.isActive ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '12px', textAlign: 'center', width: '100%' }}
                 >
                   <div className={`btn-icon ${tool.colorClass} ${tool.isActive ? 'active' : ''}`} style={{ background: 'transparent', pointerEvents: 'none', width: 'auto', height: 'auto', marginBottom: '4px' }}>
                     {tool.icon}

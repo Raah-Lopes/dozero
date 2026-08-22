@@ -384,7 +384,7 @@ export function GMToolbar() {
             tooltip="Voltar"
             description="Retorna ao menu principal"
           />
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
           
           <ToolButton icon={<MousePointer2 size={20} />} active={activeTool === 'CURSOR'} onClick={() => { setActiveTool('CURSOR'); setActiveSubmenu(null); }} tooltip="Cursor" description="Interaja, selecione e mova tokens e objetos na mesa" />
           <ToolButton icon={<Hand size={20} />} active={activeTool === 'pan'} onClick={() => { setActiveTool('pan'); setActiveSubmenu(null); }} tooltip="Mover" description="Arraste para navegar pelo cenário livremente" />
@@ -392,7 +392,7 @@ export function GMToolbar() {
           <ToolButton icon={<Layers size={20} />} active={false} onClick={() => window.dispatchEvent(new Event('toggle-layers-menu'))} tooltip="Camadas (Layers)" description="Destranque mapas, ordene desenhos ou apague conteúdos" />
           <ToolButton icon={<Settings2 size={20} />} active={false} onClick={() => window.dispatchEvent(new Event('toggle-config-menu'))} tooltip="Configurações do Mapa" description="Altere tamanho do grid, imagem de fundo ou modo fow" />
           
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
           
           <ToolButton icon={<Pen size={20} />} active={false} onClick={() => { setActiveFolder('draw'); setActiveSubmenu(null); }} tooltip="Desenhar" description="Exibe ferramentas de caneta, formas, setas e texto" />
           <ToolButton 
@@ -424,7 +424,7 @@ export function GMToolbar() {
             tooltip="Voltar"
             description="Retorna ao menu de edição de mapa base"
           />
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
           <ToolButton 
             icon={<Pen size={20} />} 
             active={activeTool === 'pen'} 
@@ -483,7 +483,7 @@ export function GMToolbar() {
             tooltip="Adicionar Imagem"
             description="Envie adereços ou pedaços de cenário PNG local"
           />
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
           <ToolButton 
             icon={<Undo2 size={20} />} 
             active={false} 
@@ -510,12 +510,12 @@ export function GMToolbar() {
             tooltip="Voltar"
             description="Retorna ao menu de edição principal"
           />
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
           
           <ToolButton icon={<Eye size={20} />} active={fogMode === 'reveal'} onClick={() => handleSetFogMode('reveal')} tooltip="Modo Revelar" description="O que você desenhar será iluminado para a visão dos jogadores na mesa" />
           <ToolButton icon={<EyeOff size={20} />} active={fogMode === 'hide'} onClick={() => handleSetFogMode('hide')} tooltip="Modo Esconder" description="O que você desenhar será obscurecido novamente (Apagão)" />
 
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
 
           <ToolButton icon={<Paintbrush size={20} />} active={isFog && fogShape === 'brush'} onClick={() => { setFogShape('brush'); handleSetTool('FOG', 'brush'); }} tooltip="Pincel" description="Traços naturais (use Shift+Roda do mouse para tamanho)" />
           <ToolButton icon={<Square size={20} />} active={isFog && fogShape === 'rect'} onClick={() => { setFogShape('rect'); handleSetTool('FOG', 'rect'); }} tooltip="Retângulo" description="Revela ou oculta caixas perfeitas (ideal para salas)" />
@@ -525,12 +525,12 @@ export function GMToolbar() {
           <ToolButton icon={<Lasso size={20} />} active={isFog && fogShape === 'lasso'} onClick={() => { setFogShape('lasso'); handleSetTool('FOG', 'lasso'); }} tooltip="Laço" description="Desenhe e preencha grandes falhas de névoa orgânicas à mão livre em um só clique" />
           <ToolButton icon={<Eraser size={20} />} active={isFog && fogShape === 'eraser'} onClick={() => { setFogShape('eraser'); handleSetTool('FOG', 'erase'); }} tooltip="Borracha (FOG)" description="Apaga blocos de formas preenchidas que geraram a sombra ou luz clicando neles" />
           
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
           
           <ToolButton icon={<Undo2 size={20} />} active={false} onClick={() => window.dispatchEvent(new Event('canvas-undo'))} tooltip="Desfazer Névoa" description="Desfaz a última manipulação da camada de iluminação" />
           <ToolButton icon={<Redo2 size={20} />} active={false} onClick={() => window.dispatchEvent(new Event('canvas-redo'))} tooltip="Refazer Névoa" description="Refaz as alterações na neblina" />
 
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
           
           <ToolButton icon={<RefreshCcw size={20} />} active={false} onClick={() => FogOfWar.clear()} tooltip="Resetar FOG" description="Preenche toda a tela de volta com escuridão completa, apagando todos os recortes!" />
           <ToolButton icon={fogConfig.enabled ? <EyeOff size={20} color="#ef4444" /> : <Eye size={20} color="#10b981" />} active={false} onClick={() => Config.updateFog({ enabled: !fogConfig.enabled })} tooltip={fogConfig.enabled ? "Desativar FOG Global" : "Ativar FOG Global"} description="Liga ou desliga o escurecimento total do mapa provisoriamente (Se desligado, os players veem TUDO!)" />

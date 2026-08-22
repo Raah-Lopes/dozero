@@ -1173,7 +1173,9 @@ ${vencedor}`, true);
     if (defensor.saqueado) {
       adicionarLog(`⚠️ ${defensor.nome} já foi saqueado. Não há mais nada de valor.`, false);
       return;
-  const ouroSorte = Math.floor(Math.random() * (defensor.nivel * 10)) + 5;
+    }
+
+    const ouroSorte = Math.floor(Math.random() * (defensor.nivel * 10)) + 5;
     
     const atk = { ...atacante };
     const def = { ...defensor };
