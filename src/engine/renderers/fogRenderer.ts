@@ -143,89 +143,56 @@ export function renderFogOfWar(
   }
 
   // 4. Draw GM Ops 
-  // 'reveal' permanently opens an area.
-  // 'hide' acts as an INVISIBLE WALL for players, but we draw a red outline for the GM.
-  fogOps.forEach(op => {
-    const isReveal = op.mode === 'reveal';
-    const g = getGfx(isReveal ? 'erase' : 'normal');
-    let gmGfx = null;
-    if (isGM) {
-       gmGfx = getGfx('normal'); // Separate graphics object for GM lines so it doesn't use erase blend mode
-    }
+  // 'reveal' permanently opens an area (fusing all overlapping shapes together seamlessly).
+  // 'hide' acts as an INVISIBLE WALL for players, blocking line-of-sight.
+  const reveals = fogOps.filter(op => op.mode === 'reveal');
+  const hides = fogOps.filter(op => op.mode === 'hide');
 
-    if (op.type === 'circle') {
-      const geom = op.geom as FogGeomCircle;
-      g.circle(geom.x, geom.y, geom.r);
-      if (gmGfx) gmGfx.circle(geom.x, geom.y, geom.r);
-    } else if (op.type === 'square') {
-      const geom = op.geom as FogGeomSquare;
-      g.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
-      if (gmGfx) gmGfx.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
-    } else if (op.type === 'polygon') {
-      const geom = op.geom as FogGeomPolygon;
-      if (geom.points && geom.points.length > 2) {
-        g.moveTo(geom.points[0].x, geom.points[0].y);
-        if (gmGfx) gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
-        for (let i = 1; i < geom.points.length; i++) {
-          g.lineTo(geom.points[i].x, geom.points[i].y);
-          if (gmGfx) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
+  if (reveals.length > 0) {
+    // Unificação de todas as geometrias de revelação (retângulos, círculos, triângulos, polígonos) em 1 único Graphics
+    const revealGfx = getGfx('erase');
+    
+    reveals.forEach(op => {
+      if (op.type === 'circle') {
+        const geom = op.geom as FogGeomCircle;
+        revealGfx.circle(geom.x, geom.y, geom.r);
+      } else if (op.type === 'square') {
+        const geom = op.geom as FogGeomSquare;
+        revealGfx.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
+      } else if (op.type === 'polygon') {
+        const geom = op.geom as FogGeomPolygon;
+        if (geom.points && geom.points.length > 2) {
+          revealGfx.moveTo(geom.points[0].x, geom.points[0].y);
+          for (let i = 1; i < geom.points.length; i++) {
+            revealGfx.lineTo(geom.points[i].x, geom.points[i].y);
+          }
+          revealGfx.lineTo(geom.points[0].x, geom.points[0].y);
         }
-        g.lineTo(geom.points[0].x, geom.points[0].y);
-        if (gmGfx) gmGfx.lineTo(geom.points[0].x, geom.points[0].y);
-      }
-    } else if (op.type === 'path') {
-      const geom = op.geom as any;
-      if (geom.points && geom.points.length > 1) {
-        g.moveTo(geom.points[0].x, geom.points[0].y);
-        if (gmGfx) gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
-        for (let i = 1; i < geom.points.length; i++) {
-          g.lineTo(geom.points[i].x, geom.points[i].y);
-          if (gmGfx) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
+      } else if (op.type === 'path') {
+        const geom = op.geom as any;
+        if (geom.points && geom.points.length > 1) {
+          const pathGfx = getGfx('erase');
+          pathGfx.moveTo(geom.points[0].x, geom.points[0].y);
+          for (let i = 1; i < geom.points.length; i++) {
+            pathGfx.lineTo(geom.points[i].x, geom.points[i].y);
+          }
+          pathGfx.stroke({ color: 0xffffff, width: geom.width || 30, cap: 'round', join: 'round' });
         }
       }
-    }
+    });
 
-    if (isReveal) {
-      if (op.type === 'path') {
-        g.stroke({ color: 0xffffff, width: (op.geom as any).width, cap: 'round', join: 'round' });
-      } else {
-        g.fill({ color: 0xffffff, alpha: 1 });
-      }
-      if (gmGfx) {
-         if (op.type === 'path') {
-            gmGfx.stroke({ color: 0x475569, alpha: 0.8, width: 2, cap: 'round', join: 'round' });
-         } else {
-            gmGfx.stroke({ width: 2, color: 0x475569, alpha: 0.8 });
-         }
-      }
-    } else {
-      // 'hide' ops agem puramente como paredes que bloqueiam a passagem de raios de luz (Raycasting)
-      // Linhas de parede desenhadas apenas para o Mestre
-      if (gmGfx) {
-        if (op.type === 'circle') {
-          const geom = op.geom as FogGeomCircle;
-          gmGfx.circle(geom.x, geom.y, geom.r);
-        } else if (op.type === 'square') {
-          const geom = op.geom as FogGeomSquare;
-          gmGfx.rect(geom.x - geom.w / 2, geom.y - geom.h / 2, geom.w, geom.h);
-        } else if (op.type === 'polygon') {
-          const geom = op.geom as FogGeomPolygon;
-          if (geom.points && geom.points.length > 2) {
-            gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
-            for (let i = 1; i < geom.points.length; i++) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
-            gmGfx.lineTo(geom.points[0].x, geom.points[0].y);
-          }
-        } else if (op.type === 'path') {
-          const geom = op.geom as any;
-          if (geom.points && geom.points.length > 1) {
-            gmGfx.moveTo(geom.points[0].x, geom.points[0].y);
-            for (let i = 1; i < geom.points.length; i++) gmGfx.lineTo(geom.points[i].x, geom.points[i].y);
-          }
-        }
-        gmGfx.stroke({ width: 2, color: 0xef4444, alpha: 0.6 });
-      }
-    }
-  });
+    revealGfx.fill({ color: 0xffffff, alpha: 1.0 });
+  }
+
+  if (hides.length > 0 && isGM) {
+    const gmHideGfx = getGfx('normal');
+    const wallSegments = extractWallSegments(fogOps);
+    wallSegments.forEach(seg => {
+      gmHideGfx.moveTo(seg.a.x, seg.a.y);
+      gmHideGfx.lineTo(seg.b.x, seg.b.y);
+    });
+    gmHideGfx.stroke({ width: 2, color: 0xef4444, alpha: 0.8, cap: 'round', join: 'round' });
+  }
 
   fogContainer.visible = true;
 }

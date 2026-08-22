@@ -929,6 +929,38 @@ export const GameCanvas: React.FC = () => {
             
             if (currentDrawingPoints.length > 1) {
                 import('../store').then(s => {
+                   const layerId = localState.activeDrawingLayerId || 'default';
+                   const newPoints = [...currentDrawingPoints];
+                   const activeShape = localState.activeTool === 'shape' ? localState.activeShapeType : undefined;
+
+                   // Se a auto-fusão estiver ligada e for ferramenta de forma, fundir com formas sobrepostas
+                   if (localState.activeTool === 'shape' && (localState as any).autoFuseShapes) {
+                      const candidate = { points: newPoints, subShapes: [{ shapeType: activeShape || 'rectangle', points: newPoints }] };
+                      const shapesOnLayer = Array.from(state.drawings.values() as IterableIterator<any>).filter(
+                         d => d.type === 'shape' && (d.layerId || 'default') === layerId
+                      );
+
+                      const targetToMerge = shapesOnLayer.find(d => s.doShapesOverlap(d, candidate));
+                      if (targetToMerge) {
+                         const currentSubShapes = targetToMerge.subShapes && targetToMerge.subShapes.length > 0
+                            ? [...targetToMerge.subShapes]
+                            : [{ shapeType: targetToMerge.shapeType || 'rectangle', points: [...targetToMerge.points] }];
+                         
+                         currentSubShapes.push({
+                            shapeType: activeShape || 'rectangle',
+                            points: newPoints
+                         });
+
+                         s.updateDrawing(targetToMerge.id, {
+                            subShapes: currentSubShapes,
+                            shapeType: 'fused',
+                            isFused: true,
+                            name: targetToMerge.name ? `${targetToMerge.name} (Fundida)` : 'Forma Fundida'
+                         });
+                         return;
+                      }
+                   }
+
                    const maxZ = Math.max(
                       ...Array.from(state.backgrounds.values()).map((b: any) => b.zIndex || 0),
                       ...Array.from(state.drawings.values()).map((d: any) => d.zIndex || 0),
@@ -938,11 +970,11 @@ export const GameCanvas: React.FC = () => {
                       id: 'draw_' + Date.now() + Math.random().toString(36).substr(2, 5),
                       type: localState.activeTool === 'shape' ? 'shape' : (localState.activeTool as any),
                       shapeType: localState.activeTool === 'shape' ? localState.activeShapeType : undefined,
-                      points: [...currentDrawingPoints],
+                      points: newPoints,
                       color: localState.drawColor || '#ef4444',
                       width: localState.drawWidth || 4,
                       zIndex: maxZ + 1,
-                      layerId: localState.activeDrawingLayerId || 'default'
+                      layerId: layerId
                    });
                 });
             }
@@ -3093,28 +3125,47 @@ export const GameCanvas: React.FC = () => {
             }
             g.stroke({ width, color, alpha: 1, cap: 'round', join: 'round' });
           } else if (d.type === 'shape') {
-            if (d.points.length >= 2) {
-               const p1 = d.points[0];
-               const p2 = d.points[d.points.length - 1];
-               const minX = Math.min(p1.x, p2.x);
-               const minY = Math.min(p1.y, p2.y);
-               const w = Math.abs(p2.x - p1.x);
-               const h = Math.abs(p2.y - p1.y);
-               
-               if (d.shapeType === 'circle') {
-                 g.ellipse(minX + w/2, minY + h/2, w/2, h/2);
-               } else if (d.shapeType === 'triangle') {
-                 g.moveTo(minX + w/2, minY);
-                 g.lineTo(minX + w, minY + h);
-                 g.lineTo(minX, minY + h);
-                 g.closePath();
-               } else {
-                 g.rect(minX, minY, w, h);
+            const subShapes = d.subShapes && d.subShapes.length > 0
+              ? d.subShapes
+              : (d.points.length >= 2 ? [{ shapeType: d.shapeType || 'rectangle', points: d.points }] : []);
+            
+            if (subShapes.length > 0) {
+               for (const s of subShapes) {
+                  if (s.points && s.points.length >= 2) {
+                     const p1 = s.points[0];
+                     const p2 = s.points[s.points.length - 1];
+                     const minX = Math.min(p1.x, p2.x);
+                     const minY = Math.min(p1.y, p2.y);
+                     const w = Math.abs(p2.x - p1.x);
+                     const h = Math.abs(p2.y - p1.y);
+                     
+                     if (s.shapeType === 'circle') {
+                       g.ellipse(minX + w/2, minY + h/2, w/2, h/2);
+                     } else if (s.shapeType === 'triangle') {
+                       g.moveTo(minX + w/2, minY);
+                       g.lineTo(minX + w, minY + h);
+                       g.lineTo(minX, minY + h);
+                       g.closePath();
+                     } else {
+                       g.rect(minX, minY, w, h);
+                     }
+                  }
+               }
+
+               if (d.fillColor || d.isFused) {
+                  g.fill({ color: d.fillColor || color, alpha: 0.25 });
                }
                g.stroke({ width, color, alpha: 1 });
                
                g.removeChildren().forEach((c: any) => c.destroy());
-               if (d.text) {
+               if (d.text && d.points.length >= 2) {
+                  const p1 = d.points[0];
+                  const p2 = d.points[d.points.length - 1];
+                  const minX = Math.min(p1.x, p2.x);
+                  const minY = Math.min(p1.y, p2.y);
+                  const w = Math.abs(p2.x - p1.x);
+                  const h = Math.abs(p2.y - p1.y);
+
                   const textStyle = {
                      fontFamily: 'Inter, sans-serif',
                      fontSize: 24,

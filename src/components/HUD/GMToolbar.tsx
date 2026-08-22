@@ -4,7 +4,7 @@ import {
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
   Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, 
-  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords 
+  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine 
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -395,6 +395,22 @@ export function GMToolbar() {
           <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
           
           <ToolButton icon={<Pen size={20} />} active={false} onClick={() => { setActiveFolder('draw'); setActiveSubmenu(null); }} tooltip="Desenhar" description="Exibe ferramentas de caneta, formas, setas e texto" />
+          <ToolButton 
+            icon={<Combine size={20} />} 
+            active={false} 
+            onClick={() => {
+              import('../../store').then(s => {
+                const count = s.fuseOverlappingShapes(s.localState.activeDrawingLayerId);
+                if (count > 0) {
+                  toast.success(`✨ ${count} forma(s) sobreposta(s) foram fundidas com sucesso!`);
+                } else {
+                  toast.info("Nenhuma forma sobreposta encontrada na camada ativa.");
+                }
+              });
+            }} 
+            tooltip="Fundir Formas Sobrepostas" 
+            description="Unifique todas as formas e salas que se tocam na camada ativa" 
+          />
           <ToolButton icon={<CloudFog size={20} />} active={isFog} onClick={() => { setActiveFolder('fog'); setActiveSubmenu(null); }} tooltip="Névoa" description="Esconda ou revele partes do mapa dos jogadores" />
         </>
       )}
@@ -422,6 +438,22 @@ export function GMToolbar() {
             onClick={() => handleSetTool('shape')} 
             tooltip="Forma Geométrica"
             description="Desenhe blocos de formatos rígidos para delimitar a área"
+          />
+          <ToolButton 
+            icon={<Combine size={20} />} 
+            active={false} 
+            onClick={() => {
+              import('../../store').then(s => {
+                const count = s.fuseOverlappingShapes(s.localState.activeDrawingLayerId);
+                if (count > 0) {
+                  toast.success(`✨ ${count} forma(s) sobreposta(s) foram fundidas com sucesso!`);
+                } else {
+                  toast.info("Nenhuma forma sobreposta encontrada na camada ativa.");
+                }
+              });
+            }} 
+            tooltip="Fundir Formas Sobrepostas"
+            description="Unifique todas as formas geométricas e salas que se tocam na camada atual"
           />
           <ToolButton 
             icon={<ArrowRight size={20} />} 

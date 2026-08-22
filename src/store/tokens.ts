@@ -16,8 +16,14 @@ export const localState = {
   drawColor: '#ef4444',
   drawWidth: 4,
   activeDrawingLayerId: 'default',
-  fogMode: 'reveal' as 'reveal' | 'hide'
+  fogMode: 'reveal' as 'reveal' | 'hide',
+  autoFuseShapes: false
 };
+
+export function setAutoFuseShapes(enabled: boolean) {
+  localState.autoFuseShapes = enabled;
+  window.dispatchEvent(new Event('tool-changed'));
+}
 
 export function setFogMode(mode: 'reveal' | 'hide') {
   localState.fogMode = mode;

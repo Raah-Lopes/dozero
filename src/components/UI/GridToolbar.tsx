@@ -9,7 +9,7 @@ import {
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
   Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan, X,
-  Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload
+  Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload, Combine
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from './Tooltip';
@@ -1051,52 +1051,213 @@ export const GridToolbar: React.FC = () => {
           maxWidth: '92vw',
           overflowX: 'auto'
         }}>
-          {/* Color presets */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>COR:</span>
-            <Tooltip label="Cor do Traço" description="Escolha a cor do desenho">
-              <input
-                type="color"
-                value={drawColor}
-                onChange={e => setDrawColor(e.target.value)}
-                style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
-              />
-            </Tooltip>
-          </div>
-
-          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
-          
-          {/* Shape Types (Only when shape tool is active) */}
-          {activeTool === 'shape' && (
+          {/* Se estiver em ferramenta de Névoa de Guerra */}
+          {activeTool.startsWith('fog_') ? (
             <>
+              {/* Modo da Névoa (Revelar ou Esconder) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', color: C.textMut, fontWeight: 700, textTransform: 'uppercase' }}>NÉVOA:</span>
+                <button
+                  type="button"
+                  onClick={() => setFogMode('reveal')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    background: fogMode === 'reveal' ? C.successBg : 'transparent',
+                    border: fogMode === 'reveal' ? `1px solid ${C.success}` : '1px solid rgba(255,255,255,0.1)',
+                    color: fogMode === 'reveal' ? C.success : C.textDim
+                  }}
+                >
+                  <Eye size={13} /> Revelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFogMode('hide')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    background: fogMode === 'hide' ? C.dangerBg : 'transparent',
+                    border: fogMode === 'hide' ? `1px solid ${C.danger}` : '1px solid rgba(255,255,255,0.1)',
+                    color: fogMode === 'hide' ? C.danger : C.textDim
+                  }}
+                >
+                  <EyeOff size={13} /> Esconder
+                </button>
+              </div>
+
+              <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+
+              {/* Formas de Névoa */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '11px', color: C.textMut, fontWeight: 700, textTransform: 'uppercase' }}>FORMATO:</span>
+                {[
+                  { id: 'fog_brush', icon: Paintbrush, label: 'Pincel' },
+                  { id: 'fog_rect', icon: Square, label: 'Retângulo' },
+                  { id: 'fog_circle', icon: Circle, label: 'Círculo' },
+                  { id: 'fog_triangle', icon: Triangle, label: 'Triângulo' },
+                  { id: 'fog_polygon', icon: Hexagon, label: 'Polígono' },
+                  { id: 'fog_lasso', icon: Lasso, label: 'Laço' },
+                  { id: 'fog_erase', icon: Eraser, label: 'Borracha' },
+                ].map(tool => {
+                  const Icon = tool.icon;
+                  const isActive = activeTool === tool.id;
+                  return (
+                    <Tooltip key={tool.id} label={tool.label} position="top">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTool(tool.id as any)}
+                        style={{
+                          background: isActive ? 'rgba(14,165,233,0.3)' : C.surfHov,
+                          border: isActive ? `1px solid ${C.accent}` : '1px solid transparent',
+                          color: isActive ? C.accent : C.textMut,
+                          borderRadius: '6px',
+                          padding: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Icon size={14} />
+                      </button>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+
+              <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+
+              {/* Status de Fusão Automática */}
+              <span style={{ fontSize: '11px', color: '#c084fc', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                <Combine size={13} /> Fusão Contínua Ativa
+              </span>
+            </>
+          ) : (
+            <>
+              {/* Color presets */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>FORMA:</span>
-                <Tooltip label="Retângulo">
-                  <button
-                     onClick={() => import('../../store').then(s => s.setActiveShapeType('rectangle'))}
-                     style={{ background: localState.activeShapeType === 'rectangle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'rectangle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'rectangle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
-                  ><Square size={14} /></button>
-                </Tooltip>
-                <Tooltip label="Círculo">
-                  <button
-                     onClick={() => import('../../store').then(s => s.setActiveShapeType('circle'))}
-                     style={{ background: localState.activeShapeType === 'circle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'circle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'circle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
-                  ><Circle size={14} /></button>
-                </Tooltip>
-                <Tooltip label="Triângulo">
-                  <button
-                     onClick={() => import('../../store').then(s => s.setActiveShapeType('triangle'))}
-                     style={{ background: localState.activeShapeType === 'triangle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'triangle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'triangle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
-                  ><Triangle size={14} /></button>
+                <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>COR:</span>
+                <Tooltip label="Cor do Traço" description="Escolha a cor do desenho">
+                  <input
+                    type="color"
+                    value={drawColor}
+                    onChange={e => setDrawColor(e.target.value)}
+                    style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
+                  />
                 </Tooltip>
               </div>
+
               <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+              
+              {/* Shape Types & Fusion (Only when shape tool is active) */}
+              {activeTool === 'shape' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>FORMA:</span>
+                    <Tooltip label="Retângulo">
+                      <button
+                         onClick={() => import('../../store').then(s => s.setActiveShapeType('rectangle'))}
+                         style={{ background: localState.activeShapeType === 'rectangle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'rectangle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'rectangle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
+                      ><Square size={14} /></button>
+                    </Tooltip>
+                    <Tooltip label="Círculo">
+                      <button
+                         onClick={() => import('../../store').then(s => s.setActiveShapeType('circle'))}
+                         style={{ background: localState.activeShapeType === 'circle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'circle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'circle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
+                      ><Circle size={14} /></button>
+                    </Tooltip>
+                    <Tooltip label="Triângulo">
+                      <button
+                         onClick={() => import('../../store').then(s => s.setActiveShapeType('triangle'))}
+                         style={{ background: localState.activeShapeType === 'triangle' ? 'rgba(14,165,233,0.3)' : C.surfHov, border: localState.activeShapeType === 'triangle' ? `1px solid ${C.accent}` : '1px solid transparent', color: localState.activeShapeType === 'triangle' ? C.accent : C.textMut, borderRadius: '6px', padding: '4px', cursor: 'pointer', flexShrink: 0 }}
+                      ><Triangle size={14} /></button>
+                    </Tooltip>
+                  </div>
+
+                  <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+
+                  {/* Fusão de Formas */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Tooltip label={(localState as any).autoFuseShapes ? "Auto-Fundir Formas: ATIVADO (Formas sobrepostas são unificadas automaticamente ao desenhar)" : "Auto-Fundir Formas: DESATIVADO (Clique para ativar união de formas sobrepostas)"}>
+                      <button
+                        onClick={() => {
+                          const next = !(localState as any).autoFuseShapes;
+                          import('../../store').then(s => {
+                            s.setAutoFuseShapes(next);
+                            if (next) toast.success("Auto-Fusão Ativada: Novas formas sobrepostas serão unificadas!");
+                            else toast.info("Auto-Fusão Desativada.");
+                          });
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          background: (localState as any).autoFuseShapes ? 'rgba(168, 85, 247, 0.25)' : C.surfHov,
+                          border: (localState as any).autoFuseShapes ? '1px solid #a855f7' : '1px solid transparent',
+                          color: (localState as any).autoFuseShapes ? '#c084fc' : C.textMut,
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <Combine size={13} />
+                        <span>Auto-Fundir</span>
+                      </button>
+                    </Tooltip>
+
+                    <Tooltip label="Fundir todas as formas sobrepostas da camada ativa agora">
+                      <button
+                        onClick={() => {
+                          import('../../store').then(s => {
+                            const count = s.fuseOverlappingShapes(localState.activeDrawingLayerId);
+                            if (count > 0) {
+                              toast.success(`✨ ${count} forma(s) sobreposta(s) foram fundidas!`);
+                            } else {
+                              toast.info("Nenhuma forma sobreposta encontrada na camada ativa.");
+                            }
+                          });
+                        }}
+                        style={{
+                          background: C.surfHov,
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          color: C.textSec,
+                          borderRadius: '6px',
+                          padding: '4px 6px',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <span>Fundir Sobrepostas</span>
+                      </button>
+                    </Tooltip>
+                  </div>
+                  <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+                </>
+              )}
             </>
           )}
 
-          {/* Stroke Width */}
+          {/* Stroke Width / Raio do Pincel */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{activeTool === 'eraser' ? 'TAMANHO:' : 'TRAÇO:'}</span>
+            <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{activeTool === 'eraser' || activeTool.startsWith('fog_') ? 'TAMANHO:' : 'TRAÇO:'}</span>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <input type="range" min="1" max="50" value={drawWidth} onChange={(e) => setDrawWidth(Number(e.target.value))} />
               <span style={{color: C.textMut, fontSize: '12px', minWidth: '30px'}}>{drawWidth}px</span>
@@ -1382,6 +1543,86 @@ export const GridToolbar: React.FC = () => {
                       </Tooltip>
                     );
                   })}
+                </div>
+
+                {/* Seletor Rápido de Formas & Fusão de Formas */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: C.surfItem, padding: '4px 6px', borderRadius: '8px', border: `1px solid ${C.surfBrd}` }}>
+                  <span style={{ fontSize: '10px', color: C.textMut, fontWeight: 700, textTransform: 'uppercase' }}>Formas:</span>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTool('shape'); import('../../store').then(s => s.setActiveShapeType('rectangle')); }}
+                    style={{ padding: '3px 5px', borderRadius: '4px', border: 'none', background: activeTool === 'shape' && localState.activeShapeType === 'rectangle' ? C.accentBg : 'transparent', color: activeTool === 'shape' && localState.activeShapeType === 'rectangle' ? C.accent : C.textSec, cursor: 'pointer' }}
+                    title="Retângulo"
+                  ><Square size={13} /></button>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTool('shape'); import('../../store').then(s => s.setActiveShapeType('circle')); }}
+                    style={{ padding: '3px 5px', borderRadius: '4px', border: 'none', background: activeTool === 'shape' && localState.activeShapeType === 'circle' ? C.accentBg : 'transparent', color: activeTool === 'shape' && localState.activeShapeType === 'circle' ? C.accent : C.textSec, cursor: 'pointer' }}
+                    title="Círculo"
+                  ><Circle size={13} /></button>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTool('shape'); import('../../store').then(s => s.setActiveShapeType('triangle')); }}
+                    style={{ padding: '3px 5px', borderRadius: '4px', border: 'none', background: activeTool === 'shape' && localState.activeShapeType === 'triangle' ? C.accentBg : 'transparent', color: activeTool === 'shape' && localState.activeShapeType === 'triangle' ? C.accent : C.textSec, cursor: 'pointer' }}
+                    title="Triângulo"
+                  ><Triangle size={13} /></button>
+
+                  <div style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !(localState as any).autoFuseShapes;
+                      import('../../store').then(s => {
+                        s.setAutoFuseShapes(next);
+                        if (next) toast.success("Auto-Fusão Ativada: Formas sobrepostas serão unificadas ao desenhar!");
+                        else toast.info("Auto-Fusão Desativada.");
+                      });
+                    }}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      padding: '3px 6px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      background: (localState as any).autoFuseShapes ? 'rgba(168,85,247,0.3)' : 'transparent',
+                      border: (localState as any).autoFuseShapes ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.08)',
+                      color: (localState as any).autoFuseShapes ? '#c084fc' : C.textSec,
+                      cursor: 'pointer'
+                    }}
+                    title="Auto-Fundir ao desenhar formas sobrepostas"
+                  >
+                    <Combine size={12} /> Auto-Fundir
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      import('../../store').then(s => {
+                        const count = s.fuseOverlappingShapes(localState.activeDrawingLayerId);
+                        if (count > 0) toast.success(`✨ ${count} forma(s) fundida(s)!`);
+                        else toast.info("Nenhuma forma sobreposta encontrada.");
+                      });
+                    }}
+                    style={{
+                      padding: '3px 6px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: C.textPri,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title="Fundir todas as formas sobrepostas da camada"
+                  >
+                    Fundir
+                  </button>
                 </div>
               </div>
 
