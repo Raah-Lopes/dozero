@@ -23,7 +23,7 @@ export const daylightTheme: ThemeDefinition = {
   warning: '#d97706', // amber-600
   mana: '#2563eb', // blue-600
 
-  glassBg: 'rgba(255, 255, 255, 0.8)', // translúcido e suave
+  glassBg: 'rgba(255, 255, 255, 0.95)', // superfície sólida, limpa e de alto contraste
   glassBorder: 'rgba(0, 0, 0, 0.12)', // sutil e limpo
   glassBorderHighlight: 'rgba(37, 99, 235, 0.4)',
   glassShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.08)', // sombra suave minimalista

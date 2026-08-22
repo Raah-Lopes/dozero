@@ -216,18 +216,18 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Premium HUD Glassmorphism */
 .hud-glass {
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--glass-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hud-glass-hoverable:hover {
-  background: rgba(20, 30, 50, 0.85);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+  background: var(--bg-secondary);
+  border-color: var(--glass-border-highlight);
+  box-shadow: var(--glass-shadow);
 }
 
 .hud-sidebar-container {
@@ -795,11 +795,19 @@ html[data-theme^="chronicles"] .draggable-window-container {
   background: var(--bg-secondary) !important;
   border: 2px solid var(--glass-border) !important;
   box-shadow: 2px 4px 12px rgba(0,0,0,0.4), inset 0 0 40px rgba(0,0,0,0.05) !important;
-  
-  /* Redefine text variables locally so inline styles inside panels use dark ink instead of light wood text */
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="chronicles-parchment"] .glass-panel,
+html[data-theme="chronicles-parchment"] .draggable-window-container {
   --text-primary: #3e2723;
   --text-secondary: #5d4037;
-  color: var(--text-primary) !important;
+}
+
+html[data-theme="chronicles-wood"] .glass-panel,
+html[data-theme="chronicles-wood"] .draggable-window-container {
+  --text-primary: #f4e4c1;
+  --text-secondary: #d1bfae;
 }
 
 html[data-theme^="chronicles"] .btn-icon {
@@ -807,21 +815,16 @@ html[data-theme^="chronicles"] .btn-icon {
   background: var(--bg-tertiary) !important;
   border: 2px solid var(--glass-border) !important;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.3) !important;
-  
-  /* Ensure icon text contrasts with light backgrounds */
-  --text-primary: #3e2723;
-  --text-secondary: #5d4037;
   color: var(--text-primary) !important;
 }
 
 html[data-theme^="chronicles"] .btn-icon svg,
 html[data-theme^="chronicles"] .ai-assistant-btn svg {
-  color: #3e2723 !important;
+  color: var(--text-primary) !important;
 }
 
 html[data-theme^="chronicles"] .btn-icon:hover {
   background: var(--bg-secondary) !important;
-
   border-color: var(--accent-primary);
   transform: translateY(-2px);
 }
@@ -1049,6 +1052,14 @@ html[data-theme^="chronicles"] .stage-prop.selected {
   transition: all 0.3s ease;
 }
 
+.theme-panel-solid {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-lg, 16px) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--text-primary) !important;
+}
+
 .theme-panel-glass:hover {
   border-color: var(--glass-border-highlight) !important;
 }
@@ -1057,8 +1068,30 @@ html[data-theme^="chronicles"] .stage-prop.selected {
 .theme-font-body { font-family: var(--font-body) !important; }
 .theme-font-display { font-family: var(--font-display) !important; }
 
+/* Universal Form Controls Reset */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+select,
+textarea {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+  font-family: var(--font-body);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 0.6;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-primary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--accent-glow) !important;
+}
+
 /* Scrollbar from Theme */
-.theme-scrollbar::-webkit-scrollbar-thumb {
+.theme-scrollbar::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb) !important;
 }
 
