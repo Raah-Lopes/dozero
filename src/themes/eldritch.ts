@@ -20,9 +20,9 @@ export const eldritchTheme: ThemeDefinition = {
   textPrimary: '#e8e0d4',       // parchment white
   textSecondary: '#8a9e89',     // mossy muted green
 
-  accentPrimary: '#b91c1c',     // blood red
-  accentHover: '#991b1b',       // deeper crimson
-  accentGlow: 'rgba(185, 28, 28, 0.5)',
+  accentPrimary: '#dc2626',     // bright blood red
+  accentHover: '#ef4444',       // glowing crimson
+  accentGlow: 'rgba(220, 38, 38, 0.5)',
 
   danger: '#dc2626',
   success: '#4d7c4d',           // sickly dark green
