@@ -1,192 +1,326 @@
 import React, { useState, useEffect } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { Map, MapPin, Hammer } from 'lucide-react';
+import { Map, MapPin, Hammer, Save, Send, Sparkles, AlertTriangle, Compass, ShieldAlert } from 'lucide-react';
 import { pushChatMessage } from '../../../store';
 import { LocationParser } from '../../../services/oracle/LocationParser';
-import type { NPCCategory, NPCTable } from '../../../services/oracle/NPCParser';
+import type { NPCCategory } from '../../../services/oracle/NPCParser';
 import { DiceRoll } from '@dice-roller/rpg-dice-roller';
 import { saveMarkdownContent } from '../../../utils/githubApi';
-
 import { toast } from '../../UI/Toast';
-interface LocationGeneratorWidgetProps {
-  onClose?: () => void;
+
+interface GeneratedLocation {
+  nome: string;
+  tamanho: string;
+  perigo: string;
+  atmosfera: string;
+  marcos: string;
+  segredo: string;
+  tipo: string;
+  timestamp: number;
 }
 
-export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = ({ onClose }) => {
+interface LocationGeneratorWidgetProps {
+  onClose?: () => void;
+  embedded?: boolean;
+}
+
+export const LocationGeneratorWidget: React.FC<LocationGeneratorWidgetProps> = ({ onClose, embedded }) => {
   const [categories, setCategories] = useState<NPCCategory[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [filterType, setFilterType] = useState<string>('Aleatório');
+  const [currentLocation, setCurrentLocation] = useState<GeneratedLocation | null>(null);
 
   useEffect(() => {
-    LocationParser.loadCategories().then(cats => setCategories(cats));
+    LocationParser.loadCategories().then(cats => setCategories(cats)).catch(() => {});
 
     // Global function to handle wiki creation from chat
     (window as any).createLocationWiki = async (locBase64: string) => {
       try {
         const locData = JSON.parse(decodeURIComponent(atob(locBase64)));
-        const fileName = `${locData.nome.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.md`;
-        const path = `[1] 🏕️ Campanha Principal/Locais/${fileName}`;
-        
-        let md = `---\n`;
-        md += `tipo: Local\n`;
-        md += `nome: "${locData.nome}"\n`;
-        md += `tags: [local, generated]\n`;
-        md += `---\n\n`;
-        md += `# 🏰 ${locData.nome}\n\n`;
-        md += `> **Tamanho:** ${locData.tamanho}\n>\n`;
-        md += `> *Ameaça/Perigo:* ${locData.perigo}\n\n`;
-        
-        md += `## 📜 Visão Geral\n`;
-        md += `- **Atmosfera:** ${locData.atmosfera}\n`;
-        md += `- **Economia Principal:** ${locData.economia}\n`;
-        md += `- **Rumor/Segredo:** ${locData.rumor}\n\n`;
-
-        md += `### Notas do Mestre\n`;
-        md += `(Adicione as anotações detalhadas sobre este local aqui)\n`;
-
-        await saveMarkdownContent(path, md);
-        toast.success(`✅ Ficha de ${locData.nome} criada com sucesso em [1] 🏕️ Campanha Principal/Locais/!`);
-      } catch (e) {
-        console.error(e);
-        toast.error('Erro ao criar a ficha de Local na Wiki.');
+        await saveLocationToWiki(locData);
+      } catch (err: any) {
+        toast.error('Erro ao salvar local na Wiki.');
       }
-    };
-
-    return () => {
-      delete (window as any).createLocationWiki;
     };
   }, []);
 
-  const findTable = (name: string): NPCTable | null => {
-    if (categories.length === 0) return null;
-    const cat = categories[0];
-    return cat.tables.find(t => t.name.toLowerCase() === name.toLowerCase()) || null;
-  };
-
-  const rollTable = (table: NPCTable | null): string => {
-    if (!table) return 'Desconhecido';
+  const saveLocationToWiki = async (loc: GeneratedLocation) => {
     try {
-      const roll = new DiceRoll(table.dice);
-      const row = table.rows.find(r => roll.total >= r.min && roll.total <= r.max);
-      return row ? row.result : `[${roll.total}]`;
-    } catch {
-      return 'Erro';
+      const fileName = `${loc.nome.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.md`;
+      const path = `[1] 🏕️ Campanha Principal/Locais/${fileName}`;
+      
+      let md = `---\n`;
+      md += `tipo: Local\n`;
+      md += `nome: "${loc.nome}"\n`;
+      md += `tamanho: "${loc.tamanho}"\n`;
+      md += `perigo: "${loc.perigo}"\n`;
+      md += `tags: [local, generated]\n`;
+      md += `---\n\n`;
+      md += `# 🏰 ${loc.nome}\n\n`;
+      md += `> **Tamanho/População:** ${loc.tamanho}\n>\n`;
+      md += `> **Nível de Perigo:** ${loc.perigo}\n\n`;
+      md += `### 📜 Descrição & Atmosfera\n${loc.atmosfera}\n\n`;
+      md += `### 🏛️ Marcos Notáveis\n${loc.marcos}\n\n`;
+      md += `### 🎲 Segredos & Ganchos Narrativos\n${loc.segredo}\n\n`;
+
+      await saveMarkdownContent(path, md);
+      toast.success(`Ficha de Local "${loc.nome}" salva na Wiki com sucesso!`);
+    } catch (err: any) {
+      toast.error('Falha ao gravar arquivo na Wiki.');
     }
   };
 
-  const gerarLocal = () => {
-    setIsGenerating(true);
-    
-    let tema = filterType;
-    if (tema === 'Aleatório') {
-      tema = Math.random() > 0.5 ? 'Fantasia' : 'Sci-Fi';
-    }
-
-    const nomeTable = findTable(`Nome (${tema})`) || findTable('Nome (Fantasia)');
-    const nome = rollTable(nomeTable);
-    
-    const tamanho = rollTable(findTable('Tamanho do Assentamento'));
-    const economia = rollTable(findTable('Economia / Recurso Principal'));
-    const perigo = rollTable(findTable('Perigo Local'));
-    const atmosfera = rollTable(findTable('Atmosfera (Vibe)'));
-    const rumor = rollTable(findTable('Segredo / Rumor'));
-
-    const locData = { nome, tamanho, economia, perigo, atmosfera, rumor };
-    const base64Data = btoa(encodeURIComponent(JSON.stringify(locData)));
-
+  const shareToChat = (loc: GeneratedLocation) => {
+    const base64Data = btoa(encodeURIComponent(JSON.stringify(loc)));
     const chatHtml = `
-      <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px; margin-top: 8px; font-family: monospace;">
-        <div style="color: var(--accent-primary); font-size: 1.1em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; margin-bottom: 8px; display:flex; align-items:center; gap: 6px;">
-          🗺️ <b>${nome}</b>
+      <div style="background: rgba(59, 130, 246, 0.12); border-left: 4px solid #3b82f6; padding: 12px; border-radius: 6px; font-family: sans-serif;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span style="color: #60a5fa; font-weight: bold; font-size: 1.1em;">🏰 ${loc.nome}</span>
+          <span style="font-size: 0.8em; color: var(--text-secondary); background: rgba(0,0,0,0.3); padding: 2px 6px; borderRadius: 4px;">${loc.tamanho}</span>
         </div>
         <div style="font-size: 0.9em; line-height: 1.4; color: var(--text-secondary);">
-          <b>Escala:</b> ${tamanho}<br/>
-          <b>Vibe:</b> ${atmosfera}<br/>
-          <b>Economia:</b> ${economia}<br/>
-          <div style="margin-top: 6px; padding-left: 8px; border-left: 2px solid rgba(239,68,68,0.5);">
-            <b>⚠️ Perigo:</b> ${perigo}<br/>
-            <b>🕵️ Segredo/Rumor:</b> <span style="color: #c084fc">${rumor}</span>
+          <b>Atmosfera:</b> ${loc.atmosfera}<br/>
+          <b>Marco:</b> ${loc.marcos}<br/>
+          <div style="margin-top: 6px; padding-left: 8px; border-left: 2px solid rgba(59, 130, 246, 0.5);">
+            <b>⚠️ Perigo:</b> ${loc.perigo}<br/>
+            <b>🕵️ Segredo:</b> <span style="color: #f87171">${loc.segredo}</span>
           </div>
         </div>
-        <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+        <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px;">
           <button 
             onclick="window.createLocationWiki('${base64Data}')"
-            style="background: var(--accent-primary); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em; display: flex; align-items: center; gap: 4px;"
+            style="background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em; display: flex; align-items: center; gap: 4px; font-weight: bold;"
           >
-            📁 Salvar Local
+            📁 Salvar Local na Wiki
           </button>
         </div>
       </div>
     `;
 
     pushChatMessage(chatHtml);
+    toast.success(`Local "${loc.nome}" compartilhado no Chat!`);
+  };
+
+  const gerarLocal = () => {
+    setIsGenerating(true);
+
+    const findTable = (tName: string) => {
+      for (const cat of categories) {
+        const table = cat.tables.find(t => t.name.toLowerCase().includes(tName.toLowerCase()));
+        if (table) return table;
+      }
+      return null;
+    };
+
+    const rollT = (tName: string, fallbackArr: string[]) => {
+      const table = findTable(tName);
+      if (table && table.rows && table.rows.length > 0) {
+        try {
+          const r = new DiceRoll(table.dice || '1d100');
+          const row = table.rows.find(row => r.total >= row.min && r.total <= row.max);
+          if (row) return row.result;
+        } catch (e) {}
+      }
+      return fallbackArr[Math.floor(Math.random() * fallbackArr.length)];
+    };
+
+    // Fallbacks robustos se matrizes não estiverem carregadas
+    const prefixos = ['Ruínas de', 'Fortaleza de', 'Vila de', 'Povoado de', 'Cripta de', 'Torre de', 'Santuário de', 'Porto de', 'Bosque de', 'Oásis de', 'Posto Avançado de', 'Cidadela de'];
+    const sufixos = ['Valfenda', 'Kharanos', 'Eldoria', 'Pedranegra', 'Sombra-eterna', 'Sol-poente', 'Vento-frio', 'Brumas', 'Espinho', 'Chama-azul', 'Ossos-brancos', 'Prata-velha'];
+    const tamanhos = ['Acampamento Isolado (3-10 habitantes)', 'Vila Pequena (50-200 habitantes)', 'Cidadela Murada (1.000+ habitantes)', 'Masmorra / Complexo Subterrâneo', 'Posto Comercial Fortificado'];
+    const perigos = ['Baixo (Patrulhas constantes e clima calmo)', 'Moderado (Batedores e feras nas proximidades)', 'Alto (Presença de cultistas ou mortos-vivos)', 'Extremo / Mortal (Covil de dragão ou energia profana)'];
+    const atmosferas = ['Névoa pesada, cheiro de enxofre e silêncio sepulcral', 'Ventos gélidos, tochas estalando e guardas apreensivos', 'Ruínas cobertas de musgo com inscrições arcanas brilhando suavemente', 'Mercado movimentado com mercadores de itens exóticos'];
+    const marcosLista = ['Estátua colossal quebrada no centro da praça', 'Árvore ancestral com raízes pulsando seiva azul', 'Ponte de pedra suspensa sobre um abismo sem fundo', 'Monólito negro emitindo um zumbido constante'];
+    const segredosLista = ['Túneis secretos sob a fonte levam a uma câmara do tesouro esquecida', 'O líder local é controlado por um parasita mental antigo', 'Um pacto antigo protege o local em troca de um sacrifício a cada lua cheia', 'Uma arma lendária está selada dentro da pedra angular'];
+
+    const prefixo = rollT('Tipo de Local', prefixos);
+    const sufixo = rollT('Nome do Local', sufixos);
+    const nome = `${prefixo} ${sufixo}`;
+    const tamanho = rollT('Tamanho / População', tamanhos);
+    const perigo = rollT('Nível de Perigo', perigos);
+    const atmosfera = rollT('Atmosfera', atmosferas);
+    const marcos = rollT('Marco Notável', marcosLista);
+    const segredo = rollT('Segredo', segredosLista);
+
+    const loc: GeneratedLocation = {
+      nome,
+      tamanho,
+      perigo,
+      atmosfera,
+      marcos,
+      segredo,
+      tipo: filterType,
+      timestamp: Date.now()
+    };
+
+    setCurrentLocation(loc);
+    shareToChat(loc);
     setTimeout(() => setIsGenerating(false), 400);
   };
 
-  return (
-    <DraggableWindow 
-      id="location-generator"
-      title="Forja de Mundos" 
-      onClose={onClose} 
-      width={320}
-      height={260}
-      initialX={window.innerWidth / 2} 
-      initialY={window.innerHeight / 2 - 130}
-      dragAnywhere={false}
-    >
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
-        
+  const bodyContent = (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', boxSizing: 'border-box', overflowY: 'auto' }}>
+      
+      {/* Controles de Configuração */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', fontWeight: 'bold' }}>
-          <MapPin size={18} /> Geometria
+          <Compass size={18} /> Forja de Mundos & Locais
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-            Tema / Estilo
+            Estilo:
           </label>
           <select 
             value={filterType} 
             onChange={e => setFilterType(e.target.value)}
-            style={{ padding: '8px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '4px', outline: 'none' }}
+            style={{ padding: '6px 10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', outline: 'none', fontSize: '0.8rem' }}
           >
             <option value="Aleatório">🎲 Aleatório</option>
             <option value="Fantasia">🏰 Fantasia Medieval</option>
             <option value="Sci-Fi">🚀 Sci-Fi / Cyberpunk</option>
           </select>
         </div>
-
-        <button 
-          onClick={gerarLocal}
-          disabled={categories.length === 0 || isGenerating}
-          style={{ 
-            marginTop: 'auto',
-            padding: '16px', 
-            background: categories.length === 0 ? 'rgba(255,255,255,0.1)' : 'var(--accent-primary)', 
-            color: 'var(--text-primary)', 
-            border: 'none', 
-            borderRadius: '8px', 
-            cursor: categories.length === 0 || isGenerating ? 'not-allowed' : 'pointer',
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: '8px', 
-            fontSize: '16px', 
-            fontWeight: 'bold',
-            transition: 'all 0.2s',
-            transform: isGenerating ? 'scale(0.98)' : 'scale(1)',
-            boxShadow: '0 4px 15px rgba(255,122,0, 0.3)'
-          }}
-        >
-          {categories.length === 0 ? (
-            'Carregando Terreno...'
-          ) : isGenerating ? (
-            <><Hammer size={20} className="spin" /> Construindo...</>
-          ) : (
-            <><Map size={20} /> Forjar Local</>
-          )}
-        </button>
-
       </div>
+
+      {/* Botão de Forjar */}
+      <button 
+        onClick={gerarLocal}
+        disabled={isGenerating}
+        style={{ 
+          padding: '12px 16px', 
+          background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', 
+          color: '#ffffff', 
+          border: '1px solid #60a5fa', 
+          borderRadius: '8px', 
+          cursor: isGenerating ? 'not-allowed' : 'pointer',
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          gap: '8px', 
+          fontSize: '14px', 
+          fontWeight: 'bold',
+          transition: 'all 0.2s',
+          transform: isGenerating ? 'scale(0.98)' : 'scale(1)',
+          boxShadow: '0 4px 15px rgba(59, 130, 246, 0.35)',
+          flexShrink: 0
+        }}
+      >
+        {isGenerating ? (
+          <><Hammer size={18} className="spin" /> Sintetizando Terreno...</>
+        ) : (
+          <><Sparkles size={18} /> Forjar Novo Local</>
+        )}
+      </button>
+
+      {/* Exibição do Local Forjado Dentro do Widget */}
+      {currentLocation ? (
+        <div style={{
+          background: 'rgba(0, 0, 0, 0.4)',
+          border: '1px solid rgba(59, 130, 246, 0.35)',
+          borderRadius: '10px',
+          padding: '14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          boxShadow: 'inset 0 0 15px rgba(59, 130, 246, 0.08)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.2rem' }}>🏰</span>
+              <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#60a5fa' }}>{currentLocation.nome}</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', padding: '3px 8px', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              {currentLocation.tamanho}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', lineHeight: '1.45' }}>
+            <div>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>⚠️ Ameaça & Perigo: </span>
+              <span style={{ color: '#fbbf24' }}>{currentLocation.perigo}</span>
+            </div>
+
+            <div>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>📜 Atmosfera & Clima: </span>
+              <span style={{ color: 'var(--text-primary)' }}>{currentLocation.atmosfera}</span>
+            </div>
+
+            <div>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>🏛️ Marco Notável: </span>
+              <span style={{ color: 'var(--text-primary)' }}>{currentLocation.marcos}</span>
+            </div>
+
+            <div style={{ marginTop: '4px', padding: '8px 10px', background: 'rgba(239, 68, 68, 0.1)', borderLeft: '3px solid #ef4444', borderRadius: '4px' }}>
+              <span style={{ color: '#fca5a5', fontWeight: 700 }}>🕵️ Segredo / Gancho: </span>
+              <span style={{ color: '#fecaca' }}>{currentLocation.segredo}</span>
+            </div>
+          </div>
+
+          {/* Botões de Ação */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '6px', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => shareToChat(currentLocation)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--glass-border)',
+                borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600
+              }}
+            >
+              <Send size={13} /> Reenviar ao Chat
+            </button>
+            <button
+              onClick={() => saveLocationToWiki(currentLocation)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 12px', background: '#3b82f6', border: 'none',
+                borderRadius: '6px', color: '#fff', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 700
+              }}
+            >
+              <Save size={13} /> Salvar Ficha na Wiki
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(0, 0, 0, 0.2)',
+          border: '1px dashed rgba(255,255,255,0.1)',
+          borderRadius: '10px',
+          padding: '24px',
+          color: 'var(--text-secondary)',
+          textAlign: 'center',
+          gap: '8px'
+        }}>
+          <MapPin size={28} color="rgba(255,255,255,0.2)" />
+          <span style={{ fontSize: '0.85rem' }}>Nenhum local forjado ainda nesta sessão.</span>
+          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)' }}>Clique no botão "Forjar Novo Local" acima para sintetizar um cenário com atmosfera e segredos.</span>
+        </div>
+      )}
+
+    </div>
+  );
+
+  if (embedded) {
+    return bodyContent;
+  }
+
+  return (
+    <DraggableWindow 
+      id="location-generator"
+      title="Forja de Mundos & Locais" 
+      onClose={onClose} 
+      width={420}
+      height={520}
+      initialX={window.innerWidth / 2} 
+      initialY={window.innerHeight / 2 - 260}
+      dragAnywhere={false}
+    >
+      {bodyContent}
     </DraggableWindow>
   );
 };

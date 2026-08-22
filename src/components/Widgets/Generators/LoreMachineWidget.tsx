@@ -3,18 +3,16 @@ import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { useWiki } from '../../../hooks/useWiki';
 import { pushChatMessage, state } from '../../../store';
 import { loadMarkdownFile } from '../../../utils/githubApi';
-import { Sparkles, MessageCircle, ScrollText, BookOpen, ToyBrick } from 'lucide-react';
+import { Sparkles, MessageCircle, ScrollText, BookOpen } from 'lucide-react';
 
-export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+export const LoreMachineWidget: React.FC<{ onClose?: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
   const { index, isLoading } = useWiki();
   const [result, setResult] = useState<string | null>(null);
   const [dlcTemplates, setDlcTemplates] = useState<string[]>([]);
-    const [activeMods, setActiveMods] = useState<string[]>([]);
 
   useEffect(() => {
     const observer = async () => {
       const activeKeys = Array.from(state.dlcs.keys()).filter(k => state.dlcs.get(k) === true);
-      setActiveMods(activeKeys);
       
       let allTemplates: string[] = [];
       if (activeKeys.includes('dlc_cyberpunk')) {
@@ -44,8 +42,8 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
   };
 
   const generateRumor = () => {
-    const npcs = getEntities('npcs');
-    const locais = getEntities('lugares');
+    const npcs = getEntities('personagens');
+    const locais = getEntities('locais');
     const itens = getEntities('itens');
     const monstros = getEntities('monstros');
     const faccoes = getEntities('faccoes');
@@ -71,18 +69,18 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
 
     const tpl = getRandom(baseTemplates);
     const hydrated = tpl
-      .replace(/\$\{npc\}/g, getRandom(npcs))
-      .replace(/\$\{local\}/g, getRandom(locais))
-      .replace(/\$\{faccao\}/g, getRandom(faccoes))
-      .replace(/\$\{item\}/g, getRandom(itens))
-      .replace(/\$\{monstro\}/g, getRandom(monstros));
+      .replace(/\$\{npc\}/g, getRandom(npcs.length ? npcs : ['um mercador ambulante', 'um capitão veterano']))
+      .replace(/\$\{local\}/g, getRandom(locais.length ? locais : ['as Catacumbas', 'a Floresta Velha']))
+      .replace(/\$\{faccao\}/g, getRandom(faccoes.length ? faccoes : ['os Ladrões da Sombra', 'a Ordem de Ferro']))
+      .replace(/\$\{item\}/g, getRandom(itens.length ? itens : ['um tomo ancestral', 'uma adaga de prata']))
+      .replace(/\$\{monstro\}/g, getRandom(monstros.length ? monstros : ['um basilisco', 'uma quimera']));
 
     setResult(hydrated);
   };
 
   const generateQuest = () => {
-    const npcs = getEntities('npcs');
-    const locais = getEntities('lugares');
+    const npcs = getEntities('personagens');
+    const locais = getEntities('locais');
     const itens = getEntities('itens');
     const monstros = getEntities('monstros');
     const faccoes = getEntities('faccoes');
@@ -106,11 +104,11 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
 
     const tpl = getRandom(baseTemplates);
     const hydrated = tpl
-      .replace(/\$\{npc\}/g, getRandom(npcs))
-      .replace(/\$\{local\}/g, getRandom(locais))
-      .replace(/\$\{faccao\}/g, getRandom(faccoes))
-      .replace(/\$\{item\}/g, getRandom(itens))
-      .replace(/\$\{monstro\}/g, getRandom(monstros));
+      .replace(/\$\{npc\}/g, getRandom(npcs.length ? npcs : ['o Sumo Sacerdote', 'um fugitivo misterioso']))
+      .replace(/\$\{local\}/g, getRandom(locais.length ? locais : ['as Ruínas Alagadas', 'o Vale Sussurrante']))
+      .replace(/\$\{faccao\}/g, getRandom(faccoes.length ? faccoes : ['a Irmandade Escarlate', 'o Sindicato']))
+      .replace(/\$\{item\}/g, getRandom(itens.length ? itens : ['a Relíquia Proibida', 'o Mapa das Estrelas']))
+      .replace(/\$\{monstro\}/g, getRandom(monstros.length ? monstros : ['aberrações da névoa', 'espectros vingativos']));
 
     setResult(hydrated);
   };
@@ -120,6 +118,57 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
       pushChatMessage(`🔮 <b>A Máquina de Lores ecoa:</b><br/>${result}`, false, true);
     }
   };
+
+  const bodyContent = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.2rem', color: 'var(--text-primary)', height: '100%', boxSizing: 'border-box' }}>
+      <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+        <Sparkles size={32} color="var(--accent-primary)" style={{ marginBottom: '0.5rem' }} />
+        <h3 style={{ margin: 0, fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--accent-primary)' }}>Gerador Procedural</h3>
+        <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Mapeia dados do Obsidian para criar sementes narrativas.</p>
+      </div>
+
+      <div className="grid-responsive-2" style={{ gap: '0.5rem' }}>
+        <button 
+          onClick={generateRumor}
+          style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.2)', border: '1px solid rgba(139, 92, 246, 0.4)', color: '#c4b5fd', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}
+        >
+          <MessageCircle size={16} /> Gerar Rumor
+        </button>
+        
+        <button 
+          onClick={generateQuest}
+          style={{ padding: '0.75rem', background: 'rgba(234, 179, 8, 0.2)', border: '1px solid rgba(234, 179, 8, 0.4)', color: '#fde047', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}
+        >
+          <ScrollText size={16} /> Missão (Quest)
+        </button>
+      </div>
+
+      {/* Quadro de Resultado */}
+      <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '1rem', position: 'relative', overflowY: 'auto' }}>
+        {result ? (
+          <div style={{ fontSize: '0.95rem', lineHeight: '1.5', color: 'var(--text-primary)' }} dangerouslySetInnerHTML={{ __html: result }} />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+            Pressione um dos botões para gerar conteúdo.
+          </div>
+        )}
+      </div>
+
+      {/* Botão de Ação */}
+      {result && (
+        <button 
+          onClick={handleShare}
+          style={{ width: '100%', padding: '0.5rem', background: 'transparent', border: '1px dashed var(--accent-primary)', color: 'var(--accent-primary)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}
+        >
+          <BookOpen size={14} /> Compartilhar no Chat Global
+        </button>
+      )}
+    </div>
+  );
+
+  if (embedded) {
+    return bodyContent;
+  }
 
   if (isLoading) {
     return (
@@ -131,51 +180,7 @@ export const LoreMachineWidget: React.FC<{ onClose: () => void }> = ({ onClose }
 
   return (
     <DraggableWindow id="lore-machine" widgetKey="loreMachine" title="A Máquina de Lores" initialX={window.innerWidth / 2 - 225} initialY={100} width={450} height={320} onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.2rem', color: 'var(--text-primary)', height: '100%' }}>
-        
-        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-          <Sparkles size={32} color="var(--accent-primary)" style={{ marginBottom: '0.5rem' }} />
-          <h3 style={{ margin: 0, fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--accent-primary)' }}>Gerador Procedural</h3>
-          <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Mapeia dados do Obsidian para criar sementes narrativas.</p>
-        </div>
-
-        <div className="grid-responsive-2" style={{ gap: '0.5rem' }}>
-          <button 
-            onClick={generateRumor}
-            style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.2)', border: '1px solid rgba(139, 92, 246, 0.4)', color: '#c4b5fd', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}
-          >
-            <MessageCircle size={16} /> Gerar Rumor
-          </button>
-          
-          <button 
-            onClick={generateQuest}
-            style={{ padding: '0.75rem', background: 'rgba(234, 179, 8, 0.2)', border: '1px solid rgba(234, 179, 8, 0.4)', color: '#fde047', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 'bold' }}
-          >
-            <ScrollText size={16} /> Missão (Quest)
-          </button>
-        </div>
-
-        {/* Quadro de Resultado */}
-        <div style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '1rem', position: 'relative', overflowY: 'auto' }}>
-          {result ? (
-            <div style={{ fontSize: '0.95rem', lineHeight: '1.5', color: 'var(--text-primary)' }} dangerouslySetInnerHTML={{ __html: result }} />
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-              Pressione um dos botões para gerar conteúdo.
-            </div>
-          )}
-        </div>
-
-        {/* Botão de Ação */}
-        {result && (
-          <button 
-            onClick={handleShare}
-            style={{ width: '100%', padding: '0.5rem', background: 'transparent', border: '1px dashed var(--accent-primary)', color: 'var(--accent-primary)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}
-          >
-            <BookOpen size={14} /> Compartilhar no Chat Global
-          </button>
-        )}
-      </div>
+      {bodyContent}
     </DraggableWindow>
   );
 };

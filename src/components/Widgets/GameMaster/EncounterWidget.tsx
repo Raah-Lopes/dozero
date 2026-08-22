@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { Swords, Users, Skull, Flame, ShieldAlert } from 'lucide-react';
+import { Swords, Users, Skull, Flame } from 'lucide-react';
 import { pushChatMessage, state } from '../../../store';
 import type { CombatParticipant } from '../../../store';
 
 interface EncounterWidgetProps {
   onClose?: () => void;
+  embedded?: boolean;
 }
 
 const faccoes = [
@@ -27,7 +28,7 @@ const modificadores = [
   "Ameaça Neutra (Barril de pólvora, armadilha, reféns)"
 ];
 
-export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => {
+export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose, embedded }) => {
   const [dificuldade, setDificuldade] = useState('Médio');
   const [faccao, setFaccao] = useState(faccoes[0]);
   const [modificador, setModificador] = useState('Aleatório');
@@ -73,7 +74,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
     // Sortear modificador se estiver aleatório
     let finalMod = modificador;
     if (modificador === 'Aleatório') {
-      finalMod = modificadores[Math.floor(Math.random() * (modificadores.length - 1)) + 1]; // ignora o "Nenhum" no aleatório para ficar divertido
+      finalMod = modificadores[Math.floor(Math.random() * (modificadores.length - 1)) + 1];
     }
 
     // Mapeamento de Imagens Geradas
@@ -120,6 +121,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
         powerName = "Miasma Pútrido";
       } else if (faccao === "Cultistas do Abismo") {
         weaponName = "Adaga Sacrificial";
+        weaponDamage = `1d8+${e.level}`;
         powerName = "Raio Sombrio";
         powerEffect = `dano_1d8+${e.level}`;
       } else if (faccao === "Monstros Selvagens") {
@@ -159,7 +161,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
         imageUrl: imageUrl,
         tokenShape: 'circle',
         sizeScale: 1,
-        borderColor: '#ef4444', // Borda vermelha indicando hostilidade
+        borderColor: '#ef4444',
         showName: true,
         hpBarMode: 'always',
         status: 'npc',
@@ -172,7 +174,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
       return {
         tokenId,
         name: e.name,
-        initiative: Math.floor(Math.random() * 20) + 1 + e.level, // 1d20 + nível
+        initiative: Math.floor(Math.random() * 20) + 1 + e.level,
         imageUrl: imageUrl
       };
     });
@@ -181,7 +183,6 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
     combinedParticipants.sort((a, b) => b.initiative - a.initiative);
     
     state.combat.set('participants', combinedParticipants);
-    // Se o combate já estiver rolando, pode zoar o turno, mas o GM pode arrumar.
 
     // Imprimir Chat Log
     const html = `
@@ -212,6 +213,78 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
     setTimeout(() => setIsGenerating(false), 400);
   };
 
+  const bodyContent = (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', position: 'relative', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f97316', fontWeight: 'bold', fontSize: '1.05rem', borderBottom: '1px solid rgba(249,115,22,0.2)', paddingBottom: '10px' }}>
+        <img 
+          src="/mascot/zye-head-smile.png" 
+          alt="Zye" 
+          style={{ width: '24px', height: '24px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(249,115,22,0.4))' }} 
+        />
+        Montar Combate Rápido
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+        
+        {/* Facção */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Users size={12} /> Tipo de Inimigo / Facção
+          </label>
+          <select value={faccao} onChange={e => setFaccao(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
+            {faccoes.map(f => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+
+        {/* Dificuldade */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Skull size={12} /> Nível de Desafio
+          </label>
+          <select value={dificuldade} onChange={e => setDificuldade(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
+            <option value="Fácil">Fácil (Só Capangas)</option>
+            <option value="Médio">Médio (Grupo Padrão)</option>
+            <option value="Difícil">Difícil (Bando de Elite)</option>
+            <option value="Mortal (Boss)">Mortal (Chefe Absoluto)</option>
+          </select>
+        </div>
+
+        {/* Modificador */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Flame size={12} /> Modificador de Cenário
+          </label>
+          <select value={modificador} onChange={e => setModificador(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
+            <option value="Aleatório">🎲 Sortear Aleatório</option>
+            {modificadores.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+
+      </div>
+
+      <button 
+        onClick={gerarEncontro}
+        disabled={isGenerating}
+        style={{ 
+          marginTop: 'auto', padding: '14px', background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', 
+          color: 'var(--text-primary)', border: '1px solid #fb923c', borderRadius: '8px', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '15px', fontWeight: 'bold',
+          boxShadow: '0 4px 15px rgba(249, 115, 22, 0.4)', transition: 'all 0.2s',
+          opacity: isGenerating ? 0.7 : 1
+        }}
+        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+      >
+        {isGenerating ? <Flame className="animate-spin" size={20} /> : <Swords size={20} />}
+        Forjar & Injetar no Tracker
+      </button>
+    </div>
+  );
+
+  if (embedded) {
+    return bodyContent;
+  }
+
   return (
     <DraggableWindow 
       id="encounter-generator"
@@ -223,67 +296,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose }) => 
       initialY={100}
       dragAnywhere={false}
     >
-      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', position: 'relative' }}>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f97316', fontWeight: 'bold', fontSize: '1.1rem', borderBottom: '1px solid rgba(249,115,22,0.2)', paddingBottom: '10px' }}>
-          <ShieldAlert size={22} /> Montar Combate Rápido
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
-          
-          {/* Facção */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Users size={12} /> Tipo de Inimigo / Facção
-            </label>
-            <select value={faccao} onChange={e => setFaccao(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
-              {faccoes.map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-
-          {/* Dificuldade */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Skull size={12} /> Dificuldade
-            </label>
-            <select value={dificuldade} onChange={e => setDificuldade(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
-              <option value="Fácil">Fácil (Só Capangas)</option>
-              <option value="Médio">Médio (Grupo Padrão)</option>
-              <option value="Difícil">Difícil (Bando de Elite)</option>
-              <option value="Mortal (Boss)">Mortal (Chefe Absoluto)</option>
-            </select>
-          </div>
-
-          {/* Modificador */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Flame size={12} /> Modificador de Cenário
-            </label>
-            <select value={modificador} onChange={e => setModificador(e.target.value)} style={{ padding: '10px', background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer' }}>
-              <option value="Aleatório">🎲 Sortear Aleatório</option>
-              {modificadores.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
-
-        </div>
-
-        <button 
-          onClick={gerarEncontro}
-          disabled={isGenerating}
-          style={{ 
-            marginTop: 'auto', padding: '16px', background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', 
-            color: 'var(--text-primary)', border: '1px solid #fb923c', borderRadius: '8px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '16px', fontWeight: 'bold',
-            boxShadow: '0 4px 15px rgba(249, 115, 22, 0.4)', transition: 'all 0.2s',
-            opacity: isGenerating ? 0.7 : 1
-          }}
-          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-        >
-          {isGenerating ? <Flame className="animate-spin" size={20} /> : <Swords size={20} />}
-          Forjar & Injetar no Tracker
-        </button>
-      </div>
+      {bodyContent}
     </DraggableWindow>
   );
 };

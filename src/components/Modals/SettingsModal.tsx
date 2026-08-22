@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  X, Save, Globe, Wifi, Settings2, Shield,
-  BookOpen, GitBranch, KeyRound, Check, Loader2,
-  Swords, Scroll, User, Plug, Palette
+  X, Save, Settings2, Shield,
+  Check, Loader2, Swords, User, Plug, Palette, Bot, ToyBrick
 } from 'lucide-react';
-import { getWikiConfig, updateWikiConfig, useUserStore } from '../../store';
+import { useUserStore } from '../../store';
 import { useRulesEngine } from '../../hooks/useRulesEngine';
 import { useTheme } from '../../hooks/useTheme';
 import { THEMES } from '../../themes';
 import type { ThemeDefinition } from '../../themes';
 import { DLCManagerTab } from './DLCManagerTab';
-import { MapSettingsPanel } from '../HUD/MapSettingsPanel';
-import { Bot, ToyBrick, Map } from 'lucide-react';
 import { GMPasswordModal } from '../Auth/GMPasswordModal';
 import { useAuthStore } from '../../store/authStore';
 
@@ -20,15 +17,13 @@ interface SettingsModalProps {
   initialTab?: Tab;
 }
 
-type Tab = 'geral' | 'aparencia' | 'cenario' | 'modulos' | 'ia' | 'wiki' | 'integracoes';
+type Tab = 'geral' | 'aparencia' | 'modulos' | 'ia' | 'integracoes';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'geral', label: 'Geral',  icon: <Settings2 size={15} /> },
+  { id: 'geral', label: 'Geral', icon: <Settings2 size={15} /> },
   { id: 'aparencia', label: 'Aparência', icon: <Palette size={15} /> },
-  { id: 'cenario', label: 'Cenário & Grid', icon: <Map size={15} /> },
   { id: 'modulos', label: 'Módulos', icon: <ToyBrick size={15} /> },
   { id: 'ia', label: 'Robô IA', icon: <Bot size={15} /> },
-  { id: 'wiki',  label: 'Wiki',   icon: <Globe size={15} /> },
   { id: 'integracoes', label: 'Integrações', icon: <Plug size={15} /> },
 ];
 
@@ -213,18 +208,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
   const { currentEngineId, setEngine, engines } = useRulesEngine();
   const { isGM, setIsGM } = useUserStore();
-  const [aiEnabled,    setAiEnabled]    = useState(localStorage.getItem('aiBotEnabled') === 'true');
-  const [wikiRepo,     setWikiRepo]     = useState('');
-  const [wikiBranch,   setWikiBranch]   = useState('main');
-  const [wikiToken,    setWikiToken]    = useState('');
+  const [aiEnabled, setAiEnabled] = useState(localStorage.getItem('aiBotEnabled') === 'true');
   const [n8nWebhookUrl, setN8nWebhookUrl] = useState(localStorage.getItem('n8nWebhookUrl') || '');
 
   useEffect(() => {
-    const config = getWikiConfig();
-    setWikiRepo(config.repoUrl   || '');
-    setWikiBranch(config.branch  || 'main');
-    setWikiToken(config.token    || '');
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -234,14 +221,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
 
   const handleSave = async () => {
     setSaving(true);
-    localStorage.setItem('isGM',         isGM ? 'true' : 'false');
+    localStorage.setItem('isGM', isGM ? 'true' : 'false');
     localStorage.setItem('aiBotEnabled', aiEnabled ? 'true' : 'false');
     localStorage.setItem('n8nWebhookUrl', n8nWebhookUrl);
-    updateWikiConfig({ repoUrl: wikiRepo, branch: wikiBranch, token: wikiToken });
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 600));
     setSaving(false);
     setSaved(true);
-    await new Promise(r => setTimeout(r, 900));
+    await new Promise(r => setTimeout(r, 700));
     window.location.reload();
   };
 
@@ -530,59 +516,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
     </div>
   );
 
-  const renderWiki = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{
-        padding: '12px 14px', borderRadius: '10px',
-        background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)',
-        display: 'flex', alignItems: 'flex-start', gap: '10px',
-      }}>
-        <BookOpen size={14} color="var(--accent-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
-        <p style={{ margin: 0, fontSize: '0.72rem', color: 'rgba(192,132,252,0.8)', lineHeight: 1.6 }}>
-          Aponte para a pasta local da sua Wiki. O caminho é lido diretamente pelo servidor de desenvolvimento Vite.
-        </p>
-      </div>
-
-      <Field label="Caminho / Repositório" icon={<BookOpen size={13} />} hint="Caminho absoluto local (ex: D:/DOZERO/wikidozero) ou Autor/Repo GitHub.">
-        <form onSubmit={e => e.preventDefault()}>
-          <input
-            type="text"
-            placeholder="Ex: D:/DOZERO/wikidozero"
-            value={wikiRepo}
-            onChange={e => setWikiRepo(e.target.value)}
-            style={inputStyle}
-          />
-        </form>
-      </Field>
-
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <Field label="Branch" icon={<GitBranch size={13} />}>
-          <form onSubmit={e => e.preventDefault()}>
-            <input
-              type="text"
-              placeholder="main"
-              value={wikiBranch}
-              onChange={e => setWikiBranch(e.target.value)}
-              style={inputStyle}
-            />
-          </form>
-        </Field>
-        <Field label="Token Privado" icon={<KeyRound size={13} />}>
-          <form onSubmit={e => e.preventDefault()}>
-            <input
-              type="password"
-              autoComplete="new-password"
-              placeholder="github_pat_..."
-              value={wikiToken}
-              onChange={e => setWikiToken(e.target.value)}
-              style={inputStyle}
-            />
-          </form>
-        </Field>
-      </div>
-    </div>
-  );
-
   const renderIntegracoes = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{
@@ -596,7 +529,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         </p>
       </div>
 
-      <Field label="URL do Webhook (n8n, Zapier)" icon={<Globe size={13} />} hint="URL que receberá o payload JSON dos eventos via POST.">
+      <Field label="URL do Webhook (n8n, Zapier)" icon={<Plug size={13} />} hint="URL que receberá o payload JSON dos eventos via POST.">
         <form onSubmit={e => e.preventDefault()}>
           <input
             type="text"
@@ -613,23 +546,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
   return (
     // ── Backdrop ──
     <div
-      onClick={e => { if (e.target === e.currentTarget && activeTab !== 'cenario') onClose(); }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 99990,
-        background: activeTab === 'cenario' ? 'transparent' : 'rgba(0,0,0,0.55)', 
-        backdropFilter: activeTab === 'cenario' ? 'none' : 'blur(6px)',
+        background: 'rgba(0,0,0,0.65)', 
+        backdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', 
-        justifyContent: activeTab === 'cenario' ? 'flex-end' : 'center',
-        paddingRight: activeTab === 'cenario' ? '20px' : '0',
+        justifyContent: 'center',
+        padding: '16px',
         animation: 'fadeIn 0.2s ease-out',
-        pointerEvents: activeTab === 'cenario' ? 'none' : 'auto',
+        pointerEvents: 'auto',
       }}
     >
       {/* ── Panel ── */}
       <div style={{
         width: '100%',
-        maxWidth: '560px',
-        margin: activeTab === 'cenario' ? '0' : '0 16px',
+        maxWidth: '580px',
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
@@ -637,7 +569,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         border: '1px solid var(--glass-border)',
         borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: activeTab === 'cenario' ? '0 10px 40px rgba(0,0,0,0.5)' : '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)',
         animation: 'fadeIn 0.22s ease-out',
         pointerEvents: 'auto',
         transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -647,23 +579,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         <div style={{
           display: 'flex', alignItems: 'center', gap: '14px',
           padding: '20px 24px',
-          background: 'linear-gradient(135deg, rgba(168,85,247,0.08) 0%, transparent 100%)',
+          background: 'linear-gradient(135deg, rgba(168,85,247,0.1) 0%, transparent 100%)',
           borderBottom: '1px solid var(--glass-border)',
           flexShrink: 0,
         }}>
           <div style={{
-            width: '40px', height: '40px', borderRadius: '10px',
-            background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)',
+            width: '40px', height: '40px', borderRadius: '12px',
+            background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Settings2 size={18} color="var(--accent-primary)" />
           </div>
           <div style={{ flex: 1 }}>
-            <h2 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
-              Configurações do Ecossistema
+            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+              Configurações do Sistema
             </h2>
-            <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-secondary)', opacity: 0.7 }}>
-              Ajustes de sistema, rede e wiki
+            <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+              Preferências de tema, módulos, regras e inteligência artificial
             </p>
           </div>
           <button
@@ -682,7 +614,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         <div style={{
           display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '12px 20px 0',
           borderBottom: '1px solid var(--glass-border)', flexShrink: 0,
-          background: 'rgba(0,0,0,0.1)',
+          background: 'rgba(0,0,0,0.12)',
         }}>
           {TABS.map(tab => {
             const active = activeTab === tab.id;
@@ -713,10 +645,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         <div style={{ padding: '24px', overflowY: 'auto', flex: 1, minHeight: '300px' }}>
           {activeTab === 'geral' && renderGeral()}
           {activeTab === 'aparencia' && renderAparencia()}
-          {activeTab === 'cenario' && <MapSettingsPanel />}
           {activeTab === 'modulos' && renderModulos()}
           {activeTab === 'ia' && renderIA()}
-          {activeTab === 'wiki'  && renderWiki()}
           {activeTab === 'integracoes' && renderIntegracoes()}
         </div>
 

@@ -244,7 +244,7 @@ const CATEGORIES: CategoryData[] = [
   }
 ];
 
-export function StoryDiceWidget({ onClose }: { onClose: () => void }) {
+export function StoryDiceWidget({ onClose, embedded }: { onClose?: () => void; embedded?: boolean }) {
   const [genre, setGenre] = useState<Genre>('fantasia');
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set(CATEGORIES.map(c => c.id)));
   const [lastRoll, setLastRoll] = useState<Record<string, string> | null>(null);
@@ -361,18 +361,8 @@ export function StoryDiceWidget({ onClose }: { onClose: () => void }) {
     localStorage.setItem('story_dice_genre', val);
   };
 
-  return (
-    <DraggableWindow 
-      id="story-dice"
-      title="Story Dice (Dados de Histórias)" 
-      onClose={onClose} 
-      width={450}
-      height={650}
-      initialX={window.innerWidth / 2 - 225} 
-      initialY={100}
-      dragAnywhere={false}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+  const bodyContent = (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         
         {/* Header / Configurações */}
         <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -562,6 +552,24 @@ export function StoryDiceWidget({ onClose }: { onClose: () => void }) {
 
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return bodyContent;
+  }
+
+  return (
+    <DraggableWindow 
+      id="story-dice"
+      title="Story Dice (Dados de Histórias)" 
+      onClose={onClose} 
+      width={450}
+      height={650}
+      initialX={window.innerWidth / 2 - 225} 
+      initialY={100}
+      dragAnywhere={false}
+    >
+      {bodyContent}
     </DraggableWindow>
   );
 }

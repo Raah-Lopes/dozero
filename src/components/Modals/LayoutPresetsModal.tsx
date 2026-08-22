@@ -23,7 +23,7 @@ interface LayoutPresetsModalProps {
 }
 
 export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, onClose }) => {
-  const { openWindows, toggleWindow } = useWindowManager();
+  const { openWindows, openWindow } = useWindowManager();
   const [presets, setPresets] = useState<LayoutPreset[]>([]);
   const [presetName, setPresetName] = useState('');
   const [popouts, setPopouts] = useState<PopoutItem[]>([]);
@@ -62,8 +62,8 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
 
   const saveCurrentLayout = () => {
     const layout: Record<string, any> = {};
-    Object.entries(openWindows).forEach(([id, win]) => {
-      if (win.isOpen) {
+    Object.entries(openWindows).forEach(([id, isOpen]) => {
+      if (isOpen) {
         const savedPrefs = localStorage.getItem(`window_prefs_${id}`);
         if (savedPrefs) {
           try { layout[id] = JSON.parse(savedPrefs); } catch(e) {}
@@ -88,7 +88,7 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
   const loadPreset = (preset: LayoutPreset) => {
     Object.entries(preset.windows).forEach(([id, config]) => {
       localStorage.setItem(`window_prefs_${id}`, JSON.stringify(config));
-      toggleWindow(id, true); // Abrir janela se não estiver aberta
+      openWindow(id); // Abrir janela
       window.dispatchEvent(new CustomEvent('bring-window-to-front', { detail: id }));
     });
     toast.success(`Layout "${preset.name}" carregado!`);
@@ -104,7 +104,7 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
   const recallPopout = (popoutId: string) => {
     localStorage.removeItem(`popout_${popoutId}`);
     window.dispatchEvent(new CustomEvent('recall-popout', { detail: { id: popoutId } }));
-    toggleWindow(popoutId, true);
+    openWindow(popoutId);
     loadSavedData();
     toast.success('Janela resgatada de volta para esta tela!');
   };
@@ -112,7 +112,7 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
   const recallAllPopouts = () => {
     popouts.forEach(p => {
       localStorage.removeItem(`popout_${p.id}`);
-      toggleWindow(p.id, true);
+      openWindow(p.id);
     });
     setPopouts([]);
     toast.success('Todas as janelas foram resgatadas!');
@@ -120,18 +120,18 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
 
   const applySuggestedPreset = (type: 'gm' | 'player' | 'narrative') => {
     if (type === 'gm') {
-      toggleWindow('combatTracker', true);
-      toggleWindow('gmNotes', true);
-      toggleWindow('audioDirector', true);
+      openWindow('combatTracker');
+      openWindow('gmNotes');
+      openWindow('audioDirector');
       toast.success('Layout "Mestre Focado" aplicado!');
     } else if (type === 'player') {
-      toggleWindow('chatWindow', true);
-      toggleWindow('diceRoller', true);
-      toggleWindow('playerQuickBar', true);
+      openWindow('chatWindow');
+      openWindow('diceRoller');
+      openWindow('playerQuickBar');
       toast.success('Layout "Visão do Jogador" aplicado!');
     } else if (type === 'narrative') {
       openWindow('mindMap');
-      toggleWindow('oracle', true);
+      openWindow('masterForge');
       toast.success('Layout "Modo Narrativo" aplicado!');
     }
   };

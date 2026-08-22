@@ -1,10 +1,16 @@
 import React from 'react';
-import { Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, LogOut, Pin, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Shield, Globe } from 'lucide-react';
+import { 
+  Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, 
+  Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
+  Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
+  Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, 
+  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords 
+} from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
 import { Config, onFogConfigChanged } from '../../store/modules/configModule';
 import { FogOfWar } from '../../store/modules/fogModule';
-import { setActiveTool as setGlobalActiveTool, setFogMode as setGlobalFogMode, localState } from '../../store';
+import { setActiveTool as setGlobalActiveTool, setFogMode as setGlobalFogMode } from '../../store';
 import { Tooltip } from '../UI/Tooltip';
 import { toast } from '../UI/Toast';
 import type { FogConfig } from '../../store/modules/configModule';
@@ -30,11 +36,13 @@ export function GMToolbar() {
   const { activeTool, setActiveTool, activeModal, setActiveModal, showActors, setShowActors, openWindows, toggleWindow, viewMode, setViewMode } = useWindowManager();
   const { user, isAuthModalOpen, isProfileModalOpen, setAuthModalOpen, setProfileModalOpen } = useAuthStore();
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+  
   React.useEffect(() => {
     const h = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);
+
   const [fogConfig, setFogConfig] = React.useState<FogConfig>(Config.getFogConfig());
   const [activeFolder, setActiveFolder] = React.useState<'root'|'draw'|'fog'|'map_tools'>('root');
   const [fogMode, setLocalFogMode] = React.useState<'reveal' | 'hide'>('reveal');
@@ -108,7 +116,6 @@ export function GMToolbar() {
     return () => unsub();
   }, []);
 
-  // Update window variables for GameCanvas to read if needed (fallback)
   React.useEffect(() => {
     (window as any).__ACTIVE_TOOL__ = activeTool;
     (window as any).__FOG_MODE__ = fogMode;
@@ -120,8 +127,26 @@ export function GMToolbar() {
   };
 
   const isFog = activeTool === 'FOG';
-
   const isExpanded = isOpen;
+
+  const renderSectionHeader = (title: string) => {
+    if (!isExpanded) return null;
+    return (
+      <div style={{
+        fontSize: '0.68rem',
+        textTransform: 'uppercase',
+        color: 'rgba(255, 255, 255, 0.45)',
+        letterSpacing: '0.06em',
+        fontWeight: 700,
+        padding: '6px 8px 2px 8px',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}>
+        {title}
+      </div>
+    );
+  };
 
   return (
     <div 
@@ -134,7 +159,7 @@ export function GMToolbar() {
         maxHeight: '100%',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.5rem',
+        gap: '0.35rem',
         padding: '0.5rem',
         borderTopRightRadius: '16px',
         borderBottomRightRadius: '16px',
@@ -144,16 +169,25 @@ export function GMToolbar() {
         boxSizing: 'border-box'
       }}>
         {/* Logo Details / Menu Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', height: '50px', position: 'relative', marginBottom: '8px', paddingLeft: '8px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: '46px', position: 'relative', marginBottom: '4px', paddingLeft: '8px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', opacity: isOpen ? 1 : 0, transition: 'opacity 0.3s', pointerEvents: isOpen ? 'auto' : 'none' }}>
-            <Layers size={24} color="var(--accent-primary)" />
-            <span style={{ color: 'white', fontWeight: 600, fontSize: '18px', marginLeft: '12px' }}>Menu DOZERO</span>
+            <img 
+              src="/mascot/zye-head-smile.png" 
+              alt="Zye Sorrindo" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                objectFit: 'contain', 
+                filter: 'drop-shadow(0 2px 8px rgba(250, 204, 21, 0.4))' 
+              }} 
+            />
+            <span style={{ color: 'white', fontWeight: 800, fontSize: '15px', marginLeft: '8px', letterSpacing: '0.02em' }}>Menu DOZERO</span>
           </div>
           <button 
             onClick={() => setIsOpen(!isOpen)}
             style={{ 
               position: 'absolute', 
-              right: isOpen ? '8px' : '50%', 
+              right: isOpen ? '6px' : '50%', 
               transform: isOpen ? 'none' : 'translateX(50%)', 
               background: 'transparent', 
               border: 'none', 
@@ -163,17 +197,18 @@ export function GMToolbar() {
             }}
             title={isOpen ? "Recolher Menu" : "Expandir Menu"}
           >
-            <Menu size={24} />
+            <Menu size={22} />
           </button>
         </div>
-        <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0', flexShrink: 0 }} />
+        
+        <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '2px 0', flexShrink: 0 }} />
 
         <div 
           className="gm-tools-scroll-area"
           style={{ 
             display: 'flex', 
             flexDirection: 'column', 
-            gap: '8px', 
+            gap: '6px', 
             flex: '1 1 0%', 
             minHeight: 0,
             overflowY: 'auto', 
@@ -181,135 +216,162 @@ export function GMToolbar() {
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y',
             overscrollBehavior: 'contain',
-            paddingBottom: '50px',
+            paddingBottom: '20px',
             boxSizing: 'border-box'
           }}
         >
         {activeFolder === 'root' && (
           <>
-            {/* Hub & Nav Tools */}
-            <ToolButton 
-              icon={<Search size={20} />} 
-              active={false} 
-              onClick={() => window.dispatchEvent(new Event('open-command-palette'))} 
-              tooltip="Busca (Ctrl+K)"
-              description="Abre a paleta de comandos rápida do sistema"
-            />
-            <ToolButton 
-              icon={<LayoutGrid size={20} />} 
-              active={activeModal === 'widgets'} 
-              onClick={() => setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets')} 
-              tooltip="Menu Geral (Hub)"
-              description="Painel principal com widgets e funcionalidades do mestre"
-            />
-            <ToolButton 
-              icon={<BookOpen size={20} />} 
-              active={viewMode === 'wiki'} 
-              onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} 
-              tooltip="Wiki da Campanha"
-              description="Acesse anotações, monstros e compêndios"
-            />
-            <ToolButton 
-              icon={<Film size={20} />} 
-              active={viewMode === 'theater'} 
-              onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} 
-              tooltip="Teatro da Mente"
-              description="Modo cinematográfico imersivo para interpretação sem grid"
-            />
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-            {/* Ferramentas do Mapa */}
-            <ToolButton 
-              icon={<Map size={20} />} 
-              active={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser'].includes(activeTool as string)}
-              onClick={() => setActiveFolder('map_tools')} 
-              tooltip="Ferramentas do Mapa"
-              description="Abre o menu de Cursor, Medição, Névoa, Camadas e mais"
-            />
-          <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-            <ToolButton 
-              icon={<Users size={20} />} 
-              active={showActors} 
-              onClick={toggleNPCPanel} 
-              tooltip="Fichas & Tokens"
-              description="Lista rápida dos participantes e monstros da cena (Cast)"
-            />
-
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-            
-            <ToolButton 
-              icon={<Globe size={20} />} 
-              active={activeModal === 'lobby'} 
-              onClick={() => setActiveModal('lobby')} 
-              tooltip="Mural de Campanhas (Nuvem)"
-              description="Gerencie suas campanhas salvas na nuvem, crie novas mesas ou troque de aventura"
-            />
-            <ToolButton 
-              icon={<Shield size={20} />} 
-              active={openWindows.playerManager} 
-              onClick={() => toggleWindow('playerManager')} 
-              tooltip="Controle de Jogadores (GM)"
-              description="Gerencie conexões ativas, fichas/tokens, puxar visão e solicitar rolagens"
-            />
-            <ToolButton 
-              icon={<Users size={20} />} 
-              active={activeModal === 'players'} 
-              onClick={() => setActiveModal('players')} 
-              tooltip="Convidar Jogadores (Links & QR Code)"
-              description="Copie o link da Vercel da sala atual, exiba o QR Code ou gerencie dados locais"
-            />
-            <ToolButton 
-              icon={<MessageSquare size={20} />} 
-              active={openWindows.chatWindow} 
-              onClick={() => toggleWindow('chatWindow')} 
-              tooltip="Chat P2P"
-              description="Troque mensagens em tempo real com todos os conectados"
-            />
-            <ToolButton 
-              icon={<Dices size={20} />} 
-              active={openWindows.combatLog} 
-              onClick={() => toggleWindow('combatLog')} 
-              tooltip="Registro de Rolagens"
-              description="Acompanhe o log detalhado dos dados jogados recentemente"
-            />
-
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
-
-            <ToolButton 
-              icon={<Settings size={20} />} 
-              active={activeModal === 'settings'} 
-              onClick={() => setActiveModal('settings')} 
-              tooltip="Configurações Globais"
-              description="Ajuste atalhos de hardware, desempenho e volume"
-            />
-            <ToolButton 
-              icon={<UserCheckIcon user={user} />} 
-              active={isAuthModalOpen || isProfileModalOpen} 
-              onClick={() => {
-                if (user) {
-                  setProfileModalOpen(true);
-                } else {
-                  setAuthModalOpen(true);
-                }
-              }} 
-              tooltip={user ? `Meu Perfil (${user.user_metadata?.full_name || user.email})` : "Login / Criar Conta"}
-              description={user ? "Clique para gerenciar seu perfil, avatar ou desconectar" : "Entre com sua conta Supabase para sincronizar suas mesas"}
-            />
-            {isLocalhost && (
+            {/* 🧭 GRUPO 1: CAMPANHA & MUNDO */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {renderSectionHeader('Campanha & Mundo')}
+              
               <ToolButton 
-                icon={<CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />} 
+                icon={<Search size={19} />} 
                 active={false} 
-                onClick={handleSyncCloud} 
-                tooltip={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem (Vercel)"}
-                description="Salva todo o progresso no banco de dados nas nuvens permanentemente"
+                onClick={() => window.dispatchEvent(new Event('open-command-palette'))} 
+                tooltip="Busca (Ctrl+K)"
+                description="Abre a paleta de comandos rápida do sistema"
               />
-            )}
-            <ToolButton 
-              icon={<LogOut size={20} />} 
-              active={false} 
-              onClick={() => window.location.href = '/'} 
-              tooltip="Sair"
-              description="Encerra a visão de mestre e retorna ao menu de campanhas"
-            />
+              <ToolButton 
+                icon={<LayoutGrid size={19} />} 
+                active={activeModal === 'widgets'} 
+                onClick={() => setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets')} 
+                tooltip="Menu Geral (Hub)"
+                description="Painel principal com todos os módulos e ferramentas"
+              />
+              <ToolButton 
+                icon={<BookOpen size={19} />} 
+                active={viewMode === 'wiki'} 
+                onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} 
+                tooltip="Wiki da Campanha"
+                description="Acesse anotações, monstros, fichas e compêndios"
+              />
+              <ToolButton 
+                icon={<Film size={19} />} 
+                active={viewMode === 'theater'} 
+                onClick={() => setViewMode(viewMode === 'theater' ? 'canvas' : 'theater')} 
+                tooltip="Teatro da Mente"
+                description="Modo cinematográfico imersivo para interpretação sem grid"
+              />
+            </div>
+
+            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.12)', margin: '4px 0', flexShrink: 0 }} />
+
+            {/* ⚔️ GRUPO 2: MESA DE JOGO (ACTIVE PLAY) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {renderSectionHeader('Mesa de Jogo')}
+
+              <ToolButton 
+                icon={<Map size={19} />} 
+                active={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser'].includes(activeTool as string)}
+                onClick={() => setActiveFolder('map_tools')} 
+                tooltip="Mapa & Cenário"
+                description="Ferramentas de Cursor, Medição, Névoa de Guerra, Camadas e Caneta"
+              />
+              <ToolButton 
+                icon={<Swords size={19} />} 
+                active={openWindows.combatTracker} 
+                onClick={() => toggleWindow('combatTracker')} 
+                tooltip="Combate & Iniciativa"
+                description="Rastreador de turnos e combate para a batalha ativa"
+              />
+              <ToolButton 
+                icon={<Users size={19} />} 
+                active={showActors} 
+                onClick={toggleNPCPanel} 
+                tooltip="Fichas & Tokens"
+                description="Lista rápida dos participantes e monstros da cena (Cast)"
+              />
+              <ToolButton 
+                icon={<Dices size={19} />} 
+                active={openWindows.combatLog} 
+                onClick={() => toggleWindow('combatLog')} 
+                tooltip="Histórico de Rolagens"
+                description="Log detalhado de rolagens de dados e testes em tempo real"
+              />
+            </div>
+
+            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.12)', margin: '4px 0', flexShrink: 0 }} />
+
+            {/* 👥 GRUPO 3: GESTÃO DA MESA */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {renderSectionHeader('Gestão da Mesa')}
+
+              <ToolButton 
+                icon={<Users size={19} />} 
+                active={activeModal === 'players'} 
+                onClick={() => setActiveModal(activeModal === 'players' ? 'none' : 'players')} 
+                tooltip="Jogadores & Mesa"
+                description="Convites, QR Code, participantes conectados e permissões"
+              />
+              <ToolButton 
+                icon={<MessageSquare size={19} />} 
+                active={openWindows.chatWindow} 
+                onClick={() => toggleWindow('chatWindow')} 
+                tooltip="Chat Privado (P2P)"
+                description="Troque mensagens, sussurros e rolagens com os jogadores"
+              />
+              <ToolButton 
+                icon={<Flame size={19} />} 
+                active={openWindows.masterForge} 
+                onClick={() => toggleWindow('masterForge')} 
+                tooltip="Forja do Mestre (Criar)"
+                description="Central de geradores de NPCs, locais, monstros, oráculos e IA"
+              />
+            </div>
+
+            {/* Espaçador flexível para empurrar configurações e perfil para o rodapé */}
+            <div style={{ flex: 1, minHeight: '12px' }} />
+
+            {/* ⚙️ GRUPO 4: SISTEMA & CONTA (FOOTER) */}
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '3px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+              paddingTop: '6px',
+              marginTop: 'auto'
+            }}>
+              {renderSectionHeader('Sistema')}
+
+              {isLocalhost && (
+                <ToolButton 
+                  icon={<CloudUpload size={19} className={isSyncing ? 'spin-anim' : ''} />} 
+                  active={false} 
+                  onClick={handleSyncCloud} 
+                  tooltip={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem"}
+                  description="Salva o progresso e notas no repositório em nuvem"
+                />
+              )}
+              <ToolButton 
+                icon={<Settings size={19} />} 
+                active={activeModal === 'settings'} 
+                onClick={() => setActiveModal('settings')} 
+                tooltip="Configurações"
+                description="Ajuste temas visuais, regras, áudio, módulos e IA"
+              />
+              <ToolButton 
+                icon={<UserCheckIcon user={user} />} 
+                active={isAuthModalOpen || isProfileModalOpen} 
+                onClick={() => {
+                  if (user) {
+                    setProfileModalOpen(true);
+                  } else {
+                    setAuthModalOpen(true);
+                  }
+                }} 
+                tooltip={user ? `Meu Perfil (${user.user_metadata?.full_name || user.email})` : "Meu Perfil (Login)"}
+                description={user ? "Gerenciar conta, avatar e credenciais" : "Fazer login para sincronizar campanhas"}
+              />
+              <ToolButton 
+                icon={<LogOut size={19} color="#f87171" />} 
+                active={false} 
+                onClick={() => window.location.href = '/'} 
+                tooltip="Sair"
+                description="Encerra a sessão e retorna ao menu de campanhas"
+              />
+            </div>
           </>
         )}
 

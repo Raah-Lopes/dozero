@@ -189,12 +189,20 @@ export const AIAssistantBot: React.FC = () => {
         }}
         onMouseOver={e => (e.currentTarget.style.transform = isOpen ? 'scale(0.9)' : 'scale(1.1)')}
         onMouseOut={e => (e.currentTarget.style.transform = isOpen ? 'scale(0.9)' : 'scale(1)')}
-        title="Assistente IA de Regras"
+        title="Zye — Assistente IA de Regras & Criação"
       >
-        {isOpen ? <X size={24} /> : <Bot size={24} />}
+        {isOpen ? (
+          <X size={24} />
+        ) : (
+          <img 
+            src="/mascot/zye-head-smile.png" 
+            alt="Zye" 
+            style={{ width: '42px', height: '42px', objectFit: 'contain', pointerEvents: 'none', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))' }} 
+          />
+        )}
         {!isOpen && (
           <Sparkles 
-            size={12} 
+            size={14} 
             color="#fde047" 
             style={{ position: 'absolute', top: '-4px', right: '-4px', animation: 'pulse 2s infinite' }} 
           />
@@ -221,27 +229,34 @@ export const AIAssistantBot: React.FC = () => {
           }}
         >
           {/* Header */}
-          <div style={{ background: 'rgba(236,72,153,0.15)', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(236,72,153,0.2)' }}>
+          <div style={{ background: 'rgba(236,72,153,0.15)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(236,72,153,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Bot size={20} color="#ec4899" />
-              <h3 style={{ margin: 0, fontSize: '1rem', color: '#fbcfe8', fontFamily: 'var(--font-display)' }}>Assistente de Mestre</h3>
+              <img src="/mascot/zye-head-smile.png" alt="Zye" style={{ width: '28px', height: '28px', objectFit: 'contain', filter: 'drop-shadow(0 1px 4px rgba(250,204,21,0.4))' }} />
+              <div>
+                <h3 style={{ margin: 0, fontSize: '0.92rem', color: '#fbcfe8', fontWeight: 700 }}>Zye — Assistente</h3>
+                <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)' }}>Guardião & IA do DOZERO</span>
+              </div>
             </div>
             <button 
               onClick={() => setIsOpen(false)} 
               style={{ background: 'transparent', border: 'none', color: '#fbcfe8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', borderRadius: '4px' }}
               title="Fechar Assistente"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
           {/* Messages */}
           <div style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {aiChat.length === 0 && (
-              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.85rem' }}>
-                <Bot size={32} style={{ opacity: 0.3, marginBottom: '8px', display: 'inline-block' }} />
-                <br/>
-                Olá! Como posso te ajudar com as regras, testes ou atributos hoje?
+              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.82rem', padding: '12px' }}>
+                <img 
+                  src="/mascot/zye-reading-map.png" 
+                  alt="Zye Lendo Mapa" 
+                  style={{ width: '90px', height: 'auto', margin: '0 auto 10px auto', display: 'block', filter: 'drop-shadow(0 4px 15px rgba(236,72,153,0.35))' }} 
+                />
+                <strong style={{ color: '#fff', fontSize: '0.92rem', display: 'block', marginBottom: '4px' }}>Olá, Mestre! Eu sou o Zye! 🤖🗺️</strong>
+                Estou aqui estudando as regras e o mapa. Como posso te ajudar com atributos, testes ou criação de cenas hoje?
               </div>
             )}
             

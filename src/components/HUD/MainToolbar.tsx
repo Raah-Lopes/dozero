@@ -64,9 +64,9 @@ export function MainToolbar() {
     { id: 'wiki', label: 'Wiki da Campanha', icon: <BookOpen size={20} />, action: () => handleSetViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki'), isActive: viewMode === 'wiki', colorClass: 'theme-cyan' },
     { id: 'theater', label: 'Teatro da Mente', icon: <Film size={20} />, action: () => handleSetViewMode(viewMode === 'theater' ? 'canvas' : 'theater'), isActive: viewMode === 'theater', colorClass: 'theme-violet' },
     { id: 'layouts', label: 'Layouts & Multi-Monitor', icon: <LayoutGrid size={20} />, action: () => { window.dispatchEvent(new CustomEvent('open-layout-presets')); setIsMenuOpen(false); }, isActive: false, colorClass: 'theme-violet' },
-    { id: 'players', label: 'Convidar Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },
+    { id: 'players', label: 'Central da Mesa & Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },
     { id: 'chat', label: 'Chat P2P (Mensagens)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('chatWindow'), isActive: openWindows.chatWindow, colorClass: 'theme-blue' },
-    { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },
+    { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <Dices size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },
     ...(isLocalhost ? [{ id: 'sync', label: isSyncing ? 'Sincronizando...' : 'Sincronizar Nuvem (Vercel)', icon: <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />, action: handleSyncCloud, isActive: false, colorClass: 'theme-green' }] : []),
     { id: 'settings', label: 'Configurações do Sistema', icon: <Settings size={20} />, action: () => toggleModal('settings'), isActive: activeModal === 'settings', colorClass: 'theme-slate' },
     { id: 'exit', label: 'Sair (Voltar ao Início)', icon: <LogOut size={20} />, action: () => window.location.href = '/', isActive: false, colorClass: 'theme-red' }
@@ -90,7 +90,14 @@ export function MainToolbar() {
         {isMenuOpen && (
           <div style={{ position: 'fixed', inset: 0, background: 'var(--bg-primary)', zIndex: 1000001, display: 'flex', flexDirection: 'column', padding: '20px', pointerEvents: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 className="text-gold" style={{ margin: 0 }}>Menu DOZERO</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <img 
+                  src="/mascot/zye-head-smile.png" 
+                  alt="Zye" 
+                  style={{ width: '36px', height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(250, 204, 21, 0.4))' }} 
+                />
+                <h2 className="text-gold" style={{ margin: 0 }}>Menu DOZERO</h2>
+              </div>
               <button onClick={() => setIsMenuOpen(false)} aria-label="Fechar Menu" style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)' }}><X size={28} /></button>
             </div>
 
@@ -137,8 +144,8 @@ export function MainToolbar() {
       {/* Right side: Social & System */}
       <div className="hud-tools-bar">
         <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
-          <Tooltip label="Convidar Jogadores" description="Compartilhar Mesa" position="bottom">
-            <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} aria-label="Gerenciar Jogadores">
+          <Tooltip label="Central da Mesa & Jogadores" description="Convites, Participantes e Sala" position="bottom">
+            <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} aria-label="Central da Mesa e Jogadores">
               <Users size={20} />
             </button>
           </Tooltip>

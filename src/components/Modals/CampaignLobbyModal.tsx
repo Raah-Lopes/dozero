@@ -214,9 +214,11 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '2px solid #3b281d' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ padding: '10px', borderRadius: '14px', background: '#a46830', color: '#fff', border: '1px solid #c49a6c' }}>
-              <Globe size={22} />
-            </div>
+            <img 
+              src="/mascot/zye-head-smile.png" 
+              alt="Zye" 
+              style={{ width: '42px', height: '42px', objectFit: 'contain', filter: 'drop-shadow(0 2px 8px rgba(245, 158, 11, 0.4))' }} 
+            />
             <div>
               <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#fdfaf5', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 Mural de Campanhas & Gerenciador de Mesas
@@ -453,7 +455,11 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 alignItems: 'center',
                 gap: '10px'
               }}>
-                <BookOpen size={40} color="#8c6e5a" />
+                <img 
+                  src="/mascot/zye-scholar-books.png" 
+                  alt="Zye" 
+                  style={{ width: '85px', height: 'auto', marginBottom: '4px', filter: 'drop-shadow(0 4px 12px rgba(164, 104, 48, 0.4))' }} 
+                />
                 <h3 style={{ margin: 0, fontSize: '1rem', color: '#fdfaf5' }}>Nenhuma campanha encontrada</h3>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#d7c9b8', maxWidth: '320px' }}>
                   Crie sua primeira campanha para salvar seus mapas, tokens, wikis e histórico de sessão.

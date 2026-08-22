@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 interface Props {
   children?: ReactNode;
   fallback?: ReactNode;
+  fallbackMessage?: string;
   componentName?: string;
 }
 
@@ -19,12 +20,12 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`[ErrorBoundary] Erro capturado${this.props.componentName ? ` em ${this.props.componentName}` : ''}:`, error, errorInfo);
+    const name = this.props.componentName || this.props.fallbackMessage || '';
+    console.error(`[ErrorBoundary] Erro capturado${name ? ` em ${name}` : ''}:`, error, errorInfo);
   }
 
   private handleReset = () => {
@@ -36,6 +37,8 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) {
         return this.props.fallback;
       }
+
+      const title = this.props.fallbackMessage || (this.props.componentName ? `Falha no Módulo (${this.props.componentName})` : 'Falha no Componente');
 
       return (
         <div style={{
@@ -55,7 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
         }}>
           <AlertTriangle size={48} strokeWidth={1.5} style={{ opacity: 0.8, marginBottom: '16px' }} />
           <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600, color: '#fca5a5' }}>
-            Falha no Módulo {this.props.componentName ? `(${this.props.componentName})` : ''}
+            {title}
           </h3>
           <p style={{ margin: '0 0 20px 0', fontSize: '13px', opacity: 0.8, textAlign: 'center', maxWidth: '400px' }}>
             {this.state.error?.message || 'Um erro inesperado impediu a renderização desta parte da interface.'}

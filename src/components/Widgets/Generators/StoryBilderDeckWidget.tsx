@@ -141,9 +141,10 @@ interface SavedDeck {
 
 interface Props {
   onClose?: () => void;
+  embedded?: boolean;
 }
 
-export const StoryBilderDeckWidget = ({ onClose }: Props) => {
+export const StoryBilderDeckWidget = ({ onClose, embedded }: Props) => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(Object.keys(CATEGORIES));
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [revealedCards, setRevealedCards] = useState<number[]>([]);
@@ -241,17 +242,8 @@ export const StoryBilderDeckWidget = ({ onClose }: Props) => {
     localStorage.setItem('storyBilderDecks', JSON.stringify(updated));
   };
 
-  return (
-    <DraggableWindow
-      id="storyBilderDeck"
-      title="Story Bilder Deck"
-      initialX={200}
-      initialY={100}
-      width={700}
-      height={650}
-      onClose={onClose}
-      variant="glass"
-    >
+  const bodyContent = (
+    <>
       <style>{`
         .sbd-container {
           display: flex;
@@ -749,6 +741,25 @@ export const StoryBilderDeckWidget = ({ onClose }: Props) => {
           </div>
         )}
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return bodyContent;
+  }
+
+  return (
+    <DraggableWindow
+      id="storyBilderDeck"
+      title="Story Bilder Deck"
+      initialX={200}
+      initialY={100}
+      width={700}
+      height={650}
+      onClose={onClose}
+      variant="glass"
+    >
+      {bodyContent}
     </DraggableWindow>
   );
 }

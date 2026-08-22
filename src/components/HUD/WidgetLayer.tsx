@@ -5,7 +5,7 @@ import { CommandPalette } from '../UI/CommandPalette';
 import { useCommandRegistry } from '../../store';
 import { ShieldAlert } from 'lucide-react';
 
-// Lazy loaded widgets
+// Lazy loading individual widgets
 const OracleWidgetV2 = React.lazy(() => import('../Widgets/Generators/OracleWidgetV2').then(m => ({ default: m.OracleWidgetV2 })));
 const NPCGeneratorWidget = React.lazy(() => import('../Widgets/Generators/NPCGeneratorWidget').then(m => ({ default: m.NPCGeneratorWidget })));
 const LocationGeneratorWidget = React.lazy(() => import('../Widgets/Generators/LocationGeneratorWidget').then(m => ({ default: m.LocationGeneratorWidget })));
@@ -32,6 +32,7 @@ const StoryDiceWidget = React.lazy(() => import('../Widgets/Generators/StoryDice
 const SSStoryDiceWidget = React.lazy(() => import('../Widgets/Generators/SSStoryDiceWidget').then(m => ({ default: m.StoryDiceWidget })));
 const StoryBilderDeckWidget = React.lazy(() => import('../Widgets/Generators/StoryBilderDeckWidget').then(m => ({ default: m.StoryBilderDeckWidget })));
 const RoomManagerWidget = React.lazy(() => import('../Widgets/System/RoomManagerWidget').then(m => ({ default: m.RoomManagerWidget })));
+const MasterForgeWidget = React.lazy(() => import('../Widgets/Generators/MasterForgeWidget').then(m => ({ default: m.MasterForgeWidget })));
 
 const FallbackLoader = () => (
   <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15,23,42,0.9)', padding: '20px', borderRadius: '12px', color: '#fff', zIndex: 9999 }}>
@@ -45,32 +46,51 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
   const openWindow = useWindowManager((state) => state.openWindow);
   const registerCommand = useCommandRegistry((state) => state.registerCommand);
 
-  // If in standalone popout mode, force ONLY the requested widget to be open
+  // If running in popout/standalone mode, we only open the requested widget!
   const openWindows = standaloneWidget 
-    ? { [standaloneWidget]: true } as any 
+    ? { [standaloneWidget]: true } 
     : storeOpenWindows;
 
   React.useEffect(() => {
+    // Register standard window toggle commands into CommandPalette
     registerCommand({
-      id: 'sys_auditor',
-      title: 'Auditor de Sistema (Linter IA)',
-      category: 'System',
-      icon: <ShieldAlert size={16} />,
-      onSelect: () => openWindow('systemAuditor')
+      id: 'toggle-dice',
+      title: 'Abrir Rolador de Dados',
+      category: 'Ferramentas',
+      handler: () => openWindow('diceRoller'),
+      shortcut: 'D'
+    });
+    registerCommand({
+      id: 'toggle-master-forge',
+      title: 'Abrir A Forja do Mestre (Geradores)',
+      category: 'Mestre',
+      handler: () => openWindow('masterForge'),
+    });
+    registerCommand({
+      id: 'toggle-ai-studio',
+      title: 'Abrir AI Studio do Mestre',
+      category: 'Mestre',
+      handler: () => openWindow('aiStudio'),
+    });
+    registerCommand({
+      id: 'toggle-campaign',
+      title: 'Abrir Gestor de Campanhas',
+      category: 'Mestre',
+      handler: () => openWindow('campaignManager')
     });
   }, [registerCommand, openWindow]);
 
   return (
-    <>
-      <CommandPalette />
-      <Suspense fallback={<FallbackLoader />}>
-        <ErrorBoundary fallbackMessage="Falha ao carregar Módulo da Central.">
+    <Suspense fallback={<FallbackLoader />}>
+      <ErrorBoundary fallback={<div style={{position: 'fixed', bottom: 10, right: 10, background: 'rgba(239,68,68,0.2)', padding: 10, borderRadius: 8, color: '#fca5a5', zIndex: 999999, display: 'flex', gap: 6, alignItems: 'center'}}><ShieldAlert size={16}/> Erro ao carregar um dos widgets.</div>}>
+        <CommandPalette />
+        <div className="widgets-layer" style={{ pointerEvents: 'none' }}>
           {openWindows.oracle && <OracleWidgetV2 onClose={() => closeWindow('oracle')} />}
           {openWindows.npcGenerator && <NPCGeneratorWidget onClose={() => closeWindow('npcGenerator')} />}
           {openWindows.locationGenerator && <LocationGeneratorWidget onClose={() => closeWindow('locationGenerator')} />}
           {openWindows.encounterGenerator && <EncounterWidget onClose={() => closeWindow('encounterGenerator')} />}
           {openWindows.campaignManager && <CampaignManagerWidget onClose={() => closeWindow('campaignManager')} />}
-                    {openWindows.automatedDice && <AutomatedDiceWidget onClose={() => closeWindow('automatedDice')} />}
+          {openWindows.automatedDice && <AutomatedDiceWidget onClose={() => closeWindow('automatedDice')} />}
           {openWindows.characterRoster && <CharacterRosterWidget onClose={() => closeWindow('characterRoster')} />}
           {openWindows.chronos && <ChronosWidget onClose={() => closeWindow('chronos')} />}
           {openWindows.loreMachine && <LoreMachineWidget onClose={() => closeWindow('loreMachine')} />}
@@ -91,8 +111,9 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.storyDice && <StoryDiceWidget onClose={() => closeWindow('storyDice')} />}
           {openWindows.ssStoryDice && <SSStoryDiceWidget onClose={() => closeWindow('ssStoryDice')} />}
           {openWindows.roomManager && <RoomManagerWidget onClose={() => closeWindow('roomManager')} />}
-        </ErrorBoundary>
-      </Suspense>
-    </>
+          {openWindows.masterForge && <MasterForgeWidget onClose={() => closeWindow('masterForge')} />}
+        </div>
+      </ErrorBoundary>
+    </Suspense>
   );
 });

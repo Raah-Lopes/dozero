@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 
 interface AIStudioWidgetProps {
-  onClose: () => void;
+  onClose?: () => void;
+  embedded?: boolean;
 }
 
 // ── Tipos e constantes ───────────────────────────────────────────────────────
@@ -87,7 +88,7 @@ function saveConfig(data: Record<string, string>) {
 }
 
 // ── Componente principal ─────────────────────────────────────────────────────
-export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
+export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedded }) => {
   const { index, repoPath } = useWiki() as any;
   const savedConfig = loadConfig();
 
@@ -334,17 +335,8 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
   const needsTextArea = ['resumo_sessao', 'dlc_expand'].includes(activeTab);
   const selectedModel = filteredModels.find(m => m.id === modelId);
 
-  return (
-    <DraggableWindow
-      id="aiStudio"
-      title="🤖 Estúdio IA do Mestre"
-      initialX={Math.max(20, window.innerWidth / 2 - 560)}
-      initialY={60}
-      width={1100}
-      height={720}
-      onClose={onClose}
-      variant="glass"
-    >
+  const bodyContent = (
+    <>
       <style>{`
         .ai-tab { padding: 5px 10px; border-radius: 6px 6px 0 0; font-size: 0.65rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; border: none; transition: all 0.2s; white-space: nowrap; }
         .ai-tab.active { background: rgba(255,255,255,0.08); }
@@ -655,10 +647,16 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                 {/* Histórico */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {chatHistory.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#334155' }}>
-                      <Bot size={40} style={{ margin: '0 auto 12px', display: 'block', opacity: 0.3 }} />
-                      <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>Mestre-IA em espera</div>
-                      <div style={{ fontSize: '0.7rem' }}>Pergunte sobre regras, peça ideias de plot, improvise um NPC ou converse sobre a campanha. A IA conhece o contexto da sua wiki.</div>
+                    <div style={{ textAlign: 'center', padding: '30px 20px', color: '#94a3b8' }}>
+                      <img 
+                        src="/mascot/zye-reading-map.png" 
+                        alt="Zye" 
+                        style={{ width: '80px', height: 'auto', margin: '0 auto 10px', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(168,85,247,0.3))' }} 
+                      />
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f8fafc', marginBottom: '4px' }}>Zye & Mestre-IA em Espera</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', maxWidth: '380px', margin: '0 auto' }}>
+                        Pergunte sobre regras, peça ideias de reviravoltas ou converse sobre sua campanha. A IA conhece o contexto da sua Wiki.
+                      </div>
                     </div>
                   )}
                   {chatHistory.map((msg, i) => (
@@ -772,10 +770,14 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
                       }}
                     />
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '60px 20px', color: '#1e293b' }}>
-                      <Wand2 size={40} style={{ margin: '0 auto 12px', display: 'block', opacity: 0.2 }} />
-                      <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '4px' }}>Aguardando geração</div>
-                      <div style={{ fontSize: '0.68rem' }}>Preencha o formulário e clique em "Forjar com IA"</div>
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+                      <img 
+                        src="/mascot/zye-reading-map.png" 
+                        alt="Zye Estudando" 
+                        style={{ width: '80px', height: 'auto', margin: '0 auto 12px', display: 'block', opacity: 0.85, filter: 'drop-shadow(0 4px 12px rgba(168,85,247,0.3))' }} 
+                      />
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f8fafc', marginBottom: '4px' }}>Zye & Estúdio IA Prontos</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Preencha o formulário ao lado e clique em "Forjar com IA"</div>
                     </div>
                   )}
                 </div>
@@ -815,6 +817,25 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose }) => {
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return bodyContent;
+  }
+
+  return (
+    <DraggableWindow
+      id="aiStudio"
+      title="🤖 Estúdio IA do Mestre"
+      initialX={Math.max(20, window.innerWidth / 2 - 560)}
+      initialY={60}
+      width={1100}
+      height={720}
+      onClose={onClose}
+      variant="glass"
+    >
+      {bodyContent}
     </DraggableWindow>
   );
 };

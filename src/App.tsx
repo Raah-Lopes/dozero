@@ -238,23 +238,14 @@ function App() {
           }} />
 
           {/* Modal Layer */}
-          {(activeModal === 'players' || activeModal.startsWith('settings') || activeModal === 'chat') && (
+          {(activeModal === 'players' || activeModal.startsWith('settings')) && (
             <div className="hud-modal-layer">
               {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
               {activeModal.startsWith('settings') && (
                 <SettingsModal 
                   onClose={() => setActiveModal('none')} 
-                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : activeModal === 'settings-cenario' ? 'cenario' : 'geral'} 
+                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : 'geral'} 
                 />
-              )}
-              {activeModal === 'chat' && (
-                <div className="glass-panel animate-fade-in" style={{ padding: '1.5rem', width: '350px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Mensagens Diretas</h3>
-                    <button onClick={() => setActiveModal('none')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = 'white'} onMouseOut={e => e.currentTarget.style.color = 'var(--text-secondary)'}><X size={18} /></button>
-                  </div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nenhuma mensagem recebida.</p>
-                </div>
               )}
             </div>
           )}

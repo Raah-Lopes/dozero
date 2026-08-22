@@ -839,7 +839,11 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
           )
         ) : (
           <div className="wiki-empty-state">
-            <BookOpen size={64} color="var(--glass-border)" />
+            <img 
+              src="/mascot/zye-scholar-books.png" 
+              alt="Zye Estudioso" 
+              style={{ width: '100px', maxWidth: '35vw', height: 'auto', marginBottom: '14px', filter: 'drop-shadow(0 4px 16px rgba(168,85,247,0.35))' }} 
+            />
             <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>Bem-vindo ao Conhecimento</h2>
             <p>Selecione um pergaminho ou pasta à esquerda para começar a leitura, ou abra o <strong style={{color: 'var(--accent-primary)', cursor: 'pointer'}} onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-graph'))}>Cérebro</strong>.</p>
           </div>
