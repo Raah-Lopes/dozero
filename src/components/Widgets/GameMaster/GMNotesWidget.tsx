@@ -130,10 +130,10 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
       height={550} 
       onClose={onClose}
     >
-      <div className="flex flex-col h-full bg-[#0B0F19] text-slate-200 font-sans border-t border-slate-800 shadow-2xl">
+      <div className="flex flex-col h-full theme-bg-secondary theme-text-primary font-sans border-t border-[var(--glass-border)] shadow-2xl">
         
         {/* Toolbar de Abas (Estilo Pills Modernos) */}
-        <div className="flex bg-[#0B0F19] border-b border-white/5 overflow-x-auto select-none no-scrollbar p-2 gap-2 items-center">
+        <div className="flex theme-bg-primary border-b border-[var(--glass-border)] overflow-x-auto select-none no-scrollbar p-2 gap-2 items-center">
           {tabs.map(tab => (
             <div 
               key={tab.id}
@@ -141,10 +141,10 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
               onDoubleClick={() => handleRenameTab(tab.id, tab.title)}
               className={`group flex items-center gap-2 px-4 py-1.5 rounded-full cursor-pointer min-w-[120px] max-w-[200px] shrink-0 transition-all duration-300 border
                 ${activeTabId === tab.id 
-                  ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-                  : 'bg-white/5 border-transparent hover:bg-white/10 text-slate-400'}`}
+                  ? 'bg-[var(--accent-primary)]/20 border-[var(--accent-primary)] text-[var(--text-primary)] shadow-sm' 
+                  : 'bg-white/5 border-transparent hover:bg-white/10 text-[var(--text-secondary)]'}`}
             >
-              <FileText size={14} className={activeTabId === tab.id ? 'text-indigo-400' : 'text-slate-500'} />
+              <FileText size={14} className={activeTabId === tab.id ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'} />
               <span className="truncate flex-1 text-sm font-medium tracking-wide">{tab.title}</span>
               {tabs.length > 1 && (
                 <button 
@@ -158,7 +158,7 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
           ))}
           <button 
             onClick={handleAddTab}
-            className="p-1.5 ml-1 rounded-full bg-white/5 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-400 border border-transparent hover:border-indigo-500/30 transition-all duration-300 flex items-center justify-center hover:scale-105 active:scale-95"
+            className="p-1.5 ml-1 rounded-full bg-white/5 hover:bg-[var(--accent-primary)]/20 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] border border-transparent hover:border-[var(--glass-border)] transition-all duration-300 flex items-center justify-center hover:scale-105 active:scale-95"
             title="Nova Nota"
           >
             <Plus size={16} />
@@ -166,15 +166,15 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
         </div>
 
         {/* Action Bar */}
-        <div className="flex justify-between items-center px-4 py-3 bg-gradient-to-r from-slate-900/50 to-slate-800/20 border-b border-white/5">
-          <div className="flex items-center gap-2 text-xs text-slate-400/70 font-medium">
-            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+        <div className="flex justify-between items-center px-4 py-2.5 theme-bg-tertiary border-b border-[var(--glass-border)]">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] font-medium">
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse"></div>
             Salvo localmente
           </div>
           <div className="flex gap-3">
             <button
               onClick={handleClearTab}
-              className="group flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-full bg-slate-800/50 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all duration-300 border border-white/5 hover:border-red-500/30 hover:shadow-[0_0_10px_rgba(239,68,68,0.1)]"
+              className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full bg-white/5 hover:bg-red-500/15 text-[var(--text-secondary)] hover:text-red-400 transition-all duration-300 border border-[var(--glass-border)]"
               title="Apagar conteúdo atual"
             >
               <Trash2 size={14} className="group-hover:scale-110 transition-transform" />
@@ -183,7 +183,7 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
             <button
               onClick={handleSaveToWiki}
               disabled={isSaving}
-              className="group flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-full bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-300 shadow-lg shadow-indigo-900/30 hover:shadow-indigo-500/30 border border-indigo-400/20 disabled:opacity-50 hover:scale-105 active:scale-95"
+              className="group flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-full bg-[var(--accent-primary)] hover:brightness-110 text-white transition-all duration-300 shadow-md border border-white/10 disabled:opacity-50 hover:scale-105 active:scale-95"
             >
               <Save size={14} className="group-hover:scale-110 transition-transform" />
               {isSaving ? 'Salvando...' : 'Salvar na Wiki'}
@@ -203,14 +203,14 @@ export const GMNotesWidget: React.FC<GMNotesWidgetProps> = ({ onClose }) => {
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-slate-500 bg-slate-950/30">
-              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4 border border-white/5 shadow-inner">
-                <FileText size={32} className="text-slate-600" />
+            <div className="flex flex-col items-center justify-center h-full text-[var(--text-secondary)]">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4 border border-[var(--glass-border)] shadow-inner">
+                <FileText size={32} />
               </div>
               <p className="text-sm font-medium tracking-wide">Nenhuma nota aberta.</p>
               <button 
                 onClick={handleAddTab}
-                className="mt-4 px-6 py-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all text-sm font-medium"
+                className="mt-4 px-6 py-2 rounded-full bg-white/5 hover:bg-white/10 text-[var(--text-primary)] border border-[var(--glass-border)] transition-all text-sm font-medium"
               >
                 Criar Rascunho
               </button>

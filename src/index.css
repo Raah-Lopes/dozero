@@ -999,3 +999,66 @@ html[data-theme^="chronicles"] .stage-prop.selected {
 .zoom-controls-container:focus-within {
   opacity: 1;
 }
+
+/* ─── THEME-AWARE UTILITY CLASSES ──────────────────────────────────────────────
+   Use estas classes ao invés de hardcoded colors ou Tailwind utility classes fixas.
+   Elas respeitam automaticamente o tema ativo via CSS custom properties.
+*/
+
+/* Backgrounds */
+.theme-bg-primary { background-color: var(--bg-primary) !important; }
+.theme-bg-secondary { background-color: var(--bg-secondary) !important; }
+.theme-bg-tertiary { background-color: var(--bg-tertiary) !important; }
+.theme-bg-glass {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur, blur(16px)) !important;
+  -webkit-backdrop-filter: var(--glass-blur, blur(16px)) !important;
+}
+
+/* Text Colors */
+.theme-text-primary { color: var(--text-primary) !important; }
+.theme-text-secondary { color: var(--text-secondary) !important; }
+.theme-text-accent { color: var(--accent-primary) !important; }
+.theme-text-gradient {
+  background: var(--gradient-text) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+/* Borders */
+.theme-border-glass { border-color: var(--glass-border) !important; }
+.theme-border-glass-highlight { border-color: var(--glass-border-highlight) !important; }
+.theme-border-accent { border-color: var(--accent-primary) !important; }
+
+/* Semantic Colors */
+.theme-danger { color: var(--danger) !important; }
+.theme-success { color: var(--success) !important; }
+.theme-warning { color: var(--warning) !important; }
+.theme-mana { color: var(--mana) !important; }
+
+/* Background + Border Combos (Glass Panels) */
+.theme-panel-glass {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur, blur(16px)) !important;
+  -webkit-backdrop-filter: var(--glass-blur, blur(16px)) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-lg, 16px) !important;
+  box-shadow: var(--glass-shadow) !important;
+  transition: all 0.3s ease;
+}
+
+.theme-panel-glass:hover {
+  border-color: var(--glass-border-highlight) !important;
+}
+
+/* Typography from Theme */
+.theme-font-body { font-family: var(--font-body) !important; }
+.theme-font-display { font-family: var(--font-display) !important; }
+
+/* Scrollbar from Theme */
+.theme-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb) !important;
+}
+

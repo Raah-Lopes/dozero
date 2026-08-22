@@ -366,14 +366,14 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         display: 'flex',
         flexDirection: 'column',
         zIndex: isFullscreen ? 99999 : (isDragging ? globalZIndexCounter + 100 : zIndex),
-        boxShadow: (variant === 'default' || variant === 'glass') ? (isDragging ? '0 0 20px rgba(168, 85, 247, 0.4)' : (isPinned ? '0 0 10px rgba(168, 85, 247, 0.1)' : '')) : 'none',
+        boxShadow: (variant === 'default' || variant === 'glass') ? (isDragging ? '0 0 20px var(--accent-glow)' : (isPinned ? '0 0 10px var(--accent-glow)' : 'var(--glass-shadow)')) : 'none',
         resize: 'none', // Disabled native resize to fix jitter bug
         overflow: 'visible',
         minWidth: (variant === 'default' || variant === 'glass') ? (isBubble ? '48px' : '250px') : 'auto',
         minHeight: ((variant === 'default' || variant === 'glass') && !isBubble) ? '100px' : (isBubble ? '48px' : 'auto'),
-        backgroundColor: variant === 'default' ? 'var(--bg-secondary)' : (variant === 'bare' ? 'transparent' : undefined),
+        backgroundColor: variant === 'default' ? 'var(--bg-secondary)' : (variant === 'bare' ? 'transparent' : 'var(--glass-bg)'),
         border: (variant === 'default' && !isFullscreen) ? '1px solid var(--glass-border)' : 'none',
-        borderRadius: isBubble ? '24px' : (isFullscreen ? '0px' : (variant === 'default' ? '12px' : '0')),
+        borderRadius: isBubble ? '24px' : (isFullscreen ? '0px' : (variant === 'default' ? '12px' : 'var(--radius-lg, 16px)')),
         ...windowStyle
       }}
       onPointerDownCapture={bringToFront} // Catch any click inside to bring to front
@@ -408,12 +408,12 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
               borderRadius: '24px', cursor: isDragging ? 'grabbing' : 'pointer',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              boxShadow: 'var(--glass-shadow)',
               touchAction: 'none',
               userSelect: 'none'
             }}
           >
-            <span className="text-gold" style={{ fontSize: '1.2rem' }}>
+            <span className="theme-text-gradient" style={{ fontSize: '1.2rem' }}>
                {title.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -431,7 +431,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
             padding: '0.4rem 0.6rem',
             cursor: isDragging ? 'grabbing' : 'grab',
             borderBottom: '1px solid var(--glass-border)',
-            background: 'rgba(255, 255, 255, 0.05)',
+            background: 'var(--bg-tertiary)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -442,7 +442,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
         >
           <div style={{ display: 'flex', gap: '0.5rem', color: 'var(--text-secondary)', alignItems: 'center', minWidth: 0, overflow: 'hidden' }}>
             <GripHorizontal size={14} style={{ opacity: isPinned ? 0.2 : 1, flexShrink: 0 }} />
-            <span className="text-gold" style={{ fontSize: '0.75rem', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+            <span className="theme-text-gradient" style={{ fontSize: '0.75rem', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
           </div>
 
           {/* Action Buttons Row inside Header */}

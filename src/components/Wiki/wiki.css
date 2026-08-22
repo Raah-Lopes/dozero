@@ -15,9 +15,9 @@
   max-width: 600px;
   resize: horizontal;
   overflow-x: hidden;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--glass-bg, rgba(0, 0, 0, 0.4));
   backdrop-filter: blur(12px);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid var(--glass-border, rgba(255, 255, 255, 0.05));
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -26,8 +26,8 @@
 
 .wiki-sidebar-header {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.05));
+  background: var(--bg-tertiary, rgba(0, 0, 0, 0.2));
 }
 
 .wiki-sidebar-content {
@@ -43,11 +43,11 @@
   background: transparent;
 }
 .wiki-sidebar-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.1));
   border-radius: 4px;
 }
 .wiki-sidebar-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--glass-border-highlight, rgba(255, 255, 255, 0.2));
 }
 
 .wiki-content-area {

@@ -1173,9 +1173,7 @@ ${vencedor}`, true);
     if (defensor.saqueado) {
       adicionarLog(`⚠️ ${defensor.nome} já foi saqueado. Não há mais nada de valor.`, false);
       return;
-    }
-
-    const ouroSorte = Math.floor(Math.random() * (defensor.nivel * 10)) + 5;
+  const ouroSorte = Math.floor(Math.random() * (defensor.nivel * 10)) + 5;
     
     const atk = { ...atacante };
     const def = { ...defensor };
@@ -1192,12 +1190,12 @@ ${vencedor}`, true);
     recarregar();
   };
 
-  const estiloSelect = {
+    const estiloSelect = {
     width: '100%',
     padding: '8px 12px',
     borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(15,23,42,0.9)',
+    border: '1px solid var(--glass-border)',
+    background: 'var(--bg-secondary)',
     color: 'var(--text-primary)',
     fontFamily: 'var(--font-body)',
     marginBottom: '8px',
@@ -1216,25 +1214,25 @@ ${vencedor}`, true);
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
         
         {/* NAVEGAÇÃO DE ABAS E SELETOR DE MODO */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 20px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(30,41,59,0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 20px 0', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-tertiary)' }}>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button 
               onClick={() => setAbaAtual('combate')}
-              style={{ padding: '12px 16px', background: abaAtual === 'combate' ? 'rgba(168,85,247,0.15)' : 'transparent', border: 'none', borderBottom: abaAtual === 'combate' ? '3px solid #a855f7' : '3px solid transparent', color: abaAtual === 'combate' ? 'white' : '#cbd5e1', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'var(--font-display)', transition: 'all 0.2s' }}
+              style={{ padding: '12px 16px', background: abaAtual === 'combate' ? 'var(--accent-glow)' : 'transparent', border: 'none', borderBottom: abaAtual === 'combate' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: abaAtual === 'combate' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'var(--font-display)', transition: 'all 0.2s' }}
             >
               <Swords size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
               Combate e Alvos
             </button>
             <button 
               onClick={() => setAbaAtual('iniciativa')}
-              style={{ padding: '12px 16px', background: abaAtual === 'iniciativa' ? 'rgba(56,189,248,0.15)' : 'transparent', border: 'none', borderBottom: abaAtual === 'iniciativa' ? '3px solid #38bdf8' : '3px solid transparent', color: abaAtual === 'iniciativa' ? 'white' : '#cbd5e1', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'var(--font-display)', transition: 'all 0.2s' }}
+              style={{ padding: '12px 16px', background: abaAtual === 'iniciativa' ? 'var(--accent-glow)' : 'transparent', border: 'none', borderBottom: abaAtual === 'iniciativa' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: abaAtual === 'iniciativa' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'var(--font-display)', transition: 'all 0.2s' }}
             >
               <ListOrdered size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
               Fila de Iniciativa
             </button>
             <button 
               onClick={() => setAbaAtual('elenco')}
-              style={{ padding: '12px 16px', background: abaAtual === 'elenco' ? 'rgba(16,185,129,0.15)' : 'transparent', border: 'none', borderBottom: abaAtual === 'elenco' ? '3px solid #10b981' : '3px solid transparent', color: abaAtual === 'elenco' ? 'white' : '#cbd5e1', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'var(--font-display)', transition: 'all 0.2s' }}
+              style={{ padding: '12px 16px', background: abaAtual === 'elenco' ? 'var(--accent-glow)' : 'transparent', border: 'none', borderBottom: abaAtual === 'elenco' ? '3px solid var(--accent-primary)' : '3px solid transparent', color: abaAtual === 'elenco' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'var(--font-display)', transition: 'all 0.2s' }}
             >
               <Target size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />
               Elenco
@@ -1243,72 +1241,72 @@ ${vencedor}`, true);
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', paddingBottom: '5px' }}>
             {/* Seletor de Modo de Sistema */}
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--glass-bg)', padding: '3px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
               <button
                 onClick={() => setSistemaMode('d20')}
                 style={{
-                  padding: '5px 12px',
+                  padding: '4px 10px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: sistemaMode === 'd20' ? 'linear-gradient(135deg, #a855f7, #6366f1)' : 'transparent',
-                  color: sistemaMode === 'd20' ? '#ffffff' : '#94a3b8',
+                  background: sistemaMode === 'd20' ? 'var(--accent-primary)' : 'transparent',
+                  color: sistemaMode === 'd20' ? '#ffffff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                 }}
               >
-                Modo d20
+                D20 Clássico
               </button>
               <button
                 onClick={() => setSistemaMode('d100')}
                 style={{
-                  padding: '5px 12px',
+                  padding: '4px 10px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: sistemaMode === 'd100' ? 'linear-gradient(135deg, #38bdf8, #0ea5e9)' : 'transparent',
-                  color: sistemaMode === 'd100' ? '#ffffff' : '#94a3b8',
+                  background: sistemaMode === 'd100' ? 'var(--accent-primary)' : 'transparent',
+                  color: sistemaMode === 'd100' ? '#ffffff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                 }}
               >
-                Modo d100 (CoC)
+                D100 Percentual
               </button>
               <button
                 onClick={() => setSistemaMode('custom')}
                 style={{
-                  padding: '5px 12px',
+                  padding: '4px 10px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: sistemaMode === 'custom' ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
-                  color: sistemaMode === 'custom' ? '#ffffff' : '#94a3b8',
+                  background: sistemaMode === 'custom' ? 'var(--accent-primary)' : 'transparent',
+                  color: sistemaMode === 'custom' ? '#ffffff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                 }}
               >
-                Modo: {currentEngine.name}
+                Livre / Dados
               </button>
             </div>
 
-            {/* Input de CD */}
-            {sistemaMode !== 'd100' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <span style={{ fontSize: '0.75rem', color: '#cbd5e1', fontWeight: 'bold' }}>CD:</span>
+            {/* Configuração de CD Padrão */}
+            {sistemaMode === 'd20' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--glass-bg)', padding: '3px 8px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>CD:</span>
                 <input
                   type="number"
                   value={cd}
                   onChange={(e) => setCd(Math.max(1, parseInt(e.target.value) || 0))}
                   style={{
                     width: '45px',
-                    background: 'rgba(15,23,42,0.6)',
-                    border: '1px solid rgba(168,85,247,0.4)',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--glass-border)',
                     borderRadius: '5px',
                     padding: '2px 4px',
-                    color: '#ffffff',
+                    color: 'var(--text-primary)',
                     textAlign: 'center',
                     fontSize: '0.75rem',
                     fontWeight: 'bold',
@@ -1328,15 +1326,15 @@ ${vencedor}`, true);
               {/* TOP SELECTORS AND SURVIVAL STATS */}
               <div style={{ display: 'flex', gap: '20px' }}>
                 {/* Seleção de atacante */}
-                <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', padding: '12px 16px', borderRadius: '10px', borderLeft: '4px solid #a855f7' }}>
-                  <h4 style={{ fontFamily: 'var(--font-display)', color: '#a855f7', margin: '0 0 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                <div style={{ flex: 1, background: 'var(--bg-tertiary)', padding: '12px 16px', borderRadius: '10px', borderLeft: '4px solid var(--accent-primary)' }}>
+                  <h4 style={{ fontFamily: 'var(--font-display)', color: 'var(--accent-primary)', margin: '0 0 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <Target size={15} style={{ marginRight: 6 }} /> Atacante / Aliado
                     </div>
                     {atacante && (
                       <button 
                         onClick={() => window.dispatchEvent(new CustomEvent('open-sheet-by-wiki', { detail: atacante.caminhoArquivo }))}
-                        style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
                         title="Abrir Ficha do Personagem"
                       >
                         <BookOpen size={15} />
