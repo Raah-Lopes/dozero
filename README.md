@@ -1,4 +1,3 @@
---- README.md (原始)
 # 🎲 Dozero - Virtual Tabletop RPG
 
 Uma plataforma completa para jogar RPG de mesa online com suporte para mapa interativo, wiki colaborativa, IA generativa e sincronização P2P.
