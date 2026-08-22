@@ -402,8 +402,8 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '6px 8px', borderRadius: '8px',
-              background: user ? 'rgba(16, 185, 129, 0.1)' : 'var(--accent-glow)',
-              border: `1px solid ${user ? 'rgba(16, 185, 129, 0.3)' : 'var(--glass-border)'}`
+              background: user ? 'var(--bg-tertiary)' : 'var(--accent-glow)',
+              border: `1px solid ${user ? 'var(--success)' : 'var(--glass-border)'}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
                 {user?.user_metadata?.custom_avatar || user?.user_metadata?.avatar_url ? (
@@ -415,9 +415,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                 ) : (
                   <div style={{
                     width: '22px', height: '22px', borderRadius: '50%',
-                    background: user ? '#10b981' : 'var(--accent-primary)',
+                    background: user ? 'var(--success)' : 'var(--accent-primary)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.65rem', fontWeight: 'bold', color: 'white'
+                    fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--text-primary)'
                   }}>
                     {playerName.substring(0, 1).toUpperCase()}
                   </div>
@@ -441,7 +441,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                 style={{
                   padding: '3px 8px', borderRadius: '4px',
                   background: user ? 'var(--bg-tertiary)' : 'var(--accent-primary)',
-                  border: 'none', color: user ? 'var(--text-primary)' : '#fff', fontSize: '0.65rem',
+                  border: 'none', color: 'var(--text-primary)', fontSize: '0.65rem',
                   fontWeight: '600', cursor: 'pointer'
                 }}
               >
@@ -451,19 +451,19 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
             {/* Vinculação com Personagem / Token & Ficha */}
             <div style={{
-              background: isLinkedToCharacter ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
-              border: isLinkedToCharacter ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.08)',
+              background: isLinkedToCharacter ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
+              border: isLinkedToCharacter ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
               borderRadius: '8px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isLinkedToCharacter ? '#a5b4fc' : '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isLinkedToCharacter ? 'var(--accent-primary)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <User size={12} /> Vincular Token & Ficha
                 </span>
                 <input
                   type="checkbox"
                   checked={isLinkedToCharacter}
                   onChange={e => setIsLinkedToCharacter(e.target.checked)}
-                  style={{ cursor: 'pointer', accentColor: '#6366f1' }}
+                  style={{ cursor: 'pointer', accentColor: 'var(--accent-primary)' }}
                 />
               </div>
 
@@ -473,9 +473,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                     value={selectedTokenId}
                     onChange={e => setSelectedTokenId(e.target.value)}
                     style={{
-                      width: '100%', padding: '4px 6px', background: 'rgba(0,0,0,0.5)',
-                      border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px',
-                      color: '#e2e8f0', fontSize: '0.75rem', outline: 'none'
+                      width: '100%', padding: '4px 6px', background: 'var(--bg-secondary)',
+                      border: '1px solid var(--glass-border)', borderRadius: '4px',
+                      color: 'var(--text-primary)', fontSize: '0.75rem', outline: 'none'
                     }}
                   >
                     {availableTokens.length === 0 && <option value="">Nenhum token no mapa</option>}
@@ -488,7 +488,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
                   {activeToken && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', color: '#cbd5e1' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
                         <span>❤️ HP: <strong>{activeToken.hp ?? '?'}</strong>/{activeToken.maxHp ?? '?'}</span>
                         <span>✨ MP: <strong>{activeToken.mana ?? '?'}</strong>/{activeToken.maxMana ?? '?'}</span>
                       </div>
@@ -502,9 +502,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                                 onClick={() => handleToggleStatusEffect(cond)}
                                 style={{
                                   fontSize: '0.58rem', padding: '1px 5px', borderRadius: '3px',
-                                  background: cond === 'Morto' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.25)',
-                                  border: cond === 'Morto' ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(245,158,11,0.4)',
-                                  color: cond === 'Morto' ? '#fca5a5' : '#fde68a', cursor: 'pointer',
+                                  background: 'var(--bg-tertiary)',
+                                  border: cond === 'Morto' ? '1px solid var(--danger)' : '1px solid var(--warning)',
+                                  color: cond === 'Morto' ? 'var(--danger)' : 'var(--warning)', cursor: 'pointer',
                                   display: 'inline-block'
                                 }}
                               >
@@ -520,9 +520,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                         onClick={() => setShowEffectMenu(v => !v)}
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                          padding: '3px', background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
-                          color: '#a5b4fc', fontSize: '0.62rem', cursor: 'pointer'
+                          padding: '3px', background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--glass-border)', borderRadius: '4px',
+                          color: 'var(--accent-primary)', fontSize: '0.62rem', cursor: 'pointer'
                         }}
                       >
                         <Zap size={10} /> {showEffectMenu ? 'Fechar Efeitos' : '+ Adicionar Efeito/Status'}
@@ -530,7 +530,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
                       {/* Grade de Efeitos Rápida */}
                       {showEffectMenu && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '4px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '4px' }}>
                           {CONDICOES_DISPONIVEIS.map(cond => {
                             const isApplied = activeToken.status_efeitos?.includes(cond);
                             return (
@@ -539,9 +539,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                                 onClick={() => handleToggleStatusEffect(cond)}
                                 style={{
                                   padding: '2px 4px', fontSize: '0.58rem', textAlign: 'left',
-                                  background: isApplied ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.04)',
-                                  border: isApplied ? '1px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.08)',
-                                  borderRadius: '3px', color: isApplied ? '#a5b4fc' : '#cbd5e1', cursor: 'pointer'
+                                  background: isApplied ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
+                                  border: isApplied ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+                                  borderRadius: '3px', color: isApplied ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer'
                                 }}
                               >
                                 {isApplied ? '✓ ' : ''}{cond}
@@ -568,9 +568,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                       style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                         gap: '2px', padding: '6px 2px',
-                        background: active ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.04)',
-                        border: active ? '1px solid rgba(99,102,241,0.6)' : '1px solid transparent',
-                        borderRadius: '6px', cursor: 'pointer', color: active ? '#a5b4fc' : '#94a3b8',
+                        background: active ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
+                        border: active ? '1px solid var(--accent-primary)' : '1px solid transparent',
+                        borderRadius: '6px', cursor: 'pointer', color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
                         fontSize: '0.58rem', fontWeight: active ? 'bold' : 'normal',
                         transition: 'all 0.15s',
                         width: '100%',
@@ -587,15 +587,15 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
             </div>
 
             {/* Ajuste de Bônus Fixos (+ / -) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '4px 6px', borderRadius: '6px' }}>
-              <span style={{ fontSize: '0.65rem', color: '#64748b', whiteSpace: 'nowrap' }}>Bônus Mod:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-secondary)', padding: '4px 6px', borderRadius: '6px' }}>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Bônus Mod:</span>
               <div style={{ display: 'flex', flex: 1, gap: '4px', alignItems: 'center' }}>
                 <Tooltip label="Diminuir Bônus">
                   <button onClick={() => setBonus(b => b - 1)} style={bonusBtn}>−</button>
                 </Tooltip>
                 <span style={{
                   flex: 1, textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold',
-                  color: bonus > 0 ? '#4ade80' : bonus < 0 ? '#f87171' : '#94a3b8',
+                  color: bonus > 0 ? 'var(--success)' : bonus < 0 ? 'var(--danger)' : 'var(--text-secondary)',
                 }}>
                   {bonus >= 0 ? '+' : ''}{bonus}
                 </span>
@@ -615,18 +615,18 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                     style={{
                       display: 'flex', alignItems: 'center', gap: '6px',
                       padding: '7px 10px',
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)',
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--glass-border)',
                       borderRadius: '6px', cursor: 'pointer',
-                      color: '#e2e8f0', fontSize: '0.75rem', textAlign: 'left',
+                      color: 'var(--text-primary)', fontSize: '0.75rem', textAlign: 'left',
                       transition: 'all 0.15s',
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.2)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(99,102,241,0.4)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--accent-glow)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent-primary)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-tertiary)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--glass-border)'; }}
                   >
                     <span style={{ fontSize: '0.9rem' }}>{action.emoji}</span>
                     <span style={{ flex: 1 }}>{action.label}</span>
-                    <span style={{ fontSize: '0.65rem', color: '#64748b' }}>{action.dice}</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{action.dice}</span>
                   </button>
                 ))}
               </div>
@@ -636,7 +636,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
             {tab === 'custom' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Fórmula Personalizada:</label>
+                  <label style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Fórmula Personalizada:</label>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <input
                       type="text"
@@ -644,9 +644,9 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                       onChange={e => setCustomFormula(e.target.value)}
                       placeholder="ex: 1d20+2d100-30"
                       style={{
-                        flex: 1, padding: '6px', background: 'rgba(0,0,0,0.5)',
-                        border: '1px solid rgba(99,102,241,0.5)', borderRadius: '4px',
-                        color: '#f8fafc', fontSize: '0.75rem', fontFamily: 'monospace'
+                        flex: 1, padding: '6px', background: 'var(--bg-secondary)',
+                        border: '1px solid var(--accent-primary)', borderRadius: '4px',
+                        color: 'var(--text-primary)', fontSize: '0.75rem', fontFamily: 'monospace'
                       }}
                     />
                     <Tooltip label="Limpar fórmula">
@@ -662,16 +662,16 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
                 {/* Botões Rápidos para Montar a Fórmula */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '0.6rem', color: '#64748b' }}>Adicionar dados/modificadores:</span>
+                  <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Adicionar dados/modificadores:</span>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '3px' }}>
                     {['+1d4', '+1d6', '+1d8', '+1d10', '+1d12', '+1d20', '+1d100', '-1d6', '+5', '-5', '+10', '-30'].map(chip => (
                       <button
                         key={chip}
                         onClick={() => appendFormula(chip)}
                         style={{
-                          padding: '3px 2px', background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
-                          color: '#cbd5e1', fontSize: '0.62rem', cursor: 'pointer'
+                          padding: '3px 2px', background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--glass-border)', borderRadius: '4px',
+                          color: 'var(--text-secondary)', fontSize: '0.62rem', cursor: 'pointer'
                         }}
                       >
                         {chip}
@@ -685,10 +685,10 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                   onClick={() => executeRoll('Rolagem Customizada', '🎲', customFormula)}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                    padding: '8px', background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                    padding: '8px', background: 'var(--accent-primary)',
                     border: 'none', borderRadius: '6px', cursor: 'pointer',
-                    color: '#ffffff', fontSize: '0.8rem', fontWeight: 'bold',
-                    boxShadow: '0 2px 10px rgba(99,102,241,0.4)'
+                    color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 'bold',
+                    boxShadow: '0 2px 10px var(--accent-glow)'
                   }}
                 >
                   <Send size={14} /> Rolar Fórmula
@@ -699,20 +699,20 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
             {/* Mini-log de Histórico e Ações de Aplicação Direta no Token & Ficha */}
             {lastResults.length > 0 && (
               <div style={{
-                borderTop: '1px solid rgba(255,255,255,0.08)',
+                borderTop: '1px solid var(--glass-border)',
                 paddingTop: '8px',
                 display: 'flex', flexDirection: 'column', gap: '4px'
               }}>
-                <span style={{ fontSize: '0.6rem', color: '#64748b' }}>Últimas rolagens:</span>
+                <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Últimas rolagens:</span>
                 {lastResults.map((r, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: i === 0 ? '#a5b4fc' : '#94a3b8' }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: i === 0 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
                     <span>{r.label}: <strong>{r.val}</strong></span>
                     {isLinkedToCharacter && activeToken && (
                       <div style={{ display: 'flex', gap: '2px' }}>
                         <Tooltip label={`Aplicar ${r.val} de dano`} description={`No HP de ${activeToken.name}`}>
                           <button
                             onClick={() => handleApplyDamageToToken(r.val, false)}
-                            style={{ padding: '1px 4px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '3px', color: '#fca5a5', fontSize: '0.58rem', cursor: 'pointer' }}
+                            style={{ padding: '1px 4px', background: 'var(--bg-tertiary)', border: '1px solid var(--danger)', borderRadius: '3px', color: 'var(--danger)', fontSize: '0.58rem', cursor: 'pointer' }}
                           >
                             -HP
                           </button>
@@ -720,7 +720,7 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
                         <Tooltip label={`Curar ${r.val} de HP`} description={`Em ${activeToken.name}`}>
                           <button
                             onClick={() => handleApplyDamageToToken(r.val, true)}
-                            style={{ padding: '1px 4px', background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: '3px', color: '#86efac', fontSize: '0.58rem', cursor: 'pointer' }}
+                            style={{ padding: '1px 4px', background: 'var(--bg-tertiary)', border: '1px solid var(--success)', borderRadius: '3px', color: 'var(--success)', fontSize: '0.58rem', cursor: 'pointer' }}
                           >
                             +HP
                           </button>
@@ -773,10 +773,10 @@ export const PlayerQuickBar: React.FC<Props> = ({ playerName = 'Jogador' }) => {
 
 const bonusBtn: React.CSSProperties = {
   width: '22px', height: '22px',
-  background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'var(--bg-tertiary)',
+  border: '1px solid var(--glass-border)',
   borderRadius: '4px', cursor: 'pointer',
-  color: '#94a3b8', fontSize: '0.85rem',
+  color: 'var(--text-secondary)', fontSize: '0.85rem',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: 0,
 };

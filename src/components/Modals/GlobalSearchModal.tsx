@@ -91,7 +91,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
         className="global-search-modal"
       >
         {/* Search Bar Header */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid var(--glass-border)', gap: '12px', background: 'rgba(0,0,0,0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid var(--glass-border)', gap: '12px', background: 'var(--bg-tertiary)' }}>
           <Search size={22} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
           <input
             ref={inputRef}
@@ -106,7 +106,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               <X size={18} />
             </button>
           )}
-          <button onClick={onClose} style={{ padding: '4px 10px', background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '4px', color: 'var(--text-secondary)', fontSize: '0.75rem', cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ padding: '4px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '4px', color: 'var(--text-secondary)', fontSize: '0.75rem', cursor: 'pointer' }}>
             ESC
           </button>
         </div>
@@ -117,7 +117,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Ferramentas / Widgets */}
           {tools.length > 0 && (
             <div>
-              <div style={{ fontSize: '0.7rem', color: '#a855f7', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <LayoutGrid size={12} /> Ferramentas & Widgets
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -129,15 +129,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       onClick={item.action}
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '10px 12px', background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid transparent', borderRadius: '6px', cursor: 'pointer',
+                        padding: '10px 12px', background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer',
                         color: 'var(--text-primary)', fontSize: '0.88rem', textAlign: 'left'
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(168,85,247,0.18)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--accent-glow)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Icon size={18} style={{ color: '#c084fc' }} />
+                        <Icon size={18} style={{ color: 'var(--accent-primary)' }} />
                         <span>{item.name}</span>
                       </div>
                       <ArrowRight size={14} style={{ color: 'var(--text-secondary)', opacity: 0.6 }} />
@@ -151,7 +151,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Tokens no Mapa */}
           {tokenResults.length > 0 && (
             <div>
-              <div style={{ fontSize: '0.7rem', color: '#38bdf8', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <User size={12} /> Tokens no Mapa
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -164,14 +164,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                     }}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 12px', background: 'rgba(56,189,248,0.06)',
-                      border: '1px solid rgba(56,189,248,0.2)', borderRadius: '6px', cursor: 'pointer',
+                      padding: '10px 12px', background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer',
                       color: 'var(--text-primary)', fontSize: '0.88rem', textAlign: 'left'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <img src={t.imageUrl} alt={t.name} style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }} />
-                      <strong style={{ color: '#7dd3fc' }}>{t.name}</strong>
+                      <strong style={{ color: 'var(--accent-primary)' }}>{t.name}</strong>
                     </div>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Abrir Ficha</span>
                   </button>
@@ -183,7 +183,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Wiki Documents */}
           {wikiResults.length > 0 && (
             <div>
-              <div style={{ fontSize: '0.7rem', color: '#60a5fa', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <BookOpen size={12} /> Páginas da Wiki
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -196,14 +196,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                     }}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 12px', background: 'rgba(59,130,246,0.06)',
-                      border: '1px solid rgba(59,130,246,0.2)', borderRadius: '6px', cursor: 'pointer',
+                      padding: '10px 12px', background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer',
                       color: 'var(--text-primary)', fontSize: '0.88rem', textAlign: 'left'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>📜</span>
-                      <span style={{ fontWeight: 'bold', color: '#93c5fd' }}>{w.title || w.slug}</span>
+                      <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>{w.title || w.slug}</span>
                     </div>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{w.category || 'Wiki'}</span>
                   </button>
@@ -215,13 +215,13 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           {/* Comandos Rápidos */}
           {commands.length > 0 && (
             <div>
-              <div style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Terminal size={12} /> Comandos do Chat
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {commands.map((c, idx) => (
-                  <div key={idx} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
-                    <code style={{ color: '#fbbf24', fontWeight: 'bold' }}>{c.cmd}</code>
+                  <div key={idx} style={{ padding: '8px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+                    <code style={{ color: 'var(--warning)', fontWeight: 'bold' }}>{c.cmd}</code>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{c.desc}</span>
                   </div>
                 ))}

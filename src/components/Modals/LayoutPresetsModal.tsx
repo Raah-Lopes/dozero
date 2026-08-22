@@ -159,7 +159,7 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
         </div>
 
         {/* Salvar Layout Atual */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ background: 'var(--bg-tertiary)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>💾 Salvar Configuração Atual de Janelas</span>
           <div style={{ display: 'flex', gap: '8px' }}>
             <input
@@ -167,11 +167,11 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
               value={presetName}
               onChange={e => setPresetName(e.target.value)}
               placeholder="Ex: Setup Combate 2 Monitores..."
-              style={{ flex: 1, padding: '8px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }}
+              style={{ flex: 1, padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '4px', fontSize: '0.85rem' }}
             />
             <button
               onClick={saveCurrentLayout}
-              style={{ padding: '8px 14px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '8px 14px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: '#ffffff', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <Save size={14} /> Salvar
             </button>
@@ -180,29 +180,29 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
 
         {/* Dashboard de Widgets em Outras Telas (Popouts) */}
         {popouts.length > 0 && (
-          <div style={{ background: 'rgba(99,102,241,0.08)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(99,102,241,0.3)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ background: 'var(--accent-glow)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--accent-primary)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Monitor size={16} /> Widgets Destacados ({popouts.length})
               </span>
               <button
                 onClick={recallAllPopouts}
-                style={{ padding: '4px 8px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '4px', color: '#fca5a5', fontSize: '0.7rem', cursor: 'pointer' }}
+                style={{ padding: '4px 8px', background: 'rgba(239,68,68,0.15)', border: '1px solid var(--danger)', borderRadius: '4px', color: 'var(--danger)', fontSize: '0.7rem', cursor: 'pointer' }}
               >
                 Trazer Todos de Volta
               </button>
             </div>
             {popouts.map(p => (
-              <div key={p.id} className="popout-item">
+              <div key={p.id} className="popout-item" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', padding: '8px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{p.title}</div>
+                  <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--text-primary)' }}>{p.title}</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
                     Monitor {p.screen.availLeft > 0 ? 'Secundário' : 'Principal'} ({p.screen.width}x{p.screen.height})
                   </div>
                 </div>
                 <button
                   onClick={() => recallPopout(p.id)}
-                  style={{ padding: '4px 10px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  style={{ padding: '4px 10px', background: 'var(--accent-primary)', border: 'none', borderRadius: '4px', color: '#ffffff', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <RotateCcw size={12} /> Trazer de Volta
                 </button>
@@ -217,9 +217,9 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
             <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Seus Presets Salvos:</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {presets.map(p => (
-                <div key={p.id} className="preset-item">
+                <div key={p.id} className="preset-item" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', padding: '8px 12px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <strong style={{ fontSize: '0.85rem' }}>{p.name}</strong>
+                    <strong style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{p.name}</strong>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginLeft: '8px' }}>
                       ({Object.keys(p.windows).length} janelas)
                     </span>
@@ -227,7 +227,7 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button
                       onClick={() => loadPreset(p)}
-                      style={{ padding: '4px 10px', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: '4px', color: '#f0abfc', fontSize: '0.75rem', cursor: 'pointer' }}
+                      style={{ padding: '4px 10px', background: 'var(--accent-glow)', border: '1px solid var(--accent-primary)', borderRadius: '4px', color: 'var(--accent-primary)', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
                     >
                       Carregar
                     </button>
@@ -252,19 +252,19 @@ export const LayoutPresetsModal: React.FC<LayoutPresetsModalProps> = ({ isOpen, 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
             <button
               onClick={() => applySuggestedPreset('gm')}
-              style={{ padding: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center' }}
+              style={{ padding: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center' }}
             >
               🎯 <strong>Mestre Focado</strong><br/><span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Combate + Notas + Áudio</span>
             </button>
             <button
               onClick={() => applySuggestedPreset('player')}
-              style={{ padding: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center' }}
+              style={{ padding: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center' }}
             >
               👤 <strong>Visão Jogador</strong><br/><span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Chat + Dados + QuickBar</span>
             </button>
             <button
               onClick={() => applySuggestedPreset('narrative')}
-              style={{ padding: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center' }}
+              style={{ padding: '8px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center' }}
             >
               📖 <strong>Modo Narrativo</strong><br/><span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Conspiração + Oráculo</span>
             </button>

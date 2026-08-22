@@ -176,7 +176,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar ferramentas por nome ou descrição..." 
-          style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '8px 10px 8px 34px', borderRadius: '6px', fontSize: '0.85rem' }}
+          style={{ width: '100%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '8px 10px 8px 34px', borderRadius: '6px', fontSize: '0.85rem' }}
         />
       </div>
 
@@ -191,7 +191,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
             margin-bottom: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--glass-border);
             padding-bottom: 0.3rem;
             font-weight: bold;
           }
@@ -227,7 +227,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
           }
           .widget-btn:hover {
             transform: translateY(-3px);
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--accent-glow);
           }
           .widget-label {
             font-size: 0.72rem;
@@ -274,7 +274,7 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
         {/* ⭐ Favoritos no topo */}
         {favorites.length > 0 && !search && (
           <div className="widget-category">
-            <div className="widget-category-title" style={{ color: '#fbbf24' }}>⭐ Favoritos Rápidos</div>
+            <div className="widget-category-title" style={{ color: 'var(--warning)' }}>⭐ Favoritos Rápidos</div>
             <div className="widget-grid">
               {widgets.filter(w => favorites.includes(w.id)).map(w => {
                 const Icon = w.icon;
@@ -285,8 +285,8 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                         <Icon size={28} />
                       </button>
                     </Tooltip>
-                    <button onClick={(e) => toggleFavorite(w.id, e)} style={{ position: 'absolute', top: 0, right: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: '#fbbf24' }} title="Remover dos favoritos">
-                      <Star size={11} fill="#fbbf24" />
+                    <button onClick={(e) => toggleFavorite(w.id, e)} style={{ position: 'absolute', top: 0, right: 0, background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--warning)' }} title="Remover dos favoritos">
+                      <Star size={11} fill="var(--warning)" />
                     </button>
                     <span className="widget-label">{w.title}</span>
                   </div>
@@ -324,12 +324,12 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
                         style={{
                           position: 'absolute', top: 0, right: 0,
                           background: 'none', border: 'none', cursor: 'pointer',
-                          padding: '2px', color: isFav ? '#fbbf24' : 'rgba(255,255,255,0.2)',
+                          padding: '2px', color: isFav ? 'var(--warning)' : 'var(--glass-border)',
                           transition: 'color 0.15s',
                         }}
                         title={isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                       >
-                        <Star size={11} fill={isFav ? '#fbbf24' : 'none'} />
+                        <Star size={11} fill={isFav ? 'var(--warning)' : 'none'} />
                       </button>
                       <span className="widget-label">{w.title}</span>
                     </div>

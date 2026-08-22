@@ -257,7 +257,7 @@ export function GMToolbar() {
               />
             </div>
 
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.12)', margin: '4px 0', flexShrink: 0 }} />
+            <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0', flexShrink: 0 }} />
 
             {/* ⚔️ GRUPO 2: MESA DE JOGO (ACTIVE PLAY) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
@@ -293,7 +293,7 @@ export function GMToolbar() {
               />
             </div>
 
-            <div style={{ width: '100%', height: '1px', background: 'rgba(255,255,255,0.12)', margin: '4px 0', flexShrink: 0 }} />
+            <div style={{ width: '100%', height: '1px', background: 'var(--glass-border)', margin: '4px 0', flexShrink: 0 }} />
 
             {/* 👥 GRUPO 3: GESTÃO DA MESA */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
@@ -330,7 +330,7 @@ export function GMToolbar() {
               display: 'flex', 
               flexDirection: 'column', 
               gap: '3px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+              borderTop: '1px solid var(--glass-border)',
               paddingTop: '6px',
               marginTop: 'auto'
             }}>

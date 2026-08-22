@@ -471,9 +471,9 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                   onPointerDown={(e) => e.stopPropagation()}
                   style={{ 
                     width: '28px', height: '28px', borderRadius: '50%',
-                    background: isPinned ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255,255,255,0.06)',
-                    border: isPinned ? '1px solid #c084fc' : '1px solid rgba(255,255,255,0.1)',
-                    color: isPinned ? '#e9d5ff' : 'var(--text-secondary)', cursor: 'pointer',
+                    background: isPinned ? 'rgba(168, 85, 247, 0.3)' : 'var(--bg-tertiary)',
+                    border: isPinned ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+                    color: isPinned ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                   }}
                 >
@@ -507,7 +507,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                   onPointerDown={(e) => e.stopPropagation()}
                   style={{ 
                     width: '28px', height: '28px', borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
                     color: 'var(--text-secondary)', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                   }}
@@ -523,8 +523,8 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                   onPointerDown={(e) => e.stopPropagation()}
                   style={{ 
                     width: '28px', height: '28px', borderRadius: '50%',
-                    background: 'rgba(234, 179, 8, 0.25)', border: '1px solid rgba(234, 179, 8, 0.5)',
-                    color: '#fef08a', cursor: 'pointer',
+                    background: 'rgba(234, 179, 8, 0.2)', border: '1px solid rgba(234, 179, 8, 0.4)',
+                    color: 'var(--warning)', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                   }}
                 >
@@ -541,12 +541,12 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
                     onPointerDown={(e) => e.stopPropagation()}
                     style={{ 
                       width: '28px', height: '28px', borderRadius: '50%',
-                      background: 'rgba(239, 68, 68, 0.3)', border: '1px solid rgba(239, 68, 68, 0.6)',
-                      color: '#fca5a5', cursor: 'pointer',
+                      background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)',
+                      color: 'var(--danger)', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
                     }}
-                    onMouseOver={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.8)'; e.currentTarget.style.color = 'white'; }}
-                    onMouseOut={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)'; e.currentTarget.style.color = '#fca5a5'; }}
+                    onMouseOver={e => { e.currentTarget.style.background = 'var(--danger)'; e.currentTarget.style.color = '#ffffff'; }}
+                    onMouseOut={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'; e.currentTarget.style.color = 'var(--danger)'; }}
                   >
                     <X size={13} />
                   </button>
@@ -567,7 +567,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
               top: '-15px',
               left: '50%',
               transform: 'translateX(-50%)',
-              background: 'rgba(0,0,0,0.5)',
+              background: 'var(--bg-secondary)',
               borderRadius: '10px',
               padding: '2px 10px',
               cursor: isDragging ? 'grabbing' : 'grab',

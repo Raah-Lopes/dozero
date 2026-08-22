@@ -57,7 +57,7 @@ const Field: React.FC<{
 const inputStyle: React.CSSProperties = {
   padding: '10px 14px',
   borderRadius: '10px',
-  background: 'rgba(0,0,0,0.3)',
+  background: 'var(--bg-tertiary)',
   border: '1px solid var(--glass-border)',
   color: 'var(--text-primary)',
   fontSize: '0.85rem',
@@ -80,13 +80,13 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; id: s
       />
       <div style={{
         position: 'absolute', inset: 0, borderRadius: '999px', transition: 'background 0.25s',
-        background: checked ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
-        border: checked ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.12)',
+        background: checked ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+        border: checked ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
       }} />
       <div style={{
         position: 'absolute', top: '3px', left: checked ? '21px' : '3px',
         width: '18px', height: '18px', borderRadius: '50%',
-        background: 'white', transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)',
+        background: '#ffffff', transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)',
         boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
       }} />
     </div>
@@ -111,7 +111,7 @@ const ThemeCard: React.FC<{
         cursor: 'pointer',
         border: isActive
           ? `2px solid ${theme.accentPrimary}`
-          : `2px solid ${hovered ? theme.accentPrimary + '80' : 'rgba(255,255,255,0.07)'}`,
+          : `2px solid ${hovered ? theme.accentPrimary + '80' : 'var(--glass-border)'}`,
         background: theme.bgSecondary,
         transform: hovered || isActive ? 'translateY(-3px)' : 'none',
         transition: 'all 0.22s ease',
@@ -185,7 +185,7 @@ const ThemeCard: React.FC<{
           {[theme.accentPrimary, theme.bgTertiary, theme.textSecondary, theme.success, theme.warning].map((c, i) => (
             <div key={i} style={{
               width: '14px', height: '14px', borderRadius: '50%', background: c, flexShrink: 0,
-              border: '1px solid rgba(255,255,255,0.15)',
+              border: '1px solid var(--glass-border)',
             }} />
           ))}
           <span style={{ marginLeft: 'auto', fontSize: '0.6rem', color: theme.textSecondary, opacity: 0.7 }}>
@@ -239,7 +239,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
       <Field label="Conta & Sincronização em Nuvem" icon={<User size={13} />} hint="Conecte-se com sua conta Supabase para salvar e sincronizar campanhas.">
         <div style={{
           padding: '12px 14px', borderRadius: '12px',
-          background: 'rgba(0,0,0,0.25)', border: '1px solid var(--glass-border)',
+          background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
         }}>
           <div>
@@ -262,7 +262,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
             style={{
               padding: '8px 14px', borderRadius: '8px', border: 'none',
               background: user ? 'rgba(239, 68, 68, 0.2)' : 'linear-gradient(135deg, #9333ea, #6366f1)',
-              color: user ? '#fca5a5' : '#ffffff',
+              color: user ? 'var(--danger)' : '#ffffff',
               fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
             }}
           >
@@ -275,21 +275,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 16px', borderRadius: '12px',
-        background: isGM ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${isGM ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.07)'}`,
+        background: isGM ? 'rgba(239,68,68,0.12)' : 'var(--bg-tertiary)',
+        border: `1px solid ${isGM ? 'rgba(239,68,68,0.3)' : 'var(--glass-border)'}`,
         transition: 'all 0.25s',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
             width: '36px', height: '36px', borderRadius: '9px', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: isGM ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)',
-            border: isGM ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.08)',
+            background: isGM ? 'rgba(239,68,68,0.15)' : 'var(--bg-secondary)',
+            border: isGM ? '1px solid rgba(239,68,68,0.3)' : '1px solid var(--glass-border)',
           }}>
-            <Shield size={16} color={isGM ? '#f87171' : 'var(--text-secondary)'} />
+            <Shield size={16} color={isGM ? 'var(--danger)' : 'var(--text-secondary)'} />
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: isGM ? '#fca5a5' : 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+            <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: isGM ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
               Modo Mestre (GM)
             </p>
             <p style={{ margin: '2px 0 0', fontSize: '0.68rem', color: 'var(--text-secondary)', opacity: 0.7 }}>
@@ -318,10 +318,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
                 style={{
                   display: 'flex', alignItems: 'center', gap: '12px',
                   padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
-                  background: active ? 'rgba(168,85,247,0.1)' : 'rgba(0,0,0,0.2)',
-                  border: `1px solid ${active ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                  background: active ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
+                  border: `1px solid ${active ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
                   transition: 'all 0.18s',
-                  boxShadow: active ? '0 0 12px rgba(168,85,247,0.15)' : 'none',
+                  boxShadow: active ? '0 0 12px var(--accent-glow)' : 'none',
                 }}
               >
                 <span style={{ fontSize: '1.1rem' }}>{eng.icon}</span>
@@ -383,7 +383,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 16px', borderRadius: '12px',
-        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)'
+        background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)'
       }}>
         <div>
           <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -470,16 +470,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{
         padding: '12px 14px', borderRadius: '10px',
-        background: 'rgba(236,72,153,0.05)', border: '1px solid rgba(236,72,153,0.15)',
+        background: 'var(--accent-glow)', border: '1px solid var(--glass-border)',
         display: 'flex', alignItems: 'flex-start', gap: '10px',
       }}>
-        <Bot size={14} color="#ec4899" style={{ flexShrink: 0, marginTop: '2px' }} />
-        <p style={{ margin: 0, fontSize: '0.72rem', color: 'rgba(244,114,182,0.8)', lineHeight: 1.6 }}>
+        <Bot size={14} color="var(--accent-primary)" style={{ flexShrink: 0, marginTop: '2px' }} />
+        <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
           O Robô Assistente analisa o chat e ajuda o mestre a narrar, sugerindo descrições, criando imagens e interagindo com os jogadores via "/bot".
         </p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-tertiary)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Bot size={20} color="var(--accent-primary)" />
           <div>
@@ -502,9 +502,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
             window.dispatchEvent(new CustomEvent('toggle-window', { detail: 'aiStudio' }));
           }}
           style={{
-            background: 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(236,72,153,0.02) 100%)',
-            border: '1px solid rgba(236,72,153,0.2)',
-            borderRadius: '8px', padding: '12px 16px', color: '#f472b6',
+            background: 'var(--bg-tertiary)',
+            border: '1px solid var(--glass-border)',
+            borderRadius: '8px', padding: '12px 16px', color: 'var(--accent-primary)',
             fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '8px',
             transition: 'all 0.2s',
@@ -520,11 +520,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{
         padding: '12px 14px', borderRadius: '10px',
-        background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)',
+        background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
         display: 'flex', alignItems: 'flex-start', gap: '10px',
       }}>
         <Plug size={14} color="var(--success)" style={{ flexShrink: 0, marginTop: '2px' }} />
-        <p style={{ margin: 0, fontSize: '0.72rem', color: 'rgba(110,231,183,0.8)', lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
           Conecte o DOZERO a ferramentas de automação como <b>n8n</b>, Zapier ou Make via Webhooks. Eventos do chat e rolagens serão enviados automaticamente.
         </p>
       </div>
@@ -569,7 +569,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         border: '1px solid var(--glass-border)',
         borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px var(--glass-border)',
         animation: 'fadeIn 0.22s ease-out',
         pointerEvents: 'auto',
         transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -579,13 +579,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         <div style={{
           display: 'flex', alignItems: 'center', gap: '14px',
           padding: '20px 24px',
-          background: 'linear-gradient(135deg, rgba(168,85,247,0.1) 0%, transparent 100%)',
+          background: 'linear-gradient(135deg, var(--accent-glow) 0%, transparent 100%)',
           borderBottom: '1px solid var(--glass-border)',
           flexShrink: 0,
         }}>
           <div style={{
             width: '40px', height: '40px', borderRadius: '12px',
-            background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)',
+            background: 'var(--accent-glow)', border: '1px solid var(--glass-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Settings2 size={18} color="var(--accent-primary)" />
@@ -601,7 +601,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
               borderRadius: '8px', cursor: 'pointer', padding: '7px',
               color: 'var(--text-secondary)', display: 'flex', transition: 'all 0.15s',
             }}
@@ -614,7 +614,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         <div style={{
           display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '12px 20px 0',
           borderBottom: '1px solid var(--glass-border)', flexShrink: 0,
-          background: 'rgba(0,0,0,0.12)',
+          background: 'var(--bg-tertiary)',
         }}>
           {TABS.map(tab => {
             const active = activeTab === tab.id;
@@ -654,7 +654,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
         <div style={{
           padding: '16px 24px',
           borderTop: '1px solid var(--glass-border)',
-          background: 'rgba(0,0,0,0.15)',
+          background: 'var(--bg-tertiary)',
           flexShrink: 0,
         }}>
           <button
@@ -664,12 +664,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
               gap: '8px', padding: '12px', borderRadius: '12px', border: 'none', cursor: saving || saved ? 'not-allowed' : 'pointer',
               background: saved
-                ? 'linear-gradient(135deg, #16a34a, #15803d)'
+                ? 'var(--success)'
                 : 'linear-gradient(135deg, var(--accent-primary), var(--accent-hover))',
               color: 'var(--text-primary)', fontWeight: 800, fontSize: '0.85rem',
               fontFamily: 'var(--font-display)', letterSpacing: '0.04em',
               transition: 'all 0.3s', opacity: saving ? 0.8 : 1,
-              boxShadow: saved ? '0 0 20px rgba(34,197,94,0.3)' : '0 0 20px var(--accent-glow)',
+              boxShadow: saved ? '0 0 20px var(--success)' : '0 0 20px var(--accent-glow)',
             }}
           >
             {saving

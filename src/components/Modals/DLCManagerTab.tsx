@@ -149,15 +149,15 @@ export const DLCManagerTab: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '500px', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
 
       {/* Header */}
-      <div style={{ padding: '0 0 16px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+      <div style={{ padding: '0 0 16px 0', borderBottom: '1px solid var(--glass-border)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
           <ToyBrick size={20} color="var(--accent-primary)" />
-          <h3 style={{ margin: 0, fontSize: '1rem', flex: 1 }}>Complementos (DLCs)</h3>
+          <h3 style={{ margin: 0, fontSize: '1rem', flex: 1, color: 'var(--text-primary)' }}>Complementos (DLCs)</h3>
             <div style={{
-              background: activeCount > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${activeCount > 0 ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              background: activeCount > 0 ? 'rgba(16,185,129,0.15)' : 'var(--bg-tertiary)',
+              border: `1px solid ${activeCount > 0 ? 'var(--success)' : 'var(--glass-border)'}`,
               borderRadius: '16px', padding: '2px 10px', fontSize: '11px', fontWeight: 700,
-              color: activeCount > 0 ? '#6ee7b7' : '#64748b',
+              color: activeCount > 0 ? 'var(--success)' : 'var(--text-secondary)',
             }}>
               {activeCount} ativo{activeCount !== 1 ? 's' : ''}
             </div>
@@ -171,7 +171,7 @@ export const DLCManagerTab: React.FC = () => {
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Buscar complementos..."
               style={{
-                width: '100%', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)',
+                width: '100%', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
                 borderRadius: '8px', padding: '7px 10px 7px 30px', color: 'var(--text-primary)', fontSize: '12px',
                 outline: 'none', boxSizing: 'border-box',
               }}
@@ -185,10 +185,10 @@ export const DLCManagerTab: React.FC = () => {
                 key={key}
                 onClick={() => setActiveCategory(key)}
                 style={{
-                  background: activeCategory === key ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  border: activeCategory === key ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent',
+                  background: activeCategory === key ? 'var(--accent-glow)' : 'transparent',
+                  border: activeCategory === key ? '1px solid var(--accent-primary)' : '1px solid transparent',
                   borderRadius: '6px', padding: '4px 10px', fontSize: '11px', fontWeight: 600,
-                  color: activeCategory === key ? '#f1f5f9' : '#64748b',
+                  color: activeCategory === key ? 'var(--text-primary)' : 'var(--text-secondary)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}
               >
@@ -203,10 +203,10 @@ export const DLCManagerTab: React.FC = () => {
           {filtered.map(addon => {
             const isActive = activeDLCs.includes(addon.id);
             const IconComp = addon.icon;
-            const catColor = CATEGORY_COLORS[addon.category] || '#64748b';
+            const catColor = CATEGORY_COLORS[addon.category] || 'var(--text-secondary)';
             
             // Icon color changes if active
-            const displayIconColor = isActive ? addon.iconColor : '#64748b';
+            const displayIconColor = isActive ? addon.iconColor : 'var(--text-secondary)';
 
             return (
               <div
@@ -214,11 +214,11 @@ export const DLCManagerTab: React.FC = () => {
                 onClick={() => toggleDLC(addon.id)}
                 style={{
                   cursor: 'pointer',
-                  background: isActive ? 'rgba(16,185,129,0.06)' : 'rgba(0,0,0,0.3)',
-                  border: isActive ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(255,255,255,0.06)',
+                  background: isActive ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
+                  border: isActive ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
                   borderRadius: '10px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px',
                   transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
-                  boxShadow: isActive ? '0 0 15px rgba(16,185,129,0.1)' : 'none',
+                  boxShadow: isActive ? '0 0 15px var(--accent-glow)' : 'none',
                 }}
               >
                 {/* New badge */}
@@ -237,15 +237,15 @@ export const DLCManagerTab: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{
                     width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0,
-                    background: isActive ? `${displayIconColor}15` : 'rgba(255,255,255,0.05)',
-                    border: isActive ? `1px solid ${displayIconColor}33` : '1px solid rgba(255,255,255,0.1)',
+                    background: isActive ? `${displayIconColor}15` : 'var(--bg-secondary)',
+                    border: isActive ? `1px solid ${displayIconColor}33` : '1px solid var(--glass-border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.2s',
                   }}>
                     <IconComp size={17} color={displayIconColor} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: '13px', color: isActive ? '#f1f5f9' : '#94a3b8', lineHeight: 1.3, transition: 'color 0.2s' }}>
+                    <div style={{ fontWeight: 700, fontSize: '13px', color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)', lineHeight: 1.3, transition: 'color 0.2s' }}>
                       {addon.name}
                     </div>
                     <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
@@ -269,7 +269,7 @@ export const DLCManagerTab: React.FC = () => {
                   </span>
                   {addon.tags.map(tag => (
                     <span key={tag} style={{
-                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                       borderRadius: '10px', padding: '1px 6px', fontSize: '9px', color: 'var(--text-secondary)',
                     }}>
                       {tag}
@@ -278,7 +278,7 @@ export const DLCManagerTab: React.FC = () => {
                 </div>
 
                 {/* Affects */}
-                <div style={{ fontSize: '10px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                   <Sparkles size={10} style={{ flexShrink: 0 }} />
                   <span style={{ fontWeight: 600 }}>Afeta:</span>
                   {addon.affects.map((a, i) => (
@@ -287,9 +287,9 @@ export const DLCManagerTab: React.FC = () => {
                 </div>
 
                 {/* Status at the bottom */}
-                <div style={{ marginTop: 'auto', paddingTop: '6px', fontSize: '10px', color: isActive ? '#10b981' : '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ marginTop: 'auto', paddingTop: '6px', fontSize: '10px', color: isActive ? 'var(--success)' : 'var(--text-secondary)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isActive ? '#10b981' : '#64748b' }} />
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isActive ? 'var(--success)' : 'var(--text-secondary)' }} />
                     {isActive ? 'COMPLEMENTO ATIVO' : 'CLIQUE PARA ATIVAR'}
                   </div>
                   
@@ -309,7 +309,7 @@ export const DLCManagerTab: React.FC = () => {
           })}
 
           {filtered.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '30px', color: '#475569', fontSize: '13px' }}>
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '30px', color: 'var(--text-secondary)', fontSize: '13px' }}>
               <Search size={28} style={{ marginBottom: '8px', opacity: 0.4 }} />
               <div>Nenhum complemento encontrado.</div>
             </div>

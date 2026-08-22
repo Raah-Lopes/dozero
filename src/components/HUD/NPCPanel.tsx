@@ -490,14 +490,14 @@ export const NPCPanel: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}>
       
       {/* Tab Switcher */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.15)', borderRadius: '6px 6px 0 0', padding: '2px 4px 0 4px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', borderRadius: '6px 6px 0 0', padding: '2px 4px 0 4px', flexShrink: 0 }}>
         <button
           onClick={() => setActivePanelTab('board')}
           style={{
             flex: 1, padding: '6px 4px', fontSize: '0.75rem', fontWeight: 'bold', border: 'none',
-            background: activePanelTab === 'board' ? 'rgba(168,85,247,0.15)' : 'transparent',
+            background: activePanelTab === 'board' ? 'var(--accent-glow)' : 'transparent',
             borderBottom: activePanelTab === 'board' ? '2px solid var(--accent-primary)' : 'none',
-            color: activePanelTab === 'board' ? '#f0abfc' : 'var(--text-secondary)',
+            color: activePanelTab === 'board' ? 'var(--accent-primary)' : 'var(--text-secondary)',
             cursor: 'pointer', borderRadius: '4px 4px 0 0', transition: 'all 0.15s ease'
           }}
         >
@@ -507,9 +507,9 @@ export const NPCPanel: React.FC = () => {
           onClick={() => setActivePanelTab('library')}
           style={{
             flex: 1, padding: '6px 4px', fontSize: '0.75rem', fontWeight: 'bold', border: 'none',
-            background: activePanelTab === 'library' ? 'rgba(168,85,247,0.15)' : 'transparent',
+            background: activePanelTab === 'library' ? 'var(--accent-glow)' : 'transparent',
             borderBottom: activePanelTab === 'library' ? '2px solid var(--accent-primary)' : 'none',
-            color: activePanelTab === 'library' ? '#f0abfc' : 'var(--text-secondary)',
+            color: activePanelTab === 'library' ? 'var(--accent-primary)' : 'var(--text-secondary)',
             cursor: 'pointer', borderRadius: '4px 4px 0 0', transition: 'all 0.15s ease'
           }}
         >
@@ -541,7 +541,7 @@ export const NPCPanel: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
-              width: '100%', padding: '4px 24px 4px 8px', background: 'rgba(0,0,0,0.3)',
+              width: '100%', padding: '4px 24px 4px 8px', background: 'var(--bg-secondary)',
               border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.75rem'
             }}
           />
@@ -558,9 +558,9 @@ export const NPCPanel: React.FC = () => {
                   onClick={() => setFilterType(type)}
                   style={{
                     padding: '3px 6px', fontSize: '0.65rem', borderRadius: '4px',
-                    background: filterType === type ? 'rgba(168,85,247,0.15)' : 'rgba(0,0,0,0.2)',
-                    border: filterType === type ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.05)',
-                    color: filterType === type ? '#f0abfc' : '#cbd5e1', cursor: 'pointer',
+                    background: filterType === type ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
+                    border: filterType === type ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+                    color: filterType === type ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer',
                     textTransform: 'capitalize'
                   }}
                 >
@@ -579,12 +579,12 @@ export const NPCPanel: React.FC = () => {
               </label>
             </div>
 
-            <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', gap: '2px', background: 'var(--bg-secondary)', padding: '2px', borderRadius: '4px', border: '1px solid var(--glass-border)' }}>
               <Tooltip label="Visualização em Lista">
                 <button
                   onClick={() => setViewMode('list')}
                   style={{
-                    background: viewMode === 'list' ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    background: viewMode === 'list' ? 'var(--bg-tertiary)' : 'transparent',
                     border: 'none', color: viewMode === 'list' ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center'
                   }}
@@ -596,7 +596,7 @@ export const NPCPanel: React.FC = () => {
                 <button
                   onClick={() => setViewMode('grid')}
                   style={{
-                    background: viewMode === 'grid' ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    background: viewMode === 'grid' ? 'var(--bg-tertiary)' : 'transparent',
                     border: 'none', color: viewMode === 'grid' ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center'
                   }}
@@ -637,15 +637,15 @@ export const NPCPanel: React.FC = () => {
                       onDragStart={(e) => handleDragStart(e, t.id)}
                       style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '6px', background: isVisible ? 'rgba(15,23,42,0.4)' : 'rgba(0,0,0,0.15)',
+                        padding: '6px', background: isVisible ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
                         borderRadius: expandedTokenId === t.id ? '6px 6px 0 0' : '6px', 
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        borderBottom: expandedTokenId === t.id ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                        border: '1px solid var(--glass-border)',
+                        borderBottom: expandedTokenId === t.id ? 'none' : '1px solid var(--glass-border)',
                         cursor: 'grab', opacity: isVisible ? 1 : 0.6,
                         transition: 'all 0.15s ease'
                       }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
                       title="Arraste para o mapa!"
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
@@ -655,10 +655,10 @@ export const NPCPanel: React.FC = () => {
                           <img loading="lazy" decoding="async" 
                             src={t.imageUrl} 
                             alt={t.name} 
-                            style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}
+                            style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--glass-border)', flexShrink: 0 }}
                           />
                         ) : (
-                          <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+                          <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', flexShrink: 0 }}>
                             {t.isPlayer ? <User size={12} color="var(--success)" /> : <Cpu size={12} color="var(--text-secondary)" />}
                           </div>
                         )}
@@ -678,7 +678,7 @@ export const NPCPanel: React.FC = () => {
                         <Tooltip label={isVisible ? "Esconder do Mapa" : "Materializar no Mapa"}>
                           <button
                             onClick={(e) => handleToggleVisibility(t, e)}
-                            style={{ background: 'transparent', border: 'none', color: isVisible ? '#34d399' : 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }}
+                            style={{ background: 'transparent', border: 'none', color: isVisible ? 'var(--success)' : 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }}
                           >
                             {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
                           </button>
@@ -707,7 +707,7 @@ export const NPCPanel: React.FC = () => {
                           <Tooltip label="Gerar Ficha .md (Oráculo)">
                             <button
                               onClick={(e) => { e.stopPropagation(); handleGenerateSheetForToken(t); }}
-                              style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '2px' }}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '2px' }}
                             >
                               <Sparkles size={12} />
                             </button>
@@ -717,7 +717,7 @@ export const NPCPanel: React.FC = () => {
                         <Tooltip label="Aparência e Estilo do Token">
                           <button
                             onClick={(e) => { e.stopPropagation(); setExpandedTokenId(expandedTokenId === t.id ? null : t.id); }}
-                            style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : '#cbd5e1', cursor: 'pointer', padding: '2px' }}
+                            style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer', padding: '2px' }}
                           >
                             <Settings size={12} />
                           </button>
@@ -734,7 +734,7 @@ export const NPCPanel: React.FC = () => {
                         <Tooltip label="Excluir do Tabuleiro">
                           <button
                             onClick={(e) => handleDeleteToken(t.id, t.name, e)}
-                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '2px' }}
                           >
                             <Trash2 size={12} />
                           </button>
@@ -744,7 +744,7 @@ export const NPCPanel: React.FC = () => {
 
                     {expandedTokenId === t.id && (
                       <div style={{
-                        background: 'rgba(15,23,42,0.6)',
+                        background: 'var(--bg-tertiary)',
                         border: '1px solid var(--glass-border)',
                         borderTop: 'none',
                         borderRadius: '0 0 6px 6px',
@@ -754,11 +754,11 @@ export const NPCPanel: React.FC = () => {
                         gap: '8px',
                         marginTop: '-1px',
                         marginBottom: '4px',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
+                        boxShadow: 'var(--glass-shadow)',
                         fontSize: '0.75rem'
                       }}>
                         {/* Title bar */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '6px', marginBottom: '4px' }}>
                           <Settings size={12} color="var(--accent-primary)" />
                           <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>Configurações do Token</span>
                         </div>
@@ -778,13 +778,13 @@ export const NPCPanel: React.FC = () => {
                               {t.imageUrl ? (
                                 <img loading="lazy" decoding="async" src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               ) : (
-                                <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ width: '100%', height: '100%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                   <User size={16} />
                                 </div>
                               )}
                               <div style={{
                                 position: 'absolute', bottom: 0, left: 0, right: 0, 
-                                background: 'rgba(0,0,0,0.6)', color: 'var(--text-primary)', fontSize: '0.5rem', 
+                                background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.5rem', 
                                 textAlign: 'center', padding: '1px 0'
                               }}>
                                 EDIT
@@ -802,7 +802,7 @@ export const NPCPanel: React.FC = () => {
                               }}
                               onBlur={(e) => handlePropChangeEnd(t, 'name', e.target.value)}
                               style={{
-                                background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                 borderRadius: '4px', color: 'var(--text-primary)', padding: '3px 6px', fontSize: '0.75rem',
                                 width: '100%'
                               }}
@@ -818,7 +818,7 @@ export const NPCPanel: React.FC = () => {
                               value={t.tokenShape || 'circle'}
                               onChange={(e) => handleUpdateTokenProp(t, 'tokenShape', e.target.value)}
                               style={{
-                                background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                 borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
@@ -853,7 +853,7 @@ export const NPCPanel: React.FC = () => {
                                 }}
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
-                                  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                  background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                   borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.65rem',
                                   width: '100%', fontFamily: 'monospace'
                                 }}
@@ -867,7 +867,7 @@ export const NPCPanel: React.FC = () => {
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Escala (Size)</label>
-                              <span style={{ fontSize: '0.6rem', color: '#cbd5e1', fontWeight: 'bold' }}>{t.sizeScale ? Number(t.sizeScale).toFixed(1) : '1.0'}x</span>
+                              <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{t.sizeScale ? Number(t.sizeScale).toFixed(1) : '1.0'}x</span>
                             </div>
                             <input
                               type="range"
@@ -890,7 +890,7 @@ export const NPCPanel: React.FC = () => {
                               value={t.hpBarMode || 'always'}
                               onChange={(e) => handleUpdateTokenProp(t, 'hpBarMode', e.target.value)}
                               style={{
-                                background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                 borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
@@ -903,7 +903,7 @@ export const NPCPanel: React.FC = () => {
                         </div>
 
                         {/* Name Tag Toggle & Close Button */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--glass-border)' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
                             <input
                               type="checkbox"
@@ -942,16 +942,16 @@ export const NPCPanel: React.FC = () => {
                                 value={t.visionRadius || 200}
                                 onChange={(e) => handleUpdateTokenProp(t, 'visionRadius', parseInt(e.target.value) || 200)}
                                 style={{
-                                  width: '40px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                  borderRadius: '4px', color: 'white', padding: '1px 2px', fontSize: '0.65rem'
+                                  width: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+                                  borderRadius: '4px', color: 'var(--text-primary)', padding: '1px 2px', fontSize: '0.65rem'
                                 }}
                               />
                               <select
                                 value={t.visionStyle || 'gradient'}
                                 onChange={(e) => Tokens.update(t.id, { visionStyle: e.target.value })}
                                 style={{
-                                  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                  borderRadius: '4px', color: 'white', padding: '1px 2px', fontSize: '0.65rem',
+                                  background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+                                  borderRadius: '4px', color: 'var(--text-primary)', padding: '1px 2px', fontSize: '0.65rem',
                                   outline: 'none', cursor: 'pointer'
                                 }}
                                 title="Estilo da luz na Névoa"
@@ -964,7 +964,7 @@ export const NPCPanel: React.FC = () => {
                         </div>
 
                         {/* Jogador Atribuído (Dono / Permissão) */}
-                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Jogador Atribuído (Dono)</label>
                           <select
                             value={t.ownerName || ''}
@@ -981,7 +981,7 @@ export const NPCPanel: React.FC = () => {
                               }
                             }}
                             style={{
-                              background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                              background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                               borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                               height: '24px', outline: 'none'
                             }}
@@ -996,7 +996,7 @@ export const NPCPanel: React.FC = () => {
                         </div>
                         
                         {/* Status/Conditions */}
-                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--glass-border)' }}>
                           <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Condições</label>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                             {CONDITIONS.map(cond => {
@@ -1006,7 +1006,7 @@ export const NPCPanel: React.FC = () => {
                                   <button
                                     onClick={(e) => { e.stopPropagation(); Tokens.toggleEffect(t.id, cond.id); }}
                                     style={{
-                                      background: isActive ? cond.color : 'rgba(255,255,255,0.05)',
+                                      background: isActive ? cond.color : 'var(--bg-tertiary)',
                                       border: `1px solid ${isActive ? cond.color : 'var(--glass-border)'}`,
                                       borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem',
                                       color: isActive ? '#000' : 'var(--text-secondary)',
@@ -1026,7 +1026,7 @@ export const NPCPanel: React.FC = () => {
                           <button
                             onClick={() => setExpandedTokenId(null)}
                             style={{
-                              background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
+                              background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
                               borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 8px', fontSize: '0.65rem',
                               cursor: 'pointer'
                             }}
@@ -1057,14 +1057,14 @@ export const NPCPanel: React.FC = () => {
                       draggable
                       onDragStart={(e) => handleDragStart(e, t.id)}
                       style={{
-                        background: isVisible ? 'rgba(15,23,42,0.4)' : 'rgba(0,0,0,0.15)',
-                        border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px',
+                        background: isVisible ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
+                        border: '1px solid var(--glass-border)', borderRadius: '6px',
                         padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px',
                         alignItems: 'center', position: 'relative', cursor: 'grab',
                         opacity: isVisible ? 1 : 0.6
                       }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
                       title="Arraste para o mapa!"
                     >
                       {/* Grid Avatar */}
@@ -1076,7 +1076,7 @@ export const NPCPanel: React.FC = () => {
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: '100%', height: '100%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {t.isPlayer ? <User size={16} color="var(--success)" /> : <Cpu size={16} color="var(--text-secondary)" />}
                           </div>
                         )}
@@ -1092,7 +1092,7 @@ export const NPCPanel: React.FC = () => {
 
                       {/* Actions Layout on Grid Card (Absolute tiny hover menu) */}
                       <div style={{
-                        display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.85)',
+                        display: 'flex', gap: '2px', background: 'var(--bg-secondary)',
                         padding: '2px 4px', borderRadius: '4px', position: 'absolute',
                         top: '2px', right: '2px', opacity: 0, transition: 'opacity 0.15s ease'
                       }}
@@ -1104,7 +1104,7 @@ export const NPCPanel: React.FC = () => {
                         <Tooltip label={isVisible ? "Esconder" : "Mostrar"} position="top">
                           <button
                             onClick={(e) => handleToggleVisibility(t, e)}
-                            style={{ background: 'transparent', border: 'none', color: isVisible ? '#34d399' : 'var(--text-secondary)', cursor: 'pointer', padding: '1px' }}
+                            style={{ background: 'transparent', border: 'none', color: isVisible ? 'var(--success)' : 'var(--text-secondary)', cursor: 'pointer', padding: '1px' }}
                           >
                             {isVisible ? <Eye size={10} /> : <EyeOff size={10} />}
                           </button>
@@ -1132,7 +1132,7 @@ export const NPCPanel: React.FC = () => {
                           <Tooltip label="Gerar Ficha" position="top">
                             <button
                               onClick={(e) => { e.stopPropagation(); handleGenerateSheetForToken(t); }}
-                              style={{ background: 'transparent', border: 'none', color: '#f59e0b', cursor: 'pointer', padding: '1px' }}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--warning)', cursor: 'pointer', padding: '1px' }}
                             >
                               <Sparkles size={10} />
                             </button>
@@ -1142,7 +1142,7 @@ export const NPCPanel: React.FC = () => {
                         <Tooltip label="Configurar Aparência" position="top">
                           <button
                             onClick={(e) => { e.stopPropagation(); setExpandedTokenId(expandedTokenId === t.id ? null : t.id); }}
-                            style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : '#cbd5e1', cursor: 'pointer', padding: '1px' }}
+                            style={{ background: 'transparent', border: 'none', color: expandedTokenId === t.id ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer', padding: '1px' }}
                           >
                             <Settings size={10} />
                           </button>
@@ -1159,7 +1159,7 @@ export const NPCPanel: React.FC = () => {
                         <Tooltip label="Excluir" position="top">
                           <button
                             onClick={(e) => handleDeleteToken(t.id, t.name, e)}
-                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '1px' }}
+                            style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '1px' }}
                           >
                             <Trash2 size={10} />
                           </button>
@@ -1170,20 +1170,20 @@ export const NPCPanel: React.FC = () => {
                     {expandedTokenId === t.id && (
                       <div style={{
                         gridColumn: '1 / -1',
-                        background: 'rgba(15,23,42,0.6)',
+                        background: 'var(--bg-tertiary)',
                         border: '1px solid var(--glass-border)',
                         borderRadius: '6px',
                         padding: '10px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '8px',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
+                        boxShadow: 'var(--glass-shadow)',
                         fontSize: '0.75rem',
                         marginTop: '2px',
                         marginBottom: '6px'
                       }}>
                         {/* Title bar */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '6px', marginBottom: '4px' }}>
                           <Settings size={12} color="var(--accent-primary)" />
                           <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>Configurações do Token</span>
                         </div>
@@ -1203,13 +1203,13 @@ export const NPCPanel: React.FC = () => {
                             {t.imageUrl ? (
                               <img loading="lazy" decoding="async" src={resolveImageUrl(t.imageUrl)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
-                              <div style={{ width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ width: '100%', height: '100%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <User size={16} />
                               </div>
                             )}
                             <div style={{
                               position: 'absolute', bottom: 0, left: 0, right: 0, 
-                              background: 'rgba(0,0,0,0.6)', color: 'var(--text-primary)', fontSize: '0.5rem', 
+                              background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.5rem', 
                               textAlign: 'center', padding: '1px 0'
                             }}>
                               EDIT
@@ -1225,10 +1225,10 @@ export const NPCPanel: React.FC = () => {
                                   useWindowManager.getState().setActiveModal('tokenConfig');
                                 }}
                                 style={{
-                                  background: 'rgba(168, 85, 247, 0.2)',
-                                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                                  background: 'var(--accent-glow)',
+                                  border: '1px solid var(--accent-primary)',
                                   borderRadius: '4px',
-                                  color: '#f0abfc',
+                                  color: 'var(--accent-primary)',
                                   fontSize: '0.6rem',
                                   padding: '1px 5px',
                                   cursor: 'pointer',
@@ -1249,7 +1249,7 @@ export const NPCPanel: React.FC = () => {
                               }}
                               onBlur={(e) => handlePropChangeEnd(t, 'name', e.target.value)}
                               style={{
-                                background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                 borderRadius: '4px', color: 'var(--text-primary)', padding: '3px 6px', fontSize: '0.75rem',
                                 width: '100%'
                               }}
@@ -1265,7 +1265,7 @@ export const NPCPanel: React.FC = () => {
                               value={t.tokenShape || 'circle'}
                               onChange={(e) => handleUpdateTokenProp(t, 'tokenShape', e.target.value)}
                               style={{
-                                background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                 borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
@@ -1301,7 +1301,7 @@ export const NPCPanel: React.FC = () => {
                                 }}
                                 onBlur={(e) => handlePropChangeEnd(t, 'borderColor', e.target.value)}
                                 style={{
-                                  background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                  background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                   borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.65rem',
                                   width: '100%', fontFamily: 'monospace'
                                 }}
@@ -1315,7 +1315,7 @@ export const NPCPanel: React.FC = () => {
                           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Escala (Size)</label>
-                              <span style={{ fontSize: '0.6rem', color: '#cbd5e1', fontWeight: 'bold' }}>{t.sizeScale ? Number(t.sizeScale).toFixed(1) : '1.0'}x</span>
+                              <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{t.sizeScale ? Number(t.sizeScale).toFixed(1) : '1.0'}x</span>
                             </div>
                             <input
                               type="range"
@@ -1338,7 +1338,7 @@ export const NPCPanel: React.FC = () => {
                               value={t.hpBarMode || 'always'}
                               onChange={(e) => handleUpdateTokenProp(t, 'hpBarMode', e.target.value)}
                               style={{
-                                background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                 borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                                 width: '100%', height: '24px'
                               }}
@@ -1351,7 +1351,7 @@ export const NPCPanel: React.FC = () => {
                         </div>
 
                         {/* Name Tag Toggle & Close Button */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--glass-border)' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.7rem' }}>
                             <input
                               type="checkbox"
@@ -1390,8 +1390,8 @@ export const NPCPanel: React.FC = () => {
                                 value={t.visionRadius || 200}
                                 onChange={(e) => handleUpdateTokenProp(t, 'visionRadius', parseInt(e.target.value) || 200)}
                                 style={{
-                                  width: '46px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                                  borderRadius: '4px', color: 'white', padding: '1px 2px', fontSize: '0.65rem'
+                                  width: '46px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+                                  borderRadius: '4px', color: 'var(--text-primary)', padding: '1px 2px', fontSize: '0.65rem'
                                 }}
                               />
                             </label>
@@ -1399,7 +1399,7 @@ export const NPCPanel: React.FC = () => {
                         </div>
 
                         {/* Jogador Atribuído (Dono / Permissão) */}
-                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>Jogador Atribuído (Dono)</label>
                           <select
                             value={t.ownerName || ''}
@@ -1416,7 +1416,7 @@ export const NPCPanel: React.FC = () => {
                               }
                             }}
                             style={{
-                              background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+                              background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                               borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 4px', fontSize: '0.7rem',
                               height: '24px', outline: 'none'
                             }}
@@ -1431,7 +1431,7 @@ export const NPCPanel: React.FC = () => {
                         </div>
                         
                         {/* Status/Conditions */}
-                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid var(--glass-border)' }}>
                           <label style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Condições</label>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                             {CONDITIONS.map(cond => {
@@ -1442,7 +1442,7 @@ export const NPCPanel: React.FC = () => {
                                   title={cond.title}
                                   onClick={(e) => { e.stopPropagation(); Tokens.toggleEffect(t.id, cond.id); }}
                                   style={{
-                                    background: isActive ? cond.color : 'rgba(255,255,255,0.05)',
+                                    background: isActive ? cond.color : 'var(--bg-tertiary)',
                                     border: `1px solid ${isActive ? cond.color : 'var(--glass-border)'}`,
                                     borderRadius: '4px', padding: '2px 4px', fontSize: '0.65rem',
                                     color: isActive ? '#000' : 'var(--text-secondary)',
@@ -1461,7 +1461,7 @@ export const NPCPanel: React.FC = () => {
                           <button
                             onClick={() => setExpandedTokenId(null)}
                             style={{
-                              background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
+                              background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
                               borderRadius: '4px', color: 'var(--text-primary)', padding: '2px 8px', fontSize: '0.65rem',
                               cursor: 'pointer'
                             }}
@@ -1503,12 +1503,12 @@ export const NPCPanel: React.FC = () => {
                     onDragStart={(e) => handleDragStartWiki(e, entity.path)}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '6px', background: 'rgba(0,0,0,0.25)',
-                      borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)',
+                      padding: '6px', background: 'var(--bg-secondary)',
+                      borderRadius: '6px', border: '1px solid var(--glass-border)',
                       cursor: 'grab', transition: 'all 0.15s ease'
                     }}
                     onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--glass-border)'}
                     title="Arraste para o mapa para materializar ou dê duplo clique para abrir a ficha!"
                     onDoubleClick={(e) => handleOpenWikiSheet(entity.path, e)}
                   >
@@ -1520,10 +1520,10 @@ export const NPCPanel: React.FC = () => {
                         <img loading="lazy" decoding="async" 
                           src={avatarUrl} 
                           alt={title} 
-                          style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}
+                          style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--glass-border)', flexShrink: 0 }}
                         />
                       ) : (
-                        <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+                        <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)', flexShrink: 0 }}>
                           <BookOpen size={12} color="var(--accent-primary)" />
                         </div>
                       )}

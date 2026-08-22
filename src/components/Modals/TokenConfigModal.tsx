@@ -124,8 +124,8 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
           display: 'flex',
           flexDirection: 'column',
           borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          background: 'rgba(15, 23, 42, 0.95)',
+          border: '1px solid var(--glass-border)',
+          background: 'var(--bg-secondary)',
           boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden'
         }}
@@ -133,11 +133,11 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
         {/* Modal Header */}
         <div style={{
           padding: '1rem 1.25rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          borderBottom: '1px solid var(--glass-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(255, 255, 255, 0.03)'
+          background: 'var(--bg-tertiary)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <img 
@@ -148,14 +148,14 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                 height: '38px', 
                 borderRadius: tokenData.tokenShape === 'square' ? '6px' : '50%',
                 objectFit: 'cover',
-                border: `2px solid ${tokenData.borderColor || '#06b6d4'}`
+                border: `2px solid ${tokenData.borderColor || 'var(--accent-primary)'}`
               }} 
             />
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#f8fafc', fontWeight: 700 }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: 700 }}>
                 {tokenData.name || 'Configurar Token'}
               </h3>
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 {tokenData.status || (tokenData.isPlayer ? 'Jogador' : 'NPC')} • ID: {tokenId.slice(0, 10)}
               </span>
             </div>
@@ -163,9 +163,9 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
           <button 
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: 'none',
-              color: '#cbd5e1',
+              background: 'var(--bg-tertiary)',
+              border: '1px solid var(--glass-border)',
+              color: 'var(--text-secondary)',
               borderRadius: '8px',
               width: '32px',
               height: '32px',
@@ -183,8 +183,8 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
         {/* Tab Navigation */}
         <div style={{
           display: 'flex',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          background: 'rgba(0, 0, 0, 0.2)',
+          borderBottom: '1px solid var(--glass-border)',
+          background: 'var(--bg-tertiary)',
           padding: '0 0.5rem',
           gap: '0.25rem',
           overflowX: 'auto'
@@ -223,26 +223,26 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
           display: 'flex',
           flexDirection: 'column',
           gap: '1.25rem',
-          color: '#e2e8f0'
+          color: 'var(--text-primary)'
         }}>
           {/* TAB 1: VISÃO & LUZ (NÉVOA) */}
           {activeTab === 'vision' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Toggle Emissão de Luz/Visão */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'var(--bg-tertiary)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--glass-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
                 <div>
-                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', color: '#f8fafc' }}>
+                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                     Emissão de Visão / Iluminação
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                     Permite que este token dissipe a Névoa de Guerra no tabuleiro.
                   </p>
                 </div>
@@ -258,12 +258,13 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                   />
                   <span style={{
                     position: 'absolute', cursor: 'pointer', inset: 0,
-                    backgroundColor: (tokenData.hasVision !== false) ? '#10b981' : 'rgba(255,255,255,0.2)',
+                    backgroundColor: (tokenData.hasVision !== false) ? 'var(--success)' : 'var(--bg-tertiary)',
+                    border: '1px solid var(--glass-border)',
                     borderRadius: '26px', transition: '0.3s'
                   }}>
                     <span style={{
                       position: 'absolute', height: '20px', width: '20px', left: (tokenData.hasVision !== false) ? '24px' : '4px',
-                      bottom: '3px', backgroundColor: 'white', borderRadius: '50%', transition: '0.3s'
+                      bottom: '2px', backgroundColor: '#ffffff', borderRadius: '50%', transition: '0.3s'
                     }} />
                   </span>
                 </label>
@@ -273,26 +274,26 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                 <>
                   {/* Slider de Raio de Visão */}
                   <div style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
+                    background: 'var(--bg-tertiary)',
                     padding: '1rem',
                     borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    border: '1px solid var(--glass-border)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0.75rem'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                         Alcance do Raio de Luz:
                       </span>
                       <span style={{ 
                         fontSize: '0.85rem', 
                         fontFamily: 'monospace', 
                         color: 'var(--accent-primary)',
-                        background: 'rgba(168, 85, 247, 0.15)',
+                        background: 'var(--accent-glow)',
                         padding: '2px 8px',
                         borderRadius: '6px',
-                        border: '1px solid rgba(168, 85, 247, 0.3)'
+                        border: '1px solid var(--glass-border)'
                       }}>
                         {tokenData.visionRadius || 200} px (~{Math.round((tokenData.visionRadius || 200) / 35)}m)
                       </span>
@@ -313,7 +314,7 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                       }}
                     />
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
                       <span>50px (Tocha Curta)</span>
                       <span>200px (Padrão)</span>
                       <span>500px (Lanterna)</span>
@@ -330,10 +331,10 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Avatar Upload */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'var(--bg-tertiary)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--glass-border)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1rem'
@@ -346,11 +347,11 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                     height: '64px',
                     borderRadius: tokenData.tokenShape === 'square' ? '8px' : '50%',
                     objectFit: 'cover',
-                    border: `3px solid ${tokenData.borderColor || '#06b6d4'}`
+                    border: `3px solid ${tokenData.borderColor || 'var(--accent-primary)'}`
                   }}
                 />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Imagem do Token</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Imagem do Token</span>
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -364,10 +365,10 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                       disabled={isUploading}
                       style={{
                         padding: '6px 12px',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--glass-border)',
                         borderRadius: '6px',
-                        color: 'white',
+                        color: 'var(--text-primary)',
                         fontSize: '0.75rem',
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -384,15 +385,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
 
               {/* Formato do Token */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'var(--bg-tertiary)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--glass-border)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem'
               }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>Formato da Moldura</label>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Formato da Moldura</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                   {shapes.map(s => {
                     const active = (tokenData.tokenShape || 'circle') === s.id;
@@ -403,9 +404,9 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                         style={{
                           padding: '0.6rem',
                           borderRadius: '8px',
-                          border: active ? '2px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
-                          background: active ? 'rgba(168, 85, 247, 0.2)' : 'rgba(0,0,0,0.2)',
-                          color: active ? '#f0abfc' : '#cbd5e1',
+                          border: active ? '2px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+                          background: active ? 'var(--accent-glow)' : 'var(--bg-secondary)',
+                          color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -423,15 +424,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
 
               {/* Cor da Borda */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'var(--bg-tertiary)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--glass-border)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem'
               }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>Cor da Borda</label>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Cor da Borda</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {presetColors.map(c => (
                     <button
@@ -442,7 +443,7 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                         height: '28px',
                         borderRadius: '50%',
                         backgroundColor: c,
-                        border: (tokenData.borderColor || '#06b6d4') === c ? '2px solid white' : '1px solid rgba(0,0,0,0.4)',
+                        border: (tokenData.borderColor || '#06b6d4') === c ? '2px solid var(--accent-primary)' : '1px solid var(--glass-border)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -472,16 +473,16 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
 
               {/* Escala (Tamanho no Grid) */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'var(--bg-tertiary)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--glass-border)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>Tamanho no Tabuleiro</label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Tamanho no Tabuleiro</label>
                   <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
                     {Number(tokenData.sizeScale || 1.0).toFixed(1)}x ({tokenData.sizeScale > 1.8 ? 'Criatura Enorme' : tokenData.sizeScale > 1.2 ? 'Grande' : tokenData.sizeScale < 0.9 ? 'Pequeno' : 'Médio'})
                   </span>
@@ -500,15 +501,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
               {/* Visibilidade da Barra de Vida e Nome */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'var(--bg-tertiary)',
                   padding: '0.75rem',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--glass-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.4rem'
                 }}>
-                  <label style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Barra de HP</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Barra de HP</label>
                   <select
                     value={tokenData.hpBarMode || 'always'}
                     onChange={(e) => handleUpdate({ hpBarMode: e.target.value })}
@@ -521,15 +522,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                 </div>
 
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'var(--bg-tertiary)',
                   padding: '0.75rem',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--glass-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.4rem'
                 }}>
-                  <label style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Tag de Nome</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Tag de Nome</label>
                   <select
                     value={tokenData.showName ? 'always' : 'hover'}
                     onChange={(e) => handleUpdate({ showName: e.target.value === 'always' })}
@@ -548,15 +549,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {/* Jogador Dono */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'var(--bg-tertiary)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--glass-border)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.5rem'
               }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                   Jogador Atribuído (Dono da Ficha)
                 </label>
                 <select
@@ -582,27 +583,27 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                     </option>
                   ))}
                 </select>
-                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
                   Apenas o jogador atribuído e o Mestre poderão mover ou alterar este token.
                 </span>
               </div>
 
               {/* Travar Posição (Lock) */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'var(--bg-tertiary)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--glass-border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
                 <div>
-                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    {tokenData.locked ? <Lock size={16} color="#f59e0b" /> : <Unlock size={16} color="#94a3b8" />}
+                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {tokenData.locked ? <Lock size={16} color="var(--warning)" /> : <Unlock size={16} color="var(--text-secondary)" />}
                     Travar Posição no Tabuleiro
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                     Impede movimentação ou cliques acidentais.
                   </p>
                 </div>
@@ -611,9 +612,9 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                   style={{
                     padding: '6px 14px',
                     borderRadius: '6px',
-                    border: tokenData.locked ? '1px solid #f59e0b' : '1px solid rgba(255,255,255,0.2)',
-                    background: tokenData.locked ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255,255,255,0.05)',
-                    color: tokenData.locked ? '#fde047' : '#cbd5e1',
+                    border: tokenData.locked ? '1px solid var(--warning)' : '1px solid var(--glass-border)',
+                    background: tokenData.locked ? 'rgba(245, 158, 11, 0.2)' : 'var(--bg-secondary)',
+                    color: tokenData.locked ? 'var(--warning)' : 'var(--text-secondary)',
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     cursor: 'pointer'
@@ -628,16 +629,16 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                 background: 'rgba(239, 68, 68, 0.08)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                border: '1px solid var(--danger)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
                 <div>
-                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', color: '#fca5a5' }}>
+                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', color: 'var(--danger)' }}>
                     Excluir Token do Tabuleiro
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#f87171' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--danger)' }}>
                     Remove este token permanentemente da cena atual.
                   </p>
                 </div>
@@ -650,8 +651,8 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                   style={{
                     padding: '8px 14px',
                     borderRadius: '6px',
-                    border: '1px solid #ef4444',
-                    background: 'rgba(239, 68, 68, 0.3)',
+                    border: '1px solid var(--danger)',
+                    background: 'var(--danger)',
                     color: '#ffffff',
                     fontSize: '0.8rem',
                     fontWeight: 700,
@@ -673,15 +674,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
               {/* Pontos de Vida (HP) e Mana (MP) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'var(--bg-tertiary)',
                   padding: '0.75rem',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--glass-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.4rem'
                 }}>
-                  <label style={{ fontSize: '0.75rem', color: '#f87171', fontWeight: 700 }}>HP Atual / Máximo</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 700 }}>HP Atual / Máximo</label>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <input 
                       type="number"
@@ -689,7 +690,7 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                       onChange={(e) => handleUpdate({ hp: parseInt(e.target.value) || 0 })}
                       style={inputNumberStyle}
                     />
-                    <span style={{ alignSelf: 'center', color: '#64748b' }}>/</span>
+                    <span style={{ alignSelf: 'center', color: 'var(--text-secondary)' }}>/</span>
                     <input 
                       type="number"
                       value={tokenData.maxHp ?? 10}
@@ -700,15 +701,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                 </div>
 
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'var(--bg-tertiary)',
                   padding: '0.75rem',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--glass-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.4rem'
                 }}>
-                  <label style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: 700 }}>MP Atual / Máximo</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--mana)', fontWeight: 700 }}>MP Atual / Máximo</label>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <input 
                       type="number"
@@ -716,7 +717,7 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                       onChange={(e) => handleUpdate({ mana: parseInt(e.target.value) || 0 })}
                       style={inputNumberStyle}
                     />
-                    <span style={{ alignSelf: 'center', color: '#64748b' }}>/</span>
+                    <span style={{ alignSelf: 'center', color: 'var(--text-secondary)' }}>/</span>
                     <input 
                       type="number"
                       value={tokenData.maxMana ?? 0}
@@ -730,15 +731,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
               {/* Defesa e Iniciativa */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'var(--bg-tertiary)',
                   padding: '0.75rem',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--glass-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.4rem'
                 }}>
-                  <label style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 700 }}>Classe de Armadura / Defesa</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--warning)', fontWeight: 700 }}>Classe de Armadura / Defesa</label>
                   <input 
                     type="number"
                     value={tokenData.defesa ?? 10}
@@ -748,15 +749,15 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                 </div>
 
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
+                  background: 'var(--bg-tertiary)',
                   padding: '0.75rem',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--glass-border)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.4rem'
                 }}>
-                  <label style={{ fontSize: '0.75rem', color: '#c084fc', fontWeight: 700 }}>Iniciativa</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>Iniciativa</label>
                   <input 
                     type="number"
                     value={tokenData.iniciativa ?? 0}
@@ -772,10 +773,10 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
         {/* Modal Footer */}
         <div style={{
           padding: '0.75rem 1.25rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid var(--glass-border)',
           display: 'flex',
           justifyContent: 'flex-end',
-          background: 'rgba(0, 0, 0, 0.2)'
+          background: 'var(--bg-tertiary)'
         }}>
           <button
             onClick={onClose}
@@ -788,7 +789,7 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
               fontWeight: 700,
               fontSize: '0.85rem',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(168, 85, 247, 0.4)'
+              boxShadow: '0 4px 12px var(--accent-glow)'
             }}
           >
             Concluído
@@ -805,10 +806,10 @@ function TabButton({ active, onClick, icon, label }: { active: boolean; onClick:
       onClick={onClick}
       style={{
         padding: '0.75rem 1rem',
-        background: active ? 'rgba(168, 85, 247, 0.15)' : 'transparent',
+        background: active ? 'var(--accent-glow)' : 'transparent',
         border: 'none',
         borderBottom: active ? '2px solid var(--accent-primary)' : '2px solid transparent',
-        color: active ? '#f0abfc' : '#94a3b8',
+        color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
         fontSize: '0.8rem',
         fontWeight: 600,
         cursor: 'pointer',
@@ -826,10 +827,10 @@ function TabButton({ active, onClick, icon, label }: { active: boolean; onClick:
 }
 
 const selectStyle: React.CSSProperties = {
-  background: 'rgba(0, 0, 0, 0.4)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--glass-border)',
   borderRadius: '6px',
-  color: '#f8fafc',
+  color: 'var(--text-primary)',
   padding: '6px 8px',
   fontSize: '0.8rem',
   outline: 'none',
@@ -837,10 +838,10 @@ const selectStyle: React.CSSProperties = {
 };
 
 const inputNumberStyle: React.CSSProperties = {
-  background: 'rgba(0, 0, 0, 0.4)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
+  background: 'var(--bg-secondary)',
+  border: '1px solid var(--glass-border)',
   borderRadius: '6px',
-  color: '#f8fafc',
+  color: 'var(--text-primary)',
   padding: '6px 8px',
   fontSize: '0.85rem',
   fontWeight: 700,

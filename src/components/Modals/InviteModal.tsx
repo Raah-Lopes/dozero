@@ -457,8 +457,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     style={{
                       flex: 1,
                       padding: '9px 12px',
-                      background: 'rgba(0,0,0,0.4)',
-                      border: '1px solid rgba(196,154,108,0.4)',
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--glass-border)',
                       color: 'var(--text-primary)',
                       borderRadius: '8px',
                       fontSize: '0.82rem',
@@ -469,8 +469,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     onClick={handleCopyVercel}
                     style={{
                       padding: '9px 16px',
-                      background: copiedVercel ? 'var(--success)' : '#a46830',
-                      border: '1px solid #c49a6c',
+                      background: copiedVercel ? 'var(--success)' : 'var(--accent-primary)',
+                      border: '1px solid var(--glass-border)',
                       borderRadius: '8px',
                       color: '#fff',
                       cursor: 'pointer',
@@ -490,7 +490,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
 
               {/* Local Network (Wi-Fi) Section */}
               <div style={{
-                background: 'rgba(255,255,255,0.03)',
+                background: 'var(--bg-tertiary)',
                 padding: '16px',
                 borderRadius: '14px',
                 border: '1px solid var(--glass-border)',
@@ -517,7 +517,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     style={{
                       flex: 1,
                       padding: '8px 12px',
-                      background: 'rgba(0,0,0,0.3)',
+                      background: 'var(--bg-secondary)',
                       border: '1px solid var(--glass-border)',
                       color: 'var(--text-primary)',
                       borderRadius: '8px',
@@ -563,7 +563,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     flex: 1,
                     padding: '8px 12px',
                     borderRadius: '8px',
-                    background: 'rgba(0,0,0,0.3)',
+                    background: 'var(--bg-tertiary)',
                     border: '1px solid var(--glass-border)',
                     color: 'var(--text-primary)',
                     fontSize: '0.8rem',
@@ -577,8 +577,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     style={{
                       padding: '8px 12px',
                       borderRadius: '8px',
-                      background: 'rgba(168,85,247,0.15)',
-                      border: '1px solid rgba(168,85,247,0.4)',
+                      background: 'var(--accent-glow)',
+                      border: '1px solid var(--accent-primary)',
                       color: 'var(--accent-primary)',
                       cursor: 'pointer',
                       display: 'flex',
@@ -609,7 +609,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                       <div
                         key={player.id}
                         style={{
-                          background: 'rgba(255,255,255,0.03)',
+                          background: 'var(--bg-tertiary)',
                           border: '1px solid var(--glass-border)',
                           borderRadius: '10px',
                           padding: '10px 14px',
@@ -624,7 +624,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                             width: '34px',
                             height: '34px',
                             borderRadius: '50%',
-                            background: player.color || '#a855f7',
+                            background: player.color || 'var(--accent-primary)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -641,7 +641,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                                 {player.name || 'Jogador Anonimo'}
                               </span>
                               {player.isGM && (
-                                <span style={{ fontSize: '0.62rem', background: 'rgba(234,179,8,0.2)', color: '#fbbf24', border: '1px solid rgba(234,179,8,0.4)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
+                                <span style={{ fontSize: '0.62rem', background: 'rgba(234,179,8,0.2)', color: 'var(--warning)', border: '1px solid var(--warning)', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
                                   MESTRE
                                 </span>
                               )}
@@ -649,7 +649,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
                               <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                                Ficha: <strong style={{ color: assignedToken ? '#86efac' : '#94a3b8' }}>{assignedToken ? assignedToken.name : 'Nenhuma'}</strong>
+                                Ficha: <strong style={{ color: assignedToken ? 'var(--success)' : 'var(--text-secondary)' }}>{assignedToken ? assignedToken.name : 'Nenhuma'}</strong>
                               </span>
                             </div>
                           </div>
@@ -664,7 +664,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                               style={{
                                 padding: '5px 8px',
                                 borderRadius: '6px',
-                                background: 'rgba(0,0,0,0.4)',
+                                background: 'var(--bg-secondary)',
                                 border: '1px solid var(--glass-border)',
                                 color: 'var(--text-primary)',
                                 fontSize: '0.72rem'
@@ -679,7 +679,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                             <button
                               onClick={() => handleFocusPlayer(player.id)}
                               title="Focar Camera no Token"
-                              style={{ padding: '6px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', cursor: 'pointer' }}
+                              style={{ padding: '6px', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', cursor: 'pointer' }}
                             >
                               <Compass size={13} />
                             </button>
@@ -687,7 +687,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                             <button
                               onClick={() => handleRequestRoll(player.id)}
                               title="Pedir Rolagem de Dado"
-                              style={{ padding: '6px', borderRadius: '6px', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.4)', color: 'var(--accent-primary)', cursor: 'pointer' }}
+                              style={{ padding: '6px', borderRadius: '6px', background: 'var(--accent-glow)', border: '1px solid var(--accent-primary)', color: 'var(--accent-primary)', cursor: 'pointer' }}
                             >
                               <Dices size={13} />
                             </button>
@@ -696,7 +696,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                               <button
                                 onClick={() => handleToggleLockMovement(player.id)}
                                 title={isMovementLocked ? 'Destravar Movimentacao' : 'Travar Movimentacao'}
-                                style={{ padding: '6px', borderRadius: '6px', background: isMovementLocked ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)', border: `1px solid ${isMovementLocked ? '#ef4444' : 'var(--glass-border)'}`, color: isMovementLocked ? '#f87171' : 'var(--text-primary)', cursor: 'pointer' }}
+                                style={{ padding: '6px', borderRadius: '6px', background: isMovementLocked ? 'rgba(239,68,68,0.2)' : 'var(--bg-secondary)', border: `1px solid ${isMovementLocked ? 'var(--danger)' : 'var(--glass-border)'}`, color: isMovementLocked ? 'var(--danger)' : 'var(--text-primary)', cursor: 'pointer' }}
                               >
                                 {isMovementLocked ? <Lock size={13} /> : <Unlock size={13} />}
                               </button>
@@ -718,7 +718,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {/* Form Configuracoes da Mesa Atual */}
               <div style={{
-                background: 'rgba(255,255,255,0.03)',
+                background: 'var(--bg-tertiary)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: '12px',
                 padding: '14px',
@@ -730,7 +730,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                   <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Folder size={16} color="var(--accent-primary)" /> Configuracoes da Mesa Atual ({currentRoom})
                   </h4>
-                  <span style={{ fontSize: '0.65rem', color: user ? '#86efac' : '#fde047', background: user ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)', padding: '2px 6px', borderRadius: '4px', border: `1px solid ${user ? 'rgba(34,197,94,0.3)' : 'rgba(245,158,11,0.3)'}` }}>
+                  <span style={{ fontSize: '0.65rem', color: user ? 'var(--success)' : 'var(--warning)', background: user ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)', padding: '2px 6px', borderRadius: '4px', border: `1px solid ${user ? 'rgba(34,197,94,0.3)' : 'rgba(245,158,11,0.3)'}` }}>
                     {user ? 'Nuvem Supabase' : 'Armazenamento Local'}
                   </span>
                 </div>
@@ -746,12 +746,12 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                         value={roomNameTitle}
                         onChange={e => setRoomNameTitle(e.target.value)}
                         placeholder="Ex: A Maldicao de Strahd"
-                        style={{ width: '100%', padding: '7px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '6px', fontSize: '0.78rem', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '7px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '6px', fontSize: '0.78rem', boxSizing: 'border-box' }}
                       />
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.7rem', color: '#fde047', marginBottom: '3px', fontWeight: 700 }}>
+                      <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--accent-primary)', marginBottom: '3px', fontWeight: 700 }}>
                         Pasta Local da Wiki:
                       </label>
                       <input
@@ -759,7 +759,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                         value={wikiPath}
                         onChange={e => setWikiPath(e.target.value)}
                         placeholder="Ex: D:/DOZERO/wikidozero"
-                        style={{ width: '100%', padding: '7px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid #c49a6c', color: '#c49a6c', borderRadius: '6px', fontSize: '0.78rem', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '7px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '6px', fontSize: '0.78rem', fontFamily: 'monospace', boxSizing: 'border-box' }}
                       />
                     </div>
                   </div>
@@ -768,7 +768,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     <button
                       type="button"
                       onClick={() => setIsPublic(!isPublic)}
-                      style={{ padding: '7px', borderRadius: '6px', background: isPublic ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', border: `1px solid ${isPublic ? '#22c55e' : '#ef4444'}`, color: isPublic ? '#4ade80' : '#f87171', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      style={{ padding: '7px', borderRadius: '6px', background: isPublic ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', border: `1px solid ${isPublic ? 'var(--success)' : 'var(--danger)'}`, color: isPublic ? 'var(--success)' : 'var(--danger)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                     >
                       {isPublic ? <Eye size={12} /> : <EyeOff size={12} />}
                       {isPublic ? 'Publica no Mural' : 'Oculta'}
@@ -777,7 +777,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     <button
                       type="button"
                       onClick={() => setIsClosed(!isClosed)}
-                      style={{ padding: '7px', borderRadius: '6px', background: isClosed ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', border: `1px solid ${isClosed ? '#ef4444' : '#3b82f6'}`, color: isClosed ? '#f87171' : '#60a5fa', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                      style={{ padding: '7px', borderRadius: '6px', background: isClosed ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', border: `1px solid ${isClosed ? 'var(--danger)' : 'var(--accent-primary)'}`, color: isClosed ? 'var(--danger)' : 'var(--accent-primary)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                     >
                       {isClosed ? <Lock size={12} /> : <Unlock size={12} />}
                       {isClosed ? 'Trancada' : 'Aberta'}
@@ -795,7 +795,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
 
               {/* Mural de Campanhas & Troca de Salas */}
               <div style={{
-                background: 'rgba(0,0,0,0.2)',
+                background: 'var(--bg-tertiary)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: '12px',
                 padding: '14px',
@@ -825,7 +825,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     value={newRoom}
                     onChange={e => setNewRoom(e.target.value)}
                     placeholder="Nome da sala para entrar ou criar (ex: caverna-goblins)"
-                    style={{ flex: 1, padding: '7px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: '#fff', borderRadius: '6px', fontSize: '0.78rem' }}
+                    style={{ flex: 1, padding: '7px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', borderRadius: '6px', fontSize: '0.78rem' }}
                   />
                   <button type="button" onClick={handleRandomRoom} className="btn-icon theme-blue" title="Gerar nome aleatorio" style={{ padding: '7px' }}>
                     <RefreshCw size={14} />
@@ -833,7 +833,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                   <button
                     type="submit"
                     disabled={!newRoom.trim()}
-                    style={{ padding: '7px 14px', background: newRoom.trim() ? 'linear-gradient(135deg, #a46830 0%, #8b5220 100%)' : 'rgba(255,255,255,0.05)', border: '1px solid #c49a6c', borderRadius: '6px', color: '#fff', fontSize: '0.75rem', fontWeight: 700, cursor: newRoom.trim() ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap' }}
+                    style={{ padding: '7px 14px', background: newRoom.trim() ? 'var(--accent-primary)' : 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: '#fff', fontSize: '0.75rem', fontWeight: 700, cursor: newRoom.trim() ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap' }}
                   >
                     Entrar na Sala
                   </button>

@@ -109,7 +109,7 @@ html[data-theme="nextgen-red"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   transition: none !important;
-  background: rgba(10, 10, 15, 0.95) !important;
+  background: var(--bg-secondary) !important;
 }
 
 .glass-panel:hover {
@@ -275,13 +275,13 @@ h1, h2, h3, h4, h5, h6 {
   touch-action: pan-y !important;
   overscroll-behavior: contain !important;
   scrollbar-width: thin;
-  scrollbar-color: rgba(196, 154, 108, 0.4) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 .gm-tools-scroll-area::-webkit-scrollbar {
   width: 4px;
 }
 .gm-tools-scroll-area::-webkit-scrollbar-thumb {
-  background: rgba(196, 154, 108, 0.4);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
@@ -790,6 +790,51 @@ html[data-theme="chronicles-parchment"] {
   background-image: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%);
 }
 
+/* ==================================================
+   DAYLIGHT: SOLID SURFACES, NO GLASS, HIGH CONTRAST
+   ================================================== */
+html[data-theme="daylight-clean"] .glass-panel,
+html[data-theme="daylight-clean"] .draggable-window-container {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="daylight-clean"] .hud-glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--bg-secondary) !important;
+}
+
+html[data-theme="daylight-clean"] .btn-icon {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="daylight-clean"] .btn-icon:hover {
+  background: var(--bg-secondary) !important;
+  border-color: var(--accent-primary) !important;
+}
+
+html[data-theme="daylight-clean"] .ai-assistant-btn {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+html[data-theme="daylight-clean"] .chat-bubble-player,
+html[data-theme="daylight-clean"] .chat-bubble-npc,
+html[data-theme="daylight-clean"] .chat-bubble-system,
+html[data-theme="daylight-clean"] .chat-bubble-whisper {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+  text-shadow: none !important;
+}
+
 html[data-theme^="chronicles"] .glass-panel,
 html[data-theme^="chronicles"] .draggable-window-container {
   backdrop-filter: none !important;
@@ -802,8 +847,8 @@ html[data-theme^="chronicles"] .draggable-window-container {
 
 html[data-theme="chronicles-parchment"] .glass-panel,
 html[data-theme="chronicles-parchment"] .draggable-window-container {
-  --text-primary: #3e2723;
-  --text-secondary: #5d4037;
+  --text-primary: #20120b;
+  --text-secondary: #4e3324;
 }
 
 html[data-theme="chronicles-wood"] .glass-panel,
@@ -925,7 +970,7 @@ html[data-theme^="chronicles"] .chat-bubble-npc,
 html[data-theme^="chronicles"] .chat-bubble-system,
 html[data-theme^="chronicles"] .chat-bubble-whisper {
   background: var(--bg-secondary) !important;
-  color: #3e2723 !important;
+  color: var(--text-primary) !important;
   border: 1px solid var(--glass-border) !important;
   box-shadow: 2px 2px 6px rgba(0,0,0,0.5) !important;
   text-shadow: none !important;
@@ -934,7 +979,7 @@ html[data-theme^="chronicles"] .chat-bubble-whisper {
 html[data-theme^="chronicles"] .chat-bubble-npc .chat-author,
 html[data-theme^="chronicles"] .chat-bubble-player .chat-author,
 html[data-theme^="chronicles"] .chat-bubble-whisper .chat-author {
-  color: #5d4037 !important;
+  color: var(--text-secondary) !important;
   text-shadow: none !important;
 }
 
@@ -951,8 +996,6 @@ html[data-theme^="chronicles"] .theater-cockpit {
 html[data-theme^="chronicles"] .theater-drawer {
   background: var(--bg-secondary) !important;
   border-left: 2px solid var(--glass-border) !important;
-  --text-primary: #3e2723;
-  --text-secondary: #5d4037;
   color: var(--text-primary) !important;
 }
 html[data-theme^="chronicles"] .theater-drawer-header {
@@ -961,8 +1004,6 @@ html[data-theme^="chronicles"] .theater-drawer-header {
 html[data-theme^="chronicles"] .floating-window-header {
   background: var(--bg-tertiary) !important;
   border-bottom: 1px solid var(--glass-border) !important;
-  --text-primary: #3e2723;
-  --text-secondary: #5d4037;
   color: var(--text-primary) !important;
 }
 html[data-theme^="chronicles"] .floating-window-content {

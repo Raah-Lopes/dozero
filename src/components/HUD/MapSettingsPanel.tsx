@@ -213,7 +213,7 @@ export const MapSettingsPanel: React.FC = () => {
                   onClick={() => setActiveTool('select')}
                   style={{
                     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    background: activeTool === 'select' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                    background: activeTool === 'select' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
                     color: activeTool === 'select' ? '#fff' : 'var(--text-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem'
                   }}
                 >
@@ -226,7 +226,7 @@ export const MapSettingsPanel: React.FC = () => {
                   onClick={() => setActiveTool('text')}
                   style={{
                     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    background: activeTool === 'text' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                    background: activeTool === 'text' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
                     color: activeTool === 'text' ? '#fff' : 'var(--text-secondary)', border: '1px solid var(--glass-border)', padding: '0.5rem'
                   }}
                 >
@@ -239,7 +239,7 @@ export const MapSettingsPanel: React.FC = () => {
               <Tooltip label="Localizar todos os textos ativos">
                 <button
                   className="btn" onClick={locateAllTexts}
-                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)' }}
+                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--glass-border)', background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
                 >
                   <Search size={14} /> Localizar Textos
                 </button>
@@ -247,7 +247,7 @@ export const MapSettingsPanel: React.FC = () => {
               <Tooltip label="Apagar TODOS os textos">
                 <button
                   className="btn" onClick={clearAllTexts}
-                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.1)' }}
+                  style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.1)', color: 'var(--danger)' }}
                 >
                   <Eraser size={14} /> Limpar Todos
                 </button>
@@ -261,14 +261,14 @@ export const MapSettingsPanel: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
           
           {/* 1. GEOMETRIA DO GRID */}
-          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+          <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
               📐 Geometria do Grid
             </span>
             <select 
               value={mapConfig.gridType} 
               onChange={e => Config.updateMap({ gridType: e.target.value as MapConfig['gridType'] })}
-              style={{ background: 'rgba(15,23,42,0.8)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '6px', fontSize: '0.85rem', width:'100%' }}
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '6px', fontSize: '0.85rem', width:'100%' }}
             >
               <option value="square">Quadrados (Padrão D&D / Pathfinder)</option>
               <option value="hex_v">Hexágonos (Verticais)</option>
@@ -279,12 +279,12 @@ export const MapSettingsPanel: React.FC = () => {
           </div>
 
           {/* 2. TAMANHO E PRESETS RÁPIDOS */}
-          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+          <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 📏 Dimensões da Célula
               </span>
-              <span style={{ fontSize: '0.75rem', color: '#93c5fd', fontWeight: 'bold' }}>{mapConfig.gridSize}px</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>{mapConfig.gridSize}px</span>
             </div>
             
             <input 
@@ -307,9 +307,9 @@ export const MapSettingsPanel: React.FC = () => {
                   onClick={() => Config.setGridSize(preset.size)}
                   style={{
                     flex: 1, padding: '4px 6px', fontSize: '0.7rem', borderRadius: '4px',
-                    border: mapConfig.gridSize === preset.size ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.1)',
-                    background: mapConfig.gridSize === preset.size ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.05)',
-                    color: mapConfig.gridSize === preset.size ? '#38bdf8' : 'var(--text-secondary)',
+                    border: mapConfig.gridSize === preset.size ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+                    background: mapConfig.gridSize === preset.size ? 'var(--accent-glow)' : 'var(--bg-secondary)',
+                    color: mapConfig.gridSize === preset.size ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
                 >
@@ -320,7 +320,7 @@ export const MapSettingsPanel: React.FC = () => {
           </div>
 
           {/* 3. ESTILIZAÇÃO VISUAL & CORES */}
-          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+          <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>
               🎨 Estilização Visual
             </span>
@@ -337,9 +337,9 @@ export const MapSettingsPanel: React.FC = () => {
                     onClick={() => Config.setGridColor(c)}
                     style={{
                       width: '24px', height: '24px', borderRadius: '50%', background: c,
-                      border: mapConfig.gridColor.toLowerCase() === c.toLowerCase() ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.3)',
+                      border: mapConfig.gridColor.toLowerCase() === c.toLowerCase() ? '2px solid var(--accent-primary)' : '1px solid var(--glass-border)',
                       cursor: 'pointer',
-                      boxShadow: mapConfig.gridColor.toLowerCase() === c.toLowerCase() ? '0 0 8px rgba(56,189,248,0.6)' : 'none'
+                      boxShadow: mapConfig.gridColor.toLowerCase() === c.toLowerCase() ? '0 0 8px var(--accent-glow)' : 'none'
                     }}
                   />
                 ))}
@@ -365,7 +365,7 @@ export const MapSettingsPanel: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Opacidade</span>
-                  <span style={{ fontSize: '0.7rem', color: '#93c5fd', fontWeight: 'bold' }}>{Math.round(mapConfig.gridAlpha * 100)}%</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>{Math.round(mapConfig.gridAlpha * 100)}%</span>
                 </div>
                 <input 
                   type="range" min="0" max="1" step="0.05" value={mapConfig.gridAlpha} 
@@ -377,7 +377,7 @@ export const MapSettingsPanel: React.FC = () => {
           </div>
 
           {/* 4. NÉVOA DE GUERRA (FOW) */}
-          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
+          <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '0.8rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 🌫️ Névoa de Guerra
@@ -410,7 +410,7 @@ export const MapSettingsPanel: React.FC = () => {
             <input 
               type="file" accept=".png,.jpg,.jpeg,.webp,.gif,.svg" multiple onChange={handleImageUpload}
               style={{
-                padding: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--glass-border)',
+                padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px dashed var(--glass-border)',
                 borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: '0.85rem', cursor: 'pointer'
               }}
             />
@@ -418,7 +418,7 @@ export const MapSettingsPanel: React.FC = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {selectedIds.size > 0 ? (
-              <div style={{ padding: '0.5rem', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ padding: '0.5rem', background: 'var(--accent-glow)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, width: '100%' }}>
                   {selectedIds.size} Mapa(s) Selecionado(s)
                 </span>
@@ -456,7 +456,7 @@ export const MapSettingsPanel: React.FC = () => {
                     key={bg.id} 
                     style={{ 
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-                      background: selectedIds.has(bg.id) ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255,255,255,0.05)', 
+                      background: selectedIds.has(bg.id) ? 'var(--accent-glow)' : 'var(--bg-tertiary)', 
                       padding: '0.5rem', borderRadius: '4px',
                       border: selectedIds.has(bg.id) ? '1px solid var(--accent-primary)' : '1px solid transparent'
                     }}
@@ -481,7 +481,7 @@ export const MapSettingsPanel: React.FC = () => {
                         <button 
                           onClick={(e) => { e.stopPropagation(); updateBackgroundProps(bg.id, { hidden: !bg.hidden }); }}
                           className="btn-icon"
-                          style={{ padding: '0.3rem', border: '1px solid transparent', background: bg.hidden ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.1)' }}
+                          style={{ padding: '0.3rem', border: '1px solid transparent', background: bg.hidden ? 'var(--bg-secondary)' : 'var(--bg-tertiary)' }}
                         >
                           {bg.hidden ? <EyeOff size={14} color="var(--text-secondary)" /> : <Eye size={14} color="var(--text-primary)" />}
                         </button>
@@ -536,7 +536,7 @@ export const MapSettingsPanel: React.FC = () => {
                 setLibraryUpdateKey(k => k + 1);
               }}
               style={{
-                padding: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--glass-border)',
+                padding: '0.5rem', background: 'var(--bg-tertiary)', border: '1px dashed var(--glass-border)',
                 borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: '0.85rem', cursor: 'pointer'
               }}
             />
@@ -568,7 +568,7 @@ const PropLibraryGallery = () => {
               e.dataTransfer.setData('application/json', JSON.stringify({ type: 'prop', url: item.url, name: item.name }));
             }}
             style={{
-              aspectRatio: '1', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
+              aspectRatio: '1', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
               borderRadius: '4px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               cursor: 'grab', padding: '0.2rem', position: 'relative'
             }}

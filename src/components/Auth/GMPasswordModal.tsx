@@ -71,7 +71,8 @@ export const GMPasswordModal: React.FC<GMPasswordModalProps> = ({ isOpen, onClos
         padding: '2rem',
         display: 'flex', flexDirection: 'column', gap: '1.5rem',
         position: 'relative',
-        border: '1px solid rgba(239,68,68,0.3)'
+        border: '1px solid var(--danger)',
+        background: 'var(--bg-secondary)',
       }}>
         
         <button 
@@ -82,10 +83,10 @@ export const GMPasswordModal: React.FC<GMPasswordModalProps> = ({ isOpen, onClos
         </button>
 
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ padding: '12px', background: 'rgba(239,68,68,0.1)', borderRadius: '50%', color: '#f87171' }}>
+          <div style={{ padding: '12px', background: 'rgba(239,68,68,0.1)', borderRadius: '50%', color: 'var(--danger)' }}>
             {isCreating ? <Lock size={32} /> : <Shield size={32} />}
           </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', color: '#fca5a5', fontSize: '1.5rem', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: '1.5rem', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
             {isCreating ? 'Proteger Mesa' : 'Acesso Restrito'}
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
@@ -96,7 +97,7 @@ export const GMPasswordModal: React.FC<GMPasswordModalProps> = ({ isOpen, onClos
         </div>
 
         {error && (
-          <div style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.5)', color: '#fca5a5', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center' }}>
             {error}
           </div>
         )}
@@ -113,10 +114,10 @@ export const GMPasswordModal: React.FC<GMPasswordModalProps> = ({ isOpen, onClos
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                background: 'rgba(0,0,0,0.5)',
-                border: '1px solid rgba(239,68,68,0.3)',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--danger)',
                 borderRadius: 'var(--radius-sm)',
-                color: 'white',
+                color: 'var(--text-primary)',
                 fontFamily: 'var(--font-body)',
                 fontSize: '1rem',
                 outline: 'none',
@@ -126,7 +127,7 @@ export const GMPasswordModal: React.FC<GMPasswordModalProps> = ({ isOpen, onClos
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ background: 'var(--danger)', width: '100%', padding: '1rem', fontSize: '1rem' }}>
+          <button type="submit" className="btn btn-primary" style={{ background: 'var(--danger)', color: '#ffffff', width: '100%', padding: '1rem', fontSize: '1rem' }}>
             {isCreating ? 'Definir Senha e Assumir' : 'Destrancar Painel do Mestre'}
           </button>
         </form>
