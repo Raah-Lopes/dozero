@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Tokens } from '../../store/modules';
-import { Swords, Trash2, ChevronRight, Play, Square, Dices, Skull, PlusCircle, Activity, Zap, Flame, Shield, Clock, Target, MessageSquare, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { Swords, Trash2, ChevronRight, Play, Square, Dices, Skull, PlusCircle, Activity, Zap, Flame, Shield, Clock, Target, MessageSquare, Send, ChevronDown, ChevronUp, Trophy } from 'lucide-react';
 import { state, removeCombatParticipant, nextCombatTurn, clearCombat, pushChatMessage, addConditionToParticipant, removeConditionFromParticipant, updateTokenProps } from '../../store';
 import type { CombatParticipant, CombatCondition } from '../../store';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
+import { saveCombatEncounter } from '../../services/encounterCloudService';
 
 import { toast } from '../UI/Toast';
 import { Tooltip } from '../UI/Tooltip';
@@ -168,7 +169,43 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
   const [showStakes, setShowStakes] = useState(false);
   const [stakesSuccess, setStakesSuccess] = useState('');
   const [stakesFailure, setStakesFailure] = useState('');
+  const [showEndMenu, setShowEndMenu] = useState(false);
   const climaxTimerRef = useRef<number | null>(null);
+
+  const handleEndCombatWithOutcome = async (outcome: 'victory' | 'defeat' | 'escaped' | 'clear') => {
+    setShowEndMenu(false);
+    const currentRoom = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+    const roundCount = Number(state.combat.get('round')) || 1;
+    const combatParticipants = (state.combat.get('participants') as CombatParticipant[]) || [];
+
+    if (outcome !== 'clear' && combatParticipants.length > 0) {
+      await saveCombatEncounter({
+        campaign_id: currentRoom,
+        name: `Encontro Encerrado — Rodada ${roundCount}`,
+        round_count: roundCount,
+        outcome: outcome,
+        combatants: combatParticipants.map(p => ({
+          name: p.name,
+          level: 1,
+          hp: 0,
+          maxHp: 0,
+          defense: 10,
+          attack: 2,
+          imageUrl: p.imageUrl
+        }))
+      });
+
+      const outcomeLabels = {
+        victory: '🏆 Vitória dos Aventureiros!',
+        defeat: '💀 Derrota da Party...',
+        escaped: '🏃 Fuga da Batalha!'
+      };
+
+      pushChatMessage(`<b>Fim de Combate:</b> ${outcomeLabels[outcome]} (Duração: ${roundCount} rodada(s))`, outcome === 'victory', outcome === 'defeat');
+    }
+
+    clearCombat();
+  };
 
   useEffect(() => {
     return () => {
@@ -434,9 +471,51 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
                 </button>
               </Tooltip>
             )}
-            <div style={{ display: 'flex', gap: '4px' }}>
+            <div style={{ display: 'flex', gap: '4px', position: 'relative' }}>
               <Tooltip label="Re-rolar Tudo"><button onClick={handleRollAll} className="btn-icon" style={{ background: 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px' }}><Dices size={18} color="var(--warning)" /></button></Tooltip>
-              <Tooltip label="Limpar Tudo"><button onClick={clearCombat} className="btn-icon" style={{ background: 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px' }}><Trash2 size={18} color="var(--danger)" /></button></Tooltip>
+              
+              <Tooltip label="Encerrar com Desfecho">
+                <button 
+                  onClick={() => setShowEndMenu(!showEndMenu)} 
+                  className="btn-icon" 
+                  style={{ background: showEndMenu ? 'rgba(234,179,8,0.2)' : 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px', border: showEndMenu ? '1px solid #eab308' : 'none' }}
+                >
+                  <Trophy size={18} color="#eab308" />
+                </button>
+              </Tooltip>
+
+              <Tooltip label="Limpar Tudo"><button onClick={() => handleEndCombatWithOutcome('clear')} className="btn-icon" style={{ background: 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px' }}><Trash2 size={18} color="var(--danger)" /></button></Tooltip>
+
+              {showEndMenu && (
+                <div style={{
+                  position: 'absolute', bottom: '44px', right: 0,
+                  background: 'var(--bg-primary)', border: '1px solid var(--glass-border)',
+                  borderRadius: '10px', padding: '8px', display: 'flex', flexDirection: 'column',
+                  gap: '6px', width: '180px', boxShadow: '0 8px 24px rgba(0,0,0,0.8)', zIndex: 100
+                }}>
+                  <div style={{ fontSize: '0.68rem', color: '#fde047', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '4px' }}>
+                    🏆 Desfecho do Combate:
+                  </div>
+                  <button
+                    onClick={() => handleEndCombatWithOutcome('victory')}
+                    style={{ padding: '6px 8px', background: 'rgba(34,197,94,0.15)', border: '1px solid #22c55e', borderRadius: '6px', color: '#4ade80', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    🏆 Vitória dos Jogadores
+                  </button>
+                  <button
+                    onClick={() => handleEndCombatWithOutcome('defeat')}
+                    style={{ padding: '6px 8px', background: 'rgba(239,68,68,0.15)', border: '1px solid #ef4444', borderRadius: '6px', color: '#f87171', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    💀 Derrota da Party
+                  </button>
+                  <button
+                    onClick={() => handleEndCombatWithOutcome('escaped')}
+                    style={{ padding: '6px 8px', background: 'rgba(59,130,246,0.15)', border: '1px solid #3b82f6', borderRadius: '6px', color: '#60a5fa', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    🏃 Fuga da Batalha
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

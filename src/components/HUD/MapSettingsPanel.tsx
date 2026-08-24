@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   state,
   addBackground,
@@ -12,9 +12,17 @@ import {
 import { Config, onConfigChanged, onMapConfigChanged, onFogConfigChanged } from '../../store/modules/configModule';
 import type { BackgroundData, MapConfig } from '../../store';
 import type { FogConfig } from '../../store/modules/configModule';
-import { ImagePlus, Trash2, Eye, EyeOff, Grid, RefreshCw, MousePointer2, Type, Search, Eraser } from 'lucide-react';
+import { ImagePlus, Trash2, Eye, EyeOff, Grid, RefreshCw, MousePointer2, Type, Search, Eraser, Cloud, Play, Plus, Save } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from '../UI/Tooltip';
+import {
+  saveSceneToCloud,
+  getScenesFromCloud,
+  deleteSceneFromCloud,
+  applySceneToTable,
+  SceneRecord
+} from '../../services/sceneCloudService';
+import { toast } from '../UI/Toast';
 
 export const MapSettingsPanel: React.FC = () => {
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
@@ -25,8 +33,30 @@ export const MapSettingsPanel: React.FC = () => {
   const [fogConfig, setFogConfig] = useState<FogConfig>(Config.getFogConfig());
   
   const [activeTool, setActiveToolState] = useState(bgLocalState.activeTool);
-  const [activeTab, setActiveTab] = useState<'mapas' | 'grid' | 'ferramentas' | 'props'>('mapas');
+  const [activeTab, setActiveTab] = useState<'mapas' | 'grid' | 'ferramentas' | 'props' | 'cenarios'>('mapas');
   const [libraryUpdateKey, setLibraryUpdateKey] = useState(0);
+
+  // Cloud Scenes State
+  const [scenesList, setScenesList] = useState<SceneRecord[]>([]);
+  const [loadingScenes, setLoadingScenes] = useState(false);
+  const [newSceneName, setNewSceneName] = useState('');
+  const [savingScene, setSavingScene] = useState(false);
+
+  const loadScenes = useCallback(async () => {
+    const currentRoom = typeof window !== 'undefined'
+      ? (new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2')
+      : 'dozero-mesa-principal-v2';
+    setLoadingScenes(true);
+    const list = await getScenesFromCloud(currentRoom);
+    setScenesList(list);
+    setLoadingScenes(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'cenarios') {
+      loadScenes();
+    }
+  }, [activeTab, loadScenes]);
 
   useEffect(() => {
     // Background observer (unchanged)
@@ -174,6 +204,33 @@ export const MapSettingsPanel: React.FC = () => {
     }
   };
 
+  const handleSaveCurrentScene = async () => {
+    const name = newSceneName.trim() || `Cena ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    const currentRoom = typeof window !== 'undefined'
+      ? (new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2')
+      : 'dozero-mesa-principal-v2';
+
+    setSavingScene(true);
+    const bgs = Array.from(state.backgrounds.values()) as BackgroundData[];
+    const mapCfg = Config.getMapConfig();
+    const fogCfg = Config.getFogConfig();
+
+    const saved = await saveSceneToCloud({
+      campaign_id: currentRoom,
+      name,
+      backgrounds: bgs,
+      grid_config: mapCfg,
+      fog_config: fogCfg,
+      thumbnail_url: bgs[0]?.url || null
+    });
+
+    if (saved) {
+      setNewSceneName('');
+      loadScenes();
+    }
+    setSavingScene(false);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '2rem' }}>
       
@@ -182,6 +239,7 @@ export const MapSettingsPanel: React.FC = () => {
         {[
           { id: 'mapas', label: 'Mapas' },
           { id: 'grid', label: 'Grid & FOW' },
+          { id: 'cenarios', label: 'Cenários (Nuvem)' },
           { id: 'ferramentas', label: 'Ferramentas' },
           { id: 'props', label: 'Objetos' }
         ].map(tab => (
@@ -504,6 +562,121 @@ export const MapSettingsPanel: React.FC = () => {
                           <Trash2 size={16} />
                         </button>
                       </Tooltip>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'cenarios' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Card Salvar Cena Atual */}
+          <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Cloud size={14} /> Salvar Cenário Atual na Nuvem
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <input
+                type="text"
+                value={newSceneName}
+                onChange={e => setNewSceneName(e.target.value)}
+                placeholder="Ex: Masmorra do Dragão (Nível 1)"
+                style={{ flex: 1, padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem', outline: 'none' }}
+              />
+              <button
+                onClick={handleSaveCurrentScene}
+                disabled={savingScene}
+                style={{ padding: '8px 14px', background: 'var(--accent-primary)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 'bold' }}
+              >
+                {savingScene ? <RefreshCw className="animate-spin" size={14} /> : <Save size={14} />}
+                Salvar
+              </button>
+            </div>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
+              Salva todos os mapas visíveis, grid, escala e iluminação/nevoeiro da cena atual.
+            </span>
+          </div>
+
+          {/* Lista de Cenas Salvas */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                Cenários Salvos ({scenesList.length})
+              </span>
+              <button
+                onClick={loadScenes}
+                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+              >
+                <RefreshCw size={11} /> Atualizar
+              </button>
+            </div>
+
+            {loadingScenes ? (
+              <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                Carregando cenários...
+              </div>
+            ) : scenesList.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem', border: '1px dashed var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                Nenhum cenário salvo ainda. Digite um nome acima e clique em "Salvar".
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto' }}>
+                {scenesList.map(scene => (
+                  <div
+                    key={scene.id}
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--glass-border)',
+                      borderRadius: '8px',
+                      padding: '8px 10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px'
+                    }}
+                  >
+                    {/* Thumbnail */}
+                    <div style={{ width: '48px', height: '36px', borderRadius: '4px', background: 'var(--bg-tertiary)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {scene.thumbnail_url ? (
+                        <img src={scene.thumbnail_url} alt={scene.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <Cloud size={16} color="var(--text-secondary)" />
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '0.82rem', color: '#fdfaf5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {scene.name}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
+                        {scene.backgrounds?.length || 0} mapa(s) • Grid: {scene.grid_config?.gridType || 'square'}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => applySceneToTable(scene)}
+                        title="Ativar este cenário na mesa"
+                        style={{ padding: '6px 10px', background: 'rgba(34,197,94,0.15)', border: '1px solid #22c55e', borderRadius: '6px', color: '#4ade80', fontSize: '0.72rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Play size={12} /> Ativar
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (scene.id && confirm(`Excluir cenário "${scene.name}" da nuvem?`)) {
+                            await deleteSceneFromCloud(scene.id);
+                            loadScenes();
+                          }
+                        }}
+                        title="Excluir"
+                        style={{ padding: '6px 8px', background: 'rgba(239,68,68,0.15)', border: '1px solid #ef4444', borderRadius: '6px', color: '#f87171', cursor: 'pointer' }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </div>
                 ))}

@@ -6,6 +6,7 @@ import { convertImageToWebPBlob } from '../utils/imageUtils';
 interface AuthState {
   user: User | null;
   session: Session | null;
+  preferences: Record<string, any>;
   loading: boolean;
   isAuthModalOpen: boolean;
   isProfileModalOpen: boolean;
@@ -18,6 +19,8 @@ interface AuthState {
   setResetPasswordModalOpen: (open: boolean) => void;
   initialize: () => Promise<void>;
   updateUserProfile: (data: { full_name?: string; avatar_url?: string }) => Promise<void>;
+  loadPreferences: () => Promise<void>;
+  updatePreferences: (newPrefs: Record<string, any>) => Promise<void>;
   uploadAvatar: (file: File) => Promise<string>;
   signOut: () => Promise<void>;
 }
@@ -27,6 +30,7 @@ let isAuthInitialized = false;
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
+  preferences: {},
   loading: true,
   isAuthModalOpen: false,
   isProfileModalOpen: false,
@@ -50,6 +54,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // 1. Escuta mudanças de auth em tempo real
       supabase.auth.onAuthStateChange((event, session) => {
         set({ session, user: session?.user ?? null, loading: false });
+        if (session?.user?.id) {
+          get().loadPreferences();
+        }
         if (event === 'PASSWORD_RECOVERY') {
           set({ isResetPasswordModalOpen: true });
         }
@@ -59,12 +66,51 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         set({ session, user: session.user ?? null, loading: false });
+        if (session.user?.id) {
+          get().loadPreferences();
+        }
       } else {
         set({ loading: false });
       }
     } catch (err) {
       console.error('Erro ao inicializar Supabase Auth:', err);
       set({ loading: false });
+    }
+  },
+  loadPreferences: async () => {
+    if (!isSupabaseConfigured) return;
+    const currentUser = get().user;
+    if (!currentUser?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('preferences')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+      if (!error && data?.preferences) {
+        set({ preferences: data.preferences });
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar preferências de perfil:', e);
+    }
+  },
+  updatePreferences: async (newPrefs) => {
+    const merged = { ...get().preferences, ...newPrefs };
+    set({ preferences: merged });
+
+    if (!isSupabaseConfigured) return;
+    const currentUser = get().user;
+    if (!currentUser?.id) return;
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ preferences: merged })
+        .eq('id', currentUser.id);
+    } catch (e) {
+      console.warn('Erro ao salvar preferências no Supabase:', e);
     }
   },
   updateUserProfile: async (data) => {

@@ -85,10 +85,37 @@ export class SupabaseRealtimeProvider {
       }
     });
 
-    // 4. Inscreve no canal e solicita sincronização
-    this.channel.subscribe((status) => {
+    // 4. Rastreamento de Presença Real de Jogadores
+    this.channel.on('presence', { event: 'sync' }, () => {
+      if (this.isDestroyed || !this.channel) return;
+      const state = this.channel.presenceState();
+      const onlineCount = Object.keys(state).length;
+      window.dispatchEvent(new CustomEvent('room-presence-sync', { 
+        detail: { room: this.roomName, count: onlineCount, presenceState: state } 
+      }));
+    });
+
+    let isSubscribed = false;
+
+    // 5. Inscreve no canal e registra presença
+    this.channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
+        isSubscribed = true;
         console.log(`[SupabaseRealtime] Conectado à sala '${this.roomName}' em tempo real!`);
+        
+        // Registra presença do usuário atual na sala
+        try {
+          const authUser = (await supabase.auth.getUser()).data.user;
+          await this.channel?.track({
+            user_id: authUser?.id || `anon_${Date.now()}`,
+            user_name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Aventureiro',
+            room_code: this.roomName,
+            joined_at: new Date().toISOString()
+          });
+        } catch (e) {
+          console.warn('[SupabaseRealtime] Erro ao registrar presença:', e);
+        }
+
         // Pede o estado atual para qualquer jogador que já esteja online na sala
         this.channel?.send({
           type: 'broadcast',
@@ -98,9 +125,9 @@ export class SupabaseRealtimeProvider {
       }
     });
 
-    // 5. Transmite alterações locais do documento para os outros jogadores
+    // 6. Transmite alterações locais do documento para os outros jogadores
     this.doc.on('update', (update, origin) => {
-      if (this.isDestroyed || origin === 'supabase-realtime') return;
+      if (this.isDestroyed || origin === 'supabase-realtime' || !isSubscribed) return;
       try {
         this.channel?.send({
           type: 'broadcast',

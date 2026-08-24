@@ -51,6 +51,9 @@ export interface ThemeDefinition {
 // Import and register new themes here. Order determines display order in picker.
 
 import { defaultTheme } from './default';
+import { tormentaTheme } from './tormenta20';
+import { threedetVictoryTheme } from './threedetVictory';
+import { sciFiTheme } from './scifiGalaxy';
 import { eldritchTheme } from './eldritch';
 import { codexTheme } from './codex';
 import { nextGenTheme } from './nextgen';
@@ -60,6 +63,9 @@ import { chroniclesParchmentTheme } from './chronicles-parchment';
 
 export const THEMES: ThemeDefinition[] = [
   defaultTheme,
+  tormentaTheme,
+  threedetVictoryTheme,
+  sciFiTheme,
   nextGenTheme,
   daylightTheme,
   eldritchTheme,

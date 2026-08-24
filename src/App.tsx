@@ -52,10 +52,14 @@ import { AuthModal } from './components/Modals/AuthModal';
 import { ProfileModal } from './components/Modals/ProfileModal';
 import { ResetPasswordModal } from './components/Modals/ResetPasswordModal';
 import { CampaignLobbyModal } from './components/Modals/CampaignLobbyModal';
+import { PlayerVaultModal } from './components/Modals/PlayerVaultModal';
 import { TokenConfigModal } from './components/Modals/TokenConfigModal';
+import { VoiceChatBar } from './components/Widgets/System/VoiceChatBar';
+import { useAutoSaveSession } from './services/useAutoSaveSession';
+import { useRoomPresence } from './services/useRoomPresence';
 import { useAuthStore } from './store/authStore';
 
-type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby' | 'tokenConfig';
+type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby' | 'vault' | 'tokenConfig';
 
 function App() {
   const [isReady] = useState(true);
@@ -67,6 +71,11 @@ function App() {
   }, [initAuth]);
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
+  const currentRoom = urlParams.get('room') || 'default-room';
+
+  // Auto-backup de sessão periódico no banco Supabase e rastreamento de presença real
+  useAutoSaveSession(currentRoom);
+  useRoomPresence(currentRoom);
 
   const {
     openWindows, toggleWindow,
@@ -421,11 +430,21 @@ function App() {
           <>
             <MobileBottomNav />
             <MobileQuickActions />
+            <VoiceChatBar roomCode={urlParams.get('room') || 'default-room'} />
           </>
         )}
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
-        <CampaignLobbyModal isOpen={activeModal === 'lobby'} onClose={() => setActiveModal('none')} />
+        <CampaignLobbyModal
+          isOpen={activeModal === 'lobby'}
+          onClose={() => setActiveModal('none')}
+          onOpenVault={() => setActiveModal('vault')}
+        />
+        <PlayerVaultModal 
+          isOpen={activeModal === 'vault'} 
+          onClose={() => setActiveModal('none')} 
+          activeCampaignId={currentRoom !== 'default-room' ? currentRoom : undefined} 
+        />
         {activeModal === 'tokenConfig' && editingTokenId && (
           <TokenConfigModal 
             tokenId={editingTokenId} 

@@ -4,7 +4,7 @@ import { Tokens } from '../../store/modules/tokenModule';
 import { 
   X, Sun, Flame, 
   Circle, Square, Hexagon, Star, Check, Upload,
-  Sliders, User, Palette, Lock, Unlock, Trash2
+  Sliders, User, Palette, Lock, Unlock, Trash2, Shield
 } from 'lucide-react';
 import { useWiki } from '../../hooks/useWiki';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
@@ -12,6 +12,8 @@ import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { toast } from '../UI/Toast';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { saveImageToCloud } from '../../utils/githubApi';
+import { saveCharacter } from '../../services/characterRepository';
+import { useAuthStore } from '../../store/authStore';
 
 interface TokenConfigModalProps {
   tokenId: string | null;
@@ -82,6 +84,41 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
       toast.error('Erro ao atualizar avatar: ' + err.message);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const { user } = useAuthStore();
+
+  const handleSaveToVault = async () => {
+    if (!tokenData || !tokenData.name) {
+      toast.warning('Token precisa de um nome para ser salvo no Vault.');
+      return;
+    }
+    try {
+      await saveCharacter({
+        id: tokenData.characterId || undefined,
+        name: tokenData.name,
+        type: tokenData.isPlayer || tokenData.type === 'player' ? 'pc' : (tokenData.type === 'enemy' ? 'monster' : 'npc'),
+        avatar_url: tokenData.imageUrl || tokenData.avatar || '',
+        data: {
+          hp: tokenData.hp,
+          maxHp: tokenData.maxHp,
+          mana: tokenData.mana,
+          maxMana: tokenData.maxMana,
+          speed: tokenData.speed,
+          ac: tokenData.ac || tokenData.ca || 10,
+          tokenShape: tokenData.tokenShape,
+          borderColor: tokenData.borderColor,
+          visionRadius: tokenData.visionRadius,
+          torchRadius: tokenData.torchRadius
+        },
+        notes_markdown: tokenData.notes || '',
+        campaign_id: null
+      }, user?.id);
+
+      toast.success(`Ficha de "${tokenData.name}" salva com sucesso no seu Vault!`);
+    } catch (err) {
+      toast.error('Erro ao salvar ficha no Vault.');
     }
   };
 
@@ -160,24 +197,46 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
               </span>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            style={{
-              background: 'var(--bg-tertiary)',
-              border: '1px solid var(--glass-border)',
-              color: 'var(--text-secondary)',
-              borderRadius: '8px',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'background 0.2s'
-            }}
-          >
-            <X size={18} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleSaveToVault}
+              title="Salvar esta ficha no seu Player Vault"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '6px 12px',
+                background: 'rgba(164,104,48,0.2)',
+                border: '1px solid var(--accent-primary)',
+                borderRadius: '8px',
+                color: 'var(--accent-primary)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <Shield size={14} /> Salvar no Vault
+            </button>
+            <button 
+              onClick={onClose}
+              style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--glass-border)',
+                color: 'var(--text-secondary)',
+                borderRadius: '8px',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}

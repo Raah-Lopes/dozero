@@ -11,3 +11,4 @@ export { ResetPasswordModal } from './ResetPasswordModal';
 export { SettingsModal } from './SettingsModal';
 export { TokenConfigModal } from './TokenConfigModal';
 export { WidgetHubModal } from './WidgetHubModal';
+export { PlayerVaultModal } from './PlayerVaultModal';

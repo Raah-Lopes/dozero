@@ -1,6 +1,7 @@
 import { getWikiConfig } from '../store';
 import { WikiIndexer } from '../services/wiki/WikiIndexer';
 import { uploadImageToCloud } from '../services/cloudUpload';
+import { uploadToSupabaseStorage } from '../services/storageService';
 
 export interface GithubTreeItem {
   path: string;
@@ -111,11 +112,19 @@ export async function openLocalFolder(path: string = ''): Promise<void> {
 }
 
 /**
- * Salva imagem: Local ANEXOS (no dev local) → ImgBB / Catbox.moe (na nuvem) → fallback.
- * Retorna a URL da imagem (nuvem ou local).
+ * Salva imagem: Supabase Storage (prioritário) → Local ANEXOS (dev local) → ImgBB/Catbox (fallback) → Base64.
+ * Retorna a URL permanente da imagem na nuvem.
  */
 export async function saveImageToCloud(base64: string, filename: string): Promise<string> {
-  // 1. Em desenvolvimento local, tenta salvar na pasta local ANEXOS (instantâneo e offline)
+  // 1. Tenta Supabase Storage (rápido, permanente e com CDN)
+  try {
+    const supabaseUrl = await uploadToSupabaseStorage(base64, filename);
+    if (supabaseUrl) return supabaseUrl;
+  } catch (e) {
+    console.warn('[saveImageToCloud] Falha no upload para Supabase Storage, tentando fallback...', e);
+  }
+
+  // 2. Em desenvolvimento local, tenta salvar na pasta local ANEXOS
   if (!import.meta.env.PROD) {
     try {
       const config = getWikiConfig();
@@ -130,19 +139,19 @@ export async function saveImageToCloud(base64: string, filename: string): Promis
         if (data?.url) return data.url as string;
       }
     } catch (e) {
-      console.warn('[saveImageToCloud] Falha ao salvar localmente no ANEXOS, tentando nuvem...', e);
+      console.warn('[saveImageToCloud] Falha ao salvar localmente no ANEXOS...', e);
     }
   }
 
-  // 2. Tenta nuvem (ImgBB ou Catbox com timeout de segurança)
+  // 3. Fallback nuvem secundária (Catbox / ImgBB)
   try {
     const cloudUrl = await uploadImageToCloud(base64, filename);
     if (cloudUrl) return cloudUrl;
   } catch (e) {
-    console.warn('[saveImageToCloud] Falha no upload para nuvem.', e);
+    console.warn('[saveImageToCloud] Falha no upload secundário.', e);
   }
 
-  // 3. Fallback final (base64 seguro)
+  // 4. Fallback final (base64 seguro)
   return base64;
 }
 

@@ -49,7 +49,10 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
   useEffect(() => {
     const updateLocalLists = () => {
       try {
-        const pArr = Array.from(state.players.values());
+        const pArr: any[] = [];
+        state.players.forEach((v: any, k: string) => {
+          pArr.push({ id: k, ...(typeof v === 'object' ? v : { name: String(v) }) });
+        });
         setPlayersList(pArr);
         const tArr = Tokens.getAll();
         setTokensList(tArr);
@@ -90,9 +93,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
           setRoomNameTitle(currentCamp.name || currentRoom);
           setIsPublic(currentCamp.is_public ?? true);
           setIsClosed(currentCamp.is_closed ?? false);
-          if (currentCamp.wiki_path) {
-            setWikiPath(currentCamp.wiki_path);
-          }
+          const localWiki = localStorage.getItem(`dozero_wiki_path_${currentRoom}`) || 'D:/DOZERO/wikidozero';
+          setWikiPath(localWiki);
         } else {
           setRoomNameTitle(currentRoom);
         }
@@ -193,9 +195,12 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
         name: roomNameTitle.trim() || currentRoom,
         is_public: isPublic,
         is_closed: isClosed,
-        wiki_path: wikiPath.trim(),
         user_id: user?.id
       });
+      // wikiPath é local de cada mestre — nunca vai para a nuvem
+      if (wikiPath.trim()) {
+        localStorage.setItem(`dozero_wiki_path_${currentRoom}`, wikiPath.trim());
+      }
       toast.success('Configuracoes da mesa salvas com sucesso!');
     } catch (err: any) {
       toast.warning('Configuracoes aplicadas localmente na sessao.');
@@ -601,13 +606,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                     Nenhum jogador conectado no momento. Compartilhe o link de convite!
                   </div>
                 ) : (
-                  filteredPlayers.map((player) => {
+                  filteredPlayers.map((player, idx) => {
                     const assignedToken = tokensList.find(t => t.ownerId === player.id);
                     const isMovementLocked = assignedToken?.movementLocked;
 
                     return (
                       <div
-                        key={player.id}
+                        key={player.id || `player_${idx}`}
                         style={{
                           background: 'var(--bg-tertiary)',
                           border: '1px solid var(--glass-border)',

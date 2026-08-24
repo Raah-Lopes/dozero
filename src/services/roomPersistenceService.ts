@@ -344,44 +344,22 @@ export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceAp
   }
 
   try {
-    // 2.1 Tenta baixar do Supabase Storage
-    try {
-      const fileName = `snapshots/${roomCode}.json`;
-      const { data: fileData, error: fileErr } = await supabase.storage
-        .from('room-backups')
-        .download(fileName);
+    // 2.1 Busca diretamente da tabela 'campaigns' (rápido, indexado e sem 400)
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('snapshot')
+      .eq('room_code', roomCode)
+      .maybeSingle();
 
-      if (!fileErr && fileData) {
-        const text = await fileData.text();
-        const bundle: RoomBundle = JSON.parse(text);
-        if (bundle && bundle.data) {
-          applyRoomBundle(bundle);
-          await saveLocalSnapshotIDB(roomCode, bundle);
-          console.log(`[RoomPersistence] Sala '${roomCode}' restaurada do Supabase Storage!`);
-          return true;
-        }
-      }
-    } catch (fErr) {}
-
-    // 2.2 Tenta buscar da tabela 'campaigns'
-    try {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('snapshot')
-        .eq('room_code', roomCode)
-        .maybeSingle();
-
-      if (!error && data?.snapshot) {
-        applyRoomBundle(data.snapshot);
-        await saveLocalSnapshotIDB(roomCode, data.snapshot);
-        console.log(`[RoomPersistence] Sala '${roomCode}' restaurada da tabela campaigns no Supabase!`);
-        return true;
-      }
-    } catch (e) {}
+    if (!error && data?.snapshot) {
+      applyRoomBundle(data.snapshot);
+      await saveLocalSnapshotIDB(roomCode, data.snapshot);
+      console.log(`[RoomPersistence] Sala '${roomCode}' restaurada da tabela campaigns!`);
+      return true;
+    }
 
     return false;
   } catch (err) {
-    console.warn('[RoomPersistence] Falha ao carregar snapshot da nuvem:', err);
     return false;
   }
 }

@@ -21,10 +21,24 @@ import {
   EyeOff,
   Lock,
   Unlock,
-  Upload
+  Upload,
+  ArrowLeft,
+  Crown,
+  UserMinus,
+  UserPlus
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { getCampaigns, createOrUpdateCampaign, deleteCampaignCloud, CampaignCloudRecord } from '../../services/campaignCloudService';
+import { 
+  getCampaigns, 
+  createOrUpdateCampaign, 
+  deleteCampaignCloud, 
+  getCampaignMembers, 
+  updateCampaignMemberRole, 
+  removeCampaignMember, 
+  joinCampaign, 
+  CampaignCloudRecord, 
+  CampaignMemberRecord 
+} from '../../services/campaignCloudService';
 import { updateWikiConfig } from '../../store/wiki';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { toast } from '../UI/Toast';
@@ -33,6 +47,7 @@ import { navigateToRoom, getVercelRoomUrl, getRoomUrl } from '../../utils/roomUr
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onOpenVault?: () => void;
 }
 
 const DEFAULT_COVERS = [
@@ -42,7 +57,7 @@ const DEFAULT_COVERS = [
   'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80'
 ];
 
-export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
+export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVault }) => {
   const { user } = useAuthStore();
   const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +75,10 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [isPublic, setIsPublic] = useState(true);
   const [isClosed, setIsClosed] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // Gestão de Participantes / Membros
+  const [selectedCampaignForMembers, setSelectedCampaignForMembers] = useState<CampaignCloudRecord | null>(null);
+  const [members, setMembers] = useState<CampaignMemberRecord[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -79,10 +98,66 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleOpenMembers = async (camp: CampaignCloudRecord, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedCampaignForMembers(camp);
+    setIsCreating(false);
+    setMembersLoading(true);
+    try {
+      const list = await getCampaignMembers(camp.id);
+      setMembers(list);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao carregar participantes da mesa.');
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  const handleChangeMemberRole = async (userId: string, role: 'gm' | 'player' | 'spectator') => {
+    if (!selectedCampaignForMembers) return;
+    const ok = await updateCampaignMemberRole(selectedCampaignForMembers.id, userId, role);
+    if (ok) {
+      toast.success('Papel do participante atualizado!');
+      setMembers(prev => prev.map(m => m.user_id === userId ? { ...m, role } : m));
+    } else {
+      toast.error('Não foi possível alterar o papel do membro.');
+    }
+  };
+
+  const handleRemoveMember = async (userId: string, memberName: string) => {
+    if (!selectedCampaignForMembers) return;
+    if (confirm(`Remover "${memberName}" da campanha?`)) {
+      const ok = await removeCampaignMember(selectedCampaignForMembers.id, userId);
+      if (ok) {
+        toast.info(`"${memberName}" foi removido da mesa.`);
+        setMembers(prev => prev.filter(m => m.user_id !== userId));
+      } else {
+        toast.error('Erro ao remover membro da campanha.');
+      }
+    }
+  };
+
+  const handleJoinCampaignDirect = async (camp: CampaignCloudRecord) => {
+    if (!user?.id) {
+      toast.error('Faça login para entrar na campanha.');
+      return;
+    }
+    const ok = await joinCampaign(camp.id, user.id, 'player');
+    if (ok) {
+      toast.success('Você entrou na campanha como Jogador!');
+      handleOpenMembers(camp);
+      loadList();
+    } else {
+      toast.error('Erro ao ingressar na mesa.');
+    }
+  };
+
   if (!isOpen) return null;
 
   const handleOpenCreate = () => {
     setEditingId(null);
+    setSelectedCampaignForMembers(null);
     setName('');
     setSystem('D&D 5e / Fantasia Medieval');
     setDescription('');
@@ -102,7 +177,7 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
     setDescription(camp.description || '');
     setCoverUrl(camp.cover_url || DEFAULT_COVERS[0]);
     setPassCode(camp.pass_code || '');
-    setWikiPath(camp.wiki_path || 'D:/DOZERO/wikidozero');
+    setWikiPath(localStorage.getItem(`dozero_wiki_path_${camp.room_code}`) || 'D:/DOZERO/wikidozero');
     setIsPublic(camp.is_public !== false);
     setIsClosed(camp.is_closed === true);
     setIsCreating(true);
@@ -133,10 +208,14 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
         description: description.trim(),
         cover_url: coverUrl.trim(),
         pass_code: passCode.trim(),
-        wiki_path: wikiPath.trim(),
         is_public: isPublic,
         is_closed: isClosed
       }, user?.id);
+
+      // Salva o caminho local da wiki isolado no navegador do mestre local
+      if (wikiPath.trim()) {
+        localStorage.setItem(`dozero_wiki_path_${newCamp.room_code}`, wikiPath.trim());
+      }
 
       toast.success(`Campanha "${newCamp.name}" salva com sucesso!`);
       setIsCreating(false);
@@ -170,11 +249,10 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
       return;
     }
 
-    // Configura o repositório/pasta da Wiki apontado para a mesa
-    if (camp.wiki_path) {
-      updateWikiConfig({ repoUrl: camp.wiki_path });
-      WikiIndexer.clearCache();
-    }
+    // Configura o repositório/pasta da Wiki apontado para a mesa (lendo do localStorage da sala)
+    const localRoomWiki = localStorage.getItem(`dozero_wiki_path_${camp.room_code}`) || 'D:/DOZERO/wikidozero';
+    updateWikiConfig({ repoUrl: localRoomWiki });
+    WikiIndexer.clearCache();
 
     navigateToRoom(camp.room_code, camp.pass_code || undefined);
   };
@@ -240,7 +318,7 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Top Actions & Search */}
-        {!isCreating && (
+        {!isCreating && !selectedCampaignForMembers && (
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', margin: '16px 0 12px' }}>
             <div style={{ position: 'relative', flex: 1 }}>
               <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#8c6e5a' }} />
@@ -262,6 +340,23 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 }}
               />
             </div>
+
+            {onOpenVault && (
+              <button
+                onClick={() => { onClose(); onOpenVault(); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '9px 16px',
+                  background: 'rgba(164,104,48,0.12)',
+                  border: '1px solid #c49a6c',
+                  borderRadius: '12px',
+                  color: '#c49a6c',
+                  fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap'
+                }}
+              >
+                <Shield size={15} /> Vault
+              </button>
+            )}
 
             <button
               onClick={handleOpenCreate}
@@ -286,9 +381,217 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Form de Criação / Edição */}
-        {isCreating ? (
-          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px', overflowY: 'auto', paddingRight: '4px' }}>
+        {selectedCampaignForMembers ? (
+          /* Gerenciador de Membros da Campanha */
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', overflowY: 'auto' }}>
+            {/* Top Bar com Voltar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid #4a3528' }}>
+              <button
+                onClick={() => setSelectedCampaignForMembers(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  background: 'transparent', border: 'none', color: '#c49a6c',
+                  fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer'
+                }}
+              >
+                <ArrowLeft size={16} /> Voltar para Todas as Mesas
+              </button>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={(e) => handleCopyInvite(selectedCampaignForMembers, e, 'vercel')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '5px',
+                    padding: '6px 12px', background: 'rgba(164,104,48,0.2)',
+                    border: '1px solid #c49a6c', borderRadius: '8px',
+                    color: '#fde047', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  <Globe size={13} /> Convidar com Link Vercel
+                </button>
+              </div>
+            </div>
+
+            {/* Header da Campanha Selecionada */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px', background: '#18100b', borderRadius: '12px', border: '1px solid #5a4234' }}>
+              <img
+                src={selectedCampaignForMembers.cover_url || DEFAULT_COVERS[0]}
+                alt={selectedCampaignForMembers.name}
+                style={{ width: '80px', height: '56px', borderRadius: '8px', objectFit: 'cover' }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#fdfaf5' }}>
+                    {selectedCampaignForMembers.name}
+                  </h3>
+                  <span style={{ fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(253,224,71,0.15)', border: '1px solid #a46830', borderRadius: '4px', color: '#fde047', fontWeight: 700 }}>
+                    {selectedCampaignForMembers.system}
+                  </span>
+                </div>
+                <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#a1a1aa' }}>
+                  Código da Sala: <code style={{ color: '#c49a6c', background: '#120b07', padding: '2px 6px', borderRadius: '4px' }}>{selectedCampaignForMembers.room_code}</code>
+                </p>
+              </div>
+
+              {user && !members.some(m => m.user_id === user.id) && (
+                <button
+                  onClick={() => handleJoinCampaignDirect(selectedCampaignForMembers)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 14px', background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)',
+                    border: '1px solid #22c55e', borderRadius: '8px',
+                    color: '#fff', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  <UserPlus size={14} /> Entrar nesta Mesa
+                </button>
+              )}
+            </div>
+
+            {/* Lista de Membros */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '4px 0 10px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#d7c9b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Users size={15} color="#c49a6c" /> Participantes Registrados ({members.length})
+                </span>
+              </div>
+
+              {membersLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem 0', color: '#a1a1aa', fontSize: '0.8rem' }}>
+                  Carregando lista de participantes...
+                </div>
+              ) : members.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2.5rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed #4a3528', borderRadius: '12px' }}>
+                  <Users size={32} style={{ color: '#8c6e5a', marginBottom: '6px' }} />
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#d7c9b8' }}>Nenhum participante registrado ainda nesta mesa.</p>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#a1a1aa' }}>Compartilhe o link da sala para que os jogadores possam ingressar.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {members.map(member => {
+                    const isOwner = selectedCampaignForMembers.owner_id === member.user_id;
+                    const isCurrentUserGM = selectedCampaignForMembers.owner_id === user?.id || members.some(m => m.user_id === user?.id && m.role === 'gm');
+                    const displayName = member.profile?.full_name || member.profile?.username || member.character_name || 'Jogador';
+                    const avatar = member.profile?.avatar_url;
+
+                    return (
+                      <div
+                        key={member.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 14px',
+                          background: 'rgba(255,255,255,0.03)',
+                          border: '1px solid #4a3528',
+                          borderRadius: '10px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          {avatar ? (
+                            <img src={avatar} alt={displayName} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #c49a6c' }} />
+                          ) : (
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#3b281d', border: '1px solid #5a4234', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fde047', fontWeight: 700, fontSize: '0.85rem' }}>
+                              {displayName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fdfaf5' }}>
+                                {displayName}
+                              </span>
+                              {isOwner && (
+                                <span style={{ fontSize: '0.62rem', padding: '1px 5px', borderRadius: '4px', background: 'rgba(234,179,8,0.2)', border: '1px solid #eab308', color: '#fde047', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                  <Crown size={10} /> Criador
+                                </span>
+                              )}
+                              {member.user_id === user?.id && (
+                                <span style={{ fontSize: '0.62rem', padding: '1px 5px', borderRadius: '4px', background: 'rgba(59,130,246,0.2)', border: '1px solid #3b82f6', color: '#93c5fd' }}>
+                                  Você
+                                </span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: '0.68rem', color: '#a1a1aa' }}>
+                              Entrou em: {member.joined_at ? new Date(member.joined_at).toLocaleDateString() : 'Recentemente'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Cargo & Ações */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {isCurrentUserGM && !isOwner && member.user_id !== user?.id ? (
+                            <select
+                              value={member.role}
+                              onChange={(e) => handleChangeMemberRole(member.user_id, e.target.value as any)}
+                              style={{
+                                padding: '4px 8px',
+                                background: '#120b07',
+                                border: '1px solid #5a4234',
+                                borderRadius: '6px',
+                                color: member.role === 'gm' ? '#fde047' : member.role === 'player' ? '#60a5fa' : '#c084fc',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                outline: 'none',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <option value="gm">Mestre (GM)</option>
+                              <option value="player">Jogador</option>
+                              <option value="spectator">Espectador</option>
+                            </select>
+                          ) : (
+                            <span style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              background: member.role === 'gm' ? 'rgba(234,179,8,0.15)' : member.role === 'player' ? 'rgba(59,130,246,0.15)' : 'rgba(168,85,247,0.15)',
+                              border: `1px solid ${member.role === 'gm' ? '#eab308' : member.role === 'player' ? '#3b82f6' : '#a855f7'}`,
+                              color: member.role === 'gm' ? '#fde047' : member.role === 'player' ? '#60a5fa' : '#c084fc',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}>
+                              {member.role === 'gm' ? <Crown size={11} /> : member.role === 'player' ? <Shield size={11} /> : <Eye size={11} />}
+                              {member.role === 'gm' ? 'Mestre' : member.role === 'player' ? 'Jogador' : 'Espectador'}
+                            </span>
+                          )}
+
+                          {isCurrentUserGM && !isOwner && member.user_id !== user?.id && (
+                            <button
+                              onClick={() => handleRemoveMember(member.user_id, displayName)}
+                              title="Remover da mesa"
+                              style={{
+                                padding: '5px',
+                                background: 'rgba(239,68,68,0.1)',
+                                border: '1px solid rgba(239,68,68,0.3)',
+                                borderRadius: '6px',
+                                color: '#f87171',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <UserMinus size={13} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : isCreating ? (
+          /* Formulário de Criação / Edição */
+          <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', color: '#c49a6c', fontWeight: 700 }}>
+              {editingId ? 'Editar Dados da Mesa' : 'Nova Campanha de RPG'}
+            </h3>
+
+            {/* Nome & Sistema */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
@@ -298,34 +601,35 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Ex: A Maldição de Strahd"
+                  placeholder="Ex: A Cripta do Rei Esquecido"
                   style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
-                  Sistema de RPG
+                  Sistema de Regras
                 </label>
                 <input
                   value={system}
                   onChange={e => setSystem(e.target.value)}
-                  placeholder="Ex: D&D 5e, Call of Cthulhu, Tormenta20"
+                  placeholder="Ex: D&D 5e, Tormenta20, CoC 7e, Fate"
                   style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', boxSizing: 'border-box' }}
                 />
               </div>
             </div>
 
+            {/* Descrição / Sinopse */}
             <div>
               <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#d7c9b8', marginBottom: '4px' }}>
-                Sinopse / Descrição Curta
+                Sinopse / Notas para os Jogadores
               </label>
               <textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                placeholder="Breve resumo da aventura ou premissa..."
-                rows={2}
-                style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', resize: 'none', boxSizing: 'border-box' }}
+                placeholder="Breve resumo da aventura, premissa inicial e avisos..."
+                rows={3}
+                style={{ width: '100%', padding: '8px 12px', background: '#120b07', border: '1px solid #5a4234', borderRadius: '8px', color: '#fff', fontSize: '0.82rem', resize: 'vertical', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -538,11 +842,37 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
                         {camp.description || 'Sem descrição definida.'}
                       </p>
 
-                      {camp.wiki_path && (
+                      {localStorage.getItem(`dozero_wiki_path_${camp.room_code}`) && (
                         <div style={{ fontSize: '0.65rem', color: '#c49a6c', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                          <Folder size={11} /> {camp.wiki_path}
+                          <Folder size={11} /> {localStorage.getItem(`dozero_wiki_path_${camp.room_code}`)}
                         </div>
                       )}
+
+                      {/* Botão de Membros & Participantes */}
+                      <div style={{ marginTop: '4px' }}>
+                        <button
+                          onClick={(e) => handleOpenMembers(camp, e)}
+                          title="Ver e gerenciar participantes desta campanha"
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            padding: '4px 8px',
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid #4a3528',
+                            borderRadius: '6px',
+                            color: '#d7c9b8',
+                            fontSize: '0.68rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Users size={12} color="#c49a6c" />
+                          <span>Participantes & Membros</span>
+                        </button>
+                      </div>
 
                       {/* Rodapé do Card com Ações */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #3b281d' }}>
@@ -553,7 +883,7 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose }) => {
                             style={{ padding: '5px 8px', borderRadius: '6px', background: 'rgba(164,104,48,0.25)', border: '1px solid #c49a6c', color: copiedId === `${camp.id}_vercel` ? '#86efac' : '#fde047', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.68rem', fontWeight: 700 }}
                           >
                             <Globe size={12} />
-                            {copiedId === `${camp.id}_vercel` ? 'Copiado!' : 'Link Vercel'}
+                            {copiedId === `${camp.id}_vercel` ? 'Copiado!' : 'Link'}
                           </button>
                           <button
                             onClick={(e) => handleOpenEdit(camp, e)}

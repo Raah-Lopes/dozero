@@ -4,6 +4,7 @@ import { state, useIsGM } from '../../store';
 import { updateGMChatConfig, getGMChatConfig, GMChatConfig } from '../../store/chat';
 import { toast } from '../UI/Toast';
 import { useAuthStore } from '../../store/authStore';
+import { formatChatAsMarkdown } from '../../services/chatCloudService';
 
 interface ChatHeaderProps {
   tab: 'geral' | 'in-game' | 'sistema';
@@ -184,6 +185,26 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             style={{ padding: '6px', background: 'transparent', color: chatSound ? 'var(--chat-accent)' : 'var(--chat-text-secondary)', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
           >
             {chatSound ? <Bell size={14} /> : <BellOff size={14} />}
+          </button>
+
+          {/* EXPORTAR CHAT EM MARKDOWN */}
+          <button
+            onClick={() => {
+              const currentRoom = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+              const md = formatChatAsMarkdown(state.chat.toArray(), currentRoom);
+              const blob = new Blob([md], { type: 'text/markdown' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `chat_log_${currentRoom}_${new Date().toISOString().slice(0, 10)}.md`;
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success('Log do chat exportado em Markdown!');
+            }}
+            title="Exportar Log do Chat (.MD)"
+            style={{ padding: '6px', background: 'transparent', color: 'var(--chat-text-secondary)', border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+          >
+            <Download size={14} />
           </button>
 
           {/* PAINEL DO MESTRE DO CHAT */}

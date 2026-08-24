@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { Swords, Users, Skull, Flame } from 'lucide-react';
+import { Swords, Users, Skull, Flame, Cloud, Plus, Play, Trash2, Shield, Save } from 'lucide-react';
 import { pushChatMessage, state } from '../../../store';
 import type { CombatParticipant } from '../../../store';
+import {
+  saveCombatEncounter,
+  getCombatEncounters,
+  deleteCombatEncounter,
+  spawnEncounterToTable,
+  CombatEncounterRecord
+} from '../../../services/encounterCloudService';
+import { toast } from '../../UI/Toast';
 
 interface EncounterWidgetProps {
   onClose?: () => void;
@@ -29,10 +37,33 @@ const modificadores = [
 ];
 
 export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose, embedded }) => {
+  const currentRoom = typeof window !== 'undefined'
+    ? (new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2')
+    : 'dozero-mesa-principal-v2';
+
+  const [activeTab, setActiveTab] = useState<'generator' | 'saved'>('generator');
   const [dificuldade, setDificuldade] = useState('Médio');
   const [faccao, setFaccao] = useState(faccoes[0]);
   const [modificador, setModificador] = useState('Aleatório');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [saveToCloudAfterGen, setSaveToCloudAfterGen] = useState(true);
+
+  // Encontros salvos na nuvem
+  const [savedEncounters, setSavedEncounters] = useState<CombatEncounterRecord[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+
+  const loadSaved = useCallback(async () => {
+    setLoadingSaved(true);
+    const list = await getCombatEncounters(currentRoom);
+    setSavedEncounters(list);
+    setLoadingSaved(false);
+  }, [currentRoom]);
+
+  useEffect(() => {
+    if (activeTab === 'saved') {
+      loadSaved();
+    }
+  }, [activeTab, loadSaved]);
 
   const gerarEncontro = () => {
     setIsGenerating(true);
@@ -184,6 +215,24 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose, embed
     
     state.combat.set('participants', combinedParticipants);
 
+    // Salvar na nuvem opcionalmente
+    if (saveToCloudAfterGen) {
+      saveCombatEncounter({
+        campaign_id: currentRoom,
+        name: `${faccao} (${dificuldade})`,
+        outcome: 'active',
+        combatants: enemiesToSpawn.map(e => ({
+          name: e.name,
+          level: e.level,
+          hp: 10 + (e.level * 12),
+          maxHp: 10 + (e.level * 12),
+          defense: 10 + e.level,
+          attack: 2 + e.level,
+          imageUrl: imageMap[faccao] || '/enemy_bandit.png'
+        }))
+      });
+    }
+
     // Imprimir Chat Log
     const html = `
       <div style="background: rgba(0,0,0,0.5); border: 2px solid #f97316; border-radius: 12px; padding: 16px; margin-top: 12px; font-family: monospace; position: relative; overflow: hidden; box-shadow: 0 0 20px rgba(249,115,22,0.2);">
@@ -214,70 +263,157 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose, embed
   };
 
   const bodyContent = (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', position: 'relative', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f97316', fontWeight: 'bold', fontSize: '1.05rem', borderBottom: '1px solid rgba(249,115,22,0.2)', paddingBottom: '10px' }}>
-        <img 
-          src="/mascot/zye-head-smile.png" 
-          alt="Zye" 
-          style={{ width: '24px', height: '24px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(249,115,22,0.4))' }} 
-        />
-        Montar Combate Rápido
+    <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', position: 'relative', boxSizing: 'border-box' }}>
+      
+      {/* Abas */}
+      <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-tertiary)', padding: '3px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+        <button
+          onClick={() => setActiveTab('generator')}
+          style={{
+            flex: 1, padding: '6px', fontSize: '0.75rem', fontWeight: 'bold',
+            background: activeTab === 'generator' ? 'var(--accent-primary)' : 'transparent',
+            color: activeTab === 'generator' ? '#fff' : 'var(--text-secondary)',
+            border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
+          }}
+        >
+          <Flame size={13} /> Gerador
+        </button>
+        <button
+          onClick={() => setActiveTab('saved')}
+          style={{
+            flex: 1, padding: '6px', fontSize: '0.75rem', fontWeight: 'bold',
+            background: activeTab === 'saved' ? 'var(--accent-primary)' : 'transparent',
+            color: activeTab === 'saved' ? '#fff' : 'var(--text-secondary)',
+            border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
+          }}
+        >
+          <Cloud size={13} /> Salvos na Nuvem
+        </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
-        
-        {/* Facção */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Users size={12} /> Tipo de Inimigo / Facção
-          </label>
-          <select value={faccao} onChange={e => setFaccao(e.target.value)} style={{ padding: '10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer', outline: 'none' }}>
-            {faccoes.map(f => <option key={f} value={f}>{f}</option>)}
-          </select>
+      {activeTab === 'generator' ? (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+            {/* Facção */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Users size={12} /> Tipo de Inimigo / Facção
+              </label>
+              <select value={faccao} onChange={e => setFaccao(e.target.value)} style={{ padding: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer', outline: 'none', fontSize: '0.8rem' }}>
+                {faccoes.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+
+            {/* Dificuldade */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Skull size={12} /> Nível de Desafio
+              </label>
+              <select value={dificuldade} onChange={e => setDificuldade(e.target.value)} style={{ padding: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer', outline: 'none', fontSize: '0.8rem' }}>
+                <option value="Fácil">Fácil (Só Capangas)</option>
+                <option value="Médio">Médio (Grupo Padrão)</option>
+                <option value="Difícil">Difícil (Bando de Elite)</option>
+                <option value="Mortal (Boss)">Mortal (Chefe Absoluto)</option>
+              </select>
+            </div>
+
+            {/* Modificador */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Flame size={12} /> Modificador de Cenário
+              </label>
+              <select value={modificador} onChange={e => setModificador(e.target.value)} style={{ padding: '8px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer', outline: 'none', fontSize: '0.8rem' }}>
+                <option value="Aleatório">🎲 Sortear Aleatório</option>
+                {modificadores.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+
+            {/* Checkbox Salvar na Nuvem */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#fde047', cursor: 'pointer', marginTop: '2px' }}>
+              <input
+                type="checkbox"
+                checked={saveToCloudAfterGen}
+                onChange={e => setSaveToCloudAfterGen(e.target.checked)}
+              />
+              Salvar cópia na nuvem da campanha
+            </label>
+          </div>
+
+          <button 
+            onClick={gerarEncontro}
+            disabled={isGenerating}
+            style={{ 
+              marginTop: 'auto', padding: '12px', background: 'var(--accent-primary)', 
+              color: '#ffffff', border: '1px solid var(--glass-border-highlight)', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', fontWeight: 'bold',
+              boxShadow: '0 4px 15px var(--accent-glow)', transition: 'all 0.2s',
+              opacity: isGenerating ? 0.7 : 1
+            }}
+          >
+            {isGenerating ? <Flame className="animate-spin" size={18} /> : <Swords size={18} />}
+            Forjar & Injetar na Mesa
+          </button>
+        </>
+      ) : (
+        /* Aba de Encontros Salvos */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto' }}>
+          {loadingSaved ? (
+            <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+              Carregando encontros da nuvem...
+            </div>
+          ) : savedEncounters.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem', border: '1px dashed var(--glass-border)', borderRadius: '10px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+              Nenhum encontro salvo na nuvem para esta mesa.
+            </div>
+          ) : (
+            savedEncounters.map(enc => (
+              <div
+                key={enc.id}
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '8px',
+                  padding: '8px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px'
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '0.82rem', color: '#fdfaf5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {enc.name}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
+                    {enc.combatants?.length || 0} combatente(s) • {enc.outcome === 'victory' ? '✅ Vitória' : enc.outcome === 'defeat' ? '💀 Derrota' : 'Ativo'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    onClick={() => spawnEncounterToTable(enc)}
+                    title="Invocar Encontro na Mesa"
+                    style={{ padding: '5px 8px', background: 'rgba(34,197,94,0.15)', border: '1px solid #22c55e', borderRadius: '6px', color: '#4ade80', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                  >
+                    <Play size={11} /> Invocar
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (enc.id && confirm(`Excluir encontro "${enc.name}" da nuvem?`)) {
+                        await deleteCombatEncounter(enc.id);
+                        loadSaved();
+                      }
+                    }}
+                    title="Excluir"
+                    style={{ padding: '5px 7px', background: 'rgba(239,68,68,0.15)', border: '1px solid #ef4444', borderRadius: '6px', color: '#f87171', cursor: 'pointer' }}
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-
-        {/* Dificuldade */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Skull size={12} /> Nível de Desafio
-          </label>
-          <select value={dificuldade} onChange={e => setDificuldade(e.target.value)} style={{ padding: '10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer', outline: 'none' }}>
-            <option value="Fácil">Fácil (Só Capangas)</option>
-            <option value="Médio">Médio (Grupo Padrão)</option>
-            <option value="Difícil">Difícil (Bando de Elite)</option>
-            <option value="Mortal (Boss)">Mortal (Chefe Absoluto)</option>
-          </select>
-        </div>
-
-        {/* Modificador */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Flame size={12} /> Modificador de Cenário
-          </label>
-          <select value={modificador} onChange={e => setModificador(e.target.value)} style={{ padding: '10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px', cursor: 'pointer', outline: 'none' }}>
-            <option value="Aleatório">🎲 Sortear Aleatório</option>
-            {modificadores.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-
-      </div>
-
-      <button 
-        onClick={gerarEncontro}
-        disabled={isGenerating}
-        style={{ 
-          marginTop: 'auto', padding: '14px', background: 'var(--accent-primary)', 
-          color: '#ffffff', border: '1px solid var(--glass-border-highlight)', borderRadius: '8px', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '15px', fontWeight: 'bold',
-          boxShadow: '0 4px 15px var(--accent-glow)', transition: 'all 0.2s',
-          opacity: isGenerating ? 0.7 : 1
-        }}
-        onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-        onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-      >
-        {isGenerating ? <Flame className="animate-spin" size={20} /> : <Swords size={20} />}
-        Forjar & Injetar no Tracker
-      </button>
+      )}
     </div>
   );
 
@@ -290,8 +426,8 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose, embed
       id="encounter-generator"
       title="Forja de Encontros" 
       onClose={onClose} 
-      width={360}
-      height={400}
+      width={380}
+      height={420}
       initialX={window.innerWidth / 2 + 150} 
       initialY={100}
       dragAnywhere={false}

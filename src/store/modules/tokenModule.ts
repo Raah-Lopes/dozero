@@ -56,9 +56,10 @@ export interface Token {
   // Status & Effects
   status_efeitos?: string[];
   
-  // Wiki Integration
+  // Wiki & Database Integration
   wikiPath?: string;
   caminhoArquivo?: string;
+  characterId?: string; // ID do personagem no Supabase / Player Vault
   
   // Ownership & Permissions
   ownerId?: string;

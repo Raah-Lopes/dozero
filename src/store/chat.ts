@@ -32,15 +32,24 @@ export interface PollData {
   isAnonymous: boolean;
 }
 
+import { saveChatMessageToCloud } from '../services/chatCloudService';
+
+const getActiveRoomCode = () => {
+  if (typeof window === 'undefined') return 'dozero-mesa-principal-v2';
+  return new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+};
+
 export function pushChatMessage(message: string, isCritical: boolean = false, isFailure: boolean = false) {
   const cleanMsg = sanitizeHtml(message);
-  state.chat.push([{ id: Math.random().toString(36).substring(2), text: cleanMsg, isCritical, isFailure, timestamp: Date.now(), tipo: 'sistema' }]);
+  const msgObj = { id: Math.random().toString(36).substring(2), text: cleanMsg, isCritical, isFailure, timestamp: Date.now(), tipo: 'sistema' };
+  state.chat.push([msgObj]);
   dispatchWebhookEvent('chat_message', { text: cleanMsg, isCritical, isFailure, tipo: 'sistema' });
+  saveChatMessageToCloud(getActiveRoomCode(), msgObj);
 }
 
 export function pushAdvancedChatMessage(message: string, options: ChatMessageOptions) {
   const cleanMsg = sanitizeHtml(message);
-  state.chat.push([{
+  const msgObj = {
     id: Math.random().toString(36).substring(2),
     text: cleanMsg,
     timestamp: Date.now(),
@@ -56,7 +65,8 @@ export function pushAdvancedChatMessage(message: string, options: ChatMessageOpt
     audioTrigger: options.audioTrigger,
     pollId: options.pollId,
     reactions: options.reactions || {}
-  }]);
+  };
+  state.chat.push([msgObj]);
   
   dispatchWebhookEvent('chat_message_advanced', {
     text: cleanMsg,
@@ -65,6 +75,7 @@ export function pushAdvancedChatMessage(message: string, options: ChatMessageOpt
     isCritical: options.isCritical || false,
     isFailure: options.isFailure || false
   });
+  saveChatMessageToCloud(getActiveRoomCode(), msgObj);
 }
 
 export function toggleMessageReaction(messageId: string, emoji: string, playerName: string) {

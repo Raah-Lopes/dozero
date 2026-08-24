@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, RefreshCw, Key, Link as LinkIcon, QrCode, Network, Database, Trash2, Globe, Sparkles, ExternalLink, Folder, Eye, EyeOff, Lock, Unlock, Upload, Save } from 'lucide-react';
+import { Copy, RefreshCw, Key, Link as LinkIcon, QrCode, Network, Database, Trash2, Globe, Sparkles, ExternalLink, Folder, Eye, EyeOff, Lock, Unlock, Upload, Save, History, Download, FileUp, ShieldAlert } from 'lucide-react';
 import { toast } from '../../UI/Toast';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { useWindowManager } from '../../../hooks/useWindowManager';
@@ -8,6 +8,12 @@ import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 import { createOrUpdateCampaign, getCampaigns, CampaignCloudRecord } from '../../../services/campaignCloudService';
 import { useAuthStore } from '../../../store/authStore';
 import { navigateToRoom, getVercelRoomUrl, getRoomUrl } from '../../../utils/roomUrl';
+import { 
+  createManualSnapshot, 
+  restoreCloudSnapshot, 
+  exportSnapshotToFile, 
+  importSnapshotFromFile 
+} from '../../../services/sessionSnapshotManager';
 
 interface RoomManagerWidgetProps {
   onClose?: () => void;
@@ -41,27 +47,31 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
       const found = list.find(c => c.room_code === currentRoom);
       if (found) {
         if (found.name) setRoomNameTitle(found.name);
-        if (found.wiki_path) setWikiPath(found.wiki_path);
         if (found.cover_url) setCoverUrl(found.cover_url);
         if (found.is_public !== undefined) setIsPublic(found.is_public);
         if (found.is_closed !== undefined) setIsClosed(found.is_closed);
       }
+      // wikiPath é local — lê do localStorage isolado por sala
+      const localWiki = localStorage.getItem(`dozero_wiki_path_${currentRoom}`);
+      if (localWiki) setWikiPath(localWiki);
     });
   }, [currentRoom, user?.id]);
 
   const handleSaveRoomSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // 1. Atualiza repositório da Wiki
+      // 1. Atualiza repositório da Wiki localmente
       updateWikiConfig({ repoUrl: wikiPath.trim() });
       WikiIndexer.clearCache();
+      if (wikiPath.trim()) {
+        localStorage.setItem(`dozero_wiki_path_${currentRoom}`, wikiPath.trim());
+      }
 
-      // 2. Atualiza registro da mesa no cache cloud/local
+      // 2. Atualiza registro da mesa no cache cloud/local (sem wikiPath local)
       await createOrUpdateCampaign({
         room_code: currentRoom,
         name: roomNameTitle.trim() || currentRoom,
         pass_code: currentPass,
-        wiki_path: wikiPath.trim(),
         cover_url: coverUrl.trim(),
         is_public: isPublic,
         is_closed: isClosed
@@ -113,6 +123,35 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
       window.indexedDB.deleteDatabase(roomNameToDelete);
       setLocalRooms(prev => prev.filter(r => r !== roomNameToDelete));
       toast.success(`Sala "${roomNameToDelete}" removida do PC.`);
+    }
+  };
+
+  const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
+  const [isRestoringSnapshot, setIsRestoringSnapshot] = useState(false);
+
+  const handleCreateSnapshot = async () => {
+    setIsSavingSnapshot(true);
+    await createManualSnapshot(currentRoom, user?.id);
+    setIsSavingSnapshot(false);
+  };
+
+  const handleRestoreSnapshot = async () => {
+    if (confirm('Atenção: Restaurar a mesa substituirá os tokens, desenhos e combate atuais pelo último ponto salvo na nuvem. Deseja continuar?')) {
+      setIsRestoringSnapshot(true);
+      await restoreCloudSnapshot(currentRoom);
+      setIsRestoringSnapshot(false);
+    }
+  };
+
+  const handleExportJSON = () => {
+    exportSnapshotToFile(currentRoom, user?.id);
+  };
+
+  const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (confirm(`Restaurar mesa a partir do arquivo de backup "${file.name}"?`)) {
+      await importSnapshotFromFile(file);
     }
   };
 
@@ -294,7 +333,109 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
         )}
       </div>
 
-      {/* 4. Fast Room Switcher */}
+      {/* 4. Snapshots & Ponto de Restauração da Mesa */}
+      <div className="glass-panel" style={{ padding: '16px', borderRadius: '12px' }}>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', color: '#fde047' }}>
+          <History size={18} color="#fde047" />
+          Snapshots & Ponto de Restauração
+        </h3>
+        <p style={{ margin: '0 0 12px 0', fontSize: '0.72rem', color: '#a1a1aa' }}>
+          Grave o estado consolidado da mesa (tokens, cenários, combate e desenhos) ou restaure a qualquer momento.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+          <button
+            type="button"
+            onClick={handleCreateSnapshot}
+            disabled={isSavingSnapshot}
+            style={{
+              padding: '8px 12px',
+              background: 'rgba(34,197,94,0.15)',
+              border: '1px solid #22c55e',
+              borderRadius: '8px',
+              color: '#4ade80',
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <Save size={14} />
+            {isSavingSnapshot ? 'Salvando...' : 'Salvar Snapshot'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleRestoreSnapshot}
+            disabled={isRestoringSnapshot}
+            style={{
+              padding: '8px 12px',
+              background: 'rgba(234,179,8,0.15)',
+              border: '1px solid #eab308',
+              borderRadius: '8px',
+              color: '#fde047',
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <History size={14} />
+            {isRestoringSnapshot ? 'Restaurando...' : 'Restaurar Nuvem'}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px' }}>
+          <button
+            type="button"
+            onClick={handleExportJSON}
+            style={{
+              flex: 1,
+              padding: '6px 10px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid #5a4234',
+              borderRadius: '8px',
+              color: '#d7c9b8',
+              fontSize: '0.72rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px'
+            }}
+          >
+            <Download size={13} /> Exportar .JSON
+          </button>
+
+          <label
+            style={{
+              flex: 1,
+              padding: '6px 10px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid #5a4234',
+              borderRadius: '8px',
+              color: '#d7c9b8',
+              fontSize: '0.72rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px'
+            }}
+          >
+            <FileUp size={13} /> Importar .JSON
+            <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
+          </label>
+        </div>
+      </div>
+
+      {/* 5. Fast Room Switcher */}
       <div className="glass-panel" style={{ padding: '16px', borderRadius: '12px' }}>
         <h3 style={{ margin: '0 0 10px 0', fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', color: '#fdfaf5' }}>
           <LinkIcon size={18} className="theme-green" />
