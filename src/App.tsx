@@ -55,6 +55,7 @@ import { CampaignLobbyModal } from './components/Modals/CampaignLobbyModal';
 import { PlayerVaultModal } from './components/Modals/PlayerVaultModal';
 import { TokenConfigModal } from './components/Modals/TokenConfigModal';
 import { VoiceChatBar } from './components/Widgets/System/VoiceChatBar';
+import { StreamOverlay } from './components/Stream/StreamOverlay';
 import { useAutoSaveSession } from './services/useAutoSaveSession';
 import { useRoomPresence } from './services/useRoomPresence';
 import { useAuthStore } from './store/authStore';
@@ -132,6 +133,12 @@ function App() {
   // ===== STANDALONE WIDGET MODE (MULTI-MONITOR POP-OUT) ===== //
   if (standaloneWidget) {
     return <PopoutViewer widgetId={standaloneWidget} />;
+  }
+
+  // ===== STREAM OVERLAY MODE (OBS / LIVE BROADCAST) ===== //
+  const isStreamMode = urlParams.get('mode') === 'stream' || urlParams.get('mode') === 'spectator';
+  if (isStreamMode) {
+    return <StreamOverlay roomCode={currentRoom} />;
   }
 
   return (

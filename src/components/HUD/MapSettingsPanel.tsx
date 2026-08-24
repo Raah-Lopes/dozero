@@ -214,6 +214,10 @@ export const MapSettingsPanel: React.FC = () => {
     const bgs = Array.from(state.backgrounds.values()) as BackgroundData[];
     const mapCfg = Config.getMapConfig();
     const fogCfg = Config.getFogConfig();
+    const fogOps = Array.from(state.fogOps.values());
+    const drawings = Array.from(state.drawings.values());
+    const currentMusic = state.audio.get('music') as any;
+    const currentAmbience = state.audio.get('ambience') as any;
 
     const saved = await saveSceneToCloud({
       campaign_id: currentRoom,
@@ -221,6 +225,12 @@ export const MapSettingsPanel: React.FC = () => {
       backgrounds: bgs,
       grid_config: mapCfg,
       fog_config: fogCfg,
+      fog_ops: fogOps,
+      drawings: drawings,
+      audio_config: {
+        musicUrl: currentMusic?.url || undefined,
+        ambienceUrl: currentAmbience?.url || undefined
+      },
       thumbnail_url: bgs[0]?.url || null
     });
 

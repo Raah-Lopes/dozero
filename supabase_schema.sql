@@ -276,6 +276,9 @@ create table if not exists public.scenes (
   backgrounds jsonb default '[]'::jsonb,
   grid_config jsonb default '{}'::jsonb,
   fog_config jsonb default '{}'::jsonb,
+  audio_config jsonb default '{}'::jsonb,
+  fog_ops jsonb default '[]'::jsonb,
+  drawings jsonb default '[]'::jsonb,
   props jsonb default '[]'::jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now()

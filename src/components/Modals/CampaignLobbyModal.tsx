@@ -25,7 +25,10 @@ import {
   ArrowLeft,
   Crown,
   UserMinus,
-  UserPlus
+  UserPlus,
+  Package,
+  Download,
+  Archive
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { 
@@ -39,6 +42,7 @@ import {
   CampaignCloudRecord, 
   CampaignMemberRecord 
 } from '../../services/campaignCloudService';
+import { exportAdventureBundle, importAdventureBundle } from '../../services/adventureBundleService';
 import { updateWikiConfig } from '../../store/wiki';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { toast } from '../UI/Toast';
@@ -357,6 +361,42 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
                 <Shield size={15} /> Vault
               </button>
             )}
+
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '9px 14px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid #5a4234',
+                borderRadius: '12px',
+                color: '#d7c9b8',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Package size={15} color="#c49a6c" /> Importar Pacote
+              <input
+                type="file"
+                accept=".dozero,.json"
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const defaultName = file.name.replace(/\.[^/.]+$/, '');
+                    const room = prompt('Digite o código da sala de destino para importar este pacote:', defaultName.toLowerCase().replace(/[^a-z0-9_-]/g, '-'));
+                    if (room) {
+                      await importAdventureBundle(file, room, user?.id);
+                      loadList();
+                    }
+                  }
+                  e.target.value = '';
+                }}
+              />
+            </label>
 
             <button
               onClick={handleOpenCreate}
@@ -891,6 +931,16 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
                             style={{ padding: '5px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', border: '1px solid #5a4234', color: '#d7c9b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <Folder size={13} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              exportAdventureBundle(camp.room_code, camp.name, user?.id);
+                            }}
+                            title="Exportar Pacote de Aventura (.dozero)"
+                            style={{ padding: '5px', borderRadius: '6px', background: 'rgba(196,154,108,0.15)', border: '1px solid #c49a6c', color: '#c49a6c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Download size={13} />
                           </button>
                           <button
                             onClick={(e) => handleDelete(camp.id, camp.name, e)}

@@ -6,6 +6,8 @@ import { Pin, X, Terminal } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { saveImageToCloud } from '../../utils/githubApi';
 import { toast } from '../UI/Toast';
+import { parseAndRollDice, triggerDiceOverlay } from '../../utils/diceParser';
+import { generateSessionChronicle, publishChronicleToChat } from '../../services/sessionChronicleService';
 
 // Components
 import { ChatHeader } from './ChatHeader';
@@ -121,6 +123,10 @@ export const ChatWindow: React.FC = () => {
       options.alvo = parts[0];
       text = parts.slice(1).join(' ');
       options.tipo = 'whisper';
+    } else if (text.startsWith('/gm ')) {
+      options.alvo = 'GM';
+      text = text.substring(4);
+      options.tipo = 'whisper';
     } else if (text.startsWith('/me ')) {
       text = text.substring(4);
       options.tipo = 'me';
@@ -132,15 +138,42 @@ export const ChatWindow: React.FC = () => {
       }
     } else if (text.startsWith('/roll ') || text.startsWith('/r ')) {
       const expr = text.replace(/^\/(roll|r)\s+/, '');
-      text = `Rolou: ${expr} = ${Math.floor(Math.random() * 20) + 1}`;
+      const result = parseAndRollDice(expr);
+      triggerDiceOverlay(`Rolagem: ${expr}`, result.total, result.isCriticalSuccess ? 'heal' : result.isCriticalFailure ? 'attack' : 'utility');
+      const critBadge = result.isCriticalSuccess ? '<span style="color:#4ade80; font-weight:bold;"> [CRÍTICO 🌟]</span>' : result.isCriticalFailure ? '<span style="color:#f87171; font-weight:bold;"> [FALHA CRÍTICA 💀]</span>' : '';
+      text = `🎲 <b>${playerName}</b> rolou <code>${expr}</code>: <b>${result.breakdown}</b>${critBadge}`;
       options.tipo = 'in-game';
+    } else if (text.startsWith('/cronica') || text.startsWith('/recap')) {
+      const room = typeof window !== 'undefined'
+        ? (new URLSearchParams(window.location.search).get('room') || 'default-room')
+        : 'default-room';
+      generateSessionChronicle(room).then(({ markdown }) => {
+        publishChronicleToChat(markdown);
+      });
+      setInput('');
+      return;
+    } else if (text.startsWith('/descanso')) {
+      const isLongo = text.includes('longo');
+      let healedCount = 0;
+      state.tokens.forEach((token, id) => {
+        if (token.status === 'player' || token.status === 'hero') {
+          const maxHp = token.maxHp || token.hp || 20;
+          const healAmount = isLongo ? maxHp : Math.ceil(maxHp / 2);
+          const newHp = Math.min(maxHp, (token.hp || 0) + healAmount);
+          state.tokens.set(id, { ...token, hp: newHp });
+          healedCount++;
+        }
+      });
+      pushAdvancedChatMessage(`⛺ <b>Descanso ${isLongo ? 'Longo' : 'Curto'}:</b> ${healedCount} personagem(ns) recuperaram pontos de vida!`, { tipo: 'sistema', autor: 'Sistema' });
+      setInput('');
+      return;
     } else if (text.startsWith('/play ')) {
       options.audioTrigger = text.replace('/play ', '');
       text = `[Tocando som: ${options.audioTrigger}]`;
     } else if (text.startsWith('/pin ')) {
       options.pinned = true;
       text = text.replace('/pin ', '');
-    } else if (text.startsWith('/clear')) {
+    } else if (text.startsWith('/clear') || text.startsWith('/limpar')) {
       if (state.chat.length > 0) {
         state.chat.delete(0, state.chat.length);
       }

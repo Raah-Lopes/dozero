@@ -14,6 +14,12 @@ export interface SceneRecord {
   backgrounds: BackgroundData[];
   grid_config?: Partial<MapConfig>;
   fog_config?: Partial<FogConfig>;
+  audio_config?: {
+    musicUrl?: string;
+    ambienceUrl?: string;
+  };
+  fog_ops?: any[];
+  drawings?: any[];
   props?: any[];
   created_at?: string;
   updated_at?: string;
@@ -36,6 +42,9 @@ export async function saveSceneToCloud(scene: SceneRecord): Promise<SceneRecord 
       backgrounds: scene.backgrounds || [],
       grid_config: scene.grid_config || {},
       fog_config: scene.fog_config || {},
+      audio_config: scene.audio_config || {},
+      fog_ops: scene.fog_ops || [],
+      drawings: scene.drawings || [],
       props: scene.props || [],
       updated_at: new Date().toISOString()
     };
@@ -133,6 +142,38 @@ export function applySceneToTable(scene: SceneRecord) {
     // 3. Aplica Fog Config se presente
     if (scene.fog_config) {
       Config.setFogConfig(scene.fog_config);
+    }
+
+    // 4. Aplica Operações de Névoa de Guerra (Fog of War) salvas
+    if (scene.fog_ops && Array.isArray(scene.fog_ops)) {
+      state.fogOps.clear();
+      scene.fog_ops.forEach((op: any) => {
+        if (op.id) state.fogOps.set(op.id, op);
+      });
+    }
+
+    // 5. Aplica Desenhos do Mapa (Drawings) salvos
+    if (scene.drawings && Array.isArray(scene.drawings)) {
+      state.drawings.clear();
+      scene.drawings.forEach((drawing: any) => {
+        if (drawing.id) state.drawings.set(drawing.id, drawing);
+      });
+    }
+
+    // 6. Aplica Trilha Sonora / Soundscape da cena se configurado
+    if (scene.audio_config?.musicUrl) {
+      state.audio.set('music', {
+        url: scene.audio_config.musicUrl,
+        isPlaying: true,
+        ts: Date.now()
+      });
+    }
+    if (scene.audio_config?.ambienceUrl) {
+      state.audio.set('ambience', {
+        url: scene.audio_config.ambienceUrl,
+        isPlaying: true,
+        ts: Date.now()
+      });
     }
 
     pushChatMessage(

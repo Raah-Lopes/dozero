@@ -4,6 +4,7 @@ import { state } from '../../store';
 import { Trash2, Download, Settings, Filter, Dices, Sword, BookOpen, MessageSquare, FileText, Code, Search, X } from 'lucide-react';
 import { toast } from '../UI/Toast';
 import { confirmDialog } from '../UI/Toast';
+import { generateSessionChronicle, downloadChronicleMarkdown } from '../../services/sessionChronicleService';
 
 interface LogMessage {
   text: string;
@@ -229,6 +230,20 @@ export const CombatLog: React.FC = () => {
               </button>
               <button onClick={() => { handleExport('json'); setShowMenu(false); }} style={{ padding: '4px 6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#e2e8f0', fontSize: '0.7rem', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Code size={12} /> JSON (.json)
+              </button>
+              <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2px 0' }} />
+              <button
+                onClick={async () => {
+                  setShowMenu(false);
+                  const room = typeof window !== 'undefined'
+                    ? (new URLSearchParams(window.location.search).get('room') || 'default-room')
+                    : 'default-room';
+                  const { markdown } = await generateSessionChronicle(room);
+                  downloadChronicleMarkdown(markdown, `Cronica_${room}_${new Date().toISOString().slice(0,10)}.md`);
+                }}
+                style={{ padding: '4px 6px', background: 'rgba(234,179,8,0.15)', border: '1px solid #eab308', borderRadius: '4px', color: '#fde047', fontSize: '0.7rem', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}
+              >
+                <FileText size={12} /> 📜 Crônica (.md)
               </button>
               <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2px 0' }} />
               <button onClick={() => { handleClear(); setShowMenu(false); }} style={{ padding: '4px 6px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '4px', color: '#fca5a5', fontSize: '0.7rem', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>

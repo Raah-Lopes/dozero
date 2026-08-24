@@ -5,7 +5,8 @@ import { toast } from '../components/UI/Toast';
 export interface TableSnapshot {
   tokens?: Record<string, any>;
   backgrounds?: Record<string, any>;
-  drawings?: any[];
+  drawings?: Record<string, any>;
+  fogOps?: Record<string, any>;
   clocks?: Record<string, any>;
   grid?: Record<string, any>;
   combat?: Record<string, any>;
@@ -23,8 +24,9 @@ export function captureCurrentTableSnapshot(roomCode: string, userId?: string | 
     tokens: state.tokens.toJSON(),
     backgrounds: state.backgrounds.toJSON(),
     drawings: state.drawings.toJSON(),
+    fogOps: state.fogOps.toJSON(),
     clocks: state.clocks.toJSON(),
-    grid: state.grid.toJSON(),
+    grid: state.mapConfig.toJSON(),
     combat: state.combat.toJSON(),
     theater: state.theater.toJSON(),
     savedAt: new Date().toISOString(),
@@ -42,11 +44,9 @@ export function applyTableSnapshot(snapshot: TableSnapshot): boolean {
   doc.transact(() => {
     // 1. Tokens
     if (snapshot.tokens && typeof snapshot.tokens === 'object') {
-      // Limpa tokens antigos que não estão no snapshot
       Array.from(state.tokens.keys()).forEach(k => {
         if (!snapshot.tokens![k]) state.tokens.delete(k);
       });
-      // Insere/atualiza tokens do snapshot
       Object.entries(snapshot.tokens).forEach(([k, v]) => {
         state.tokens.set(k, v);
       });
@@ -63,12 +63,26 @@ export function applyTableSnapshot(snapshot: TableSnapshot): boolean {
     }
 
     // 3. Drawings
-    if (Array.isArray(snapshot.drawings)) {
-      state.drawings.delete(0, state.drawings.length);
-      state.drawings.push(snapshot.drawings);
+    if (snapshot.drawings && typeof snapshot.drawings === 'object') {
+      Array.from(state.drawings.keys()).forEach(k => {
+        if (!snapshot.drawings![k]) state.drawings.delete(k);
+      });
+      Object.entries(snapshot.drawings).forEach(([k, v]) => {
+        state.drawings.set(k, v);
+      });
     }
 
-    // 4. Clocks
+    // 4. FogOps
+    if (snapshot.fogOps && typeof snapshot.fogOps === 'object') {
+      Array.from(state.fogOps.keys()).forEach(k => {
+        if (!snapshot.fogOps![k]) state.fogOps.delete(k);
+      });
+      Object.entries(snapshot.fogOps).forEach(([k, v]) => {
+        state.fogOps.set(k, v);
+      });
+    }
+
+    // 5. Clocks
     if (snapshot.clocks && typeof snapshot.clocks === 'object') {
       Array.from(state.clocks.keys()).forEach(k => {
         if (!snapshot.clocks![k]) state.clocks.delete(k);
@@ -78,14 +92,14 @@ export function applyTableSnapshot(snapshot: TableSnapshot): boolean {
       });
     }
 
-    // 5. Grid
+    // 6. Grid / MapConfig
     if (snapshot.grid && typeof snapshot.grid === 'object') {
       Object.entries(snapshot.grid).forEach(([k, v]) => {
-        state.grid.set(k, v);
+        state.mapConfig.set(k, v);
       });
     }
 
-    // 6. Combat
+    // 7. Combat
     if (snapshot.combat && typeof snapshot.combat === 'object') {
       Object.entries(snapshot.combat).forEach(([k, v]) => {
         state.combat.set(k, v);

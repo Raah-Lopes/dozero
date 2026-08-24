@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { 
   Users, Copy, Check, QrCode, Globe, RefreshCw, 
   ExternalLink, Link as LinkIcon, Wifi, 
-  Lock, Unlock, Dices, Compass, Folder, Save, X, Eye, EyeOff
+  Lock, Unlock, Dices, Compass, Folder, Save, X, Eye, EyeOff, Radio, Tv
 } from 'lucide-react';
 import { state } from '../../services/yjs';
 import { Tokens } from '../../store/modules/tokenModule';
@@ -109,6 +109,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
   // URLs de convite
   const vercelLink = getVercelRoomUrl(currentRoom);
   const inviteLanLink = getRoomUrl(currentRoom);
+  const streamLink = `${vercelLink}&mode=stream`;
+  const [copiedStream, setCopiedStream] = useState(false);
 
   const handleCopyVercel = () => {
     navigator.clipboard.writeText(vercelLink);
@@ -122,6 +124,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
     setCopiedLan(true);
     toast.success('Link de Rede Local copiado!');
     setTimeout(() => setCopiedLan(false), 2500);
+  };
+
+  const handleCopyStream = () => {
+    navigator.clipboard.writeText(streamLink);
+    setCopiedStream(true);
+    toast.success('Link de Transmissão (OBS / Stream) copiado!');
+    setTimeout(() => setCopiedStream(false), 2500);
   };
 
   // Acoes de GM para jogadores
@@ -547,6 +556,65 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                   >
                     {copiedLan ? <Check size={15} /> : <Copy size={15} />}
                     {copiedLan ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Stream / OBS Studio Section */}
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.08)',
+                padding: '16px',
+                borderRadius: '14px',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Radio size={16} color="#ef4444" className="animate-pulse" />
+                  <div>
+                    <h3 style={{ margin: 0, color: '#fca5a5', fontSize: '0.9rem', fontWeight: 700 }}>
+                      Modo Transmissão (OBS Studio / Twitch / YouTube / TV)
+                    </h3>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      Visualização limpa sem menus nem botões da HUD. Ideal para Browser Source do OBS ou TV na mesa.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    readOnly
+                    value={streamLink}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--glass-border)',
+                      color: 'var(--text-primary)',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem'
+                    }}
+                  />
+                  <button
+                    onClick={handleCopyStream}
+                    style={{
+                      padding: '8px 14px',
+                      background: copiedStream ? 'var(--success)' : '#ef4444',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {copiedStream ? <Check size={15} /> : <Copy size={15} />}
+                    {copiedStream ? 'Copiado!' : 'Copiar Stream'}
                   </button>
                 </div>
               </div>
