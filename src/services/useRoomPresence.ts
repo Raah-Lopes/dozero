@@ -28,16 +28,6 @@ export function useRoomPresence(roomCode: string) {
         const count = Object.keys(presenceState).length;
         const total = Math.max(1, count);
         setOnlineCount(total);
-
-        // Se o usuário atual for autenticado, atualiza a contagem na tabela campaigns
-        if (user?.id) {
-          supabase
-            .from('campaigns')
-            .update({ active_players_count: total })
-            .eq('room_code', roomCode)
-            .then(() => {})
-            .catch(() => {});
-        }
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {

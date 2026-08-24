@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      // 1. Escuta mudanças de auth em tempo real
+      // 1. Escuta mudanças de auth em tempo real (já emite INITIAL_SESSION)
       supabase.auth.onAuthStateChange((event, session) => {
         set({ session, user: session?.user ?? null, loading: false });
         if (session?.user?.id) {
@@ -64,17 +64,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ isResetPasswordModalOpen: true });
         }
       });
-
-      // 2. Obtém a sessão inicial
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        set({ session, user: session.user ?? null, loading: false });
-        if (session.user?.id) {
-          get().loadPreferences();
-        }
-      } else {
-        set({ loading: false });
-      }
     } catch (err) {
       console.error('Erro ao inicializar Supabase Auth:', err);
       set({ loading: false });
