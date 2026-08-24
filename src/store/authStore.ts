@@ -27,6 +27,9 @@ interface AuthState {
 
 let isAuthInitialized = false;
 
+let inflightLoadPreferences: Promise<void> | null = null;
+let lastLoadedUserId: string | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
@@ -81,20 +84,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!isSupabaseConfigured) return;
     const currentUser = get().user;
     if (!currentUser?.id) return;
+    if (inflightLoadPreferences) return inflightLoadPreferences;
+    if (currentUser.id === lastLoadedUserId && Object.keys(get().preferences).length > 0) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('preferences')
-        .eq('id', currentUser.id)
-        .maybeSingle();
+    inflightLoadPreferences = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('preferences')
+          .eq('id', currentUser.id)
+          .maybeSingle();
 
-      if (!error && data?.preferences) {
-        set({ preferences: data.preferences });
+        if (!error && data?.preferences) {
+          lastLoadedUserId = currentUser.id;
+          set({ preferences: data.preferences });
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar preferências de perfil:', e);
+      } finally {
+        inflightLoadPreferences = null;
       }
-    } catch (e) {
-      console.warn('Erro ao carregar preferências de perfil:', e);
-    }
+    })();
+
+    return inflightLoadPreferences;
   },
   updatePreferences: async (newPrefs) => {
     const merged = { ...get().preferences, ...newPrefs };

@@ -32,6 +32,10 @@ export function getLobbyStats(campaigns: CampaignCloudRecord[]) {
   };
 }
 
+let inflightGetCampaigns: Promise<CampaignCloudRecord[]> | null = null;
+let lastGetCampaignsTime = 0;
+let cachedCampaignsList: CampaignCloudRecord[] | null = null;
+
 /**
  * Carrega campanhas com estratégia de Cache Local (Local-First) + Sincronização direta com Supabase Postgres
  * Evita carregar campos pesados (como snapshot da mesa) no lobby.
@@ -49,44 +53,61 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
     return localList;
   }
 
-  try {
-    // Busca apenas as colunas necessárias para o Lobby (otimização de payload)
-    const { data: tableData, error } = await supabase
-      .from('campaigns')
-      .select('id, name, system, description, cover_url, room_code, is_public, is_closed, active_players_count, owner_id, created_at, updated_at, last_played_at')
-      .order('updated_at', { ascending: false });
-
-    if (error) {
-      console.warn('[CampaignCloud] Erro ao buscar campanhas do banco:', error.message);
-      return localList.length > 0 ? localList : getDefaultDemoCampaigns();
-    }
-
-    if (tableData && tableData.length > 0) {
-      const cloudCampaigns: CampaignCloudRecord[] = tableData.map((row: any) => ({
-        id: row.id,
-        name: row.name,
-        system: row.system,
-        description: row.description,
-        cover_url: row.cover_url,
-        room_code: row.room_code,
-        is_public: row.is_public,
-        is_closed: row.is_closed,
-        active_players_count: row.active_players_count || 1,
-        owner_id: row.owner_id,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        last_played_at: row.last_played_at
-      }));
-
-      localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(cloudCampaigns));
-      return cloudCampaigns;
-    }
-
-    return localList;
-  } catch (e) {
-    console.warn('[CampaignCloud] Falha na rede, usando cache local:', e);
-    return localList;
+  // Deduplicação de chamadas simultâneas
+  const now = Date.now();
+  if (cachedCampaignsList && now - lastGetCampaignsTime < 3000) {
+    return cachedCampaignsList;
   }
+  if (inflightGetCampaigns) {
+    return inflightGetCampaigns;
+  }
+
+  inflightGetCampaigns = (async () => {
+    try {
+      // Busca apenas as colunas necessárias para o Lobby (otimização de payload)
+      const { data: tableData, error } = await supabase
+        .from('campaigns')
+        .select('id, name, system, description, cover_url, room_code, is_public, is_closed, active_players_count, owner_id, created_at, updated_at, last_played_at')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.warn('[CampaignCloud] Erro ao buscar campanhas do banco:', error.message);
+        return localList.length > 0 ? localList : getDefaultDemoCampaigns();
+      }
+
+      if (tableData && tableData.length > 0) {
+        const cloudCampaigns: CampaignCloudRecord[] = tableData.map((row: any) => ({
+          id: row.id,
+          name: row.name,
+          system: row.system,
+          description: row.description,
+          cover_url: row.cover_url,
+          room_code: row.room_code,
+          is_public: row.is_public,
+          is_closed: row.is_closed,
+          active_players_count: row.active_players_count || 1,
+          owner_id: row.owner_id,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          last_played_at: row.last_played_at
+        }));
+
+        localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(cloudCampaigns));
+        cachedCampaignsList = cloudCampaigns;
+        lastGetCampaignsTime = Date.now();
+        return cloudCampaigns;
+      }
+
+      return localList;
+    } catch (e) {
+      console.warn('[CampaignCloud] Falha na rede, usando cache local:', e);
+      return localList;
+    } finally {
+      inflightGetCampaigns = null;
+    }
+  })();
+
+  return inflightGetCampaigns;
 }
 
 /**

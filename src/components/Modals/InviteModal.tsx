@@ -104,7 +104,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
     };
 
     loadCampaignData();
-  }, [currentRoom, user]);
+  }, [currentRoom, user?.id]);
 
   // URLs de convite
   const vercelLink = getVercelRoomUrl(currentRoom);
