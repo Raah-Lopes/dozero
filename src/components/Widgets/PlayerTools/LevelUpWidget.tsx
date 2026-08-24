@@ -9,13 +9,11 @@ interface LevelUpWidgetProps {
 }
 
 export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, tokenData, onSave }) => {
-  if (!isOpen) return null;
-
   const [localData, setLocalData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (tokenData) {
+    if (tokenData && isOpen) {
       console.log('[LevelUpWidget] TokenData Raw:', tokenData);
       const getAttr = (keys: string[], fallback = 10) => {
         for (const k of keys) {
@@ -154,6 +152,8 @@ export const LevelUpWidget: React.FC<LevelUpWidgetProps> = ({ isOpen, onClose, t
     setIsSaving(false);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div style={{

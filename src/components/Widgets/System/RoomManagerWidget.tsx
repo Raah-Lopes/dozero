@@ -40,6 +40,8 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
   
   const [localRooms, setLocalRooms] = useState<string[]>([]);
   const [isScanning, setIsScanning] = useState(false);
+  const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
+  const [isRestoringSnapshot, setIsRestoringSnapshot] = useState(false);
 
   useEffect(() => {
     // Carrega dados da campanha atual para preencher os campos
@@ -125,9 +127,6 @@ export const RoomManagerWidget: React.FC<RoomManagerWidgetProps> = ({ onClose })
       toast.success(`Sala "${roomNameToDelete}" removida do PC.`);
     }
   };
-
-  const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
-  const [isRestoringSnapshot, setIsRestoringSnapshot] = useState(false);
 
   const handleCreateSnapshot = async () => {
     setIsSavingSnapshot(true);
