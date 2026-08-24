@@ -240,7 +240,7 @@ export async function loadSessionSnapshot(roomCode: string): Promise<any | null>
       .from('campaigns')
       .select('snapshot')
       .eq('room_code', roomCode)
-      .single();
+      .maybeSingle();
 
     if (error || !data) return null;
     return data.snapshot;
