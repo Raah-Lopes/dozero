@@ -1,16 +1,27 @@
 // intercepta requisições locais da Wiki no Vercel (Production) para servir arquivos cacheados do build
 const mdFiles = import.meta.glob('../../../wikidozero/**/*.md', { query: '?raw', import: 'default' });
+let isWikiInterceptorSetup = false;
 
 export function setupWikiInterceptor() {
+  if (typeof window === 'undefined' || isWikiInterceptorSetup) return;
+  
   if (import.meta.env.PROD) {
+    isWikiInterceptorSetup = true;
     console.log("[WikiInterceptor] Modo Vercel ativado: Servindo Wiki do cache interno.");
     const originalFetch = window.fetch;
     
-    window.fetch = async (...args) => {
-      const requestUrl = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url;
+    window.fetch = function(...args: any[]) {
+      const firstArg = args[0];
+      const requestUrl = typeof firstArg === 'string' ? firstArg : (firstArg && typeof firstArg === 'object' && 'url' in firstArg ? (firstArg as any).url : '');
+      
+      // Se não for rota da Wiki local (/api/wiki/...), passa direto pelo fetch nativo sem overhead
+      if (typeof requestUrl !== 'string' || !requestUrl.includes('/api/wiki/')) {
+        return originalFetch.apply(window, args as [RequestInfo | URL, RequestInit?]);
+      }
+
       const options = args[1];
       
-      if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/tree')) {
+      if (requestUrl.includes('/api/wiki/tree')) {
         const tree: any[] = [];
         const addedFolders = new Set<string>();
 
@@ -18,7 +29,6 @@ export function setupWikiInterceptor() {
           let cleanPath = p.replace('../../../wikidozero/', '');
           if (cleanPath.startsWith('./')) cleanPath = cleanPath.substring(2);
           
-          // Adiciona as pastas pais
           const parts = cleanPath.split('/');
           let currentFolder = '';
           for (let i = 0; i < parts.length - 1; i++) {
@@ -29,35 +39,33 @@ export function setupWikiInterceptor() {
             }
           }
           
-          // Adiciona o arquivo
           tree.push({ path: cleanPath, type: 'blob', mode: '100644', size: 1024 });
         });
         
-        return new Response(JSON.stringify({ tree }), {
+        return Promise.resolve(new Response(JSON.stringify({ tree }), {
           headers: { 'Content-Type': 'application/json' }
-        });
+        }));
       }
       
-      if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/search')) {
+      if (requestUrl.includes('/api/wiki/search')) {
         const paths = Object.keys(mdFiles).map(p => {
           let cleanPath = p.replace('../../../wikidozero/', '');
           if (cleanPath.startsWith('./')) cleanPath = cleanPath.substring(2);
           return cleanPath;
         });
-        return new Response(JSON.stringify({ results: paths }));
+        return Promise.resolve(new Response(JSON.stringify({ results: paths })));
       }
       
-      if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/ignored')) {
-        return new Response(JSON.stringify({ ignored: [] }), {
+      if (requestUrl.includes('/api/wiki/ignored')) {
+        return Promise.resolve(new Response(JSON.stringify({ ignored: [] }), {
           headers: { 'Content-Type': 'application/json' }
-        });
+        }));
       }
       
-      if (typeof requestUrl === 'string' && requestUrl.includes('/api/wiki/file')) {
+      if (requestUrl.includes('/api/wiki/file')) {
         const method = (options && options.method) ? options.method.toUpperCase() : 'GET';
         if (method === 'GET') {
           try {
-            // Em caso de chamadas relativas, adicionar origin fake para o parse funcionar
             const urlObj = new URL(requestUrl, window.location.origin);
             const reqPath = urlObj.searchParams.get('path');
             
@@ -67,19 +75,17 @@ export function setupWikiInterceptor() {
               
               const loader = mdFiles[fullPath];
               if (loader) {
-                const content = await loader();
-                return new Response(JSON.stringify({ content }), {
+                return loader().then(content => new Response(JSON.stringify({ content }), {
                   headers: { 'Content-Type': 'application/json' }
-                });
+                }));
               } else {
                 const fallbackKey = Object.keys(mdFiles).find(k => k.toLowerCase() === fullPath.toLowerCase());
                 if (fallbackKey) {
-                   const content = await mdFiles[fallbackKey]();
-                   return new Response(JSON.stringify({ content }), {
+                   return mdFiles[fallbackKey]().then(content => new Response(JSON.stringify({ content }), {
                      headers: { 'Content-Type': 'application/json' }
-                   });
+                   }));
                 }
-                return new Response('Not Found', { status: 404 });
+                return Promise.resolve(new Response('Not Found', { status: 404 }));
               }
             }
           } catch (e) {
@@ -88,7 +94,7 @@ export function setupWikiInterceptor() {
         }
       }
 
-      return originalFetch(...args);
+      return originalFetch.apply(window, args as [RequestInfo | URL, RequestInit?]);
     };
   }
 }
