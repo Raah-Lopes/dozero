@@ -6,9 +6,13 @@ import { toast } from '../UI/Toast';
 import { useAuthStore } from '../../store/authStore';
 import { formatChatAsMarkdown } from '../../services/chatCloudService';
 
+export type ChatMainTab = 'chat' | 'voz' | 'combate';
+
 interface ChatHeaderProps {
-  tab: 'geral' | 'in-game' | 'sistema';
-  setTab: (tab: 'geral' | 'in-game' | 'sistema') => void;
+  mainTab: ChatMainTab;
+  setMainTab: (tab: ChatMainTab) => void;
+  subTab: 'geral' | 'in-game' | 'sistema';
+  setSubTab: (tab: 'geral' | 'in-game' | 'sistema') => void;
   showSearch: boolean;
   setShowSearch: (show: boolean) => void;
   searchQuery: string;
@@ -24,7 +28,7 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
-  tab, setTab, showSearch, setShowSearch, searchQuery, setSearchQuery,
+  mainTab, setMainTab, subTab, setSubTab, showSearch, setShowSearch, searchQuery, setSearchQuery,
   isSelectMode, setIsSelectMode, selectedIds, setSelectedIds,
   chatSound, setChatSound, setClearedAt, setShowHelpModal
 }) => {
@@ -41,50 +45,129 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     return () => state.chatConfig?.unobserve(handler);
   }, []);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box', background: 'var(--chat-bg-primary)' }}>
+      {/* ─── ABAS PRINCIPAIS SUPERIORES (CHAT / VOZ / COMBATE) ─── */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        background: '#18110b',
+        borderBottom: '1px solid rgba(90, 66, 52, 0.7)',
+        padding: '3px 4px',
+        gap: '3px'
+      }}>
+        <button
+          onClick={() => setMainTab('chat')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px',
+            padding: '6px 4px',
+            background: mainTab === 'chat' ? 'rgba(168, 85, 247, 0.2)' : 'transparent',
+            border: `1px solid ${mainTab === 'chat' ? 'rgba(168, 85, 247, 0.5)' : 'transparent'}`,
+            borderRadius: '6px',
+            color: mainTab === 'chat' ? '#e9d5ff' : '#a1a1aa',
+            fontSize: '0.75rem',
+            fontWeight: mainTab === 'chat' ? 700 : 500,
+            cursor: 'pointer'
+          }}
+        >
+          <span>💬</span> Chat
+        </button>
+
+        <button
+          onClick={() => setMainTab('voz')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px',
+            padding: '6px 4px',
+            background: mainTab === 'voz' ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+            border: `1px solid ${mainTab === 'voz' ? 'rgba(34, 197, 94, 0.5)' : 'transparent'}`,
+            borderRadius: '6px',
+            color: mainTab === 'voz' ? '#86efac' : '#a1a1aa',
+            fontSize: '0.75rem',
+            fontWeight: mainTab === 'voz' ? 700 : 500,
+            cursor: 'pointer'
+          }}
+        >
+          <span>🎙️</span> Voz & Tela
+        </button>
+
+        <button
+          onClick={() => setMainTab('combate')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px',
+            padding: '6px 4px',
+            background: mainTab === 'combate' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+            border: `1px solid ${mainTab === 'combate' ? 'rgba(239, 68, 68, 0.5)' : 'transparent'}`,
+            borderRadius: '6px',
+            color: mainTab === 'combate' ? '#fca5a5' : '#a1a1aa',
+            fontSize: '0.75rem',
+            fontWeight: mainTab === 'combate' ? 700 : 500,
+            cursor: 'pointer'
+          }}
+        >
+          <span>⚔️</span> Combate
+        </button>
+      </div>
+
+      {/* ─── SUB-BARRA DE AÇÕES E CANAIS ─── */}
       <div style={{
         display: 'flex', borderBottom: '1px solid var(--chat-border)', alignItems: 'center',
         flexWrap: 'wrap', gap: '2px', padding: '4px', width: '100%', maxWidth: '100%', boxSizing: 'border-box'
       }}>
-        {/* TAB BUTTONS - Auto-wrap & shrink gracefully when window is narrow */}
-        <div style={{ display: 'flex', flex: '1 1 140px', minWidth: '120px', gap: '2px' }}>
-          <button
-            onClick={() => setTab('geral')}
-            style={{
-              flex: 1, minWidth: 0, padding: '6px 4px',
-              background: tab === 'geral' ? 'var(--chat-bg-secondary)' : 'transparent',
-              color: 'var(--chat-text-primary)', border: 'none', fontSize: '0.75rem', cursor: 'pointer',
-              borderRadius: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              fontWeight: tab === 'geral' ? 'bold' : 'normal'
-            }}
-          >
-            Geral
-          </button>
-          <button
-            onClick={() => setTab('in-game')}
-            style={{
-              flex: 1, minWidth: 0, padding: '6px 4px',
-              background: tab === 'in-game' ? 'var(--chat-bg-secondary)' : 'transparent',
-              color: 'var(--chat-text-primary)', border: 'none', fontSize: '0.75rem', cursor: 'pointer',
-              borderRadius: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              fontWeight: tab === 'in-game' ? 'bold' : 'normal'
-            }}
-          >
-            In-Game
-          </button>
-          <button
-            onClick={() => setTab('sistema')}
-            style={{
-              flex: 1, minWidth: 0, padding: '6px 4px',
-              background: tab === 'sistema' ? 'var(--chat-bg-secondary)' : 'transparent',
-              color: 'var(--chat-text-primary)', border: 'none', fontSize: '0.75rem', cursor: 'pointer',
-              borderRadius: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              fontWeight: tab === 'sistema' ? 'bold' : 'normal'
-            }}
-          >
-            Sistema
-          </button>
-        </div>
+        {/* SUB-CANAIS DE TEXTO (Apenas quando mainTab === 'chat') */}
+        {mainTab === 'chat' && (
+          <div style={{ display: 'flex', flex: '1 1 120px', minWidth: '100px', gap: '2px' }}>
+            <button
+              onClick={() => setSubTab('geral')}
+              style={{
+                flex: 1, minWidth: 0, padding: '4px 3px',
+                background: subTab === 'geral' ? 'var(--chat-bg-secondary)' : 'transparent',
+                color: subTab === 'geral' ? 'var(--chat-accent)' : 'var(--chat-text-secondary)',
+                border: 'none', fontSize: '0.72rem', cursor: 'pointer',
+                borderRadius: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontWeight: subTab === 'geral' ? 'bold' : 'normal'
+              }}
+            >
+              Geral
+            </button>
+            <button
+              onClick={() => setSubTab('in-game')}
+              style={{
+                flex: 1, minWidth: 0, padding: '4px 3px',
+                background: subTab === 'in-game' ? 'var(--chat-bg-secondary)' : 'transparent',
+                color: subTab === 'in-game' ? 'var(--chat-accent)' : 'var(--chat-text-secondary)',
+                border: 'none', fontSize: '0.72rem', cursor: 'pointer',
+                borderRadius: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontWeight: subTab === 'in-game' ? 'bold' : 'normal'
+              }}
+            >
+              In-Game
+            </button>
+            <button
+              onClick={() => setSubTab('sistema')}
+              style={{
+                flex: 1, minWidth: 0, padding: '4px 3px',
+                background: subTab === 'sistema' ? 'var(--chat-bg-secondary)' : 'transparent',
+                color: subTab === 'sistema' ? 'var(--chat-accent)' : 'var(--chat-text-secondary)',
+                border: 'none', fontSize: '0.72rem', cursor: 'pointer',
+                borderRadius: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontWeight: subTab === 'sistema' ? 'bold' : 'normal'
+              }}
+            >
+              Sistema
+            </button>
+          </div>
+        )}
         
         {/* ACTIONS BAR - Flex shrink 0 so icons stay intact on narrow widths */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: 'auto', flexShrink: 0, flexWrap: 'wrap' }}>

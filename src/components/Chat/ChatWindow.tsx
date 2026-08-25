@@ -10,11 +10,13 @@ import { parseAndRollDice, triggerDiceOverlay } from '../../utils/diceParser';
 import { generateSessionChronicle, publishChronicleToChat } from '../../services/sessionChronicleService';
 
 // Components
-import { ChatHeader } from './ChatHeader';
+import { ChatHeader, ChatMainTab } from './ChatHeader';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { PollComposerModal } from './PollComposerModal';
 import { ImagePreviewModal } from './ImagePreviewModal';
+import { ChatVoicePanel } from './ChatVoicePanel';
+import { CombatLog } from './CombatLog';
 
 // Hooks
 import { useChatIdentity } from './hooks/useChatIdentity';
@@ -26,9 +28,14 @@ export const ChatWindow: React.FC = () => {
   const { messages, chatSound, setChatSound, typingPlayers, setTypingStatus } = useChatState(clientId, playerName);
 
   const [input, setInput] = useState('');
-  const [tab, setTab] = useState<'geral' | 'in-game' | 'sistema'>('geral');
+  const [mainTab, setMainTab] = useState<ChatMainTab>('chat');
+  const [subTab, setSubTab] = useState<'geral' | 'in-game' | 'sistema'>('geral');
   const [pinned, setPinned] = useState<any | null>(null);
   const [clearedAt, setClearedAt] = useState<number>(0);
+  
+  const roomCode = typeof window !== 'undefined'
+    ? (new URLSearchParams(window.location.search).get('room') || 'default-room')
+    : 'default-room';
   
   // Selection
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -231,7 +238,7 @@ export const ChatWindow: React.FC = () => {
   const filteredMessages = useMemo(() => {
     return messages.filter(m => {
       if (m.timestamp < clearedAt) return false;
-      if (tab !== 'geral' && m.tipo !== tab) return false;
+      if (subTab !== 'geral' && m.tipo !== subTab) return false;
       if (m.tipo === 'whisper') {
         const isTarget = m.alvo === playerName || m.alvo?.toLowerCase() === playerName.toLowerCase();
         const isSender = m.autor === playerName || m.autor_alias === playerName;
@@ -245,7 +252,7 @@ export const ChatWindow: React.FC = () => {
       }
       return true;
     });
-  }, [messages, tab, clearedAt, playerName, searchQuery]);
+  }, [messages, subTab, clearedAt, playerName, searchQuery]);
 
   return (
     <div 
@@ -262,7 +269,8 @@ export const ChatWindow: React.FC = () => {
       )}
       
       <ChatHeader 
-        tab={tab} setTab={setTab}
+        mainTab={mainTab} setMainTab={setMainTab}
+        subTab={subTab} setSubTab={setSubTab}
         showSearch={showSearch} setShowSearch={setShowSearch}
         searchQuery={searchQuery} setSearchQuery={setSearchQuery}
         isSelectMode={isSelectMode} setIsSelectMode={setIsSelectMode}
@@ -271,58 +279,69 @@ export const ChatWindow: React.FC = () => {
         setClearedAt={setClearedAt} setShowHelpModal={setShowHelpModal}
       />
 
-      {pinned && (
-        <div style={{ padding: '6px 10px', background: 'rgba(234, 179, 8, 0.15)', borderBottom: '1px solid #eab308', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Pin size={12} style={{ color: '#fde047' }} />
-          <span><strong>Fixado:</strong> {pinned.text}</span>
-          <button onClick={() => setPinned(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#fde047', cursor: 'pointer' }}><X size={12}/></button>
+      {/* ─── CONTEÚDO PRINCIPAL CONFORME A ABA ─── */}
+      {mainTab === 'voz' ? (
+        <ChatVoicePanel roomCode={roomCode} />
+      ) : mainTab === 'combate' ? (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <CombatLog />
         </div>
-      )}
+      ) : (
+        <>
+          {pinned && (
+            <div style={{ padding: '6px 10px', background: 'rgba(234, 179, 8, 0.15)', borderBottom: '1px solid #eab308', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Pin size={12} style={{ color: '#fde047' }} />
+              <span><strong>Fixado:</strong> {pinned.text}</span>
+              <button onClick={() => setPinned(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#fde047', cursor: 'pointer' }}><X size={12}/></button>
+            </div>
+          )}
 
-      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-        {filteredMessages.map((msg, i) => (
-          <MessageBubble 
-            key={msg.id || i}
-            msg={msg}
-            playerName={playerName}
-            isSelectMode={isSelectMode}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
-            hoveredMsgId={hoveredMsgId}
-            setHoveredMsgId={setHoveredMsgId}
-            setLightboxImg={setLightboxImg}
+          <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+            {filteredMessages.map((msg, i) => (
+              <MessageBubble 
+                key={msg.id || i}
+                msg={msg}
+                playerName={playerName}
+                isSelectMode={isSelectMode}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
+                hoveredMsgId={hoveredMsgId}
+                setHoveredMsgId={setHoveredMsgId}
+                setLightboxImg={setLightboxImg}
+              />
+            ))}
+          </div>
+
+          {typingPlayers.length > 0 && (
+            <div style={{ padding: '2px 10px', fontSize: '0.65rem', color: '#a5b4fc', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>💬</span>
+              <span>{typingPlayers.join(', ')} {typingPlayers.length > 1 ? 'estão' : 'está'} digitando...</span>
+            </div>
+          )}
+
+          {isComposingPoll && (
+            <PollComposerModal onClose={() => setIsComposingPoll(false)} playerName={playerName} />
+          )}
+
+          {pendingImageBase64 && (
+            <ImagePreviewModal 
+              base64={pendingImageBase64} 
+              onConfirm={handleConfirmImageSend} 
+              onCancel={() => setPendingImageBase64(null)} 
+            />
+          )}
+
+          <ChatInput 
+            input={input} setInput={handleInputChange} handleSend={handleSend}
+            playerName={playerName} playerColor={playerColor}
+            setPlayerName={setPlayerName} setPlayerColor={setPlayerColor}
+            showIdentityPopup={showIdentityPopup} setShowIdentityPopup={setShowIdentityPopup}
+            setIsComposingPoll={setIsComposingPoll} setShowHelpModal={setShowHelpModal}
+            sentHistory={sentHistory} historyIndex={historyIndex} setHistoryIndex={setHistoryIndex}
+            onImageSelected={handleImageSelected}
           />
-        ))}
-      </div>
-
-      {typingPlayers.length > 0 && (
-        <div style={{ padding: '2px 10px', fontSize: '0.65rem', color: '#a5b4fc', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span>💬</span>
-          <span>{typingPlayers.join(', ')} {typingPlayers.length > 1 ? 'estão' : 'está'} digitando...</span>
-        </div>
+        </>
       )}
-
-      {isComposingPoll && (
-        <PollComposerModal onClose={() => setIsComposingPoll(false)} playerName={playerName} />
-      )}
-
-      {pendingImageBase64 && (
-        <ImagePreviewModal 
-          base64={pendingImageBase64} 
-          onConfirm={handleConfirmImageSend} 
-          onCancel={() => setPendingImageBase64(null)} 
-        />
-      )}
-
-      <ChatInput 
-        input={input} setInput={handleInputChange} handleSend={handleSend}
-        playerName={playerName} playerColor={playerColor}
-        setPlayerName={setPlayerName} setPlayerColor={setPlayerColor}
-        showIdentityPopup={showIdentityPopup} setShowIdentityPopup={setShowIdentityPopup}
-        setIsComposingPoll={setIsComposingPoll} setShowHelpModal={setShowHelpModal}
-        sentHistory={sentHistory} historyIndex={historyIndex} setHistoryIndex={setHistoryIndex}
-        onImageSelected={handleImageSelected}
-      />
 
       {/* GUIA DE COMANDOS VISUAL MODAL */}
       {showHelpModal && (

@@ -54,7 +54,6 @@ import { ResetPasswordModal } from './components/Modals/ResetPasswordModal';
 import { CampaignLobbyModal } from './components/Modals/CampaignLobbyModal';
 import { PlayerVaultModal } from './components/Modals/PlayerVaultModal';
 import { TokenConfigModal } from './components/Modals/TokenConfigModal';
-import { VoiceChatBar } from './components/Widgets/System/VoiceChatBar';
 import { StreamOverlay } from './components/Stream/StreamOverlay';
 import { useAutoSaveSession } from './services/useAutoSaveSession';
 import { useRoomPresence } from './services/useRoomPresence';
@@ -366,7 +365,15 @@ function App() {
         )}
 
         {openWindows.chatWindow && (
-          <DraggableWindow id="chatWindow" title="Chat P2P" initialX={window.innerWidth - 680} initialY={160} width={320} height={400} onClose={handleCloseChatWindow}>
+          <DraggableWindow 
+            id="chatWindow" 
+            title="Chat & Voz P2P" 
+            initialX={typeof window !== 'undefined' && window.innerWidth > 768 ? window.innerWidth - 420 : 10} 
+            initialY={typeof window !== 'undefined' && window.innerWidth > 768 ? 120 : 60} 
+            width={typeof window !== 'undefined' && window.innerWidth > 768 ? 380 : 'calc(100vw - 20px)'} 
+            height={typeof window !== 'undefined' && window.innerWidth > 768 ? 540 : 'calc(100vh - 140px)'} 
+            onClose={handleCloseChatWindow}
+          >
             <ErrorBoundary componentName="ChatWindow"><ChatWindow /></ErrorBoundary>
           </DraggableWindow>
         )}
@@ -437,7 +444,6 @@ function App() {
           <>
             <MobileBottomNav />
             <MobileQuickActions />
-            <VoiceChatBar roomCode={urlParams.get('room') || 'default-room'} />
           </>
         )}
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
