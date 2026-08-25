@@ -6,10 +6,10 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 
 ## Próxima ordem de execução
 
-1. **D.4 Genealogia** — derivar árvore familiar das conexões semânticas existentes.
-2. **C.2 Editor visual de fichas** — completar fluxo por abas e histórico sem depender de YAML cru.
-3. **F.3 Offline aprimorado** — fila visível de sync e recuperação de conflitos.
-4. **F.2 Macros condicionais** — builder condicional e contexto automático.
+1. **C.2 Editor visual de fichas** — completar fluxo por abas e histórico sem depender de YAML cru.
+2. **F.3 Offline aprimorado** — fila visível de sync e recuperação de conflitos.
+3. **F.2 Macros condicionais** — builder condicional e contexto automático.
+4. **A.1 Voz WebRTC e screen share** — auditoria de permissões granulares e áudio TURN.
 
 ## Trilha A — comunicação e áudio
 
@@ -41,7 +41,7 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 | D.1 Entidades tipadas e cards | Concluído | Tipos, estilos, filtros, ordenação e densidade implementados em WikiViewer/wikiEntities. |
 | D.2 Conexões semânticas | Concluído | Editor com tipos nativos/customizados, descrição e privacidade implementado. |
 | D.3 Grafo de conexões | Concluído | LivingBrain possui cores por tipo, filtros, criação com Shift+arrastar e shortest path. Usa D3 existente em vez de nova dependência. |
-| D.4 Genealogia | Próximo | Ainda não existe árvore familiar dedicada; reutilizar conexões semânticas de parentesco. |
+| D.4 Genealogia | Concluído | Utilitário de inferência semântica e bidirecional de parentesco (`genealogy.ts`), componente visual hierárquico multi-geracional (`GenealogyTree.tsx`) com navegação focal e cards informativos integrado ao WikiViewer com testes unitários. |
 
 ## Trilha E — espaço e tempo
 

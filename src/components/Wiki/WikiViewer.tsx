@@ -17,6 +17,8 @@ import * as yaml from 'js-yaml';
 import { toast } from '../UI/Toast';
 import { useWiki } from '../../hooks/useWiki';
 import { getEntityDate, getEntityStatus, getEntityTags, getWikiEntityStyle, WIKI_ENTITY_STYLES } from '../../utils/wikiEntities';
+import { GenealogyTree } from './GenealogyTree';
+import { WikiIndexer, WikiEntry } from '../../services/wiki/WikiIndexer';
 import './wiki.css';
 
 interface TreeNode {
@@ -211,6 +213,11 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [wikiEntries, setWikiEntries] = useState<WikiEntry[]>([]);
+
+  useEffect(() => {
+    WikiIndexer.buildIndex().then(entries => setWikiEntries(entries || [])).catch(() => {});
+  }, [activeFile, syncing]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -835,6 +842,23 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
               {parsedMeta && (
                 <div style={{ marginTop: '20px' }}>
                   <FrontmatterSheetViewer parsedMeta={parsedMeta} />
+                </div>
+              )}
+
+              {/* Injetor da Árvore Genealógica e Parentescos */}
+              {activeFile && (
+                <div style={{ marginTop: '20px' }}>
+                  <GenealogyTree 
+                    currentEntry={{
+                      slug: activeFile.split('/').pop()?.replace(/\.md$/i, '') || '',
+                      path: activeFile,
+                      title: String(parsedMeta?.nome || parsedMeta?.name || parsedMeta?.titulo || activeFile.split('/').pop()?.replace(/\.md$/i, '') || ''),
+                      metadata: parsedMeta || {},
+                      content: content || ''
+                    }}
+                    allEntries={wikiEntries}
+                    onSelectPerson={(path) => setActiveFile(path)}
+                  />
                 </div>
               )}
               
