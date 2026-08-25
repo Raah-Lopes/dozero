@@ -8,6 +8,7 @@ import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 import type { WikiEntry } from '../../../services/wiki/WikiQuery';
 import { getWikiEntityType } from '../../../utils/wikiEntities';
 import { ChronosTimeline } from './ChronosTimeline';
+import { useWindowManager } from '../../../hooks/useWindowManager';
 
 export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = ({ onClose, isGM = true }) => {
   const [timeState, setTimeState] = useState<ChronosState | null>(null);
@@ -24,6 +25,8 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   const [monthDefinitions, setMonthDefinitions] = useState('');
   const [weekdays, setWeekdays] = useState('');
   const [moonCycle, setMoonCycle] = useState('28');
+  const openWindow = useWindowManager(store => store.openWindow);
+  const closeWindow = useWindowManager(store => store.closeWindow);
 
   useEffect(() => {
     initChronos();
@@ -57,9 +60,10 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   const calendar = getChronosConfig();
   const currentMonth = calendar.months[timeState.month - 1];
   const moon = getMoonPhase(timeState.day, timeState.month, timeState.year, calendar);
-  const todayEvents = getChronosEvents().filter(event => event.day === timeState.day && event.month === timeState.month && event.year === timeState.year);
+  const calendarEvents = getChronosEvents().filter(event => event.datePrecision !== 'year');
+  const todayEvents = calendarEvents.filter(event => event.day === timeState.day && event.month === timeState.month && event.year === timeState.year);
   const currentDate = getCalendarDayNumber(timeState.day, timeState.month, timeState.year, calendar);
-  const upcomingEvents = getChronosEvents()
+  const upcomingEvents = calendarEvents
     .filter(event => getCalendarDayNumber(event.day, event.month, event.year, calendar) > currentDate)
     .sort((a, b) => getCalendarDayNumber(a.day, a.month, a.year, calendar) - getCalendarDayNumber(b.day, b.month, b.year, calendar))
     .slice(0, 3);
@@ -124,17 +128,22 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
           </div>
         </div>
 
-        <button
-          type="button"
-          aria-expanded={timelineOpen}
-          onClick={() => setTimelineOpen(value => !value)}
-          style={{ padding: '7px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '7px', border: `1px solid ${timelineOpen ? 'var(--accent-primary)' : 'var(--glass-border)'}`, background: timelineOpen ? 'rgba(16,185,129,.14)' : 'var(--bg-secondary)', color: timelineOpen ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '.74rem', fontWeight: 700 }}
-        >
-          <History size={14} /> {timelineOpen ? 'Fechar linha do tempo' : 'Abrir linha do tempo'}
-        </button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px' }}>
+          <button type="button" onClick={() => { closeWindow('chronos'); openWindow('chronicle'); }} style={{ padding: '7px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '7px', border: '1px solid var(--accent-primary)', background: 'rgba(16,185,129,.14)', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '.74rem', fontWeight: 700 }}>
+            <CalendarDays size={14} /> Abrir Chronica
+          </button>
+          <button
+            type="button"
+            aria-expanded={timelineOpen}
+            onClick={() => setTimelineOpen(value => !value)}
+            style={{ padding: '7px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '7px', border: `1px solid ${timelineOpen ? 'var(--accent-primary)' : 'var(--glass-border)'}`, background: timelineOpen ? 'rgba(16,185,129,.14)' : 'var(--bg-secondary)', color: timelineOpen ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '.74rem', fontWeight: 700 }}
+          >
+            <History size={14} /> {timelineOpen ? 'Fechar timeline' : 'Timeline operacional'}
+          </button>
+        </div>
 
         {timelineOpen ? (
-          <ChronosTimeline calendar={calendar} current={timeState} events={getChronosEvents()} isGM={isGM} onMove={updateChronosEvent} onRemove={removeChronosEvent} />
+          <ChronosTimeline calendar={calendar} current={timeState} events={calendarEvents} isGM={isGM} onMove={updateChronosEvent} onRemove={removeChronosEvent} />
         ) : null}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

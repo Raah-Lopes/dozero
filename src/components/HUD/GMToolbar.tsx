@@ -3,8 +3,8 @@ import {
   Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, 
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
-  Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, Dices, 
-  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine 
+  Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare,
+  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -248,6 +248,13 @@ export function GMToolbar() {
                 tooltip="Wiki da Campanha"
                 description="Acesse anotações, monstros, fichas e compêndios"
               />
+              <ToolButton
+                icon={<CalendarRange size={19} />}
+                active={Boolean(openWindows.chronicle)}
+                onClick={() => toggleWindow('chronicle')}
+                tooltip="Chronica"
+                description="Abra a linha do tempo histórica completa do mundo"
+              />
               <ToolButton 
                 icon={<Film size={19} />} 
                 active={viewMode === 'theater'} 
@@ -283,13 +290,6 @@ export function GMToolbar() {
                 onClick={toggleNPCPanel} 
                 tooltip="Fichas & Tokens"
                 description="Lista rápida dos participantes e monstros da cena (Cast)"
-              />
-              <ToolButton 
-                icon={<Dices size={19} />} 
-                active={openWindows.combatLog} 
-                onClick={() => toggleWindow('combatLog')} 
-                tooltip="Histórico de Rolagens"
-                description="Log detalhado de rolagens de dados e testes em tempo real"
               />
             </div>
 

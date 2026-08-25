@@ -14,6 +14,7 @@ const CampaignManagerWidget = React.lazy(() => import('../Widgets/GameMaster/Cam
 const AutomatedDiceWidget = React.lazy(() => import('../Widgets/PlayerTools/AutomatedDiceWidget').then(m => ({ default: m.AutomatedDiceWidget })));
 const CharacterRosterWidget = React.lazy(() => import('../Widgets/PlayerTools/CharacterRosterWidget').then(m => ({ default: m.CharacterRosterWidget })));
 const ChronosWidget = React.lazy(() => import('../Widgets/GameMaster/ChronosWidget').then(m => ({ default: m.ChronosWidget })));
+const ChronicleWidget = React.lazy(() => import('../Widgets/GameMaster/ChronicleWidget').then(m => ({ default: m.ChronicleWidget })));
 const LoreMachineWidget = React.lazy(() => import('../Widgets/Generators/LoreMachineWidget').then(m => ({ default: m.LoreMachineWidget })));
 const WorldEngineWidget = React.lazy(() => import('../Widgets/Generators/WorldEngineWidget').then(m => ({ default: m.WorldEngineWidget })));
 const EntityForgeWidget = React.lazy(() => import('./EntityForgeWidget').then(m => ({ default: m.EntityForgeWidget })));
@@ -77,6 +78,12 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
       category: 'Mestre',
       onSelect: () => openWindow('campaignManager')
     });
+    registerCommand({
+      id: 'toggle-chronicle',
+      title: 'Abrir Chronica — Linha do Tempo',
+      category: 'Mestre',
+      onSelect: () => openWindow('chronicle')
+    });
   }, [registerCommand, openWindow]);
 
   return (
@@ -92,6 +99,7 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.automatedDice && <AutomatedDiceWidget onClose={() => closeWindow('automatedDice')} />}
           {openWindows.characterRoster && <CharacterRosterWidget onClose={() => closeWindow('characterRoster')} />}
           {openWindows.chronos && <ChronosWidget onClose={() => closeWindow('chronos')} />}
+          {openWindows.chronicle && <ChronicleWidget onClose={() => closeWindow('chronicle')} />}
           {openWindows.loreMachine && <LoreMachineWidget onClose={() => closeWindow('loreMachine')} />}
           {openWindows.worldEngine && <WorldEngineWidget onClose={() => closeWindow('worldEngine')} />}
           {openWindows.entityForge && <EntityForgeWidget onClose={() => closeWindow('entityForge')} />}

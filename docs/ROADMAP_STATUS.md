@@ -1,15 +1,15 @@
 # Status operacional do roadmap DOZERO 360°
 
-Atualizado em 25 de agosto de 2026, após o commit `c3ba1814`.
+Atualizado em 25 de agosto de 2026.
 
 Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 
 ## Próxima ordem de execução
 
-1. **F.2 Macros condicionais** — builder condicional e contexto automático.
-2. **A.1 Voz WebRTC e screen share** — auditoria de permissões granulares e áudio TURN.
-3. **A.2 Soundboard e cenas sonoras** — grid configurável de sons e presets.
-4. **A.3 Rádio ambiente** — crossfade de ambiências e rádio unificado.
+1. **E.4 Chronica histórico** — calendários visuais conectados à cronologia e ao relógio operacional.
+2. **F.2 Macros condicionais** — builder condicional e contexto automático.
+3. **A.1 Voz WebRTC e screen share** — auditoria de permissões granulares e áudio TURN.
+4. **A.2 Soundboard e cenas sonoras** — grid configurável de sons e presets.
 
 ## Trilha A — comunicação e áudio
 
@@ -50,6 +50,7 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 | E.1 Calendário fantástico | Concluído | Presets, meses variáveis, estações, semana, ciclo lunar e eventos sincronizados implementados no Chronos. |
 | E.2 Cronos Timeline | Concluído | Linha do tempo horizontal histórica multi-camadas (`world`, `campaign`, `character`), zoom (`day`, `month`, `year`), drag/drop, navegação temporal e integração com entidades tipadas da wiki implementados no ChronosWidget/ChronosTimeline com testes unitários. |
 | E.3 Pins de lore | Concluído | Pins interativos no canvas 2D com cores e estilos por tipo de entidade da wiki, abertura de notas com um clique, arrasto no mapa pelo mestre, criação via drag & drop da wiki, controle de visibilidade (GM vs Jogadores), modal de gerenciamento e persistência de snapshots com Yjs. |
+| E.4 Chronica histórico | Parcial | O sistema de `D:\IMPLEMENTACOES DOZERO\CALENDARIO` foi integrado como workspace principal em tela cheia dentro da mesa: identidade visual própria, cabeçalho do mundo, estatísticas, mapa proporcional, trilho histórico, eras com drag-and-drop/reordenação/duplicação/recolhimento/fundos, registros tipados com busca/tags/camadas/Wiki, detalhes e CRUD, upload de imagens com Supabase Storage e fallback local, importação/exportação JSON compatível, mundo de exemplo e responsividade. Estado colaborativo via Yjs; anos negativos e ano zero são preservados. Chronos permanece como suplemento operacional e seus eventos de dia/mês não são apagados por importação ou limpeza histórica. Faltam os calendários visuais planejados. |
 
 ## Trilha F — IA e automação
 
@@ -70,4 +71,3 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 ## Regra de atualização
 
 Ao concluir uma fatia do roadmap, atualize o estado e a evidência nesta tabela no mesmo conjunto de mudanças. Não marque `Concluído` somente porque existe um componente: o fluxo precisa funcionar e ter verificação proporcional ao risco.
-

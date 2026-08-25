@@ -21,9 +21,34 @@ export interface ChronosEvent {
   year: number;
   layer?: ChronosEventLayer;
   wikiPath?: string;
+  eraId?: string;
+  datePrecision?: 'day' | 'year';
+  kind?: ChronicleEventKind;
+  description?: string;
+  imageUrl?: string;
+  tags?: string[];
 }
 
 export type ChronosEventLayer = 'world' | 'campaign' | 'character';
+export type ChronicleEventKind = 'fundacao' | 'reinado' | 'batalha' | 'descoberta' | 'catastrofe' | 'pacto' | 'magia' | 'jornada' | 'queda';
+
+export interface ChronicleEra {
+  id: string;
+  name: string;
+  startYear: number;
+  endYear: number;
+  color: string;
+  description: string;
+  backgroundUrl?: string;
+  collapsed?: boolean;
+}
+
+export interface ChronicleMeta {
+  worldName: string;
+  calendarLabel: string;
+}
+
+const chronicleId = (prefix: string) => `${prefix}_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2)}`}`;
 
 export function initChronos() {
   if (!state.chronos.get('config')) state.chronos.set('config', DEFAULT_CALENDAR);
@@ -57,6 +82,110 @@ export function getChronosState(): ChronosState {
 
 export function getChronosEvents(): ChronosEvent[] {
   return (state.chronos.get('events') as ChronosEvent[]) || [];
+}
+
+export function getChronicleEras(): ChronicleEra[] {
+  return (state.chronos.get('eras') as ChronicleEra[]) || [];
+}
+
+export function getChronicleMeta(): ChronicleMeta {
+  return (state.chronos.get('chronicleMeta') as ChronicleMeta) || { worldName: 'Mundo da Campanha', calendarLabel: 'Ano' };
+}
+
+export function saveChronicleMeta(patch: Partial<ChronicleMeta>) {
+  const current = getChronicleMeta();
+  const next = {
+    worldName: patch.worldName?.trim() || current.worldName,
+    calendarLabel: patch.calendarLabel?.trim() || current.calendarLabel
+  };
+  state.chronos.set('chronicleMeta', next);
+  return next;
+}
+
+export function replaceChronicle(eras: ChronicleEra[], events: ChronosEvent[], meta?: Partial<ChronicleMeta>) {
+  state.chronos.set('eras', eras);
+  state.chronos.set('events', [
+    ...getChronosEvents().filter(event => event.datePrecision !== 'year'),
+    ...events.map(event => ({ ...event, datePrecision: 'year' as const }))
+  ]);
+  if (meta) saveChronicleMeta(meta);
+}
+
+export function saveChronicleEra(input: Omit<ChronicleEra, 'id'> & { id?: string }) {
+  const name = input.name.trim();
+  if (!name || !Number.isFinite(input.startYear) || !Number.isFinite(input.endYear) || input.endYear < input.startYear) return null;
+  const era: ChronicleEra = { ...input, id: input.id || chronicleId('chronicle_era'), name, description: input.description.trim() };
+  const eras = getChronicleEras();
+  state.chronos.set('eras', eras.some(item => item.id === era.id) ? eras.map(item => item.id === era.id ? era : item) : [...eras, era]);
+  return era;
+}
+
+export function moveChronicleEra(id: string, direction: -1 | 1) {
+  const eras = [...getChronicleEras()];
+  const from = eras.findIndex(era => era.id === id);
+  const to = from + direction;
+  if (from < 0 || to < 0 || to >= eras.length) return;
+  const [era] = eras.splice(from, 1);
+  eras.splice(to, 0, era);
+  state.chronos.set('eras', eras);
+}
+
+export function reorderChronicleEra(id: string, targetId: string) {
+  if (id === targetId) return;
+  const eras = [...getChronicleEras()];
+  const from = eras.findIndex(era => era.id === id);
+  const to = eras.findIndex(era => era.id === targetId);
+  if (from < 0 || to < 0) return;
+  const [era] = eras.splice(from, 1);
+  eras.splice(to, 0, era);
+  state.chronos.set('eras', eras);
+}
+
+export function toggleChronicleEra(id: string) {
+  state.chronos.set('eras', getChronicleEras().map(era => era.id === id ? { ...era, collapsed: !era.collapsed } : era));
+}
+
+export function duplicateChronicleEra(id: string) {
+  const eras = [...getChronicleEras()];
+  const index = eras.findIndex(era => era.id === id);
+  if (index < 0) return null;
+  const source = eras[index];
+  const copy: ChronicleEra = { ...source, id: chronicleId('chronicle_era'), name: `${source.name} (cópia)` };
+  eras.splice(index + 1, 0, copy);
+  const copiedEvents = getChronosEvents()
+    .filter(event => event.eraId === id)
+    .map(event => ({ ...event, id: chronicleId('chronicle_event'), eraId: copy.id }));
+  state.chronos.set('eras', eras);
+  if (copiedEvents.length) state.chronos.set('events', [...getChronosEvents(), ...copiedEvents]);
+  return copy;
+}
+
+export function removeChronicleEra(id: string) {
+  state.chronos.set('eras', getChronicleEras().filter(era => era.id !== id));
+  state.chronos.set('events', getChronosEvents().map(event => event.eraId === id ? { ...event, eraId: undefined } : event));
+}
+
+export function saveChronicleEvent(input: Partial<ChronosEvent> & Pick<ChronosEvent, 'title' | 'year'>) {
+  const title = input.title.trim();
+  if (!title || !Number.isFinite(input.year)) return null;
+  const event: ChronosEvent = {
+    id: input.id || chronicleId('chronicle_event'),
+    title,
+    day: input.day || 1,
+    month: input.month || 1,
+    year: Math.round(input.year),
+    datePrecision: input.datePrecision || 'year',
+    layer: input.layer || 'world',
+    kind: input.kind || 'fundacao',
+    description: input.description?.trim() || '',
+    imageUrl: input.imageUrl?.trim() || undefined,
+    tags: [...new Set((input.tags || []).map(tag => tag.trim()).filter(Boolean))],
+    eraId: input.eraId,
+    wikiPath: input.wikiPath
+  };
+  const events = getChronosEvents();
+  state.chronos.set('events', events.some(item => item.id === event.id) ? events.map(item => item.id === event.id ? event : item) : [...events, event]);
+  return event;
 }
 
 export function addChronosEvent(title: string, date = getChronosState(), details: { layer?: ChronosEventLayer; wikiPath?: string } = {}) {

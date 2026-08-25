@@ -2,6 +2,12 @@
 
 Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o changelog.
 
+## 2026-08-25 — Chronica como núcleo histórico
+
+**Status:** Ativa  
+**Decisão:** usar o Chronica como espaço principal para eras e acontecimentos históricos; manter o Chronos como suplemento operacional para calendário, passagem do tempo, clima, lua, estações e eventos datados da sessão.  
+**Motivo:** a história do mundo precisa aceitar escalas longas, anos negativos e ano zero sem comprometer os cálculos de calendário usados durante o jogo. Os dois módulos compartilham eventos sincronizados, mas apresentam fluxos próprios.
+
 ## 2026-08-25 — Funções antes de polimento isolado
 
 **Status:** Ativa  
@@ -37,4 +43,3 @@ Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o
 **Status:** Ativa  
 **Decisão:** usar MCP com `project_ref`, grupos mínimos e modo somente leitura no trabalho cotidiano; escrita apenas em tarefa explicitamente autorizada.  
 **Motivo:** reduz superfície de ataque e evita alterações acidentais em dados hospedados.
-

@@ -3,7 +3,7 @@ import { Command } from 'cmdk';
 import { 
   Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, 
   Dices, Users, Sun, Sparkles, ToyBrick, Globe,
-  Anvil, Castle, Shield, Search, X, FileText, LayoutTemplate, CopyPlus, Pin
+  Anvil, Castle, Shield, Search, X, FileText, LayoutTemplate, CopyPlus, Pin, CalendarRange
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
@@ -128,6 +128,7 @@ export const CommandPalette: React.FC = () => {
     { id: 'gm_encounter', title: 'Forja de Encontros', icon: <Skull size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_encounter', () => openWindow('encounterGenerator')) },
     { id: 'gm_tracker', title: 'Iniciativa (Combate)', icon: <Swords size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_tracker', () => openWindow('tracker')) },
     { id: 'gm_clock', title: 'Relógio de Tensão', icon: <Timer size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_clock', () => setActiveModal('clockConfig')) },
+    { id: 'gm_chronicle', title: 'Chronica — Linha do Tempo', icon: <CalendarRange size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_chronicle', () => openWindow('chronicle')) },
     { id: 'gm_chronos', title: 'Motor Chronos', icon: <Sun size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_chronos', () => openWindow('chronos')) },
     
     // PlayerTools

@@ -1,4 +1,4 @@
-import { LucideIcon, Bot, Shield, BookOpen, FileText, Users, Skull, Swords, Timer, Sun, Map, Video, Dices, Network, Globe, Coins, UserPlus, Eye, Sparkles, Anvil, Castle, ToyBrick, Palette, Flame, MessageSquare } from 'lucide-react';
+import { LucideIcon, Bot, Shield, BookOpen, FileText, Users, Skull, Swords, Timer, Sun, Map, Video, Dices, Network, Globe, Coins, UserPlus, Eye, Sparkles, Anvil, Castle, ToyBrick, Palette, Flame, CalendarRange } from 'lucide-react';
 
 export type WidgetActionType = 'toggleWindow' | 'setActiveModal' | 'setShowActors' | 'custom';
 
@@ -24,6 +24,7 @@ export const WIDGET_REGISTRY: WidgetMeta[] = [
   { id: 'gmnotes', cat: 'Narrativa', title: 'Bloco de Notas Secreto', description: 'Anotações ocultas e rascunhos exclusivos apenas para os olhos do Mestre', icon: FileText, theme: 'theme-green', shadow: '0 0 10px rgba(34,197,94,0.4)', actionType: 'toggleWindow', actionPayload: 'gmNotes', gmOnly: true },
   { id: 'mindmap', cat: 'Narrativa', title: 'Painel de Conspiração', description: 'Mural de notas interligadas para detetives e investigadores ligarem os pontos', icon: Network, theme: 'theme-pink', actionType: 'toggleWindow', actionPayload: 'mindMap' },
   { id: 'lore', cat: 'Narrativa', title: 'Máquina de Lores', description: 'Crie histórias míticas, rumores e crônicas automaticamente a partir da Wiki', icon: Sparkles, theme: 'theme-purple', actionType: 'toggleWindow', actionPayload: 'loreMachine' },
+  { id: 'chronicle', cat: 'Narrativa', title: 'Chronica — Linha do Tempo', description: 'Organize eras e acontecimentos históricos do mundo, com busca, camadas e vínculos à Wiki', icon: CalendarRange, theme: 'theme-purple', actionType: 'toggleWindow', actionPayload: 'chronicle', gmOnly: true },
 
   // 👥 Personagens & Atores
   { id: 'roster', cat: 'Personagens', title: 'Lista de Personagens', description: 'Seleção da ficha do jogador atual, troca de controle e consulta aos aliados', icon: Users, theme: 'theme-green', actionType: 'toggleWindow', actionPayload: 'characterRoster' },
@@ -35,7 +36,7 @@ export const WIDGET_REGISTRY: WidgetMeta[] = [
   // 🔧 Ferramentas & Mapa
   { id: 'tracker', cat: 'Ferramentas', title: 'Iniciativa & Combate', description: 'Organizador de turnos para combates dinâmicos entre jogadores e inimigos', icon: Swords, theme: 'theme-red', actionType: 'toggleWindow', actionPayload: 'combatTracker' },
   { id: 'clock', cat: 'Ferramentas', title: 'Relógio de Tensão', description: 'Cronômetro visual de fatias para marcar o tempo de urgência de eventos', icon: Timer, theme: 'theme-amber', actionType: 'setActiveModal', actionPayload: 'clockConfig', gmOnly: true },
-  { id: 'chronos', cat: 'Ferramentas', title: 'Motor Chronos', description: 'Controle atmosférico de clima, dia, noite e efeitos imersivos', icon: Sun, theme: 'theme-yellow', actionType: 'toggleWindow', actionPayload: 'chronos', gmOnly: true },
+  { id: 'chronos', cat: 'Ferramentas', title: 'Motor Chronos', description: 'Suplemento operacional para calendário, passagem dos dias, lua, estações e eventos da sessão', icon: Sun, theme: 'theme-yellow', actionType: 'toggleWindow', actionPayload: 'chronos', gmOnly: true },
   { id: 'mapsettings', cat: 'Ferramentas', title: 'Visual da Mesa (Cenário)', description: 'Ajuste imagem de fundo, escala de grid, alinhamento e cores', icon: Map, theme: 'theme-blue', actionType: 'setActiveModal', actionPayload: 'settings-cenario', gmOnly: true },
   { id: 'tradeshop', cat: 'Ferramentas', title: 'Sistema Comercial & Lojas', description: 'Vitrine interativa de lojas, mercadores e sistema de compras em jogo', icon: Coins, theme: 'theme-amber', shadow: '0 0 10px rgba(245,158,11,0.3)', actionType: 'toggleWindow', actionPayload: 'tradeShop' },
   { id: 'webframe', cat: 'Ferramentas', title: 'Navegador Integrado', description: 'Abre um iframe embutido com links úteis da internet', icon: Globe, theme: 'theme-pink', actionType: 'toggleWindow', actionPayload: 'webFrame' },

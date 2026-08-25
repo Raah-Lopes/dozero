@@ -40,7 +40,7 @@ Prioridade do produto: funções completas primeiro; estética deve sustentar cl
 | Voz | `src/services/webrtcVoiceManager.ts`, `src/components/Chat/ChatVoicePanel.tsx`, `src/components/Widgets/System/VoiceChatBar.tsx` |
 | Wiki | `src/components/Wiki/`, `src/services/wiki/`, `vite-plugins/wiki-api.ts` |
 | Teatro | `src/components/Theater/`, `src/store/theater.ts` |
-| Calendário/mundo | `src/components/Widgets/GameMaster/ChronosWidget.tsx`, `src/store/world.ts`, `src/utils/fantasyCalendar.ts` |
+| História/calendário | `src/components/Widgets/GameMaster/ChronicleWidget.tsx` (eras e história), `src/components/Widgets/GameMaster/ChronosWidget.tsx` (tempo operacional), `src/store/world.ts`, `src/utils/fantasyCalendar.ts` |
 | Temas | `src/themes/`, `src/hooks/useTheme.ts`, `src/components/Modals/SettingsModal.tsx` |
 | Banco | `supabase/migrations/`, serviços Supabase e RLS no projeto hospedado |
 
@@ -68,4 +68,3 @@ Prioridade do produto: funções completas primeiro; estética deve sustentar cl
 - Usar Ponytail com parcimônia, em modo leve.
 - Não publicar no Git sem solicitação.
 - Não misturar arquivos pessoais da wiki ou artefatos gerados em commits.
-
