@@ -142,6 +142,7 @@ hasVision: true
 Ouro: 5
 inCombat: true
 visionRadius: 200
+
 ---
 
 
