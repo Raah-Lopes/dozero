@@ -9,7 +9,7 @@ import {
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
   Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan, X,
-  Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload, Combine
+  Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload, Combine, MapPin
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from './Tooltip';
@@ -51,6 +51,7 @@ const TOOL_META: Record<string, { label: string; desc: string; shortcut?: string
   shape:        { label: 'Formas',                desc: 'Crie retângulos, círculos e triângulos', shortcut: 'R ou 4' },
   arrow:        { label: 'Seta Tática',           desc: 'Desenhe setas para indicar direções', shortcut: 'A ou 5' },
   text:         { label: 'Texto',                 desc: 'Insira textos e anotações no mapa',  shortcut: 'T ou 6' },
+  lore_pins:    { label: 'Pins de Lore',          desc: 'Gerenciar pontos de interesse e notas da wiki no mapa', shortcut: 'L' },
   ruler:        { label: 'Régua',                 desc: 'Meça distâncias entre dois pontos',  shortcut: '7' },
   eraser:       { label: 'Borracha',              desc: 'Apague desenhos clicando neles',     shortcut: '8' },
   fog_brush:    { label: 'Névoa (Pincel)',        desc: 'Desenhe à mão livre para revelar ou esconder névoa' },
@@ -747,6 +748,20 @@ export const GridToolbar: React.FC = () => {
           {/* TAB: OBJETOS */}
           {activeConfigTab === 'objetos' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Tooltip label="Pins de Lore no Mapa" description="Gerenciar pontos de interesse e notas vinculadas no mapa" position="bottom">
+                <button
+                  onClick={() => {
+                    setShowConfigMenu(false);
+                    window.dispatchEvent(new CustomEvent('open-lore-pins'));
+                  }}
+                  style={{
+                    background: 'rgba(16,185,129,0.15)', border: `1px solid ${C.accentBrd}`, color: C.accent,
+                    borderRadius: '6px', padding: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%'
+                  }}
+                >
+                  <MapPin size={14} /> Pins de Lore no Mapa
+                </button>
+              </Tooltip>
               <Tooltip label="Localizar Textos" description="Destaca todos os textos no mapa" position="bottom">
                 <button
                   onClick={() => window.dispatchEvent(new Event('locate-texts'))}
@@ -1517,12 +1532,13 @@ export const GridToolbar: React.FC = () => {
                 <span style={{ fontSize: '11px', fontWeight: 700, color: C.textMut, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Ferramentas de Desenho
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
                   {[
                     { id: 'pen', icon: Pen, label: 'Caneta', shortcut: 'P' },
                     { id: 'shape', icon: Square, label: 'Formas', shortcut: 'R' },
                     { id: 'arrow', icon: ArrowRight, label: 'Seta Tática', shortcut: 'A' },
                     { id: 'text', icon: Type, label: 'Texto', shortcut: 'T' },
+                    { id: 'lore_pins', icon: MapPin, label: 'Pins de Lore', shortcut: 'L', isAction: true },
                     { id: 'ruler', icon: Ruler, label: 'Régua', shortcut: '7' },
                     { id: 'eraser', icon: Eraser, label: 'Borracha', shortcut: '8' },
                   ].map(tool => {
@@ -1535,7 +1551,11 @@ export const GridToolbar: React.FC = () => {
                           className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
                           style={{ width: '100%', height: '34px' }}
                           onClick={() => {
-                            setActiveTool(tool.id as any);
+                            if ((tool as any).isAction) {
+                              window.dispatchEvent(new CustomEvent('open-lore-pins'));
+                            } else {
+                              setActiveTool(tool.id as any);
+                            }
                           }}
                         >
                           <Icon size={16} color={isActive ? C.accent : C.textSec} />

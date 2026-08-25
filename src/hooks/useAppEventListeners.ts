@@ -26,21 +26,25 @@ export const useAppEventListeners = ({
 }: UseAppEventListenersProps) => {
   const [isLayoutPresetsOpen, setIsLayoutPresetsOpen] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
+  const [isLorePinsOpen, setIsLorePinsOpen] = useState(false);
   const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
 
   useYjsCleanup();
 
-  // 1. Layout Presets & Global Search & Shortcuts
+  // 1. Layout Presets & Global Search & Lore Pins Shortcuts
   useEffect(() => {
     const handleOpenPresets = () => setIsLayoutPresetsOpen(true);
     const handleOpenSearch = () => setIsGlobalSearchOpen(true);
+    const handleOpenLorePins = () => setIsLorePinsOpen(true);
 
     window.addEventListener('open-layout-presets', handleOpenPresets);
     window.addEventListener('open-global-search', handleOpenSearch);
+    window.addEventListener('open-lore-pins', handleOpenLorePins);
 
     return () => {
       window.removeEventListener('open-layout-presets', handleOpenPresets);
       window.removeEventListener('open-global-search', handleOpenSearch);
+      window.removeEventListener('open-lore-pins', handleOpenLorePins);
     };
   }, []);
 
@@ -244,6 +248,7 @@ export const useAppEventListeners = ({
   return {
     isLayoutPresetsOpen, setIsLayoutPresetsOpen,
     isGlobalSearchOpen, setIsGlobalSearchOpen,
+    isLorePinsOpen, setIsLorePinsOpen,
     activeCutscene, setActiveCutscene
   };
 };

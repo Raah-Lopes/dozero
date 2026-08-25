@@ -15,7 +15,9 @@ const roomName = urlParams.get('room') || 'dozero-mesa-principal-v2';
 // =========================================================================
 // OFFLINE STORAGE (INDEXEDDB)
 // =========================================================================
-export const indexeddbProvider = new IndexeddbPersistence(roomName, doc);
+export const indexeddbProvider = typeof indexedDB !== 'undefined'
+  ? new IndexeddbPersistence(roomName, doc)
+  : (null as any);
 
 // =========================================================================
 // REAL-TIME SYNC (WebSocket local dev + Supabase Realtime produção)
@@ -74,6 +76,7 @@ export const state = {
   drawings: doc.getMap('drawings'),
   drawingLayers: doc.getMap('drawingLayers'),
   fogOps: doc.getMap('fogOps'),
+  lorePins: doc.getMap('lorePins'),
   roomSettings: doc.getMap('roomSettings')
 };
 
@@ -86,6 +89,7 @@ export const undoManager = new Y.UndoManager([
   state.props,
   state.backgrounds,
   state.mapTexts,
+  state.lorePins,
   state.fogOps
 ]);
 
@@ -99,7 +103,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Initialize mock state ONLY on first-ever room initialization
-indexeddbProvider.on('synced', () => {
+indexeddbProvider?.on('synced', () => {
   // Inicializa mapa de combate se vazio
   if (!state.combat.has('isActive')) {
     state.combat.set('isActive', false);

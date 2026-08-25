@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, BookOpen, LayoutGrid, Terminal, User, ArrowRight } from 'lucide-react';
+import { Search, X, BookOpen, LayoutGrid, Terminal, User, ArrowRight, MapPin } from 'lucide-react';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { state } from '../../store';
@@ -40,6 +40,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
 
   // Search Results
   const tools = [
+    { name: 'Pins de Lore no Mapa', type: 'Ferramenta', icon: MapPin, action: () => { window.dispatchEvent(new CustomEvent('open-lore-pins')); onClose(); } },
     { name: 'Hub de Ferramentas (Menu Geral)', type: 'Widget', icon: LayoutGrid, action: () => { setActiveModal('widgets'); onClose(); } },
     { name: 'Wiki da Campanha', type: 'Visão', icon: BookOpen, action: () => { setViewMode('wiki'); onClose(); } },
     { name: 'Diretor de Áudio & Trilha Sonora', type: 'Widget', icon: LayoutGrid, action: () => { toggleWindow('audioDirector'); onClose(); } },

@@ -15,3 +15,4 @@ export * from './user';
 export * from './useCommandRegistry';
 export * from './drawings';
 export * from './fog';
+export * from './lorePins';

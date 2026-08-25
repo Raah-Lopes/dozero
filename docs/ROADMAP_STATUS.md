@@ -6,10 +6,10 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 
 ## Próxima ordem de execução
 
-1. **E.3 Pins de lore** — ligar pontos do mapa a entidades tipadas da wiki.
-2. **D.4 Genealogia** — derivar árvore familiar das conexões semânticas existentes.
-3. **C.2 Editor visual de fichas** — completar fluxo por abas e histórico sem depender de YAML cru.
-4. **F.3 Offline aprimorado** — fila visível de sync e recuperação de conflitos.
+1. **D.4 Genealogia** — derivar árvore familiar das conexões semânticas existentes.
+2. **C.2 Editor visual de fichas** — completar fluxo por abas e histórico sem depender de YAML cru.
+3. **F.3 Offline aprimorado** — fila visível de sync e recuperação de conflitos.
+4. **F.2 Macros condicionais** — builder condicional e contexto automático.
 
 ## Trilha A — comunicação e áudio
 
@@ -49,7 +49,7 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 |---|---|---|
 | E.1 Calendário fantástico | Concluído | Presets, meses variáveis, estações, semana, ciclo lunar e eventos sincronizados implementados no Chronos. |
 | E.2 Cronos Timeline | Concluído | Linha do tempo horizontal histórica multi-camadas (`world`, `campaign`, `character`), zoom (`day`, `month`, `year`), drag/drop, navegação temporal e integração com entidades tipadas da wiki implementados no ChronosWidget/ChronosTimeline com testes unitários. |
-| E.3 Pins de lore | Próximo | Ferramenta que vincula coordenadas no mapa a entidades tipadas da wiki. |
+| E.3 Pins de lore | Concluído | Pins interativos no canvas 2D com cores e estilos por tipo de entidade da wiki, abertura de notas com um clique, arrasto no mapa pelo mestre, criação via drag & drop da wiki, controle de visibilidade (GM vs Jogadores), modal de gerenciamento e persistência de snapshots com Yjs. |
 
 ## Trilha F — IA e automação
 

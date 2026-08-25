@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Tokens, Config, FogOfWar } from '../store/modules';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture, FillGradient } from 'pixi.js';
-import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps } from '../store';
+import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps, updateLorePinPosition, removeLorePin, addLorePin, getLorePins, LorePinData, createLorePinFromWikiEntry } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 import { toast } from '../components/UI/Toast';
 import { useAuthStore } from '../store/authStore';
@@ -1044,10 +1044,11 @@ export const GameCanvas: React.FC = () => {
       canvasEl.addEventListener('drop', (e) => {
         e.preventDefault();
         const tokenId = e.dataTransfer?.getData('tokenId');
+        const lorePinWikiPath = e.dataTransfer?.getData('lorePinWikiPath');
         const wikiPath = e.dataTransfer?.getData('wikiPath');
         const textData = e.dataTransfer?.getData('application/json');
 
-        if (tokenId || wikiPath || textData) {
+        if (tokenId || lorePinWikiPath || wikiPath || textData) {
           const rect = canvasEl.getBoundingClientRect();
           const dropX = e.clientX - rect.left;
           const dropY = e.clientY - rect.top;
@@ -1059,16 +1060,50 @@ export const GameCanvas: React.FC = () => {
           const config = Config.getAll();
           const snapped = snapToGrid(worldPoint.x, worldPoint.y, config);
           
-          if (tokenId) {
+          if (lorePinWikiPath) {
+            const title = e.dataTransfer?.getData('lorePinTitle') || 'Ponto de Interesse';
+            const entityType = e.dataTransfer?.getData('lorePinType') || 'local';
+            addLorePin({
+              x: snapped.x,
+              y: snapped.y,
+              title,
+              wikiPath: lorePinWikiPath,
+              entityType
+            });
+            toast.success(`📍 Pin "${title}" fixado no mapa!`);
+          } else if (tokenId) {
             Tokens.update(tokenId, { x: snapped.x, y: snapped.y });
           } else if (wikiPath) {
-            window.dispatchEvent(new CustomEvent('spawn-token-from-wiki', {
-              detail: { wikiPath, x: snapped.x, y: snapped.y }
-            }));
+            // Se segurar Shift ou Alt durante o drop, cria um Pin de Lore em vez de Token
+            if (e.shiftKey || e.altKey) {
+              const fileName = wikiPath.split('/').pop()?.replace(/\.md$/i, '').replace(/_/g, ' ') || 'Ponto de Interesse';
+              addLorePin({
+                x: snapped.x,
+                y: snapped.y,
+                title: fileName,
+                wikiPath,
+                entityType: 'local'
+              });
+              toast.success(`📍 Pin de Lore "${fileName}" adicionado!`);
+            } else {
+              window.dispatchEvent(new CustomEvent('spawn-token-from-wiki', {
+                detail: { wikiPath, x: snapped.x, y: snapped.y }
+              }));
+            }
           } else if (textData) {
             try {
               const parsed = JSON.parse(textData);
-              if (parsed.type === 'prop') {
+              if (parsed.type === 'lore-pin' || parsed.type === 'lorePin') {
+                addLorePin({
+                  x: snapped.x,
+                  y: snapped.y,
+                  title: parsed.title || parsed.name || 'Ponto de Interesse',
+                  wikiPath: parsed.wikiPath || parsed.path,
+                  entityType: parsed.entityType || 'local',
+                  description: parsed.description
+                });
+                toast.success(`📍 Pin de Lore fixado no mapa!`);
+              } else if (parsed.type === 'prop') {
                 import('../store/props').then(m => {
                   m.addMapProp({
                     name: parsed.name,
@@ -1112,6 +1147,10 @@ export const GameCanvas: React.FC = () => {
       let textsContainer = new Container();
       textsContainer.zIndex = 110;
       viewport.addChild(textsContainer);
+
+      let lorePinsContainer = new Container();
+      lorePinsContainer.zIndex = 115;
+      viewport.addChild(lorePinsContainer);
 
       // Fog of War Overlay System
       const fogContainer = new Container();
@@ -1418,6 +1457,156 @@ export const GameCanvas: React.FC = () => {
       state.mapTexts.observe(syncTexts);
       syncTexts();
       (app as any)._yjsTextObserver = syncTexts;
+
+      // Lore Pins Container & Sprites
+      const lorePinSprites: Record<string, Container> = {};
+      let draggingLorePinId: string | null = null;
+      let lorePinDragOffset = { x: 0, y: 0 };
+
+      const syncLorePins = () => {
+        if (!state.lorePins) return;
+        const pinsState = state.lorePins;
+        const isGM = localStorage.getItem('isGM') === 'true';
+
+        Object.keys(lorePinSprites).forEach(id => {
+          if (!pinsState.has(id)) {
+            lorePinsContainer.removeChild(lorePinSprites[id]);
+            lorePinSprites[id].destroy({ children: true });
+            delete lorePinSprites[id];
+          }
+        });
+
+        Array.from(pinsState.entries()).forEach(([id, pinData]) => {
+          const pin = pinData as LorePinData;
+          if (pin.gmOnly && !isGM) {
+            if (lorePinSprites[id]) {
+              lorePinSprites[id].visible = false;
+            }
+            return;
+          }
+
+          if (!lorePinSprites[id]) {
+            const container = new Container();
+            
+            // 1. Sombra
+            const shadow = new Graphics();
+            shadow.ellipse(0, 16, 12, 5);
+            shadow.fill({ color: 0x000000, alpha: 0.4 });
+            container.addChild(shadow);
+
+            // 2. Marcador Pin
+            const pinMarker = new Graphics();
+            container.addChild(pinMarker);
+
+            // 3. Ícone / Círculo interno
+            const iconBadge = new Graphics();
+            container.addChild(iconBadge);
+
+            // 4. Badge com fundo translúcido
+            const labelBg = new Graphics();
+            container.addChild(labelBg);
+
+            const labelText = new Text({
+              text: pin.title || 'Ponto de Interesse',
+              style: {
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 13,
+                fill: '#ffffff',
+                align: 'center',
+                fontWeight: 'bold'
+              }
+            });
+            labelText.anchor.set(0.5, 0);
+            labelText.y = 18;
+            container.addChild(labelText);
+
+            container.eventMode = 'static';
+            container.cursor = 'pointer';
+
+            container.on('pointerover', () => {
+              container.scale.set(1.15);
+            });
+
+            container.on('pointerout', () => {
+              container.scale.set(1.0);
+            });
+
+            container.on('pointerdown', (e) => {
+              if (e.button === 0) {
+                e.stopPropagation();
+                
+                if (pin.wikiPath) {
+                  window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: pin.wikiPath } }));
+                  toast.success(`📖 Abrindo nota: ${pin.title}`);
+                } else {
+                  toast.info(`📍 ${pin.title}${pin.description ? ' — ' + pin.description : ''}`);
+                }
+
+                if (isGM) {
+                  draggingLorePinId = id;
+                  const localPos = viewport.toLocal(e.global);
+                  lorePinDragOffset = { x: container.x - localPos.x, y: container.y - localPos.y };
+                  container.alpha = 0.7;
+                  container.cursor = 'grabbing';
+                }
+              } else if (e.button === 2 && isGM) {
+                e.stopPropagation();
+                if (confirm(`Remover Pin de Lore "${pin.title}" do mapa?`)) {
+                  removeLorePin(id);
+                  toast.info(`Pin "${pin.title}" removido.`);
+                }
+              }
+            });
+
+            lorePinsContainer.addChild(container);
+            lorePinSprites[id] = container;
+          }
+
+          const container = lorePinSprites[id];
+          container.visible = true;
+
+          const pinMarker = container.children[1] as Graphics;
+          const iconBadge = container.children[2] as Graphics;
+          const labelBg = container.children[3] as Graphics;
+          const labelText = container.children[4] as Text;
+
+          labelText.text = pin.title || 'Ponto de Interesse';
+
+          const colorHex = pin.color || '#34d399';
+          pinMarker.clear();
+          pinMarker.circle(0, 0, 15);
+          pinMarker.poly([
+            { x: -10, y: 7 },
+            { x: 0, y: 20 },
+            { x: 10, y: 7 }
+          ]);
+          pinMarker.fill({ color: colorHex });
+          pinMarker.stroke({ color: '#1a110a', width: 2 });
+
+          iconBadge.clear();
+          iconBadge.circle(0, 0, 5);
+          iconBadge.fill({ color: '#ffffff' });
+
+          labelBg.clear();
+          const textW = labelText.width + 12;
+          const textH = labelText.height + 4;
+          labelBg.roundRect(-textW / 2, 16, textW, textH, 6);
+          labelBg.fill({ color: '#120d0a', alpha: 0.85 });
+          labelBg.stroke({ color: colorHex, width: 1 });
+
+          if (draggingLorePinId !== id) {
+            container.x = pin.x;
+            container.y = pin.y;
+            container.alpha = pin.gmOnly ? 0.65 : 1.0;
+          }
+        });
+      };
+
+      if (state.lorePins) {
+        state.lorePins.observe(syncLorePins);
+        syncLorePins();
+        (app as any)._yjsLorePinsObserver = syncLorePins;
+      }
 
       interface TokenSpriteRecord {
         container: Container;
@@ -1988,8 +2177,19 @@ export const GameCanvas: React.FC = () => {
       app.stage.on('pointerup', onStageDragEnd);
       app.stage.on('pointerupoutside', onStageDragEnd);
 
-      // Text drag stays on window (text containers live outside pixi viewport)
+      // Text and LorePin drag stays on window
       const handleNativeMove = (e: PointerEvent) => {
+        if (draggingLorePinId) {
+          const container = lorePinSprites[draggingLorePinId];
+          if (container) {
+            const rect = app.canvas.getBoundingClientRect();
+            const localPos = viewport.toLocal({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+            container.x = localPos.x + lorePinDragOffset.x;
+            container.y = localPos.y + lorePinDragOffset.y;
+          }
+          return;
+        }
+
         if (!draggingTextId || draggingTextId.startsWith('prop_')) return;
         const container = textSprites[draggingTextId];
         if (container) {
@@ -2001,6 +2201,16 @@ export const GameCanvas: React.FC = () => {
       };
 
       const handleNativeUp = (e: PointerEvent) => {
+        if (draggingLorePinId) {
+          const container = lorePinSprites[draggingLorePinId];
+          if (container) {
+            updateLorePinPosition(draggingLorePinId, container.x, container.y);
+            container.alpha = 1;
+            container.cursor = 'pointer';
+          }
+          draggingLorePinId = null;
+        }
+
         if (draggingTextId && !draggingTextId.startsWith('prop_')) {
           const container = textSprites[draggingTextId];
           if (container) {
@@ -3582,6 +3792,9 @@ export const GameCanvas: React.FC = () => {
           }
           if ((appRef.current as any)._yjsTextObserver) {
             state.mapTexts.unobserve((appRef.current as any)._yjsTextObserver);
+          }
+          if ((appRef.current as any)._yjsLorePinsObserver && state.lorePins) {
+            state.lorePins.unobserve((appRef.current as any)._yjsLorePinsObserver);
           }
           if ((appRef.current as any)._cleanupMapObservers) {
             (appRef.current as any)._cleanupMapObservers();

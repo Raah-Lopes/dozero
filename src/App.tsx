@@ -41,6 +41,7 @@ import { MobileBottomNav } from './components/HUD/MobileBottomNav';
 import { MobileQuickActions } from './components/HUD/MobileQuickActions';
 import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
 import { GlobalSearchModal } from './components/Modals/GlobalSearchModal';
+import { LorePinsModal } from './components/Modals/LorePinsModal';
 import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
@@ -106,6 +107,7 @@ function App() {
   const {
     isLayoutPresetsOpen, setIsLayoutPresetsOpen,
     isGlobalSearchOpen, setIsGlobalSearchOpen,
+    isLorePinsOpen, setIsLorePinsOpen,
     activeCutscene, setActiveCutscene
   } = useAppEventListeners({
     viewMode,
@@ -448,6 +450,7 @@ function App() {
         )}
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
+        <LorePinsModal isOpen={isLorePinsOpen} onClose={() => setIsLorePinsOpen(false)} />
         <CampaignLobbyModal
           isOpen={activeModal === 'lobby'}
           onClose={() => setActiveModal('none')}

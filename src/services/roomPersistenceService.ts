@@ -15,6 +15,7 @@ export interface RoomBundle {
     fogOps?: any[];
     mapTexts?: any[];
     props?: any[];
+    lorePins?: any[];
     combat?: any;
     clocks?: any[];
     roomSettings?: any;
@@ -88,6 +89,7 @@ export function getRoomBundle(): RoomBundle {
       fogOps: Array.from(state.fogOps.entries()),
       mapTexts: Array.from(state.mapTexts.entries()),
       props: Array.from(state.props.entries()),
+      lorePins: state.lorePins ? Array.from(state.lorePins.entries()) : [],
       combat: (state.combat as any).toJSON ? (state.combat as any).toJSON() : {},
       clocks: Array.from(state.clocks.entries()),
       roomSettings: state.roomSettings ? (state.roomSettings as any).toJSON() : {},
@@ -156,6 +158,12 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
     if (Array.isArray(data.props)) {
       state.props.clear();
       data.props.forEach(([key, val]) => state.props.set(key, val));
+    }
+
+    // 8.1 Lore Pins
+    if (state.lorePins && Array.isArray(data.lorePins)) {
+      state.lorePins.clear();
+      data.lorePins.forEach(([key, val]) => state.lorePins.set(key, val));
     }
 
     // 9. Combat
