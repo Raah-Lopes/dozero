@@ -71,7 +71,7 @@ export const ChatWindow: React.FC = () => {
         }
       }, 50);
     }
-  }, [messages, tab, searchQuery]);
+  }, [messages, subTab, searchQuery]);
 
   const lastSendTimeRef = useRef<number>(0);
 
@@ -109,7 +109,7 @@ export const ChatWindow: React.FC = () => {
     setTypingStatus(false);
     
     let text = input;
-    let options: ChatMessageOptions = { tipo: tab, autor: playerName, autor_color: playerColor };
+    let options: ChatMessageOptions = { tipo: subTab, autor: playerName, autor_color: playerColor };
 
     setSentHistory(prev => [...prev, text]);
     setHistoryIndex(-1);
@@ -216,7 +216,7 @@ export const ChatWindow: React.FC = () => {
       const url = await saveImageToCloud(pendingImageBase64, `chat_${Date.now()}.webp`);
       const imgMarkup = `<img src="${url}" alt="Imagem" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 4px; display: block; object-fit: contain;" />`;
       const finalMsg = caption.trim() ? `${caption.trim()}<br/>${imgMarkup}` : imgMarkup;
-      pushAdvancedChatMessage(finalMsg, { tipo: tab, autor: playerName });
+      pushAdvancedChatMessage(finalMsg, { tipo: subTab, autor: playerName });
     } catch (err) {
       console.error('[Chat] Error uploading image:', err);
       toast.error('Erro ao enviar imagem.');
