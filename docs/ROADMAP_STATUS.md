@@ -6,10 +6,10 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 
 ## Próxima ordem de execução
 
-1. **C.2 Editor visual de fichas** — completar fluxo por abas e histórico sem depender de YAML cru.
-2. **F.3 Offline aprimorado** — fila visível de sync e recuperação de conflitos.
-3. **F.2 Macros condicionais** — builder condicional e contexto automático.
-4. **A.1 Voz WebRTC e screen share** — auditoria de permissões granulares e áudio TURN.
+1. **F.3 Offline aprimorado** — fila visível de sync e recuperação de conflitos.
+2. **F.2 Macros condicionais** — builder condicional e contexto automático.
+3. **A.1 Voz WebRTC e screen share** — auditoria de permissões granulares e áudio TURN.
+4. **A.2 Soundboard e cenas sonoras** — grid configurável de sons e presets.
 
 ## Trilha A — comunicação e áudio
 
@@ -32,7 +32,7 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 | Item | Estado | Evidência/pendência |
 |---|---|---|
 | C.1 Theme Packs | Concluído | Registro com dez temas, troca e overrides em Settings. Auditar consistência visual gradualmente. |
-| C.2 Editor visual de fichas | Parcial | CharacterSheet e fichas frontmatter existem. Faltam fluxo consolidado por abas, macros e histórico de sessão conforme roadmap. |
+| C.2 Editor visual de fichas | Concluído | Painel unificado em 4 abas operacionais (Visão Geral & Combate com ações rápidas de ataque, Magias & Poderes com consumo automático de PM, Mochila & Inventário com controle de quantidade/peso e Biografia com Diário de Sessão) sem depender de edição direta de YAML cru. |
 
 ## Trilha D — wiki semântica
 
