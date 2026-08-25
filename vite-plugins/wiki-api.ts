@@ -71,6 +71,7 @@ function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[
       // Buscar avatar (primeira imagem no frontmatter ou no corpo)
       let avatar: string | null = null;
       let extracted = '';
+      let entityType = '';
 
       const yamlMatch = /^---\n([\s\S]*?)\n---/.exec(content);
       if (yamlMatch) {
@@ -78,6 +79,8 @@ function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[
          if (avatarMatch) {
             extracted = avatarMatch[1].trim().replace(/['"]/g, '');
          }
+         const typeMatch = yamlMatch[1].match(/(?:^|\n)(?:tipo|type|categoria):\s*(.+)/i);
+         if (typeMatch) entityType = typeMatch[1].trim().replace(/['"]/g, '').toLowerCase();
       }
 
       if (!extracted) {
@@ -124,7 +127,7 @@ function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[
           }
         }
 
-      nodes.push({ id, name, path: relativePath, group: path.dirname(relativePath), avatar, isFolder: false });
+      nodes.push({ id, name, path: relativePath, group: path.dirname(relativePath), avatar, entityType, isFolder: false });
       
       // Link file to its parent folder
       if (currentFolderId) {

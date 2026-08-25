@@ -1,5 +1,6 @@
 import { state } from '../services/yjs';
 import { pushChatMessage } from './chat';
+import { DEFAULT_CALENDAR, getCalendarDayNumber, normalizeCalendarConfig, type CalendarConfig } from '../utils/fantasyCalendar';
 
 // =========================================================================
 // CHRONOS ENGINE (A Campanha Viva)
@@ -21,6 +22,7 @@ export interface ChronosEvent {
 }
 
 export function initChronos() {
+  if (!state.chronos.get('config')) state.chronos.set('config', DEFAULT_CALENDAR);
   if (!state.chronos.get('global')) {
     state.chronos.set('global', {
       day: 1,
@@ -30,6 +32,19 @@ export function initChronos() {
       season: 'Primavera'
     });
   }
+}
+
+export function getChronosConfig(): CalendarConfig {
+  return normalizeCalendarConfig((state.chronos.get('config') as CalendarConfig) || DEFAULT_CALENDAR);
+}
+
+export function setChronosConfig(nextConfig: CalendarConfig) {
+  const config = normalizeCalendarConfig(nextConfig);
+  const current = getChronosState();
+  const month = Math.min(config.months.length, Math.max(1, current.month));
+  const selectedMonth = config.months[month - 1];
+  state.chronos.set('global', { ...current, month, day: Math.min(selectedMonth.days, current.day), season: selectedMonth.season });
+  state.chronos.set('config', config);
 }
 
 export function getChronosState(): ChronosState {
@@ -43,11 +58,13 @@ export function getChronosEvents(): ChronosEvent[] {
 export function addChronosEvent(title: string, date = getChronosState()) {
   const cleanTitle = title.trim();
   if (!cleanTitle) return;
+  const config = getChronosConfig();
+  const month = Math.min(config.months.length, Math.max(1, date.month));
   state.chronos.set('events', [...getChronosEvents(), {
     id: `chronos_event_${Date.now()}`,
     title: cleanTitle,
-    day: Math.min(30, Math.max(1, date.day)),
-    month: Math.min(12, Math.max(1, date.month)),
+    day: Math.min(config.months[month - 1].days, Math.max(1, date.day)),
+    month,
     year: Math.max(1, date.year)
   }]);
 }
@@ -58,6 +75,7 @@ export function removeChronosEvent(id: string) {
 
 export function advanceDay() {
   const current = getChronosState();
+  const config = getChronosConfig();
   
   
   let newDay = current.day + 1;
@@ -65,19 +83,15 @@ export function advanceDay() {
   let newYear = current.year;
   let newSeason = current.season;
 
-  if (newDay > 30) {
+  if (newDay > config.months[newMonth - 1].days) {
     newDay = 1;
     newMonth += 1;
-    if (newMonth > 12) {
+    if (newMonth > config.months.length) {
       newMonth = 1;
       newYear += 1;
     }
-    // Update Season
-    if (newMonth >= 3 && newMonth <= 5) newSeason = 'Outono';
-    else if (newMonth >= 6 && newMonth <= 8) newSeason = 'Inverno';
-    else if (newMonth >= 9 && newMonth <= 11) newSeason = 'Primavera';
-    else newSeason = 'Verão';
   }
+  newSeason = config.months[newMonth - 1].season;
 
   state.chronos.set('global', { ...current, day: newDay, month: newMonth, year: newYear, season: newSeason, timeOfDay: 'Manhã' });
   
@@ -86,7 +100,7 @@ export function advanceDay() {
     .forEach(event => pushChatMessage(`📅 <b>Hoje no mundo:</b> ${event.title}`, true, false));
 
   // LOGICA DE CONSEQUENCIAS (FOME/SEDE)
-  pushChatMessage(`🌅 <b>Um novo dia amanheceu!</b> (${newDay}/${newMonth}/${newYear}) - ${newSeason}`, true, false);
+  pushChatMessage(`🌅 <b>Um novo dia amanheceu!</b> (${newDay} de ${config.months[newMonth - 1].name}, ${newYear}) - ${newSeason}`, true, false);
   
   const tokens = Array.from(state.tokens.entries()) as [string, any][];
   let famintos = 0;
@@ -121,7 +135,7 @@ export function advanceDay() {
 
   // LOGICA DO MOTOR DE MUNDO (FACÇÕES E CORRUPÇÃO)
   // Roda a simulação a cada 7 dias (Semanas)
-  if (newDay % 7 === 0) {
+  if (getCalendarDayNumber(newDay, newMonth, newYear, config) % Math.max(1, config.weekdays.length) === 0) {
     const factions = state.world.get('factions') as any[] || [];
     const settlements = state.world.get('settlements') as any[] || [];
     

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { state, initChronos, getChronosState, getChronosEvents, addChronosEvent, removeChronosEvent, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../../store';
+import { state, initChronos, getChronosState, getChronosConfig, setChronosConfig, getChronosEvents, addChronosEvent, removeChronosEvent, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../../store';
 import type { ChronosState } from '../../../store';
-import { Clock, Sun, Moon, Sunrise,  CalendarDays, Tent, Coffee } from 'lucide-react';
-import { getMoonPhase } from '../../../utils/fantasyCalendar';
+import { Clock, Sun, Moon, Sunrise, CalendarDays, Tent, Coffee, Settings } from 'lucide-react';
+import { CALENDAR_PRESETS, getCalendarDayNumber, getMoonPhase, parseCalendarMonths, serializeCalendarMonths, type CalendarConfig } from '../../../utils/fantasyCalendar';
 
 export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = ({ onClose, isGM = true }) => {
   const [timeState, setTimeState] = useState<ChronosState | null>(null);
@@ -11,6 +11,11 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   const [eventDay, setEventDay] = useState('');
   const [eventMonth, setEventMonth] = useState('');
   const [eventYear, setEventYear] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [calendarName, setCalendarName] = useState('');
+  const [monthDefinitions, setMonthDefinitions] = useState('');
+  const [weekdays, setWeekdays] = useState('');
+  const [moonCycle, setMoonCycle] = useState('28');
 
   useEffect(() => {
     initChronos();
@@ -28,13 +33,24 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   }, []);
 
   if (!timeState) return null;
-  const moon = getMoonPhase(timeState.day, timeState.month, timeState.year);
+  const calendar = getChronosConfig();
+  const currentMonth = calendar.months[timeState.month - 1];
+  const moon = getMoonPhase(timeState.day, timeState.month, timeState.year, calendar);
   const todayEvents = getChronosEvents().filter(event => event.day === timeState.day && event.month === timeState.month && event.year === timeState.year);
-  const currentDate = timeState.year * 360 + timeState.month * 30 + timeState.day;
+  const currentDate = getCalendarDayNumber(timeState.day, timeState.month, timeState.year, calendar);
   const upcomingEvents = getChronosEvents()
-    .filter(event => event.year * 360 + event.month * 30 + event.day > currentDate)
-    .sort((a, b) => (a.year * 360 + a.month * 30 + a.day) - (b.year * 360 + b.month * 30 + b.day))
+    .filter(event => getCalendarDayNumber(event.day, event.month, event.year, calendar) > currentDate)
+    .sort((a, b) => getCalendarDayNumber(a.day, a.month, a.year, calendar) - getCalendarDayNumber(b.day, b.month, b.year, calendar))
     .slice(0, 3);
+  const weekday = calendar.weekdays.length ? calendar.weekdays[currentDate % calendar.weekdays.length] : '';
+
+  const loadCalendarEditor = (config: CalendarConfig) => {
+    setCalendarName(config.name);
+    setMonthDefinitions(serializeCalendarMonths(config.months));
+    setWeekdays(config.weekdays.join(', '));
+    setMoonCycle(String(config.moonCycleDays));
+  };
+  const selectedEventMonth = calendar.months[(Number(eventMonth) || timeState.month) - 1] || currentMonth;
 
   const getTimeIcon = (time: string) => {
     switch (time) {
@@ -61,17 +77,17 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   };
 
   return (
-    <DraggableWindow id="chronos-widget" widgetKey="chronos" title="Motor Chronos" initialX={window.innerWidth / 2 - 160} initialY={100} onClose={onClose} width={320} height={440}>
+    <DraggableWindow id="chronos-widget" widgetKey="chronos" title="Motor Chronos" initialX={window.innerWidth / 2 - 180} initialY={80} onClose={onClose} width={360} height={560}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', color: 'var(--text-primary)' }}>
         
         {/* Mostrador Principal */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.4)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
             <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-              Dia {timeState.day} <span style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Mês {timeState.month}</span>
+              Dia {timeState.day} <span style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>{currentMonth.name}</span>
             </span>
             <span style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CalendarDays size={14} /> {timeState.season} - Ano {timeState.year}
+              <CalendarDays size={14} /> {weekday ? `${weekday} · ` : ''}{timeState.season} · Ano {timeState.year}
             </span>
             <span style={{ fontSize: '0.75rem', color: '#c4b5fd', display: 'flex', alignItems: 'center', gap: '4px' }}>
               {moon.icon} {moon.name}
@@ -79,6 +95,7 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+            {isGM && <button onClick={() => { loadCalendarEditor(calendar); setSettingsOpen(value => !value); }} title="Configurar calendário" style={{ alignSelf: 'flex-end', border: 0, background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0 }}><Settings size={14} /></button>}
             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.1)' }}>
               {getTimeIcon(timeState.timeOfDay)}
             </div>
@@ -97,17 +114,52 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
           {isGM && <>
             <input value={eventTitle} onChange={event => setEventTitle(event.target.value)} placeholder="Novo evento" style={{ minWidth: 0, padding: '5px 7px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
             <div style={{ display: 'flex', gap: '4px' }}>
-              <input type="number" value={eventDay} onChange={event => setEventDay(event.target.value)} placeholder={`Dia ${timeState.day}`} min="1" max="30" style={{ width: '52px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
-              <input type="number" value={eventMonth} onChange={event => setEventMonth(event.target.value)} placeholder={`Mês ${timeState.month}`} min="1" max="12" style={{ width: '58px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
+              <input type="number" value={eventDay} onChange={event => setEventDay(event.target.value)} placeholder={`Dia ${timeState.day}`} min="1" max={selectedEventMonth.days} style={{ width: '52px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
+              <select value={eventMonth} onChange={event => setEventMonth(event.target.value)} aria-label="Mês do evento" style={{ minWidth: 0, flex: 1, padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }}>
+                <option value="">{currentMonth.name}</option>
+                {calendar.months.map((month, index) => <option key={`${month.name}-${index}`} value={index + 1}>{month.name}</option>)}
+              </select>
               <input type="number" value={eventYear} onChange={event => setEventYear(event.target.value)} placeholder={`Ano ${timeState.year}`} min="1" style={{ width: '66px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
-              <button onClick={() => { addChronosEvent(eventTitle, { day: Number(eventDay) || timeState.day, month: Number(eventMonth) || timeState.month, year: Number(eventYear) || timeState.year, timeOfDay: timeState.timeOfDay, season: timeState.season }); setEventTitle(''); setEventDay(''); setEventMonth(''); setEventYear(''); }} style={{ padding: '5px 8px', background: 'var(--accent-primary)', border: 0, borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '0.72rem' }}>Adicionar</button>
+              <button onClick={() => { addChronosEvent(eventTitle, { day: Number(eventDay) || timeState.day, month: Number(eventMonth) || timeState.month, year: Number(eventYear) || timeState.year, timeOfDay: timeState.timeOfDay, season: selectedEventMonth.season }); setEventTitle(''); setEventDay(''); setEventMonth(''); setEventYear(''); }} style={{ padding: '5px 8px', background: 'var(--accent-primary)', border: 0, borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '0.72rem' }}>Adicionar</button>
             </div>
           </>}
         </div>
 
+        {settingsOpen && isGM && <div style={{ display: 'grid', gap: '8px', padding: '10px', background: 'rgba(0,0,0,.3)', border: '1px solid var(--glass-border)', borderRadius: '8px', fontSize: '.72rem' }}>
+          <label style={{ display: 'grid', gap: '3px' }}>Preset
+            <select value={calendar.id in CALENDAR_PRESETS ? calendar.id : 'custom'} onChange={event => {
+              const preset = CALENDAR_PRESETS[event.target.value];
+              if (preset) { setChronosConfig(preset); loadCalendarEditor(preset); }
+            }} style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '5px' }}>
+              <option value="custom" disabled>Personalizado</option>
+              {Object.values(CALENDAR_PRESETS).map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'grid', gap: '3px' }}>Nome
+            <input value={calendarName} onChange={event => setCalendarName(event.target.value)} maxLength={60} style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '5px' }} />
+          </label>
+          <label style={{ display: 'grid', gap: '3px' }}>Meses — uma linha: nome, dias, estação
+            <textarea value={monthDefinitions} onChange={event => setMonthDefinitions(event.target.value)} rows={5} style={{ padding: '6px', resize: 'vertical', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '5px' }} />
+          </label>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <label style={{ display: 'grid', gap: '3px', flex: 1 }}>Dias da semana
+              <input value={weekdays} onChange={event => setWeekdays(event.target.value)} placeholder="Lua, Marte, Sol" style={{ minWidth: 0, padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '5px' }} />
+            </label>
+            <label style={{ display: 'grid', gap: '3px', width: '72px' }}>Ciclo lunar
+              <input type="number" min="1" max="999" step="0.01" value={moonCycle} onChange={event => setMoonCycle(event.target.value)} style={{ minWidth: 0, padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '5px' }} />
+            </label>
+          </div>
+          <button onClick={() => {
+            const months = parseCalendarMonths(monthDefinitions);
+            if (!months.length) return;
+            setChronosConfig({ id: 'custom', name: calendarName, months, weekdays: weekdays.split(',').map(day => day.trim()).filter(Boolean), moonCycleDays: Number(moonCycle) });
+            setSettingsOpen(false);
+          }} style={{ padding: '7px', background: 'var(--accent-primary)', border: 0, borderRadius: '6px', color: '#04130d', fontWeight: 700, cursor: 'pointer' }}>Aplicar calendário</button>
+        </div>}
+
         {upcomingEvents.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
           <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>Próximos Eventos</span>
-          {upcomingEvents.map(event => <span key={event.id}>◦ {event.day}/{event.month}/{event.year} — {event.title}</span>)}
+          {upcomingEvents.map(event => <span key={event.id}>◦ {event.day} de {calendar.months[event.month - 1]?.name || event.month}, {event.year} — {event.title}</span>)}
         </div>}
 
         {/* Controles do Mestre */}

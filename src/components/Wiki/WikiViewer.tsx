@@ -16,7 +16,7 @@ import { syncFileToBoardTokens } from '../../services/wiki/syncWiki';
 import * as yaml from 'js-yaml';
 import { toast } from '../UI/Toast';
 import { useWiki } from '../../hooks/useWiki';
-import { getEntityDate, getEntityStatus, getEntityTags } from '../../utils/wikiEntities';
+import { getEntityDate, getEntityStatus, getEntityTags, getWikiEntityStyle, WIKI_ENTITY_STYLES } from '../../utils/wikiEntities';
 import './wiki.css';
 
 interface TreeNode {
@@ -24,23 +24,6 @@ interface TreeNode {
   path: string;
   type: 'tree' | 'blob';
   children: Record<string, TreeNode>;
-}
-
-const ENTITY_STYLE: Record<string, { label: string; color: string }> = {
-  local: { label: 'Local', color: '#34d399' },
-  personagem: { label: 'Personagem', color: '#c084fc' },
-  organizacao: { label: 'Organização', color: '#fbbf24' },
-  evento: { label: 'Evento', color: '#38bdf8' },
-  item: { label: 'Item', color: '#fb7185' },
-  criatura: { label: 'Criatura', color: '#f87171' },
-  divindade: { label: 'Divindade', color: '#fde047' },
-  conceito: { label: 'Conceito', color: '#fb923c' }
-};
-
-function getEntityStyle(meta: Record<string, string> | null) {
-  const rawType = (meta?.tipo || meta?.type || meta?.categoria || '').toLowerCase();
-  const aliases: Record<string, string> = { localizacao: 'local', lugar: 'local', npc: 'personagem', monstro: 'criatura', faccao: 'organizacao', facção: 'organizacao' };
-  return ENTITY_STYLE[aliases[rawType] || rawType];
 }
 
 function buildTree(items: GithubTreeItem[]): TreeNode {
@@ -527,17 +510,17 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       return null;
     }
   }, [frontmatter]);
-  const entityStyle = getEntityStyle(parsedMeta);
+  const entityStyle = getWikiEntityStyle(parsedMeta);
   const typedEntities = wikiIndex
     .filter(entry => {
-      const style = getEntityStyle(entry.metadata as Record<string, string>);
+      const style = getWikiEntityStyle(entry.metadata);
       return Boolean(style);
     });
   const entityTags = [...new Set(typedEntities.flatMap(entry => getEntityTags(entry.metadata)))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const entityStatuses = [...new Set(typedEntities.map(entry => getEntityStatus(entry.metadata)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const semanticEntities = typedEntities
     .filter(entry => {
-      const style = getEntityStyle(entry.metadata as Record<string, string>)!;
+      const style = getWikiEntityStyle(entry.metadata)!;
       return (!entityFilter || style.label === entityFilter)
         && (!entityTag || getEntityTags(entry.metadata).includes(entityTag))
         && (!entityStatus || getEntityStatus(entry.metadata) === entityStatus);
@@ -903,7 +886,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
               <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
                 <select value={entityFilter} onChange={event => setEntityFilter(event.target.value)} style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
                   <option value="">Todas as entidades</option>
-                  {[...new Map(Object.values(ENTITY_STYLE).map(style => [style.label, style])).values()].map(style => <option key={style.label}>{style.label}</option>)}
+                  {Object.values(WIKI_ENTITY_STYLES).map(style => <option key={style.label}>{style.label}</option>)}
                 </select>
                 {entityTags.length > 0 && <select value={entityTag} onChange={event => setEntityTag(event.target.value)} aria-label="Filtrar por tag" style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
                   <option value="">Todas as tags</option>
@@ -927,7 +910,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: entityDensity === 'list' ? '1fr' : `repeat(auto-fill, minmax(${entityDensity === 'comfortable' ? '220px' : '150px'}, 1fr))`, gap: '8px' }}>
                 {semanticEntities.map(entry => {
-                  const style = getEntityStyle(entry.metadata as Record<string, string>)!;
+                  const style = getWikiEntityStyle(entry.metadata)!;
                   const name = String(entry.metadata?.nome || entry.metadata?.titulo || entry.slug);
                   const image = String(entry.metadata?.imagem || entry.metadata?.avatar || '');
                   const tags = getEntityTags(entry.metadata);

@@ -1,12 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { useGameStore, getWikiConfig } from '../../store';
+import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
-import { Settings, Search, X, Map as MapIcon, Share2, GitMerge, Trash2, Edit2 } from 'lucide-react';
+import { Settings, Search, X, Share2, GitMerge, Trash2, Edit2 } from 'lucide-react';
 
 import { toast } from '../UI/Toast';
 import { ConnectionEditor } from './ConnectionEditor';
 import { escapeRegExp, formatWikiConnection, type WikiConnectionDraft } from '../../utils/wikiConnections';
+import { shortestPath } from '../../utils/graphPaths';
+import { getWikiEntityType, WIKI_ENTITY_STYLES } from '../../utils/wikiEntities';
 interface NodeData extends d3.SimulationNodeDatum {
   id: string;
   name: string;
@@ -16,6 +18,7 @@ interface NodeData extends d3.SimulationNodeDatum {
   val?: number;
   depth?: number;
   isFolder?: boolean;
+  entityType?: string;
 }
 
 interface LinkData extends d3.SimulationLinkDatum<NodeData> {
@@ -41,6 +44,10 @@ export const LivingBrain: React.FC = () => {
   
   const [layoutMode, setLayoutMode] = useState<'organic' | 'tree'>('organic');
   const [isLinkMode, setIsLinkMode] = useState(false);
+  const [showGraphTools, setShowGraphTools] = useState(false);
+  const [hiddenTypes, setHiddenTypes] = useState<string[]>([]);
+  const [pathStart, setPathStart] = useState('');
+  const [pathEnd, setPathEnd] = useState('');
   const isLinkModeRef = useRef(false);
   useEffect(() => {
     isLinkModeRef.current = isLinkMode;
@@ -55,8 +62,38 @@ export const LivingBrain: React.FC = () => {
   const visualStateRef = useRef({
     searchResults: null as string[] | null,
     linkingSourceNode: null as NodeData | null,
-    mousePos: { x: 0, y: 0 }
+    mousePos: { x: 0, y: 0 },
+    highlightedNodes: new Set<string>(),
+    highlightedEdges: new Set<string>()
   });
+
+  const entityNodes = useMemo(() => data.nodes.filter(node => !node.isFolder), [data.nodes]);
+  const graphTypes = useMemo(() => [...new Set(entityNodes.map(node => getWikiEntityType({ tipo: node.entityType }) || 'outro'))], [entityNodes]);
+  const visibleEntityNodes = useMemo(() => entityNodes.filter(node => !hiddenTypes.includes(getWikiEntityType({ tipo: node.entityType }) || 'outro')), [entityNodes, hiddenTypes]);
+  const highlightedPath = useMemo(() => {
+    const visibleIds = new Set(visibleEntityNodes.map(node => node.id));
+    const names = new Map(visibleEntityNodes.map(node => [node.name.toLowerCase(), node.id]));
+    const resolveId = (value: string | NodeData) => {
+      const raw = typeof value === 'string' ? value : value.id;
+      return visibleIds.has(raw) ? raw : names.get(raw.toLowerCase()) || '';
+    };
+    const edges = data.links
+      .map(link => ({ source: resolveId(link.source), target: resolveId(link.target) }))
+      .filter(edge => edge.source && edge.target);
+    return shortestPath(edges, pathStart, pathEnd);
+  }, [data, pathStart, pathEnd, visibleEntityNodes]);
+
+  useEffect(() => {
+    const highlightedEdges = new Set<string>();
+    highlightedPath.slice(1).forEach((node, index) => {
+      const previous = highlightedPath[index];
+      highlightedEdges.add(`${previous}|${node}`);
+      highlightedEdges.add(`${node}|${previous}`);
+    });
+    visualStateRef.current.highlightedNodes = new Set(highlightedPath);
+    visualStateRef.current.highlightedEdges = highlightedEdges;
+    simulationRef.current?.alpha(0.15).restart();
+  }, [highlightedPath]);
 
   const fetchGraph = async () => {
     try {
@@ -181,7 +218,7 @@ export const LivingBrain: React.FC = () => {
     
     const oldNodes = new Map(simulationRef.current?.nodes().map(n => [n.id, n]) || []);
     
-    const nodes = data.nodes.map(d => {
+    const nodes = data.nodes.filter(node => node.isFolder || !hiddenTypes.includes(getWikiEntityType({ tipo: node.entityType }) || 'outro')).map(d => {
       const old = oldNodes.get(d.id);
       if (old && old.x !== undefined && old.y !== undefined) {
         return { ...d, x: old.x, y: old.y, vx: old.vx, vy: old.vy, fx: old.fx, fy: old.fy };
@@ -263,13 +300,14 @@ export const LivingBrain: React.FC = () => {
         context.moveTo(link.source.x, link.source.y);
         context.lineTo(link.target.x, link.target.y);
         
-        let alpha = 0.4;
+        const isHighlightedEdge = vs.highlightedEdges.has(`${link.source.id}|${link.target.id}`);
+        let alpha = vs.highlightedNodes.size > 1 ? (isHighlightedEdge ? 1 : 0.05) : 0.4;
         if (vs.searchResults && (!vs.searchResults.includes(link.source.id) && !vs.searchResults.includes(link.target.id))) {
           alpha = 0.05;
         }
         
-        context.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
-        context.lineWidth = 2 / transformRef.current.k;
+        context.strokeStyle = isHighlightedEdge ? `rgba(52, 211, 153, ${alpha})` : `rgba(168, 85, 247, ${alpha})`;
+        context.lineWidth = (isHighlightedEdge ? 4 : 2) / transformRef.current.k;
         context.stroke();
         
         const dx = link.target.x - link.source.x;
@@ -283,7 +321,7 @@ export const LivingBrain: React.FC = () => {
         context.moveTo(arrowX, arrowY);
         context.lineTo(arrowX - 8 * Math.cos(angle - Math.PI/6), arrowY - 8 * Math.sin(angle - Math.PI/6));
         context.lineTo(arrowX - 8 * Math.cos(angle + Math.PI/6), arrowY - 8 * Math.sin(angle + Math.PI/6));
-        context.fillStyle = `rgba(168, 85, 247, ${alpha + 0.3})`;
+        context.fillStyle = isHighlightedEdge ? `rgba(52, 211, 153, ${alpha})` : `rgba(168, 85, 247, ${alpha + 0.3})`;
         context.fill();
 
         if (link.label && transformRef.current.k >= 0.5) {
@@ -320,18 +358,23 @@ export const LivingBrain: React.FC = () => {
 
       nodes.forEach((node) => {
         const size = node.val || 15;
+        const type = getWikiEntityType({ tipo: node.entityType });
+        const nodeColor = WIKI_ENTITY_STYLES[type]?.color || '#a855f7';
+        const isPathNode = vs.highlightedNodes.has(node.id);
         
         context.save();
         context.globalAlpha = 1.0;
         if (vs.searchResults && !vs.searchResults.includes(node.id)) {
           context.globalAlpha = 0.2;
+        } else if (vs.highlightedNodes.size > 1 && !isPathNode) {
+          context.globalAlpha = 0.15;
         }
 
         // Optimization: Native shadowBlur is extremely slow in canvas (causes requestAnimationFrame violations).
         // Instead, we draw a fake glow using a simple larger circle with low alpha.
         const isHovered = node.id === (vs as any).hoveredNode?.id;
         const isLinking = node.id === (vs as any).linkingSourceNode?.id;
-        const glowColor = isLinking ? 'rgba(250, 204, 21, 0.3)' : 'rgba(168, 85, 247, 0.2)';
+        const glowColor = isLinking ? 'rgba(250, 204, 21, 0.3)' : isPathNode ? 'rgba(52, 211, 153, 0.35)' : `${nodeColor}33`;
         
         if (isHovered || isLinking || node.isFolder) {
            context.beginPath();
@@ -359,7 +402,7 @@ export const LivingBrain: React.FC = () => {
           if (cached && cached.loaded) {
             context.arc(node.x!, node.y!, size, 0, 2 * Math.PI, false);
             context.lineWidth = node.id === vs.linkingSourceNode?.id ? 4 : 2;
-            context.strokeStyle = node.id === vs.linkingSourceNode?.id ? '#facc15' : '#a855f7';
+            context.strokeStyle = node.id === vs.linkingSourceNode?.id ? '#facc15' : isPathNode ? '#34d399' : nodeColor;
             context.stroke();
             context.clip();
             context.drawImage(cached.img, node.x! - size, node.y! - size, size * 2, size * 2);
@@ -367,14 +410,14 @@ export const LivingBrain: React.FC = () => {
             context.arc(node.x!, node.y!, size, 0, 2 * Math.PI, false);
             context.fillStyle = '#1e293b';
             context.fill();
-            context.strokeStyle = '#a855f7';
+            context.strokeStyle = isPathNode ? '#34d399' : nodeColor;
             context.stroke();
           }
         } else {
           context.arc(node.x!, node.y!, size, 0, 2 * Math.PI, false);
           context.fillStyle = '#1e293b';
           context.fill();
-          context.strokeStyle = node.id === vs.linkingSourceNode?.id ? '#facc15' : '#a855f7';
+          context.strokeStyle = node.id === vs.linkingSourceNode?.id ? '#facc15' : isPathNode ? '#34d399' : nodeColor;
           context.lineWidth = 2;
           context.stroke();
         }
@@ -384,6 +427,8 @@ export const LivingBrain: React.FC = () => {
           context.save();
           if (vs.searchResults && !vs.searchResults.includes(node.id)) {
             context.globalAlpha = 0.2;
+          } else if (vs.highlightedNodes.size > 1 && !isPathNode) {
+            context.globalAlpha = 0.15;
           }
           const fontSize = 12 / transformRef.current.k;
           context.font = `bold ${fontSize}px Inter, sans-serif`;
@@ -447,6 +492,7 @@ export const LivingBrain: React.FC = () => {
     let draggingNode: NodeData | null = null;
     let dragStartPos = { x: 0, y: 0 };
     let hasDragged = false;
+    let linkingByDrag = false;
 
     d3.select(canvas)
       .on("mousedown", (event: MouseEvent) => {
@@ -458,7 +504,11 @@ export const LivingBrain: React.FC = () => {
           // If we clicked a node, STOP d3.zoom from panning the canvas
           event.stopImmediatePropagation();
           
-          if (isLinkModeRef.current) {
+          if (event.shiftKey && !node.isFolder) {
+            visualStateRef.current.linkingSourceNode = node;
+            linkingByDrag = true;
+            render();
+          } else if (isLinkModeRef.current) {
             // No modo de ligação, mousedown já seleciona o nó
             const vs = visualStateRef.current;
             if (!vs.linkingSourceNode) {
@@ -508,12 +558,24 @@ export const LivingBrain: React.FC = () => {
           return; // Skip other mousemove logic
         }
 
-        if (visualStateRef.current.linkingSourceNode && isLinkModeRef.current) {
+        if (visualStateRef.current.linkingSourceNode && (isLinkModeRef.current || linkingByDrag)) {
           render();
         }
       });
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalMouseUp = (event: MouseEvent) => {
+        if (linkingByDrag) {
+           const source = visualStateRef.current.linkingSourceNode;
+           const bounds = canvas.getBoundingClientRect();
+           const target = getNodeAt(event.clientX - bounds.left, event.clientY - bounds.top);
+           visualStateRef.current.linkingSourceNode = null;
+           linkingByDrag = false;
+           if (source && target && !target.isFolder && source.id !== target.id) {
+             setConnectionEditor({ source, target });
+           }
+           render();
+           return;
+        }
         if (draggingNode) {
            const node = draggingNode;
            
@@ -565,7 +627,7 @@ export const LivingBrain: React.FC = () => {
       d3.select(canvas).on("mouseup", null);
       d3.select(canvas).on("contextmenu", null);
     };
-  }, [data, dimensions, layoutMode]);
+  }, [data, dimensions, layoutMode, hiddenTypes]);
 
   const createRelation = async (sourcePath: string, targetName: string, draft: WikiConnectionDraft) => {
     try {
@@ -696,6 +758,14 @@ export const LivingBrain: React.FC = () => {
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: 'radial-gradient(circle at center, #0f172a 0%, #020617 100%)' }}>
       <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', zIndex: 10, display: 'flex', gap: '0.5rem' }}>
+        <button
+          onClick={() => setShowGraphTools(value => !value)}
+          className="glass-panel hover-glow"
+          aria-expanded={showGraphTools}
+          title="Filtros e caminhos"
+          style={{ padding: '0.6rem', display: 'flex', alignItems: 'center', background: showGraphTools ? 'var(--accent-primary)' : 'rgba(15,23,42,0.8)', color: showGraphTools ? '#04130d' : 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '8px', cursor: 'pointer' }}>
+          <Settings size={16} />
+        </button>
         <button 
            onClick={() => setLayoutMode(layoutMode === 'organic' ? 'tree' : 'organic')} 
            className="glass-panel hover-glow" 
@@ -712,6 +782,32 @@ export const LivingBrain: React.FC = () => {
           {isLinkMode ? 'Modo de Ligação' : 'Criar Ligações'}
         </button>
       </div>
+
+      {showGraphTools && <aside style={{ position: 'absolute', top: '4.8rem', left: '1.5rem', zIndex: 20, width: '290px', maxHeight: 'calc(100% - 7rem)', overflowY: 'auto', padding: '14px', background: 'rgba(15,23,42,.94)', border: '1px solid var(--glass-border)', borderRadius: '10px', color: 'var(--text-primary)', boxShadow: '0 16px 40px rgba(0,0,0,.45)', backdropFilter: 'blur(8px)' }}>
+        <strong style={{ fontSize: '.85rem' }}>Tipos visíveis</strong>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', margin: '10px 0 16px' }}>
+          {graphTypes.map(type => {
+            const style = WIKI_ENTITY_STYLES[type];
+            return <label key={type} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '.78rem', color: style?.color || 'var(--text-secondary)' }}>
+              <input type="checkbox" checked={!hiddenTypes.includes(type)} onChange={() => setHiddenTypes(current => current.includes(type) ? current.filter(item => item !== type) : [...current, type])} />
+              {style?.label || 'Outro'}
+            </label>;
+          })}
+        </div>
+        <strong style={{ fontSize: '.85rem' }}>Destacar caminho</strong>
+        <div style={{ display: 'grid', gap: '7px', marginTop: '10px' }}>
+          <select value={pathStart} onChange={event => setPathStart(event.target.value)} aria-label="Entidade inicial" style={{ padding: '7px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
+            <option value="">Origem…</option>
+            {visibleEntityNodes.map(node => <option key={node.id} value={node.id}>{node.name}</option>)}
+          </select>
+          <select value={pathEnd} onChange={event => setPathEnd(event.target.value)} aria-label="Entidade final" style={{ padding: '7px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
+            <option value="">Destino…</option>
+            {visibleEntityNodes.map(node => <option key={node.id} value={node.id}>{node.name}</option>)}
+          </select>
+          {pathStart && pathEnd && <small style={{ color: highlightedPath.length ? '#34d399' : 'var(--danger)' }}>{highlightedPath.length ? `${highlightedPath.length - 1} conexão(ões) no menor caminho` : 'Nenhum caminho encontrado'}</small>}
+          {(pathStart || pathEnd) && <button onClick={() => { setPathStart(''); setPathEnd(''); }} style={{ padding: '6px', background: 'transparent', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-secondary)', cursor: 'pointer' }}>Limpar destaque</button>}
+        </div>
+      </aside>}
 
       <div style={{ position: 'absolute', top: '1.5rem', left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.85)', padding: '0.6rem 1.2rem', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.4)', backdropFilter: 'blur(8px)', width: '350px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
         <Search size={18} color="var(--text-secondary)" />
@@ -742,6 +838,8 @@ export const LivingBrain: React.FC = () => {
            <strong>Modo Ligação:</strong> Clique em um nó de origem e depois no alvo para criar uma relação.
         </div>
       )}
+
+      {!isLinkMode && <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 8, color: 'var(--text-secondary)', fontSize: '.72rem', background: 'rgba(15,23,42,.72)', padding: '5px 8px', borderRadius: '6px' }}>Shift + arrastar: criar conexão</div>}
 
       {contextMenu && (
         <div style={{ 
