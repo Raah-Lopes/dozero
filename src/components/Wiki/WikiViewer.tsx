@@ -15,6 +15,8 @@ import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { syncFileToBoardTokens } from '../../services/wiki/syncWiki';
 import * as yaml from 'js-yaml';
 import { toast } from '../UI/Toast';
+import { useWiki } from '../../hooks/useWiki';
+import { getEntityDate, getEntityStatus, getEntityTags } from '../../utils/wikiEntities';
 import './wiki.css';
 
 interface TreeNode {
@@ -22,6 +24,23 @@ interface TreeNode {
   path: string;
   type: 'tree' | 'blob';
   children: Record<string, TreeNode>;
+}
+
+const ENTITY_STYLE: Record<string, { label: string; color: string }> = {
+  local: { label: 'Local', color: '#34d399' },
+  personagem: { label: 'Personagem', color: '#c084fc' },
+  organizacao: { label: 'Organização', color: '#fbbf24' },
+  evento: { label: 'Evento', color: '#38bdf8' },
+  item: { label: 'Item', color: '#fb7185' },
+  criatura: { label: 'Criatura', color: '#f87171' },
+  divindade: { label: 'Divindade', color: '#fde047' },
+  conceito: { label: 'Conceito', color: '#fb923c' }
+};
+
+function getEntityStyle(meta: Record<string, string> | null) {
+  const rawType = (meta?.tipo || meta?.type || meta?.categoria || '').toLowerCase();
+  const aliases: Record<string, string> = { localizacao: 'local', lugar: 'local', npc: 'personagem', monstro: 'criatura', faccao: 'organizacao', facção: 'organizacao' };
+  return ENTITY_STYLE[aliases[rawType] || rawType];
 }
 
 function buildTree(items: GithubTreeItem[]): TreeNode {
@@ -200,6 +219,12 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
   const [saving, setSaving] = useState(false);
   const [showCheatSheet, setShowCheatSheet] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [entityFilter, setEntityFilter] = useState('');
+  const [entityTag, setEntityTag] = useState('');
+  const [entityStatus, setEntityStatus] = useState('');
+  const [entitySort, setEntitySort] = useState<'az' | 'za' | 'created' | 'updated'>('az');
+  const [entityDensity, setEntityDensity] = useState<'compact' | 'comfortable' | 'list'>('compact');
+  const { index: wikiIndex } = useWiki();
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -502,6 +527,31 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
       return null;
     }
   }, [frontmatter]);
+  const entityStyle = getEntityStyle(parsedMeta);
+  const typedEntities = wikiIndex
+    .filter(entry => {
+      const style = getEntityStyle(entry.metadata as Record<string, string>);
+      return Boolean(style);
+    });
+  const entityTags = [...new Set(typedEntities.flatMap(entry => getEntityTags(entry.metadata)))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const entityStatuses = [...new Set(typedEntities.map(entry => getEntityStatus(entry.metadata)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const semanticEntities = typedEntities
+    .filter(entry => {
+      const style = getEntityStyle(entry.metadata as Record<string, string>)!;
+      return (!entityFilter || style.label === entityFilter)
+        && (!entityTag || getEntityTags(entry.metadata).includes(entityTag))
+        && (!entityStatus || getEntityStatus(entry.metadata) === entityStatus);
+    })
+    .sort((left, right) => {
+      const leftName = String(left.metadata?.nome || left.metadata?.titulo || left.slug);
+      const rightName = String(right.metadata?.nome || right.metadata?.titulo || right.slug);
+      const byName = leftName.localeCompare(rightName, 'pt-BR');
+      if (entitySort === 'za') return -byName;
+      if (entitySort === 'created' || entitySort === 'updated') {
+        return getEntityDate(right.metadata, entitySort) - getEntityDate(left.metadata, entitySort) || byName;
+      }
+      return byName;
+    });
 
   return (
     <div className="wiki-container animate-fade-in" style={{ position: 'relative' }}>
@@ -687,7 +737,10 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
           ) : (
             <div className="wiki-markdown" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Editando: {activeFile}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Editando: {activeFile}</span>
+                  {entityStyle && <span style={{ color: entityStyle.color, border: `1px solid ${entityStyle.color}`, borderRadius: '999px', padding: '2px 7px', fontSize: '0.68rem', fontWeight: 700, flexShrink: 0 }}>{entityStyle.label}</span>}
+                </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
                     onClick={async () => {
@@ -846,6 +899,46 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
             />
             <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>Bem-vindo ao Conhecimento</h2>
             <p>Selecione um pergaminho ou pasta à esquerda para começar a leitura, ou abra o <strong style={{color: 'var(--accent-primary)', cursor: 'pointer'}} onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-graph'))}>Cérebro</strong>.</p>
+            {typedEntities.length > 0 && <div style={{ width: '100%', maxWidth: '720px', textAlign: 'left' }}>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                <select value={entityFilter} onChange={event => setEntityFilter(event.target.value)} style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
+                  <option value="">Todas as entidades</option>
+                  {[...new Map(Object.values(ENTITY_STYLE).map(style => [style.label, style])).values()].map(style => <option key={style.label}>{style.label}</option>)}
+                </select>
+                {entityTags.length > 0 && <select value={entityTag} onChange={event => setEntityTag(event.target.value)} aria-label="Filtrar por tag" style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
+                  <option value="">Todas as tags</option>
+                  {entityTags.map(tag => <option key={tag}>{tag}</option>)}
+                </select>}
+                {entityStatuses.length > 0 && <select value={entityStatus} onChange={event => setEntityStatus(event.target.value)} aria-label="Filtrar por status" style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
+                  <option value="">Todos os status</option>
+                  {entityStatuses.map(status => <option key={status}>{status}</option>)}
+                </select>}
+                <select value={entitySort} onChange={event => setEntitySort(event.target.value as typeof entitySort)} aria-label="Ordenar entidades" style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
+                  <option value="az">Nome A–Z</option>
+                  <option value="za">Nome Z–A</option>
+                  <option value="created">Criação mais recente</option>
+                  <option value="updated">Edição mais recente</option>
+                </select>
+                <select value={entityDensity} onChange={event => setEntityDensity(event.target.value as typeof entityDensity)} aria-label="Densidade dos cards" style={{ padding: '6px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', borderRadius: '6px' }}>
+                  <option value="compact">Compacto</option>
+                  <option value="comfortable">Confortável</option>
+                  <option value="list">Lista</option>
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: entityDensity === 'list' ? '1fr' : `repeat(auto-fill, minmax(${entityDensity === 'comfortable' ? '220px' : '150px'}, 1fr))`, gap: '8px' }}>
+                {semanticEntities.map(entry => {
+                  const style = getEntityStyle(entry.metadata as Record<string, string>)!;
+                  const name = String(entry.metadata?.nome || entry.metadata?.titulo || entry.slug);
+                  const image = String(entry.metadata?.imagem || entry.metadata?.avatar || '');
+                  const tags = getEntityTags(entry.metadata);
+                  return <button key={entry.path} onClick={() => setActiveFile(entry.path)} style={{ textAlign: 'left', padding: '10px', background: 'var(--bg-secondary)', border: `1px solid ${style.color}`, borderRadius: '8px', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {image ? <img src={image} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} /> : <span style={{ color: style.color }}>●</span>}
+                    <span style={{ minWidth: 0 }}><small style={{ color: style.color }}>{style.label}</small><br />{name}{tags.length > 0 && <span style={{ display: 'flex', gap: '3px', marginTop: '4px', flexWrap: 'wrap' }}>{tags.slice(0, 2).map(tag => <small key={tag} style={{ background: 'rgba(255,255,255,.08)', borderRadius: '999px', padding: '1px 5px' }}>{tag}</small>)}{tags.length > 2 && <small>+{tags.length - 2}</small>}</span>}</span>
+                  </button>;
+                })}
+                {semanticEntities.length === 0 && <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>Nenhuma entidade corresponde aos filtros.</p>}
+              </div>
+            </div>}
           </div>
         )}
       </div>

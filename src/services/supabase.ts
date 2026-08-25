@@ -3,6 +3,20 @@ import { createClient, SupportedStorage } from '@supabase/supabase-js';
 // Memória em cache para fallback infalível
 const memoryStore: Record<string, string> = {};
 
+function purgeDozeroCache(storage: Storage) {
+  const keys: string[] = [];
+  for (let i = 0; i < storage.length; i++) {
+    const key = storage.key(i);
+    if (key && !key.startsWith('sb-') && (
+      key.startsWith('dozero_theater_state_') ||
+      key.startsWith('dozero_room_snapshot_') ||
+      key.startsWith('dozero_snapshot_') ||
+      key === 'story_dice_history'
+    )) keys.push(key);
+  }
+  keys.forEach(key => storage.removeItem(key));
+}
+
 // Limpeza agressiva imediata se a cota do LocalStorage estiver comprometida
 if (typeof window !== 'undefined' && window.localStorage) {
   try {
@@ -17,31 +31,15 @@ if (typeof window !== 'undefined' && window.localStorage) {
     }
 
     if (quotaFull) {
-      console.warn('[LocalStorage] Cota 100% cheia detectada. Executando purga total de cache...');
-      localStorage.clear();
-      console.log('[LocalStorage] Purga de emergência concluída. Espaço 100% liberado!');
+      console.warn('[LocalStorage] Cota cheia detectada. Limpando somente o cache descartável do DOZERO.');
+      purgeDozeroCache(localStorage);
+      console.log('[LocalStorage] Limpeza seletiva concluída.');
     } else {
       // Limpeza de chaves antigas pesadas que ocupam espaço desnecessário
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && !key.startsWith('sb-')) {
-          const valLen = localStorage.getItem(key)?.length || 0;
-          if (
-            valLen > 10000 ||
-            key.startsWith('dozero_theater_state_') || 
-            key.startsWith('dozero_room_snapshot_') || 
-            key.startsWith('dozero_snapshot_') ||
-            key.startsWith('story_dice_history')
-          ) {
-            keysToRemove.push(key);
-          }
-        }
-      }
-      keysToRemove.forEach(k => localStorage.removeItem(k));
+      purgeDozeroCache(localStorage);
     }
   } catch (e) {
-    try { localStorage.clear(); } catch {}
+    // ponytail: a sessão fica no memoryStore se a limpeza seletiva falhar.
   }
 }
 
@@ -64,9 +62,9 @@ const safeStorage: SupportedStorage = {
     try {
       localStorage.setItem(key, value);
     } catch (err) {
-      console.warn('[SafeStorage] LocalStorage cheio ao gravar auth. Purgando cache do navegador...');
+      console.warn('[SafeStorage] LocalStorage cheio ao gravar auth. Limpando cache descartável do DOZERO...');
       try {
-        localStorage.clear();
+        purgeDozeroCache(localStorage);
         localStorage.setItem(key, value);
       } catch (retryErr) {
         try {

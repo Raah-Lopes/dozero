@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { state, initChronos, getChronosState, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../../store';
+import { state, initChronos, getChronosState, getChronosEvents, addChronosEvent, removeChronosEvent, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../../store';
 import type { ChronosState } from '../../../store';
 import { Clock, Sun, Moon, Sunrise,  CalendarDays, Tent, Coffee } from 'lucide-react';
+import { getMoonPhase } from '../../../utils/fantasyCalendar';
 
 export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = ({ onClose, isGM = true }) => {
   const [timeState, setTimeState] = useState<ChronosState | null>(null);
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventDay, setEventDay] = useState('');
+  const [eventMonth, setEventMonth] = useState('');
+  const [eventYear, setEventYear] = useState('');
 
   useEffect(() => {
     initChronos();
@@ -23,6 +28,13 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   }, []);
 
   if (!timeState) return null;
+  const moon = getMoonPhase(timeState.day, timeState.month, timeState.year);
+  const todayEvents = getChronosEvents().filter(event => event.day === timeState.day && event.month === timeState.month && event.year === timeState.year);
+  const currentDate = timeState.year * 360 + timeState.month * 30 + timeState.day;
+  const upcomingEvents = getChronosEvents()
+    .filter(event => event.year * 360 + event.month * 30 + event.day > currentDate)
+    .sort((a, b) => (a.year * 360 + a.month * 30 + a.day) - (b.year * 360 + b.month * 30 + b.day))
+    .slice(0, 3);
 
   const getTimeIcon = (time: string) => {
     switch (time) {
@@ -49,7 +61,7 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   };
 
   return (
-    <DraggableWindow id="chronos-widget" widgetKey="chronos" title="Motor Chronos" initialX={window.innerWidth / 2 - 160} initialY={100} onClose={onClose} width={320} height={250}>
+    <DraggableWindow id="chronos-widget" widgetKey="chronos" title="Motor Chronos" initialX={window.innerWidth / 2 - 160} initialY={100} onClose={onClose} width={320} height={440}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', color: 'var(--text-primary)' }}>
         
         {/* Mostrador Principal */}
@@ -61,6 +73,9 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
             <span style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <CalendarDays size={14} /> {timeState.season} - Ano {timeState.year}
             </span>
+            <span style={{ fontSize: '0.75rem', color: '#c4b5fd', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {moon.icon} {moon.name}
+            </span>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -70,6 +85,30 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
             <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: 'var(--text-secondary)' }}>{timeState.timeOfDay}</span>
           </div>
         </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Eventos de Hoje</span>
+          {todayEvents.map(event => (
+            <div key={event.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '0.75rem', color: '#fde68a' }}>
+              <span>📌 {event.title}</span>
+              {isGM && <button onClick={() => removeChronosEvent(event.id)} style={{ background: 'none', border: 0, color: 'var(--danger)', cursor: 'pointer' }} title="Remover evento">×</button>}
+            </div>
+          ))}
+          {isGM && <>
+            <input value={eventTitle} onChange={event => setEventTitle(event.target.value)} placeholder="Novo evento" style={{ minWidth: 0, padding: '5px 7px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <input type="number" value={eventDay} onChange={event => setEventDay(event.target.value)} placeholder={`Dia ${timeState.day}`} min="1" max="30" style={{ width: '52px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
+              <input type="number" value={eventMonth} onChange={event => setEventMonth(event.target.value)} placeholder={`Mês ${timeState.month}`} min="1" max="12" style={{ width: '58px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
+              <input type="number" value={eventYear} onChange={event => setEventYear(event.target.value)} placeholder={`Ano ${timeState.year}`} min="1" style={{ width: '66px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
+              <button onClick={() => { addChronosEvent(eventTitle, { day: Number(eventDay) || timeState.day, month: Number(eventMonth) || timeState.month, year: Number(eventYear) || timeState.year, timeOfDay: timeState.timeOfDay, season: timeState.season }); setEventTitle(''); setEventDay(''); setEventMonth(''); setEventYear(''); }} style={{ padding: '5px 8px', background: 'var(--accent-primary)', border: 0, borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '0.72rem' }}>Adicionar</button>
+            </div>
+          </>}
+        </div>
+
+        {upcomingEvents.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+          <span style={{ textTransform: 'uppercase', fontWeight: 'bold' }}>Próximos Eventos</span>
+          {upcomingEvents.map(event => <span key={event.id}>◦ {event.day}/{event.month}/{event.year} — {event.title}</span>)}
+        </div>}
 
         {/* Controles do Mestre */}
         {isGM && (

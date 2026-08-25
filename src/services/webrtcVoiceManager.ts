@@ -114,7 +114,13 @@ export class WebRTCVoiceManager {
       const { fromPeerId, fromUserName, targetPeerId, signal } = payload;
       if (targetPeerId && targetPeerId !== this.myPeerId) return;
 
-      if (signal.type === 'join') {
+      if (signal.type === 'leave') {
+        const peer = this.peers.get(fromPeerId);
+        peer?.pc.close();
+        this.peers.delete(fromPeerId);
+        this.remoteStreams.delete(fromPeerId);
+        this.notify();
+      } else if (signal.type === 'join') {
         // Alguém entrou, crie uma oferta para ele
         this.createPeerConnection(fromPeerId, fromUserName, true);
       } else if (signal.type === 'offer') {
@@ -239,6 +245,11 @@ export class WebRTCVoiceManager {
 
   public leave() {
     this.stopScreenShare();
+    this.channel?.send({
+      type: 'broadcast',
+      event: 'webrtc-signal',
+      payload: { fromPeerId: this.myPeerId, signal: { type: 'leave' } }
+    });
     if (this.localStream) {
       this.localStream.getTracks().forEach(t => t.stop());
       this.localStream = null;

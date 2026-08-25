@@ -34,22 +34,13 @@ export const useAppEventListeners = ({
   useEffect(() => {
     const handleOpenPresets = () => setIsLayoutPresetsOpen(true);
     const handleOpenSearch = () => setIsGlobalSearchOpen(true);
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsGlobalSearchOpen(prev => !prev);
-      }
-    };
 
     window.addEventListener('open-layout-presets', handleOpenPresets);
     window.addEventListener('open-global-search', handleOpenSearch);
-    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('open-layout-presets', handleOpenPresets);
       window.removeEventListener('open-global-search', handleOpenSearch);
-      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 

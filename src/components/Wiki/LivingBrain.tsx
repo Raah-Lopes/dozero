@@ -5,6 +5,8 @@ import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { Settings, Search, X, Map as MapIcon, Share2, GitMerge, Trash2, Edit2 } from 'lucide-react';
 
 import { toast } from '../UI/Toast';
+import { ConnectionEditor } from './ConnectionEditor';
+import { escapeRegExp, formatWikiConnection, type WikiConnectionDraft } from '../../utils/wikiConnections';
 interface NodeData extends d3.SimulationNodeDatum {
   id: string;
   name: string;
@@ -20,6 +22,7 @@ interface LinkData extends d3.SimulationLinkDatum<NodeData> {
   source: string | NodeData;
   target: string | NodeData;
   label?: string;
+  description?: string;
 }
 
 interface GraphData {
@@ -44,6 +47,7 @@ export const LivingBrain: React.FC = () => {
   }, [isLinkMode]);
   
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, link?: LinkData, node?: NodeData } | null>(null);
+  const [connectionEditor, setConnectionEditor] = useState<{ source: NodeData; target: NodeData; link?: LinkData } | null>(null);
 
   const simulationRef = useRef<d3.Simulation<NodeData, LinkData> | null>(null);
   const transformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
@@ -466,12 +470,7 @@ export const LivingBrain: React.FC = () => {
               vs.linkingSourceNode = null;
               
               if (source.id !== target.id) {
-                setTimeout(() => {
-                  const relationName = prompt("Qual o nome desta relação? (Deixe em branco para conexão simples)");
-                  if (relationName !== null) {
-                    createRelation(source.path, target.name, relationName);
-                  }
-                }, 10);
+                setConnectionEditor({ source, target });
               }
               render();
             }
@@ -568,7 +567,7 @@ export const LivingBrain: React.FC = () => {
     };
   }, [data, dimensions, layoutMode]);
 
-  const createRelation = async (sourcePath: string, targetName: string, label: string) => {
+  const createRelation = async (sourcePath: string, targetName: string, draft: WikiConnectionDraft) => {
     try {
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
@@ -577,24 +576,25 @@ export const LivingBrain: React.FC = () => {
       if (!res.ok) throw new Error("Failed to read source");
       const content = (await res.json()).content;
       
-      const linkText = label.trim() ? `${label.trim()}:: [[${targetName}]]` : `[[${targetName}]]`;
+      const linkText = formatWikiConnection(targetName, draft);
       const newContent = content.trim() + `\n${linkText}\n`;
       
-      await fetch('/api/wiki/save', {
+      const saveResponse = await fetch('/api/wiki/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ repoPath, path: sourcePath, content: newContent })
       });
+      if (!saveResponse.ok) throw new Error('Falha ao salvar conexão');
       
-      fetchGraph();
+      await fetchGraph();
+      toast.success('Conexão criada.');
     } catch (err) {
       console.error(err);
+      toast.error('Erro ao criar conexão.');
     }
   };
 
-  const editRelation = async (link: LinkData) => {
-    const newLabel = prompt("Novo rótulo da ligação:", link.label || '');
-    if (newLabel === null) return;
+  const editRelation = async (link: LinkData, draft: WikiConnectionDraft) => {
     try {
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
@@ -605,9 +605,8 @@ export const LivingBrain: React.FC = () => {
       let content = (await res.json()).content as string;
       
       const targetName = (link.target as NodeData).name;
-      const linkRegex = new RegExp(`(?:(?:[^\\n\\[\\]]+?)\\s*::\\s*)?\\[\\[${targetName}(?:\\|[^\\]]+)?\\]\\]`, 'g');
-      
-      const linkText = newLabel.trim() ? `${newLabel.trim()}:: [[${targetName}]]` : `[[${targetName}]]`;
+      const linkRegex = new RegExp(`^.*?\\[\\[${escapeRegExp(targetName)}(?:\\|[^\\]]+)?\\]\\].*$`, 'gm');
+      const linkText = formatWikiConnection(targetName, draft);
       content = content.replace(linkRegex, linkText);
       
       await fetch('/api/wiki/save', {
@@ -618,6 +617,7 @@ export const LivingBrain: React.FC = () => {
       
       setContextMenu(null);
       await fetchGraph();
+      toast.success('Conexão atualizada.');
     } catch (err) {
       console.error(err);
       toast.error("Erro ao editar relação: " + err);
@@ -756,7 +756,11 @@ export const LivingBrain: React.FC = () => {
                   De {(contextMenu.link.source as NodeData).name} para {(contextMenu.link.target as NodeData).name}
                </div>
                <button 
-                 onClick={() => editRelation(contextMenu.link!)}
+                 onClick={() => {
+                   const link = contextMenu.link!;
+                   setConnectionEditor({ source: link.source as NodeData, target: link.target as NodeData, link });
+                   setContextMenu(null);
+                 }}
                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left', borderRadius: '4px' }}
                  onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
                  onMouseOut={e => e.currentTarget.style.background = 'transparent'}
@@ -794,6 +798,17 @@ export const LivingBrain: React.FC = () => {
       <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }} onClick={() => setContextMenu(null)}>
         <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', cursor: isLinkMode ? 'crosshair' : 'grab' }} />
       </div>
+      {connectionEditor && <ConnectionEditor
+        sourceName={connectionEditor.source.name}
+        targetName={connectionEditor.target.name}
+        initial={connectionEditor.link ? { type: connectionEditor.link.label || '', description: connectionEditor.link.description || '' } : undefined}
+        onCancel={() => setConnectionEditor(null)}
+        onSave={async draft => {
+          if (connectionEditor.link) await editRelation(connectionEditor.link, draft);
+          else await createRelation(connectionEditor.source.path, connectionEditor.target.name, draft);
+          setConnectionEditor(null);
+        }}
+      />}
     </div>
   );
 };

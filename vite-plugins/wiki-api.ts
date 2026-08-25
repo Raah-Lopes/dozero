@@ -139,7 +139,10 @@ function buildGraph(dir: string, baseDir: string, nodes: any[] = [], links: any[
         let label = match[1] ? match[1].trim() : undefined;
         let targetName = match[2].split('|')[0]; // Handle [[Target|Alias]]
         targetName = targetName.split('#')[0]; // Handle [[Target#Section]]
-        links.push({ source: id, target: targetName.trim(), label });
+        const lineEnd = content.indexOf('\n', regex.lastIndex);
+        const trailingText = content.slice(regex.lastIndex, lineEnd < 0 ? content.length : lineEnd).trim();
+        const description = trailingText.replace(/^[—-]\s*/, '').trim() || undefined;
+        links.push({ source: id, target: targetName.trim(), label, description });
       }
     }
   }

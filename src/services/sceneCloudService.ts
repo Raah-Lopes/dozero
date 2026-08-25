@@ -25,6 +25,18 @@ export interface SceneRecord {
   updated_at?: string;
 }
 
+export async function getCampaignIdForRoom(roomCode: string): Promise<string | null> {
+  if (!isSupabaseConfigured || !roomCode) return null;
+  const { data, error } = await supabase
+    .from('campaigns')
+    .select('id')
+    .eq('room_code', roomCode)
+    .maybeSingle();
+
+  if (error) console.warn('[SceneCloud] Não foi possível resolver a campanha:', error);
+  return data?.id ?? null;
+}
+
 /**
  * Salva ou atualiza uma cena no Supabase Postgres
  */
@@ -35,6 +47,12 @@ export async function saveSceneToCloud(scene: SceneRecord): Promise<SceneRecord 
   }
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Entre na sua conta para salvar cenários na nuvem.');
+      return null;
+    }
+
     const payload = {
       campaign_id: scene.campaign_id || null,
       name: scene.name || 'Novo Cenário',
@@ -60,7 +78,7 @@ export async function saveSceneToCloud(scene: SceneRecord): Promise<SceneRecord 
     } else {
       res = await supabase
         .from('scenes')
-        .insert(payload)
+        .insert({ ...payload, owner_id: user.id })
         .select()
         .single();
     }
@@ -78,7 +96,7 @@ export async function saveSceneToCloud(scene: SceneRecord): Promise<SceneRecord 
 /**
  * Busca todas as cenas salvas disponíveis para a campanha / mestre
  */
-export async function getScenesFromCloud(campaignId?: string): Promise<SceneRecord[]> {
+export async function getScenesFromCloud(campaignId?: string, legacyRoomCode?: string): Promise<SceneRecord[]> {
   if (!isSupabaseConfigured) return [];
 
   try {
@@ -88,7 +106,8 @@ export async function getScenesFromCloud(campaignId?: string): Promise<SceneReco
       .order('created_at', { ascending: false });
 
     if (campaignId) {
-      query = query.or(`campaign_id.eq.${campaignId},campaign_id.is.null`);
+      const legacyFilter = legacyRoomCode ? `,campaign_id.eq.${legacyRoomCode}` : '';
+      query = query.or(`campaign_id.eq.${campaignId}${legacyFilter},campaign_id.is.null`);
     }
 
     const { data, error } = await query;

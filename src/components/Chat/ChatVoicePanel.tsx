@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Mic, MicOff, Monitor, MonitorOff, PhoneCall, PhoneOff, 
-  Users, Volume2, Shield, Maximize2, Radio, Sparkles, AlertCircle
+  Users, Maximize2
 } from 'lucide-react';
 import { WebRTCVoiceManager, PeerStreamState } from '../../services/webrtcVoiceManager';
 import { useAuthStore } from '../../store/authStore';
@@ -18,7 +18,6 @@ export const ChatVoicePanel: React.FC<Props> = ({ roomCode }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [peers, setPeers] = useState<PeerStreamState[]>([]);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const screenVideoRef = useRef<HTMLVideoElement | null>(null);
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
@@ -86,16 +85,16 @@ export const ChatVoicePanel: React.FC<Props> = ({ roomCode }) => {
     }
   }, [screenPeer]);
 
+  useEffect(() => () => manager?.leave(), [manager]);
+
   const handleToggleFullscreen = () => {
     if (!videoContainerRef.current) return;
     if (!document.fullscreenElement) {
       videoContainerRef.current.requestFullscreen().catch(err => {
         console.warn('Erro ao abrir tela cheia:', err);
       });
-      setIsFullscreen(true);
     } else {
       document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
     }
   };
 
@@ -304,6 +303,16 @@ export const ChatVoicePanel: React.FC<Props> = ({ roomCode }) => {
           </button>
         </div>
       )}
+
+      {peers.map(peer => (
+        <audio
+          key={peer.peerId}
+          autoPlay
+          ref={audio => {
+            if (audio && audio.srcObject !== peer.stream) audio.srcObject = peer.stream;
+          }}
+        />
+      ))}
 
       {/* LISTA DE JOGADORES NA CHAMADA */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

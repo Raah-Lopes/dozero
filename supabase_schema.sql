@@ -119,6 +119,22 @@ alter table public.campaigns enable row level security;
 alter table public.players enable row level security;
 alter table public.characters enable row level security;
 
+create or replace function public.is_campaign_manager(target_campaign_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.campaigns
+    where id = target_campaign_id and owner_id = auth.uid()
+  ) or exists (
+    select 1 from public.players
+    where campaign_id = target_campaign_id and user_id = auth.uid() and role = 'gm'
+  );
+$$;
+
 -- --- Políticas de Profiles ---
 create policy "profiles_select" on public.profiles for select using (true);
 create policy "profiles_update" on public.profiles for update using (auth.uid() = id);
@@ -140,9 +156,7 @@ create policy "campaigns_insert" on public.campaigns for insert with check (
 create policy "campaigns_update" on public.campaigns 
   for update using (
     auth.uid() = owner_id 
-    or owner_id is null 
-    or is_public = true
-    or id in (select campaign_id from public.players where user_id = auth.uid() and role = 'gm')
+    or public.is_campaign_manager(id)
   );
 
 create policy "campaigns_delete" on public.campaigns for delete using (
@@ -151,28 +165,37 @@ create policy "campaigns_delete" on public.campaigns for delete using (
 
 -- --- Políticas de Players ---
 create policy "players_select" on public.players 
-  for select using (true);
+  for select using (
+    public.is_campaign_manager(campaign_id)
+    or user_id = auth.uid()
+    or exists (select 1 from public.campaigns where id = campaign_id and is_public = true)
+  );
 
 create policy "players_insert" on public.players for insert with check (
-  auth.uid() is not null
+  auth.uid() = user_id
+  and (role in ('player', 'spectator') or public.is_campaign_manager(campaign_id))
 );
 
 create policy "players_update" on public.players 
-  for update using (user_id = auth.uid() or auth.uid() is not null);
+  for update using (user_id = auth.uid() or public.is_campaign_manager(campaign_id))
+  with check (
+    auth.uid() = user_id
+    and (role in ('player', 'spectator') or public.is_campaign_manager(campaign_id))
+    or public.is_campaign_manager(campaign_id)
+  );
 
 create policy "players_delete" on public.players 
-  for delete using (user_id = auth.uid() or auth.uid() is not null);
+  for delete using (user_id = auth.uid() or public.is_campaign_manager(campaign_id));
 
 -- --- Políticas de Characters ---
 create policy "characters_select" on public.characters 
   for select using (
     auth.uid() = owner_id 
-    or is_public_to_party = true
     or campaign_id in (select campaign_id from public.players where user_id = auth.uid())
   );
 
 create policy "characters_insert" on public.characters for insert with check (
-  auth.uid() is not null
+  auth.uid() = owner_id
 );
 
 create policy "characters_update" on public.characters for update using (
@@ -286,10 +309,20 @@ create table if not exists public.scenes (
 
 alter table public.scenes enable row level security;
 
-create policy "scenes_select" on public.scenes for select using (true);
-create policy "scenes_insert" on public.scenes for insert with check (auth.uid() is not null);
-create policy "scenes_update" on public.scenes for update using (auth.uid() = owner_id or owner_id is null);
-create policy "scenes_delete" on public.scenes for delete using (auth.uid() = owner_id or owner_id is null);
+create policy "scenes_select" on public.scenes for select using (
+  auth.uid() = owner_id
+  or campaign_id in (select campaign_id from public.players where user_id = auth.uid())
+  or exists (select 1 from public.campaigns where id = campaign_id and is_public = true)
+);
+create policy "scenes_insert" on public.scenes for insert with check (
+  auth.uid() = owner_id and (campaign_id is null or public.is_campaign_manager(campaign_id))
+);
+create policy "scenes_update" on public.scenes for update
+  using (auth.uid() = owner_id or public.is_campaign_manager(campaign_id))
+  with check (auth.uid() = owner_id or public.is_campaign_manager(campaign_id));
+create policy "scenes_delete" on public.scenes for delete using (
+  auth.uid() = owner_id or public.is_campaign_manager(campaign_id)
+);
 
 -- ==============================================================================
 -- 10. PUBLICAÇÃO REALTIME (Supabase Realtime)
@@ -300,4 +333,3 @@ alter publication supabase_realtime add table public.characters;
 alter publication supabase_realtime add table public.chat_messages;
 alter publication supabase_realtime add table public.combat_encounters;
 alter publication supabase_realtime add table public.scenes;
-

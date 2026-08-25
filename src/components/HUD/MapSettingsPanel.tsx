@@ -18,6 +18,7 @@ import { Tooltip } from '../UI/Tooltip';
 import {
   saveSceneToCloud,
   getScenesFromCloud,
+  getCampaignIdForRoom,
   deleteSceneFromCloud,
   applySceneToTable,
   SceneRecord
@@ -47,7 +48,8 @@ export const MapSettingsPanel: React.FC = () => {
       ? (new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2')
       : 'dozero-mesa-principal-v2';
     setLoadingScenes(true);
-    const list = await getScenesFromCloud(currentRoom);
+    const campaignId = await getCampaignIdForRoom(currentRoom);
+    const list = await getScenesFromCloud(campaignId || undefined, currentRoom);
     setScenesList(list);
     setLoadingScenes(false);
   }, []);
@@ -219,8 +221,15 @@ export const MapSettingsPanel: React.FC = () => {
     const currentMusic = state.audio.get('music') as any;
     const currentAmbience = state.audio.get('ambience') as any;
 
+    const campaignId = await getCampaignIdForRoom(currentRoom);
+    if (!campaignId) {
+      toast.error('Campanha não encontrada. Entre por uma mesa salva antes de enviar cenas para a nuvem.');
+      setSavingScene(false);
+      return;
+    }
+
     const saved = await saveSceneToCloud({
-      campaign_id: currentRoom,
+      campaign_id: campaignId,
       name,
       backgrounds: bgs,
       grid_config: mapCfg,

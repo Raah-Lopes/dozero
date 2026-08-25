@@ -57,26 +57,25 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
       id: 'toggle-dice',
       title: 'Abrir Rolador de Dados',
       category: 'Ferramentas',
-      handler: () => openWindow('diceRoller'),
-      shortcut: 'D'
+      onSelect: () => openWindow('diceRoller')
     });
     registerCommand({
       id: 'toggle-master-forge',
       title: 'Abrir A Forja do Mestre (Geradores)',
       category: 'Mestre',
-      handler: () => openWindow('masterForge'),
+      onSelect: () => openWindow('masterForge'),
     });
     registerCommand({
       id: 'toggle-ai-studio',
       title: 'Abrir AI Studio do Mestre',
       category: 'Mestre',
-      handler: () => openWindow('aiStudio'),
+      onSelect: () => openWindow('aiStudio'),
     });
     registerCommand({
       id: 'toggle-campaign',
       title: 'Abrir Gestor de Campanhas',
       category: 'Mestre',
-      handler: () => openWindow('campaignManager')
+      onSelect: () => openWindow('campaignManager')
     });
   }, [registerCommand, openWindow]);
 

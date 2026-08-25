@@ -12,6 +12,14 @@ export interface ChronosState {
   season: 'Primavera' | 'Verão' | 'Outono' | 'Inverno';
 }
 
+export interface ChronosEvent {
+  id: string;
+  title: string;
+  day: number;
+  month: number;
+  year: number;
+}
+
 export function initChronos() {
   if (!state.chronos.get('global')) {
     state.chronos.set('global', {
@@ -26,6 +34,26 @@ export function initChronos() {
 
 export function getChronosState(): ChronosState {
   return (state.chronos.get('global') as ChronosState) || { day: 1, month: 1, year: 1450, timeOfDay: 'Manhã', season: 'Primavera' };
+}
+
+export function getChronosEvents(): ChronosEvent[] {
+  return (state.chronos.get('events') as ChronosEvent[]) || [];
+}
+
+export function addChronosEvent(title: string, date = getChronosState()) {
+  const cleanTitle = title.trim();
+  if (!cleanTitle) return;
+  state.chronos.set('events', [...getChronosEvents(), {
+    id: `chronos_event_${Date.now()}`,
+    title: cleanTitle,
+    day: Math.min(30, Math.max(1, date.day)),
+    month: Math.min(12, Math.max(1, date.month)),
+    year: Math.max(1, date.year)
+  }]);
+}
+
+export function removeChronosEvent(id: string) {
+  state.chronos.set('events', getChronosEvents().filter(event => event.id !== id));
 }
 
 export function advanceDay() {
@@ -53,6 +81,10 @@ export function advanceDay() {
 
   state.chronos.set('global', { ...current, day: newDay, month: newMonth, year: newYear, season: newSeason, timeOfDay: 'Manhã' });
   
+  getChronosEvents()
+    .filter(event => event.day === newDay && event.month === newMonth && event.year === newYear)
+    .forEach(event => pushChatMessage(`📅 <b>Hoje no mundo:</b> ${event.title}`, true, false));
+
   // LOGICA DE CONSEQUENCIAS (FOME/SEDE)
   pushChatMessage(`🌅 <b>Um novo dia amanheceu!</b> (${newDay}/${newMonth}/${newYear}) - ${newSeason}`, true, false);
   

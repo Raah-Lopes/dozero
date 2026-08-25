@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Command } from 'cmdk';
 import { 
   Swords, Timer, Eye, UserPlus, Map, Skull, BookOpen, 
-  Network, Dices, Users, Sun, Sparkles, ToyBrick, Globe, 
+  Dices, Users, Sun, Sparkles, ToyBrick, Globe,
   Anvil, Castle, Shield, Search, X, FileText, LayoutTemplate, CopyPlus, Pin
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
-import { useCommandRegistry } from '../../store';
+import { state, useCommandRegistry } from '../../store';
+import type { Token } from '../../store/modules/tokenModule';
 import { Tooltip } from './Tooltip';
 
 interface ActionDef {
@@ -29,7 +30,6 @@ export const CommandPalette: React.FC = () => {
   const openWindow = useWindowManager(state => state.openWindow);
   const setActiveModal = useWindowManager(state => state.setActiveModal);
   const setOpenWikiDocs = useWindowManager(state => state.setOpenWikiDocs);
-  const setViewMode = useWindowManager(state => state.setViewMode);
   
   const { index: wikiIndex } = useWiki();
   const dynamicCommands = useCommandRegistry(state => state.commands);
@@ -183,13 +183,26 @@ export const CommandPalette: React.FC = () => {
     };
   });
 
-  const allActions = [...actions, ...dynamicCommands, ...wikiActions];
+  const tokenActions: ActionDef[] = Array.from(state.tokens.values() as Iterable<Token>)
+    .filter(token => token.id && token.name)
+    .map(token => ({
+      id: `token_${token.id}`,
+      title: token.name,
+      icon: <Users size={16} />,
+      category: 'Personagens na Mesa',
+      onSelect: () => runCommand(`token_${token.id}`, () => {
+        window.dispatchEvent(new CustomEvent('token-dblclick', { detail: token.id }));
+      })
+    }));
+
+  const allActions = [...actions, ...dynamicCommands, ...wikiActions, ...tokenActions];
   const recentActions = recentIds.map(id => allActions.find(a => a.id === id)).filter(Boolean) as ActionDef[];
   const pinnedActions = pinnedIds.map(id => allActions.find(a => a.id === id)).filter(Boolean) as ActionDef[];
 
   // Group wiki actions by their dynamic folder category, ONLY if user is typing
   const isSearching = search.trim().length > 0;
-  const wikiCategories = Array.from(new Set(wikiActions.map(a => a.category)));
+  const resourceActions = [...tokenActions, ...wikiActions];
+  const resourceCategories = Array.from(new Set(resourceActions.map(a => a.category)));
   const systemCategories = Array.from(new Set([...actions, ...dynamicCommands].map(a => a.category))).filter(c => c !== 'QuickActions');
 
   const renderItem = (action: ActionDef, keyPrefix = '') => (
@@ -416,14 +429,14 @@ export const CommandPalette: React.FC = () => {
                     </>
                   )}
 
-                  {/* Wiki Docs só aparecem se o usuário estiver buscando */}
-                  {isSearching && wikiCategories.map(cat => {
-                    const docsInCat = wikiActions.filter(a => a.category === cat);
-                    if (docsInCat.length === 0) return null;
+                  {/* Recursos só aparecem se o usuário estiver buscando */}
+                  {isSearching && resourceCategories.map(cat => {
+                    const resourcesInCategory = resourceActions.filter(a => a.category === cat);
+                    if (resourcesInCategory.length === 0) return null;
                     return (
                       <Command.Group key={cat} heading={cat} className="cmd-group">
                         <div className="cmd-group-heading">{cat}</div>
-                        {docsInCat.map(action => renderItem(action))}
+                        {resourcesInCategory.map(action => renderItem(action))}
                       </Command.Group>
                     );
                   })}
