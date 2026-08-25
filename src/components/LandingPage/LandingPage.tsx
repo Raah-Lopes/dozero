@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Dices, Play, Sparkles, Map as MapIcon, 
   Crown, Swords, Plus, Search, Lock,
-  Copy, Check, Edit3, Trash2, LogOut
+  Copy, Check, Edit3, Trash2, LogOut,
+  RotateCcw
 } from 'lucide-react';
 import './LandingPage.css';
 import { useAuthStore } from '../../store/authStore';
@@ -11,6 +12,8 @@ import { ProfileModal } from '../Modals/ProfileModal';
 import { ResetPasswordModal } from '../Modals/ResetPasswordModal';
 import { 
   getCampaigns, 
+  getLocalCampaignsCache,
+  resetCampaignsCache,
   createOrUpdateCampaign, 
   deleteCampaignCloud, 
   getLobbyStats,
@@ -41,8 +44,8 @@ const S = {
 export function LandingPage() {
   const { user, initialize, setAuthModalOpen, setProfileModalOpen, signOut } = useAuthStore();
   
-  const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>([]);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+  const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>(() => getLocalCampaignsCache());
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'all' | 'mine' | 'public'>('all');
   
@@ -89,10 +92,11 @@ export function LandingPage() {
   }, [initialize, user?.id]);
 
   const loadCampaignsList = async () => {
-    setLoadingCampaigns(true);
     try {
       const data = await getCampaigns(user?.id);
-      setCampaigns(data);
+      if (data && data.length > 0) {
+        setCampaigns(data);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -409,6 +413,18 @@ export function LandingPage() {
                       }}
                     />
                   </div>
+                  <button 
+                    onClick={() => {
+                      const cleaned = resetCampaignsCache();
+                      setCampaigns(cleaned);
+                      toast.success('Cache das mesas limpo com sucesso!');
+                      loadCampaignsList();
+                    }} 
+                    className="btn-rpg"
+                    title="Limpar Cache e Sincronizar Mesas"
+                    style={{ background: '#4a3320', color: '#e8dcc4', border: '2px solid #2c1e16', padding: '0.5rem', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <RotateCcw style={{ width: 16, height: 16 }} />
+                  </button>
                   <button onClick={handleOpenCreate} className="btn-rpg btn-red"
                     style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '1rem', padding: '0.5rem 1.2rem', whiteSpace: 'nowrap' }}>
                     <Plus style={{ width: 18, height: 18 }} /> Nova Mesa

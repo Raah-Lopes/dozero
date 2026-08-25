@@ -33,6 +33,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { 
   getCampaigns, 
+  getLocalCampaignsCache,
   createOrUpdateCampaign, 
   deleteCampaignCloud, 
   getCampaignMembers, 
@@ -63,8 +64,8 @@ const DEFAULT_COVERS = [
 
 export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVault }) => {
   const { user } = useAuthStore();
-  const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>(() => getLocalCampaignsCache());
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   
   // Criar / Editar Mesa
@@ -91,10 +92,11 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
   }, [isOpen, user?.id]);
 
   const loadList = async () => {
-    setLoading(true);
     try {
       const data = await getCampaigns(user?.id);
-      setCampaigns(data);
+      if (data && data.length > 0) {
+        setCampaigns(data);
+      }
     } catch (e) {
       console.error(e);
     } finally {

@@ -37,23 +37,51 @@ let lastGetCampaignsTime = 0;
 let cachedCampaignsList: CampaignCloudRecord[] | null = null;
 
 /**
- * Carrega campanhas com estratégia de Cache Local (Local-First) + Sincronização direta com Supabase Postgres
- * Evita carregar campos pesados (como snapshot da mesa) no lobby.
+ * Obtém o cache local imediatamente sem delay de rede
+ */
+export function getLocalCampaignsCache(): CampaignCloudRecord[] {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_CAMPAIGNS_KEY) : null;
+    if (!raw) return getDefaultDemoCampaigns();
+    const parsed: CampaignCloudRecord[] = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return getDefaultDemoCampaigns();
+    
+    // Se o cache tiver IDs demo antigos ou mais de 2 mesas antigas fora do padrão, limpa
+    const hasObsolete = parsed.some(c => c.id === 'demo_1' || c.id === 'demo_2' || c.name === 'HELSOC');
+    if (hasObsolete) {
+      const clean = getDefaultDemoCampaigns();
+      localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(clean));
+      return clean;
+    }
+    return parsed;
+  } catch {
+    return getDefaultDemoCampaigns();
+  }
+}
+
+/**
+ * Força a limpeza e redefinição do cache local para as 2 mesas oficiais
+ */
+export function resetCampaignsCache(): CampaignCloudRecord[] {
+  const defaults = getDefaultDemoCampaigns();
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(defaults));
+  }
+  cachedCampaignsList = defaults;
+  return defaults;
+}
+
+/**
+ * Carrega campanhas com estratégia Local-First (Instantâneo) + Sincronização direta com Supabase
  */
 export async function getCampaigns(userId?: string | null): Promise<CampaignCloudRecord[]> {
-  const localList: CampaignCloudRecord[] = JSON.parse(localStorage.getItem(LOCAL_CAMPAIGNS_KEY) || '[]');
+  const localList = getLocalCampaignsCache();
 
-  // Se o Supabase não estiver configurado ou não houver usuário logado, retorna cache local (ou demos se vazio)
   if (!isSupabaseConfigured) {
-    if (localList.length === 0) {
-      const defaultDemos = getDefaultDemoCampaigns();
-      localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(defaultDemos));
-      return defaultDemos;
-    }
     return localList;
   }
 
-  // Deduplicação de chamadas simultâneas
+  // Deduplicação de chamadas simultâneas (cache quente em memória de 3s)
   const now = Date.now();
   if (cachedCampaignsList && now - lastGetCampaignsTime < 3000) {
     return cachedCampaignsList;
@@ -64,15 +92,21 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
 
   inflightGetCampaigns = (async () => {
     try {
-      // Busca apenas as colunas necessárias para o Lobby (otimização de payload)
-      const { data: tableData, error } = await supabase
+      const fetchPromise = supabase
         .from('campaigns')
         .select('id, name, system, description, cover_url, room_code, is_public, is_closed, active_players_count, owner_id, created_at, updated_at, last_played_at')
         .order('updated_at', { ascending: false });
 
+      const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout de sincronização Supabase')), 3500)
+      );
+
+      const res = await Promise.race([fetchPromise, timeoutPromise]) as any;
+      const { data: tableData, error } = res || {};
+
       if (error) {
-        console.warn('[CampaignCloud] Erro ao buscar campanhas do banco:', error.message);
-        return localList.length > 0 ? localList : getDefaultDemoCampaigns();
+        console.warn('[CampaignCloud] Erro ou timeout no banco:', error.message || error);
+        return localList;
       }
 
       if (tableData && tableData.length > 0) {
@@ -100,7 +134,7 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
 
       return localList;
     } catch (e) {
-      console.warn('[CampaignCloud] Falha na rede, usando cache local:', e);
+      console.warn('[CampaignCloud] Usando cache local:', e);
       return localList;
     } finally {
       inflightGetCampaigns = null;
@@ -363,28 +397,28 @@ export async function joinCampaign(
 function getDefaultDemoCampaigns(): CampaignCloudRecord[] {
   return [
     {
-      id: 'demo_1',
-      name: 'A Cripta do Rei Esquecido',
-      system: 'D&D 5e / Fantasia Medieval',
-      description: 'Uma expedição arqueológica às ruínas subterrâneas de Valdoria revelou portais selados há milênios.',
-      cover_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
-      room_code: 'mesa_cripta_esquecida',
+      id: 'mesa-01',
+      name: 'Mesa 1 - Campanha Principal',
+      system: 'D&D 5e / Fantasia',
+      description: 'Mesa principal para sessões e campanhas ativas.',
+      cover_url: '/assets/vtt_layout_hero.jpg',
+      room_code: 'mesa-1',
       is_public: true,
       is_closed: false,
-      active_players_count: 4,
+      active_players_count: 1,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     },
     {
-      id: 'demo_2',
-      name: 'Sombras sobre Arton',
-      system: 'Tormenta20',
-      description: 'Investigação de corrupção rubra nas fronteiras de Deheon. Apenas os mais bravos sobreviverão.',
-      cover_url: 'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&w=800&q=80',
-      room_code: 'mesa_sombras_arton',
+      id: 'mesa-02',
+      name: 'Mesa 2 - Campanha Secundária',
+      system: 'Tormenta20 / Aventura',
+      description: 'Mesa secundária para sessões paralelas e testes.',
+      cover_url: '/assets/vtt_layout_hero.jpg',
+      room_code: 'mesa-2',
       is_public: true,
       is_closed: false,
-      active_players_count: 3,
+      active_players_count: 1,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
