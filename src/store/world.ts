@@ -19,7 +19,11 @@ export interface ChronosEvent {
   day: number;
   month: number;
   year: number;
+  layer?: ChronosEventLayer;
+  wikiPath?: string;
 }
+
+export type ChronosEventLayer = 'world' | 'campaign' | 'character';
 
 export function initChronos() {
   if (!state.chronos.get('config')) state.chronos.set('config', DEFAULT_CALENDAR);
@@ -55,7 +59,7 @@ export function getChronosEvents(): ChronosEvent[] {
   return (state.chronos.get('events') as ChronosEvent[]) || [];
 }
 
-export function addChronosEvent(title: string, date = getChronosState()) {
+export function addChronosEvent(title: string, date = getChronosState(), details: { layer?: ChronosEventLayer; wikiPath?: string } = {}) {
   const cleanTitle = title.trim();
   if (!cleanTitle) return;
   const config = getChronosConfig();
@@ -65,8 +69,27 @@ export function addChronosEvent(title: string, date = getChronosState()) {
     title: cleanTitle,
     day: Math.min(config.months[month - 1].days, Math.max(1, date.day)),
     month,
-    year: Math.max(1, date.year)
+    year: Math.max(1, date.year),
+    layer: details.layer || 'world',
+    wikiPath: details.wikiPath || undefined
   }]);
+}
+
+export function updateChronosEvent(id: string, patch: Partial<Omit<ChronosEvent, 'id'>>) {
+  const config = getChronosConfig();
+  state.chronos.set('events', getChronosEvents().map(event => {
+    if (event.id !== id) return event;
+    const month = Math.min(config.months.length, Math.max(1, patch.month ?? event.month));
+    const title = patch.title === undefined ? event.title : patch.title.trim() || event.title;
+    return {
+      ...event,
+      ...patch,
+      title,
+      day: Math.min(config.months[month - 1].days, Math.max(1, patch.day ?? event.day)),
+      month,
+      year: Math.max(1, patch.year ?? event.year)
+    };
+  }));
 }
 
 export function removeChronosEvent(id: string) {

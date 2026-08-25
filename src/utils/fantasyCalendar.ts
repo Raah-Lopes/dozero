@@ -28,6 +28,21 @@ export function getCalendarDayNumber(day: number, month: number, year: number, c
   return (Math.max(1, year) - 1) * yearDays + previousMonths + Math.max(1, day) - 1;
 }
 
+export function getCalendarDateFromDayNumber(dayNumber: number, config = DEFAULT_CALENDAR) {
+  const yearDays = config.months.reduce((total, item) => total + item.days, 0);
+  const safeDayNumber = Math.max(0, Math.floor(dayNumber));
+  const year = Math.floor(safeDayNumber / yearDays) + 1;
+  let remainingDays = safeDayNumber % yearDays;
+
+  for (let index = 0; index < config.months.length; index += 1) {
+    const month = config.months[index];
+    if (remainingDays < month.days) return { day: remainingDays + 1, month: index + 1, year };
+    remainingDays -= month.days;
+  }
+
+  return { day: 1, month: 1, year: year + 1 };
+}
+
 export function getMoonPhase(day: number, month: number, year: number, config = DEFAULT_CALENDAR): MoonPhase {
   const cycleDays = Math.max(1, config.moonCycleDays);
   const progress = (getCalendarDayNumber(day, month, year, config) % cycleDays) / cycleDays;

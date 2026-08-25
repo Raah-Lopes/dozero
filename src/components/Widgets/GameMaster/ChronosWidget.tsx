@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
-import { state, initChronos, getChronosState, getChronosConfig, setChronosConfig, getChronosEvents, addChronosEvent, removeChronosEvent, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../../store';
-import type { ChronosState } from '../../../store';
-import { Clock, Sun, Moon, Sunrise, CalendarDays, Tent, Coffee, Settings } from 'lucide-react';
+import { state, initChronos, getChronosState, getChronosConfig, setChronosConfig, getChronosEvents, addChronosEvent, updateChronosEvent, removeChronosEvent, advanceTimeOfDay, advanceDay, pushChatMessage } from '../../../store';
+import type { ChronosEventLayer, ChronosState } from '../../../store';
+import { Clock, Sun, Moon, Sunrise, CalendarDays, Tent, Coffee, Settings, History } from 'lucide-react';
 import { CALENDAR_PRESETS, getCalendarDayNumber, getMoonPhase, parseCalendarMonths, serializeCalendarMonths, type CalendarConfig } from '../../../utils/fantasyCalendar';
+import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
+import type { WikiEntry } from '../../../services/wiki/WikiQuery';
+import { getWikiEntityType } from '../../../utils/wikiEntities';
+import { ChronosTimeline } from './ChronosTimeline';
 
 export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = ({ onClose, isGM = true }) => {
   const [timeState, setTimeState] = useState<ChronosState | null>(null);
@@ -11,6 +15,10 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   const [eventDay, setEventDay] = useState('');
   const [eventMonth, setEventMonth] = useState('');
   const [eventYear, setEventYear] = useState('');
+  const [eventLayer, setEventLayer] = useState<ChronosEventLayer>('world');
+  const [eventWikiPath, setEventWikiPath] = useState('');
+  const [wikiEntities, setWikiEntities] = useState<WikiEntry[]>([]);
+  const [timelineOpen, setTimelineOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarName, setCalendarName] = useState('');
   const [monthDefinitions, setMonthDefinitions] = useState('');
@@ -21,7 +29,7 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
     initChronos();
 
     const observer = () => {
-      setTimeState(getChronosState());
+      setTimeState({ ...getChronosState() });
     };
 
     state.chronos.observe(observer);
@@ -29,6 +37,19 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
 
     return () => {
       state.chronos.unobserve(observer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadWikiEntities = () => WikiIndexer.buildIndex().then(entries => {
+      if (active) setWikiEntities(entries.filter(entry => getWikiEntityType(entry.metadata)));
+    });
+    void loadWikiEntities();
+    window.addEventListener('wiki-updated', loadWikiEntities);
+    return () => {
+      active = false;
+      window.removeEventListener('wiki-updated', loadWikiEntities);
     };
   }, []);
 
@@ -77,7 +98,7 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
   };
 
   return (
-    <DraggableWindow id="chronos-widget" widgetKey="chronos" title="Motor Chronos" initialX={window.innerWidth / 2 - 180} initialY={80} onClose={onClose} width={360} height={560}>
+    <DraggableWindow id="chronos-widget" widgetKey="chronos" title="Motor Chronos" initialX={window.innerWidth / 2 - (timelineOpen ? 450 : 180)} initialY={80} onClose={onClose} width={timelineOpen ? 900 : 360} height={timelineOpen ? 650 : 560}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', color: 'var(--text-primary)' }}>
         
         {/* Mostrador Principal */}
@@ -103,6 +124,19 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
           </div>
         </div>
 
+        <button
+          type="button"
+          aria-expanded={timelineOpen}
+          onClick={() => setTimelineOpen(value => !value)}
+          style={{ padding: '7px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '7px', border: `1px solid ${timelineOpen ? 'var(--accent-primary)' : 'var(--glass-border)'}`, background: timelineOpen ? 'rgba(16,185,129,.14)' : 'var(--bg-secondary)', color: timelineOpen ? 'var(--accent-primary)' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '.74rem', fontWeight: 700 }}
+        >
+          <History size={14} /> {timelineOpen ? 'Fechar linha do tempo' : 'Abrir linha do tempo'}
+        </button>
+
+        {timelineOpen ? (
+          <ChronosTimeline calendar={calendar} current={timeState} events={getChronosEvents()} isGM={isGM} onMove={updateChronosEvent} onRemove={removeChronosEvent} />
+        ) : null}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>Eventos de Hoje</span>
           {todayEvents.map(event => (
@@ -114,13 +148,24 @@ export const ChronosWidget: React.FC<{ onClose: () => void; isGM?: boolean }> = 
           {isGM && <>
             <input value={eventTitle} onChange={event => setEventTitle(event.target.value)} placeholder="Novo evento" style={{ minWidth: 0, padding: '5px 7px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
             <div style={{ display: 'flex', gap: '4px' }}>
+              <select value={eventLayer} onChange={event => setEventLayer(event.target.value as ChronosEventLayer)} aria-label="Camada do evento" style={{ flex: 1, minWidth: 0, padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }}>
+                <option value="world">Mundo</option>
+                <option value="campaign">Campanha</option>
+                <option value="character">Personagens</option>
+              </select>
+              <select value={eventWikiPath} onChange={event => setEventWikiPath(event.target.value)} aria-label="Entidade da wiki vinculada" style={{ flex: 2, minWidth: 0, padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }}>
+                <option value="">Sem vínculo com a wiki</option>
+                {wikiEntities.map(entry => <option key={entry.path} value={entry.path}>{String(entry.metadata.nome || entry.metadata.name || entry.metadata.titulo || entry.slug)}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: '4px' }}>
               <input type="number" value={eventDay} onChange={event => setEventDay(event.target.value)} placeholder={`Dia ${timeState.day}`} min="1" max={selectedEventMonth.days} style={{ width: '52px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
               <select value={eventMonth} onChange={event => setEventMonth(event.target.value)} aria-label="Mês do evento" style={{ minWidth: 0, flex: 1, padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }}>
                 <option value="">{currentMonth.name}</option>
                 {calendar.months.map((month, index) => <option key={`${month.name}-${index}`} value={index + 1}>{month.name}</option>)}
               </select>
               <input type="number" value={eventYear} onChange={event => setEventYear(event.target.value)} placeholder={`Ano ${timeState.year}`} min="1" style={{ width: '66px', padding: '5px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.72rem' }} />
-              <button onClick={() => { addChronosEvent(eventTitle, { day: Number(eventDay) || timeState.day, month: Number(eventMonth) || timeState.month, year: Number(eventYear) || timeState.year, timeOfDay: timeState.timeOfDay, season: selectedEventMonth.season }); setEventTitle(''); setEventDay(''); setEventMonth(''); setEventYear(''); }} style={{ padding: '5px 8px', background: 'var(--accent-primary)', border: 0, borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '0.72rem' }}>Adicionar</button>
+              <button onClick={() => { addChronosEvent(eventTitle, { day: Number(eventDay) || timeState.day, month: Number(eventMonth) || timeState.month, year: Number(eventYear) || timeState.year, timeOfDay: timeState.timeOfDay, season: selectedEventMonth.season }, { layer: eventLayer, wikiPath: eventWikiPath }); setEventTitle(''); setEventDay(''); setEventMonth(''); setEventYear(''); setEventWikiPath(''); }} style={{ padding: '5px 8px', background: 'var(--accent-primary)', border: 0, borderRadius: '6px', color: '#fff', cursor: 'pointer', fontSize: '0.72rem' }}>Adicionar</button>
             </div>
           </>}
         </div>

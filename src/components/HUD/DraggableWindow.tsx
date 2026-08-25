@@ -70,6 +70,13 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
   useEffect(() => {
     setSize(prev => ({ w: width !== undefined ? width : prev.w, h: height !== undefined ? height : prev.h }));
     resizeCurrentSize.current = { w: width !== undefined ? (width as number) : resizeCurrentSize.current.w, h: height !== undefined ? (height as number) : resizeCurrentSize.current.h };
+    if (typeof width === 'number') {
+      setPos(previous => {
+        const next = { ...previous, x: Math.min(previous.x, Math.max(0, window.innerWidth - width)) };
+        dragCurrentPos.current = next;
+        return next;
+      });
+    }
   }, [width, height]);
   
   const [isDragging, setIsDragging] = useState(false);

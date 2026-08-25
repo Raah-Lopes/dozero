@@ -1,44 +1,44 @@
-# Contribuindo para o Dozero VTT
+# Contribuindo para o DOZERO
 
-Obrigado pelo seu interesse em ajudar o desenvolvimento do Dozero! Abaixo você encontrará o guia rápido para rodar o projeto na sua máquina.
+## Ambiente
 
-## 🚀 Como Rodar o Projeto Localmente
+- Node.js 24.x.
+- npm.
+- Um `.env.local` criado a partir de `.env.example`; nunca envie credenciais ao Git.
 
-1. **Pré-requisitos:** Certifique-se de que você tenha o **Node.js 20.x** instalado.
-2. **Clonar o Repositório:** 
-   ```bash
-   git clone https://github.com/Raah-Lopes/dozero.git
-   cd dozero
-   ```
-3. **Instalar Dependências:**
-   ```bash
-   npm install
-   ```
-4. **Executar em Modo Dev:**
-   ```bash
-   npm run dev
-   ```
-5. Acesse `http://localhost:5174` para ver a mesa virtual localmente. O Vite está configurado para expor pela rede para facilitar testes mobile!
-
-## 🧪 Como Testar
-
-Os testes garantem a estabilidade central do VTT. Se você alterar lógicas de gerenciamento de janela ou de engine de combate, rode a suíte de testes.
-
-Para rodar todos os testes unitários:
 ```bash
-npm run test
+npm install
+npm run dev
 ```
 
-## 📝 Padrões de Commit
+A aplicação usa `http://localhost:5174` e o Vite aceita conexões da rede local para testes mobile.
 
-Temos uma automação (CI/CD) rodando no GitHub, portanto, commits diretos na branch principal (`main`) vão acionar builds e testes. 
-Para manter tudo limpo, siga o padrão *Conventional Commits*:
-- `feat:` Uma nova funcionalidade
-- `fix:` Correção de bug
-- `docs:` Mudanças em documentação
-- `style:` Formatações, ponto e vírgula, etc (sem mudança de lógica)
-- `refactor:` Refatoração de código
-- `perf:` Mudança para ganho de performance
-- `test:` Adicionar ou refatorar testes
+## Verificação
 
-Exemplo: `git commit -m "feat: adicionado novo gerador de nome para guildas"`
+Rode o menor teste que cobre a mudança e, para integrações, o build de produção:
+
+```bash
+npm run test -- --run
+npm run build
+```
+
+Mudanças de interface devem ser exercitadas no navegador. Confira o fluxo afetado, console, teclado/foco e uma largura mobile quando aplicável.
+
+## Banco e migrations
+
+- Versione mudanças em `supabase/migrations/`.
+- Não dependa somente de checks na UI: autorização persistente pertence às policies RLS.
+- Não use dados reais ou sensíveis em testes de ferramentas de IA.
+
+## Commits
+
+Use Conventional Commits:
+
+- `feat:` funcionalidade;
+- `fix:` correção;
+- `docs:` documentação;
+- `refactor:` mudança interna sem alterar comportamento;
+- `perf:` performance;
+- `test:` testes.
+
+Preserve alterações não relacionadas no worktree. Não inclua artefatos de build, arquivos temporários ou conteúdo pessoal da wiki por acidente.

@@ -12,6 +12,8 @@ node_modules/
 
 # Misc
 .DS_Store
+desktop.ini
+supabase/.temp/
 .env
 .env.local
 .env.development.local
