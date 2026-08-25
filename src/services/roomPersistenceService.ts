@@ -1,6 +1,7 @@
 import { state, doc } from './yjs';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { toast } from '../components/UI/Toast';
+import { enqueueSyncOperation } from './offlineSyncService';
 
 export interface RoomBundle {
   version: number;
@@ -263,8 +264,10 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
   // 1. Salva sempre no IndexedDB local (capacidade gigabytes, sem limite de 5MB)
   await saveLocalSnapshotIDB(roomCode, bundle);
 
-  // 2. Se Supabase estiver disponível, salva no Supabase Storage ou Tabela
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      await enqueueSyncOperation('snapshot_save', roomCode, bundle);
+    }
     return true;
   }
 
@@ -315,12 +318,14 @@ export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<
     }
 
     if (!storageSaved && !tableSaved) {
-      console.warn('[RoomPersistence] A nuvem do Supabase não aceitou o snapshot (RLS ou tabela inexistente). Use Exportar/Restaurar para transferir entre máquinas.');
+      console.warn('[RoomPersistence] Nuvem indisponível no momento. Salvando na fila offline.');
+      await enqueueSyncOperation('snapshot_save', roomCode, bundle);
     }
 
     return true;
   } catch (err) {
-    console.warn('[RoomPersistence] Erro geral ao sincronizar nuvem:', err);
+    console.warn('[RoomPersistence] Erro geral ao sincronizar nuvem, enfileirando offline:', err);
+    await enqueueSyncOperation('snapshot_save', roomCode, bundle);
     return true;
   }
 }

@@ -6,10 +6,10 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 
 ## Próxima ordem de execução
 
-1. **F.3 Offline aprimorado** — fila visível de sync e recuperação de conflitos.
-2. **F.2 Macros condicionais** — builder condicional e contexto automático.
-3. **A.1 Voz WebRTC e screen share** — auditoria de permissões granulares e áudio TURN.
-4. **A.2 Soundboard e cenas sonoras** — grid configurável de sons e presets.
+1. **F.2 Macros condicionais** — builder condicional e contexto automático.
+2. **A.1 Voz WebRTC e screen share** — auditoria de permissões granulares e áudio TURN.
+3. **A.2 Soundboard e cenas sonoras** — grid configurável de sons e presets.
+4. **A.3 Rádio ambiente** — crossfade de ambiências e rádio unificado.
 
 ## Trilha A — comunicação e áudio
 
@@ -57,7 +57,7 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 |---|---|---|
 | F.1 Mestre IA contextualizado | Parcial | Há múltiplos widgets/serviços Gemini e ferramentas de lore, mas ainda não há pgvector/RAG consolidado da campanha. |
 | F.2 Macros condicionais | Parcial | Macros e rolagens existem; falta builder condicional completo e contexto automático de distância/ambiente. |
-| F.3 Offline aprimorado | Parcial | PWA, IndexedDB, Yjs e aviso offline existem. Faltam fila de sync observável e resolução visual de conflitos. |
+| F.3 Offline aprimorado | Concluído | Fila visível de sincronização offline com persistência no IndexedDB (`offlineSyncService.ts`), badge no HUD (`OfflineSyncBadge.tsx`) com contagem de pendências, retry automático com backoff exponencial e modal de resolução de conflitos (`ConflictResolutionModal.tsx`) integrado com testes unitários. |
 
 ## Trilha G — portabilidade
 
