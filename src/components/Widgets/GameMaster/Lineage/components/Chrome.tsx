@@ -4,6 +4,7 @@ import {
   BrandSigil, IconFile, IconData, IconGenerations, IconHouse, IconLink,
   IconPlus, IconRedo, IconSearch, IconUndo, IconUsers, IconX,
 } from "./icons";
+import { LoreWorkspaceSwitcher } from "../../../../Navigation/LoreWorkspaceSwitcher";
 
 /* ---------------- barra superior ---------------- */
 
@@ -36,6 +37,10 @@ export function Toolbar(p: ToolbarProps) {
             Atlas de Casas &amp; Dinastias
           </span>
         </div>
+      </div>
+
+      <div className="hidden sm:block">
+        <LoreWorkspaceSwitcher current="lineage" />
       </div>
 
       <span className="mx-1 hidden h-6 w-px bg-line sm:block" />

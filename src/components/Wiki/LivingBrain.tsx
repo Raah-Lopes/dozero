@@ -10,6 +10,8 @@ import { useWindowManager } from '../../hooks/useWindowManager';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import type { WikiGraphLinkSource, WikiGraphNodeSource } from '../../services/wiki/wikiGraphData';
 import { saveMarkdownContent } from '../../utils/githubApi';
+import { state } from '../../services/yjs';
+import { normalizeCodex } from './Codex/codexModel';
 
 const bundledWikiModules = import.meta.glob('../../../wikidozero/**/*.md', {
   query: '?raw',
@@ -36,14 +38,42 @@ export const LivingBrain: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [graphVersion, setGraphVersion] = useState(0);
 
-  const fetchGraphData = useCallback(async () => {
+  const fetchGraphData = useCallback(async (isBackgroundRefresh = false) => {
     try {
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-      setIsLoading(true);
+      
+      const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
+      const currentRoom = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+      
+      if (!isBackgroundRefresh && codex.notes.length === 0) setIsLoading(true);
       setError(null);
 
-      const json = await WikiIndexer.buildGraph(bundledWikiFiles);
+      let json;
+      if (codex.notes.length > 0) {
+        json = {
+          nodes: codex.notes.map((note) => ({
+            id: note.id,
+            name: note.name,
+            path: note.id,
+            group: note.folderId || '',
+            isFolder: false,
+            avatar: note.imageUrl,
+            entityType: note.typeId,
+            description: note.description,
+            tags: note.tags,
+            status: String(note.fields.status || ''),
+            level: note.fields.level as string | number | undefined,
+            nd: note.fields.threat as string | number | undefined,
+          })),
+          links: codex.relations.map((relation) => ({ id: relation.id, source: relation.sourceId, target: relation.targetId, label: relation.label, color: relation.color, sourcePath: relation.sourceId })),
+        };
+      } else if (currentRoom === 'dozero-mesa-principal-v2') {
+        json = await WikiIndexer.buildGraph(bundledWikiFiles);
+      } else {
+        json = { nodes: [], links: [] };
+      }
+
       if (json.nodes.length === 0) throw new Error('Nenhuma entidade foi encontrada na Wiki desta campanha.');
 
       const mappedNodes: WNode[] = json.nodes.map((n: WikiGraphNodeSource) => {
@@ -77,7 +107,8 @@ export const LivingBrain: React.FC = () => {
           }
         }
 
-        const matchedType = DEFAULT_TYPES.find((t) => t.id === detectedType) || DEFAULT_TYPES[0];
+        const typeAliases: Record<string, string> = { person: 'personagem', place: 'local', faction: 'organizacao', item: 'item', event: 'evento', creature: 'criatura', lore: 'conceito' };
+        const matchedType = DEFAULT_TYPES.find((t) => t.id === (typeAliases[detectedType] || detectedType)) || DEFAULT_TYPES[0];
 
         let imageUrl: string | undefined = undefined;
         if (n.avatar) {
@@ -138,7 +169,10 @@ export const LivingBrain: React.FC = () => {
 
       setWikiNodes(clusteredNodes);
       setWikiEdges(mappedEdges);
-      setGraphVersion((version) => version + 1);
+      // Evitamos incrementar a versão se não for necessário recriar o canvas D3/ReactFlow inteiro
+      if (!isBackgroundRefresh) {
+        setGraphVersion((version) => version + 1);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Falha desconhecida ao carregar o Grafo.';
       console.error('[LivingBrain] Não foi possível carregar a Wiki:', err);
@@ -149,18 +183,42 @@ export const LivingBrain: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const initialLoad = window.setTimeout(() => void fetchGraphData(), 0);
-    const refresh = () => void fetchGraphData();
+    // Primeira carga síncrona/imediata
+    void fetchGraphData(false);
+    
+    const refresh = () => void fetchGraphData(true);
+    let debounceTimer: number;
+    const refreshFromSharedState = () => {
+      window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => fetchGraphData(true), 1500);
+    };
+    
+    state.wiki.observe(refreshFromSharedState);
     window.addEventListener('wiki-updated', refresh);
+    window.addEventListener('codex-updated', refresh);
+    
     return () => {
-      window.clearTimeout(initialLoad);
+      window.clearTimeout(debounceTimer);
       window.removeEventListener('wiki-updated', refresh);
+      window.removeEventListener('codex-updated', refresh);
+      state.wiki.unobserve(refreshFromSharedState);
     };
   }, [fetchGraphData]);
 
   // Criação de conexão direta no markdown da Wiki
   const handleCreateWikiRelation = async (sourcePath: string, targetName: string, label: string) => {
     try {
+      const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
+      const source = codex.notes.find((note) => note.id === sourcePath);
+      const target = codex.notes.find((note) => note.id === targetName || note.name.toLocaleLowerCase('pt-BR') === targetName.toLocaleLowerCase('pt-BR'));
+      if (source && target) {
+        if (!codex.relations.some((relation) => relation.sourceId === source.id && relation.targetId === target.id)) {
+          codex.relations.push({ id: `relation_${crypto.randomUUID()}`, sourceId: source.id, targetId: target.id, label: label || 'Relacionado a', color: '#d8b45a', icon: 'link', bidirectional: false });
+          state.wiki.set('__codex_v1__', { ...codex, updatedAt: new Date().toISOString() });
+          window.dispatchEvent(new CustomEvent('codex-updated'));
+        }
+        return;
+      }
       if (!sourcePath.toLowerCase().endsWith('.md')) throw new Error('A origem da relação não é um artigo da Wiki.');
       const content = await WikiIndexer.loadRawFileContent(sourcePath);
       if (content == null) throw new Error('Não foi possível ler o artigo de origem.');

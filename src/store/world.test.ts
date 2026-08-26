@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ chronos: new Map<string, unknown>() }));
 vi.mock('../services/yjs', () => ({ state: { chronos: mocks.chronos } }));
 vi.mock('./chat', () => ({ pushChatMessage: vi.fn() }));
 
-import { addChronosEvent, duplicateChronicleEra, getChronicleEras, getChronicleMeta, getChronosEvents, initChronos, moveChronicleEra, removeChronicleEra, reorderChronicleEra, replaceChronicle, saveChronicleEra, saveChronicleEvent, saveChronicleMeta, updateChronosEvent } from './world';
+import { addChronosEvent, duplicateChronicleEra, getChronicleEras, getChronicleMeta, getChronosEvents, initChronos, moveChronicleEra, removeChronicleEra, reorderChronicleEra, replaceChronicle, saveChronicleEra, saveChronicleEvent, saveChronicleMeta, setChronosDate, updateChronosEvent } from './world';
 
 describe('chronos event store', () => {
   beforeEach(() => mocks.chronos.clear());
@@ -60,5 +60,37 @@ describe('chronos event store', () => {
     expect(getChronosEvents().map(event => event.title)).toEqual(['Sessão', 'Importado']);
     expect(getChronicleMeta()).toEqual({ worldName: 'Novo Mundo', calendarLabel: 'N.M.' });
     expect(saveChronicleMeta({ worldName: '  Renomeado  ' }).worldName).toBe('Renomeado');
+  });
+
+  it('sets campaign operational date and computes season accurately', () => {
+    initChronos();
+    const result = setChronosDate(15, 7, 1492, 'Tarde');
+
+    expect(result).toMatchObject({
+      day: 15,
+      month: 7,
+      year: 1492,
+      timeOfDay: 'Tarde',
+      season: 'Verão'
+    });
+  });
+
+  it('saves events with day and month precision for visual calendar', () => {
+    const event = saveChronicleEvent({
+      title: 'Festival da Colheita',
+      day: 22,
+      month: 9,
+      year: 1450,
+      datePrecision: 'day',
+      kind: 'fundacao'
+    });
+
+    expect(event).toMatchObject({
+      title: 'Festival da Colheita',
+      day: 22,
+      month: 9,
+      year: 1450,
+      datePrecision: 'day'
+    });
   });
 });

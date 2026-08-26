@@ -11,10 +11,19 @@ type SyncState = 'loading' | 'local' | 'saving' | 'cloud';
 
 export function LineageWidget({ onClose }: { onClose: () => void }) {
   const roomCode = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
-  const [initialTree, setInitialTree] = useState<FamilyTree | null | undefined>(undefined);
-  const [syncState, setSyncState] = useState<SyncState>('loading');
+  const [initialTree, setInitialTree] = useState<FamilyTree | null | undefined>(() => {
+    const raw = state.lineage.get('atlas');
+    if (typeof raw === 'string') {
+      try {
+        return FamilyTree.from(JSON.parse(raw));
+      } catch {}
+    }
+    return undefined;
+  });
+  
+  const [syncState, setSyncState] = useState<SyncState>(initialTree ? 'cloud' : 'loading');
   const saveTimer = useRef<number | null>(null);
-  const lastSerialized = useRef('');
+  const lastSerialized = useRef(initialTree ? initialTree.serialize() : '');
   const isLocalUpdate = useRef(false);
 
   useEffect(() => {
@@ -41,40 +50,44 @@ export function LineageWidget({ onClose }: { onClose: () => void }) {
     };
 
     state.lineage.observe(onSharedChange);
-    void (async () => {
-      try {
-        await Promise.race([
-          indexeddbProvider?.whenSynced ?? Promise.resolve(),
-          new Promise((resolve) => window.setTimeout(resolve, 900)),
-        ]);
-        let tree = readSharedTree();
-        if (!tree) {
-          const cloud = await loadLineageAtlas(roomCode);
-          if (cloud?.data) tree = FamilyTree.from(cloud.data);
+    
+    // Se não carregou síncronamente no mount, busca do banco local/nuvem
+    if (initialTree === undefined) {
+      void (async () => {
+        try {
+          await Promise.race([
+            indexeddbProvider?.whenSynced ?? Promise.resolve(),
+            new Promise((resolve) => window.setTimeout(resolve, 900)),
+          ]);
+          let tree = readSharedTree();
+          if (!tree) {
+            const cloud = await loadLineageAtlas(roomCode);
+            if (cloud?.data) tree = FamilyTree.from(cloud.data);
+          }
+          tree ??= loadSavedTree(roomCode);
+          if (!active) return;
+          if (tree) {
+            lastSerialized.current = tree.serialize();
+            state.lineage.set('atlas', lastSerialized.current);
+          }
+          setInitialTree(tree);
+          setSyncState(tree ? 'cloud' : 'local');
+        } catch (error) {
+          console.warn('[Lineage] Inicialização local concluída sem nuvem:', error);
+          if (active) {
+            setInitialTree(loadSavedTree(roomCode));
+            setSyncState('local');
+          }
         }
-        tree ??= loadSavedTree(roomCode);
-        if (!active) return;
-        if (tree) {
-          lastSerialized.current = tree.serialize();
-          state.lineage.set('atlas', lastSerialized.current);
-        }
-        setInitialTree(tree);
-        setSyncState(tree ? 'cloud' : 'local');
-      } catch (error) {
-        console.warn('[Lineage] Inicialização local concluída sem nuvem:', error);
-        if (active) {
-          setInitialTree(loadSavedTree(roomCode));
-          setSyncState('local');
-        }
-      }
-    })();
+      })();
+    }
 
     return () => {
       active = false;
       state.lineage.unobserve(onSharedChange);
       if (saveTimer.current) window.clearTimeout(saveTimer.current);
     };
-  }, [roomCode]);
+  }, [roomCode, initialTree]);
 
   const handleTreeChange = useCallback((tree: FamilyTree) => {
     const serialized = tree.serialize();

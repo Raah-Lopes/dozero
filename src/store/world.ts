@@ -225,6 +225,29 @@ export function removeChronosEvent(id: string) {
   state.chronos.set('events', getChronosEvents().filter(event => event.id !== id));
 }
 
+export function setChronosDate(day: number, month: number, year: number, timeOfDay?: ChronosState['timeOfDay']) {
+  const current = getChronosState();
+  const config = getChronosConfig();
+  const validMonth = Math.min(config.months.length, Math.max(1, Math.round(month)));
+  const monthConfig = config.months[validMonth - 1] || config.months[0];
+  const validDay = Math.min(monthConfig.days, Math.max(1, Math.round(day)));
+  const validYear = Math.round(year);
+  const newSeason = monthConfig.season;
+  const newTimeOfDay = timeOfDay || current.timeOfDay;
+
+  const nextState: ChronosState = {
+    day: validDay,
+    month: validMonth,
+    year: validYear,
+    season: newSeason,
+    timeOfDay: newTimeOfDay
+  };
+
+  state.chronos.set('global', nextState);
+  pushChatMessage(`⏳ <b>Data da campanha ajustada:</b> ${validDay} de ${monthConfig.name}, ${validYear} (${newSeason} · ${newTimeOfDay})`, true, false);
+  return nextState;
+}
+
 export function advanceDay() {
   const current = getChronosState();
   const config = getChronosConfig();

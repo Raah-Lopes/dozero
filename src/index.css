@@ -2,6 +2,20 @@
 @import url('./responsive.css');
 @import "tailwindcss";
 
+@theme {
+  --color-tinta: #14120e;
+  --color-tinta2: #1b1812;
+  --color-tinta3: #282118;
+  --color-tinta4: #3a2c19;
+  --color-linha: #4d3b21;
+  --color-linha2: #6f5224;
+  --color-papel: #f1e6d0;
+  --color-papel2: #b6a88f;
+  --color-papel3: #7c6f5b;
+  --color-ambar: #e0a936;
+  --color-brasa: #e05c36;
+}
+
 :root {
   /* Core Colors - Slate and Neon Purple */
   --bg-primary: #020617; /* Slate 950 */

@@ -78,6 +78,21 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
   const [customTypes, setCustomTypes] = useState<TypeReg[]>(BOOT.customTypes);
   const [savedViews, setSavedViews] = useState<SavedView[]>(BOOT.savedViews);
 
+  useEffect(() => {
+    if (initialNodes && initialNodes.length > 0) {
+      setNodes((prev) => {
+        if (prev.length === initialNodes.length) {
+          return initialNodes.map(n => {
+            const ext = prev.find(p => p.id === n.id);
+            return ext ? { ...n, position: ext.position, selected: ext.selected } : n;
+          });
+        }
+        return initialNodes;
+      });
+      if (initialEdges) setEdges(initialEdges);
+    }
+  }, [initialNodes, initialEdges]);
+
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [isolate, setIsolate] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);

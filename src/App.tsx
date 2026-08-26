@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import './App.css';
-import { X, DoorOpen } from 'lucide-react';
+import { X, DoorOpen, BookOpen } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
+import { CodexWorkspace } from './components/Wiki/Codex/CodexWorkspace';
 import { GameCanvas } from './engine/GameCanvas';
 import { GMToolbar } from './components/HUD/GMToolbar';
 import { TokenContextHUD } from './components/HUD/TokenContextHUD';
@@ -63,6 +64,7 @@ type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'setti
 
 function App() {
   const [isReady] = useState(true);
+  const [showLegacyWiki, setShowLegacyWiki] = useState(false);
   const { initialize: initAuth } = useAuthStore();
   const { currentThemeId, setTheme, themeOverrides, updateOverrides, clearOverrides } = useTheme();
 
@@ -71,7 +73,7 @@ function App() {
   }, [initAuth]);
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
-  const currentRoom = urlParams.get('room') || 'default-room';
+  const currentRoom = urlParams.get('room') || 'dozero-mesa-principal-v2';
 
   // Auto-backup de sessão periódico no banco Supabase e rastreamento de presença real
   useAutoSaveSession(currentRoom);
@@ -134,7 +136,6 @@ function App() {
   if (standaloneWidget) {
     return <PopoutViewer widgetId={standaloneWidget} />;
   }
-
   // ===== STREAM OVERLAY MODE (OBS / LIVE BROADCAST) ===== //
   const isStreamMode = urlParams.get('mode') === 'stream' || urlParams.get('mode') === 'spectator';
   if (isStreamMode) {
@@ -164,8 +165,15 @@ function App() {
       {/* PÁGINA DEDICADA DA WIKI */}
       <div className={`view-layer wiki-layer ${viewMode === 'wiki' ? 'active' : ''}`}>
         {viewMode === 'wiki' && (
-          <ErrorBoundary componentName="WikiViewer">
-            <WikiViewer initialFile={wikiInitialFile} />
+          <ErrorBoundary componentName="Códice Arcanum">
+            {showLegacyWiki
+              ? <WikiViewer initialFile={wikiInitialFile} />
+              : <CodexWorkspace
+                  initialFile={wikiInitialFile}
+                  onClose={() => setViewMode('canvas')}
+                  onOpenLegacy={currentRoom === 'dozero-mesa-principal-v2' ? () => setShowLegacyWiki(true) : undefined}
+                  onOpenBrain={() => setViewMode('brain')}
+                />}
           </ErrorBoundary>
         )}
       </div>
@@ -179,16 +187,18 @@ function App() {
         )}
       </div>
 
-      {viewMode === 'wiki' && (
+      {viewMode === 'wiki' && showLegacyWiki && (
         <div className="exit-door-container-right">
+          <button onClick={() => setShowLegacyWiki(false)} className="glass-panel exit-door-btn-hoverable">
+            <span className="exit-text">Voltar ao Códice</span>
+            <BookOpen size={20} color="var(--accent-primary)" className="exit-icon" />
+          </button>
           <button onClick={() => setViewMode('canvas')} className="glass-panel exit-door-btn-hoverable">
             <span className="exit-text">Voltar para a Mesa</span>
             <DoorOpen size={20} color="var(--accent-primary)" className="exit-icon" />
           </button>
         </div>
       )}
-
-
 
       {/* PÁGINA DA MESA (HUD + MAPA) */}
       <div className={`view-layer canvas-layer-container ${viewMode === 'canvas' ? 'active' : ''}`}>

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import type { WNode } from "./core";
 import { ICluster, IDownload, IFit, IFlow, ILink, IPlus, ISearch, IStats, Sigil } from "./icons";
+import { LoreWorkspaceSwitcher } from "../../Navigation/LoreWorkspaceSwitcher";
 
 interface TopBarProps {
   nodes: WNode[];
@@ -50,6 +51,10 @@ export default function TopBar(p: TopBarProps) {
           <div className="font-display font-black text-[16px] tracking-[0.14em] text-parchment">ARCANUM</div>
           <div className="font-mono text-[8px] uppercase tracking-[0.2em] text-gold font-bold">cérebro-grafo rpg</div>
         </div>
+      </div>
+
+      <div className="mx-2 hidden sm:block">
+        <LoreWorkspaceSwitcher current="brain" />
       </div>
 
       {/* 2. Busca Inteligente Centralizada */}

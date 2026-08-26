@@ -1,0 +1,46 @@
+.lore-workspace-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(18, 14, 10, 0.82);
+  border: 1px solid rgba(120, 90, 45, 0.45);
+  border-radius: 8px;
+  padding: 3px 4px;
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.lore-workspace-switcher .lore-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #9f8e75;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lore-workspace-switcher .lore-nav-btn:hover {
+  color: #fff1ce;
+  background: rgba(224, 169, 54, 0.15);
+  border-color: rgba(224, 169, 54, 0.35);
+  transform: translateY(-1px);
+}
+
+.lore-workspace-switcher .lore-nav-btn.active {
+  color: #fce39f;
+  background: rgba(224, 169, 54, 0.25);
+  border-color: #e0a936;
+  box-shadow: 0 0 10px rgba(224, 169, 54, 0.3);
+}
+
+.lore-workspace-switcher .lore-nav-btn:focus-visible {
+  outline: 2px solid #e0a936;
+  outline-offset: 1px;
+}

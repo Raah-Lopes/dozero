@@ -2,6 +2,14 @@
 
 Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o changelog.
 
+## 2026-08-26 — Códice por campanha como fonte do ecossistema
+
+**Status:** Ativa
+
+**Decisão:** a Wiki Nova será portada como Códice estruturado e isolado por campanha. Cérebro Gráfico, Linhagem e futuras fichas referenciam as entidades desse documento. A Wiki Markdown empacotada permanece somente como acervo de migração da Mesa 0 e nunca como seed de novas mesas. O estado usa Yjs/IndexedDB e integra o snapshot Supabase da campanha.
+
+**Motivo:** impedir vazamento de conteúdo pessoal/teste entre mesas e estabelecer uma identidade comum entre os módulos de worldbuilding sem apagar o acervo atual.
+
 ## 2026-08-26 — Linhagem como atlas dinástico completo
 
 **Status:** Ativa

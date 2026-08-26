@@ -42,14 +42,14 @@ let cachedCampaignsList: CampaignCloudRecord[] | null = null;
 export function getLocalCampaignsCache(): CampaignCloudRecord[] {
   try {
     const raw = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_CAMPAIGNS_KEY) : null;
-    if (!raw) return getDefaultDemoCampaigns();
+    if (!raw) return getCanonicalCampaigns();
     const parsed: CampaignCloudRecord[] = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return getDefaultDemoCampaigns();
+    if (!Array.isArray(parsed) || parsed.length === 0) return getCanonicalCampaigns();
     
     // Se o cache tiver IDs demo antigos ou mais de 2 mesas antigas fora do padrão, limpa
     const hasObsolete = parsed.some(c => c.id === 'demo_1' || c.id === 'demo_2' || c.name === 'HELSOC');
     if (hasObsolete) {
-      const clean = getDefaultDemoCampaigns();
+      const clean = getCanonicalCampaigns();
       localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(clean));
       return clean;
     }
@@ -60,10 +60,10 @@ export function getLocalCampaignsCache(): CampaignCloudRecord[] {
 }
 
 /**
- * Força a limpeza e redefinição do cache local para as 2 mesas oficiais
+ * Força a limpeza e redefinição do cache local para a mesa canônica.
  */
 export function resetCampaignsCache(): CampaignCloudRecord[] {
-  const defaults = getDefaultDemoCampaigns();
+  const defaults = getCanonicalCampaigns();
   if (typeof window !== 'undefined') {
     localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(defaults));
   }
@@ -394,29 +394,16 @@ export async function joinCampaign(
   }
 }
 
-function getDefaultDemoCampaigns(): CampaignCloudRecord[] {
+function getCanonicalCampaigns(): CampaignCloudRecord[] {
   return [
     {
-      id: 'mesa-01',
-      name: 'Mesa 1 - Campanha Principal',
-      system: 'D&D 5e / Fantasia',
-      description: 'Mesa principal para sessões e campanhas ativas.',
+      id: 'dozero-mesa-principal-v2',
+      name: 'Mesa 0 — Ecossistema DOZERO',
+      system: 'Sistema agnóstico',
+      description: 'Mesa canônica usada para desenvolver e validar o ecossistema DOZERO.',
       cover_url: '/assets/vtt_layout_hero.jpg',
-      room_code: 'mesa-1',
-      is_public: true,
-      is_closed: false,
-      active_players_count: 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: 'mesa-02',
-      name: 'Mesa 2 - Campanha Secundária',
-      system: 'Tormenta20 / Aventura',
-      description: 'Mesa secundária para sessões paralelas e testes.',
-      cover_url: '/assets/vtt_layout_hero.jpg',
-      room_code: 'mesa-2',
-      is_public: true,
+      room_code: 'dozero-mesa-principal-v2',
+      is_public: false,
       is_closed: false,
       active_players_count: 1,
       created_at: new Date().toISOString(),

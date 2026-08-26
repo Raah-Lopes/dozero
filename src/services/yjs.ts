@@ -116,73 +116,11 @@ indexeddbProvider?.on('synced', () => {
   if (state.tokens.has('goblin_boss')) state.tokens.delete('goblin_boss');
   if (state.tokens.has('omega_sentinel')) state.tokens.delete('omega_sentinel');
 
-  const seedKey = `dozero_seeded_${roomName}`;
-  const isAlreadySeeded = state.roomSettings.get('is_seeded') === true || localStorage.getItem(seedKey) === 'true';
-  const isDefaultRoom = roomName === 'dozero-mesa-principal-v2';
-
-  // Tenta restaurar da nuvem primeiro se o estado local estiver vazio
+  // Tenta restaurar da nuvem primeiro se o estado local estiver vazio.
+  // Salas novas permanecem limpas: exemplos não fazem parte do ecossistema inicial.
   if (state.tokens.size === 0 && state.backgrounds.size === 0) {
     import('./roomPersistenceService').then(({ loadRoomSnapshotFromCloud }) => {
-      loadRoomSnapshotFromCloud(roomName).then((restored) => {
-        if (!restored && isDefaultRoom && !isAlreadySeeded && state.tokens.size === 0) {
-          state.roomSettings.set('is_seeded', true);
-          try { localStorage.setItem(seedKey, 'true'); } catch (e) {}
-
-          const heroId = `token_exemplo_heroi`;
-          state.tokens.set(heroId, {
-            id: heroId,
-            name: 'Herói Exemplo',
-            hp: 20,
-            maxHp: 20,
-            ca: 15,
-            x: 450,
-            y: 350,
-            isPlayer: true,
-            tokenShape: 'circle',
-            borderColor: '#3b82f6',
-            showName: true,
-            imageUrl: ''
-          });
-
-          const enemyId = `token_exemplo_inimigo`;
-          state.tokens.set(enemyId, {
-            id: enemyId,
-            name: 'Inimigo Exemplo',
-            hp: 10,
-            maxHp: 10,
-            ca: 12,
-            x: 650,
-            y: 350,
-            isPlayer: false,
-            tokenShape: 'circle',
-            borderColor: '#ef4444',
-            showName: true,
-            imageUrl: ''
-          });
-        }
-      });
-    });
-  } else if (!isAlreadySeeded && state.tokens.size > 0) {
-    state.roomSettings.set('is_seeded', true);
-    try { localStorage.setItem(seedKey, 'true'); } catch (e) {}
-  }
-
-  if (!state.world.has('factions')) {
-    state.world.set('factions', [
-      { id: 'f1', name: 'A Coroa Imperial', power: 50, influence: 50 },
-      { id: 'f2', name: 'O Sindicato das Sombras', power: 40, influence: 60 }
-    ]);
-  }
-  if (!state.world.has('settlements')) {
-    state.world.set('settlements', [
-      { id: 's1', name: 'A Capital', corruption: 20, economy: 80 }
-    ]);
-  }
-  if (!state.stronghold.has('data')) {
-    state.stronghold.set('data', {
-      name: 'Refúgio de Arcanus',
-      treasury: 500,
-      upgrades: [] // ex: 'cozinha', 'poco', 'camas', 'altar'
+      loadRoomSnapshotFromCloud(roomName);
     });
   }
 });
