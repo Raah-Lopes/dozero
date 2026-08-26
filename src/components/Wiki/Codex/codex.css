@@ -62,7 +62,7 @@
 .codex-stat-cloud small{font-size:9px;color:#8a795f;margin-left:2px}
 
 .codex-content-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}
-.codex-header nav{overflow-x:auto;scrollbar-width:none;min-width:0;flex:1}
+.codex-header nav{scrollbar-width:none;min-width:0;flex:1;overflow:visible;}
 .codex-header nav::-webkit-scrollbar{display:none}
 .codex-workspace .codex-primary{flex-shrink:0;white-space:nowrap}
 

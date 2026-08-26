@@ -237,9 +237,9 @@ export function Embers() {
   );
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
-      {embers.map((e) => (
+      {embers.map((e, index) => (
         <span
-          key={e.id}
+          key={`${e.id}-${index}`}
           className="ember"
           style={{
             left: e.left,
