@@ -4,7 +4,7 @@ import {
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
   Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare,
-  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange
+  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -254,6 +254,13 @@ export function GMToolbar() {
                 onClick={() => toggleWindow('chronicle')}
                 tooltip="Chronica"
                 description="Abra a linha do tempo histórica completa do mundo"
+              />
+              <ToolButton
+                icon={<GitFork size={19} />}
+                active={Boolean(openWindows.lineage)}
+                onClick={() => toggleWindow('lineage')}
+                tooltip="Linhagem"
+                description="Atlas de casas, dinastias e relações entre personagens"
               />
               <ToolButton 
                 icon={<Film size={19} />} 

@@ -61,6 +61,7 @@ export const state = {
   campaigns: doc.getMap('campaigns'),
   theater: doc.getMap('theater'),
   chronos: doc.getMap('chronos'),
+  lineage: doc.getMap('lineage'),
   dlcs: doc.getMap('dlcs'),
   audio: doc.getMap('audio'),
   world: doc.getMap('world'),

@@ -2,6 +2,14 @@
 
 Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o changelog.
 
+## 2026-08-26 — Linhagem como atlas dinástico completo
+
+**Status:** Ativa
+
+**Decisão:** portar a ferramenta Linhagem como workspace completo do DOZERO, preservando todas as operações autorais; manter a genealogia contextual da Wiki como visão complementar, sem substituí-la. O atlas usa Yjs/IndexedDB durante a sessão e um documento JSONB por campanha no Supabase para persistência durável.
+
+**Motivo:** árvores dinásticas exigem edição e navegação próprias, enquanto a Wiki continua adequada para consulta contextual de uma entidade.
+
 ## 2026-08-25 — Chronica como núcleo histórico
 
 **Status:** Ativa  

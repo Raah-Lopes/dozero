@@ -1,6 +1,6 @@
 # Status operacional do roadmap DOZERO 360°
 
-Atualizado em 25 de agosto de 2026.
+Atualizado em 26 de agosto de 2026.
 
 Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 
@@ -42,6 +42,7 @@ Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 | D.2 Conexões semânticas | Concluído | Editor com tipos nativos/customizados, descrição e privacidade implementado. |
 | D.3 Grafo de conexões | Concluído | LivingBrain possui cores por tipo, filtros, criação com Shift+arrastar e shortest path. Usa D3 existente em vez de nova dependência. |
 | D.4 Genealogia | Concluído | Utilitário de inferência semântica e bidirecional de parentesco (`genealogy.ts`), componente visual hierárquico multi-geracional (`GenealogyTree.tsx`) com navegação focal e cards informativos integrado ao WikiViewer com testes unitários. |
+| D.5 Linhagem — atlas dinástico | Concluído | A ferramenta `D:\IMPLEMENTACOES DOZERO\LINHAGEM` foi portada integralmente como workspace em tela cheia: árvore navegável com pan/zoom/foco, casas, retratos e brasões WebP, editor, vínculos familiares e sociais, relações estendidas, criação de elos intermediários, busca, desfazer/refazer, atalhos e importação/exportação JSON. Acesso pela barra do Mestre, Hub e paleta; estado local-first via Yjs/IndexedDB e tabela `lineage_atlases` com RLS aplicada no Supabase. A recursão preexistente entre as policies de `campaigns`/`players` foi corrigida; as campanhas legadas `mesa-1` e `mesa-2` foram atribuídas ao perfil `raphaell.lops`; e a gravação/leitura do atlas pelo Mestre foi validada sob RLS em uma transação revertida, sem deixar dados de teste. |
 
 ## Trilha E — espaço e tempo
 

@@ -1,4 +1,4 @@
-import { LucideIcon, Bot, Shield, BookOpen, FileText, Users, Skull, Swords, Timer, Sun, Map, Video, Dices, Network, Globe, Coins, UserPlus, Eye, Sparkles, Anvil, Castle, ToyBrick, Palette, Flame, CalendarRange } from 'lucide-react';
+import { LucideIcon, Bot, Shield, BookOpen, FileText, Users, Skull, Swords, Timer, Sun, Map, Video, Dices, Network, Globe, Coins, UserPlus, Eye, Sparkles, Anvil, Castle, ToyBrick, Palette, Flame, CalendarRange, GitFork } from 'lucide-react';
 
 export type WidgetActionType = 'toggleWindow' | 'setActiveModal' | 'setShowActors' | 'custom';
 
@@ -25,6 +25,7 @@ export const WIDGET_REGISTRY: WidgetMeta[] = [
   { id: 'mindmap', cat: 'Narrativa', title: 'Painel de Conspiração', description: 'Mural de notas interligadas para detetives e investigadores ligarem os pontos', icon: Network, theme: 'theme-pink', actionType: 'toggleWindow', actionPayload: 'mindMap' },
   { id: 'lore', cat: 'Narrativa', title: 'Máquina de Lores', description: 'Crie histórias míticas, rumores e crônicas automaticamente a partir da Wiki', icon: Sparkles, theme: 'theme-purple', actionType: 'toggleWindow', actionPayload: 'loreMachine' },
   { id: 'chronicle', cat: 'Narrativa', title: 'Chronica — Linha do Tempo', description: 'Organize eras e acontecimentos históricos do mundo, com busca, camadas e vínculos à Wiki', icon: CalendarRange, theme: 'theme-purple', actionType: 'toggleWindow', actionPayload: 'chronicle', gmOnly: true },
+  { id: 'lineage', cat: 'Narrativa', title: 'Linhagem — Casas & Dinastias', description: 'Construa árvores genealógicas, casas, descendências e relações sociais em um atlas visual colaborativo', icon: GitFork, theme: 'theme-amber', actionType: 'toggleWindow', actionPayload: 'lineage', gmOnly: true },
 
   // 👥 Personagens & Atores
   { id: 'roster', cat: 'Personagens', title: 'Lista de Personagens', description: 'Seleção da ficha do jogador atual, troca de controle e consulta aos aliados', icon: Users, theme: 'theme-green', actionType: 'toggleWindow', actionPayload: 'characterRoster' },

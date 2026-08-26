@@ -15,6 +15,7 @@ const AutomatedDiceWidget = React.lazy(() => import('../Widgets/PlayerTools/Auto
 const CharacterRosterWidget = React.lazy(() => import('../Widgets/PlayerTools/CharacterRosterWidget').then(m => ({ default: m.CharacterRosterWidget })));
 const ChronosWidget = React.lazy(() => import('../Widgets/GameMaster/ChronosWidget').then(m => ({ default: m.ChronosWidget })));
 const ChronicleWidget = React.lazy(() => import('../Widgets/GameMaster/ChronicleWidget').then(m => ({ default: m.ChronicleWidget })));
+const LineageWidget = React.lazy(() => import('../Widgets/GameMaster/Lineage/LineageWidget').then(m => ({ default: m.LineageWidget })));
 const LoreMachineWidget = React.lazy(() => import('../Widgets/Generators/LoreMachineWidget').then(m => ({ default: m.LoreMachineWidget })));
 const WorldEngineWidget = React.lazy(() => import('../Widgets/Generators/WorldEngineWidget').then(m => ({ default: m.WorldEngineWidget })));
 const EntityForgeWidget = React.lazy(() => import('./EntityForgeWidget').then(m => ({ default: m.EntityForgeWidget })));
@@ -84,6 +85,12 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
       category: 'Mestre',
       onSelect: () => openWindow('chronicle')
     });
+    registerCommand({
+      id: 'toggle-lineage',
+      title: 'Abrir Linhagem — Atlas de Casas e Dinastias',
+      category: 'Mestre',
+      onSelect: () => openWindow('lineage')
+    });
   }, [registerCommand, openWindow]);
 
   return (
@@ -100,6 +107,7 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
           {openWindows.characterRoster && <CharacterRosterWidget onClose={() => closeWindow('characterRoster')} />}
           {openWindows.chronos && <ChronosWidget onClose={() => closeWindow('chronos')} />}
           {openWindows.chronicle && <ChronicleWidget onClose={() => closeWindow('chronicle')} />}
+          {openWindows.lineage && <LineageWidget onClose={() => closeWindow('lineage')} />}
           {openWindows.loreMachine && <LoreMachineWidget onClose={() => closeWindow('loreMachine')} />}
           {openWindows.worldEngine && <WorldEngineWidget onClose={() => closeWindow('worldEngine')} />}
           {openWindows.entityForge && <EntityForgeWidget onClose={() => closeWindow('entityForge')} />}
