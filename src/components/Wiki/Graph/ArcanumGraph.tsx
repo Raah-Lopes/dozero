@@ -25,6 +25,7 @@ import { IX } from "./icons";
 import { uid, TypeRegistry, type SavedView, type TypeReg, type WEdge, type WNode, type WorldNodeData } from "./core";
 import { DEFAULT_EDGE_COLOR, ForceSimulator, Layouts, Pathfinder, StatsEngine, Vault, WorldGraph, type PathResult, type VaultPayload } from "./world";
 import { SEED_EDGES, SEED_NODES, TYPE_ORDER } from "./seed";
+import "@xyflow/react/dist/style.css";
 import "./arcanum.css";
 
 const nodeTypes = { world: GraphNode };
