@@ -36,8 +36,6 @@ import { WidgetLayer } from './components/HUD/WidgetLayer';
 import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps, pushChatMessage } from './store';
-import type { TensionClock } from './store';
-import { MobileBottomNav } from './components/HUD/MobileBottomNav';
 import { MobileQuickActions } from './components/HUD/MobileQuickActions';
 import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
 import { GlobalSearchModal } from './components/Modals/GlobalSearchModal';
@@ -207,9 +205,10 @@ function App() {
       </div>
 
       {/* Layer 10: React HUD */}
-      <div className="hud-layer hud-grid">
-        <ErrorBoundary componentName="Interface Principal (HUD)">
-          <QuestTrackerHUD />
+      {viewMode === 'canvas' && (
+        <div className="hud-layer hud-grid">
+          <ErrorBoundary componentName="Interface Principal (HUD)">
+            <QuestTrackerHUD />
 
           {/* Combat Tracker Widget */}
           {openWindows.combatTracker && (
@@ -315,139 +314,140 @@ function App() {
             />
           )}
         </ErrorBoundary>
-      </div> {/* Fim da hud-layer */}
+      </div>
+      )} {/* Fim da hud-layer */}
 
       {/* Free-Floating Window Layer */}
-      <>
-        {showActors && (
-          <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={160} width={300} onClose={handleCloseActorLibrary}>
-            <div style={{ height: '400px' }}>
-              <ErrorBoundary componentName="Painel de NPCs"><NPCPanel /></ErrorBoundary>
-            </div>
-          </DraggableWindow>
-        )}
-
-        {openSheets.map((sheetKey: string, index: number) => {
-          const isWiki = sheetKey.startsWith('wiki:');
-          const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
-          const tokenId = isWiki ? undefined : sheetKey;
-
-          return (
-            <DraggableWindow
-              key={sheetKey}
-              id={`sheet-${sheetKey}`}
-              title="Ficha do Personagem"
-              initialX={20 + (index * 40)}
-              initialY={100 + (index * 40)}
-              width={340}
-              onClose={() => handleCloseSheet(sheetKey)}
-            >
-              <ErrorBoundary componentName="Ficha (TargetTerminal)">
-                <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />
-              </ErrorBoundary>
+      {viewMode === 'canvas' && (
+        <>
+          {showActors && (
+            <DraggableWindow id="actors-library" title="Biblioteca" initialX={window.innerWidth - 360} initialY={160} width={300} onClose={handleCloseActorLibrary}>
+              <div style={{ height: '400px' }}>
+                <ErrorBoundary componentName="Painel de NPCs"><NPCPanel /></ErrorBoundary>
+              </div>
             </DraggableWindow>
-          );
-        })}
+          )}
 
-        {openWikiDocs.map((doc: { id: string, filepath: string }, index: number) => (
-          <FloatingDocument
-            key={doc.id}
-            id={doc.id}
-            filepath={doc.filepath}
-            initialX={window.innerWidth / 2 - 200 + (index * 30)}
-            initialY={100 + (index * 30)}
-            onClose={() => handleCloseWikiDoc(doc.id)}
-          />
-        ))}
+          {openSheets.map((sheetKey: string, index: number) => {
+            const isWiki = sheetKey.startsWith('wiki:');
+            const wikiPath = isWiki ? sheetKey.slice(5) : undefined;
+            const tokenId = isWiki ? undefined : sheetKey;
 
-        {openWindows.combatLog && (
-          <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={160} width={320} height={400} onClose={handleCloseCombatLog}>
-            <ErrorBoundary componentName="CombatLog"><CombatLog /></ErrorBoundary>
-          </DraggableWindow>
-        )}
+            return (
+              <DraggableWindow
+                key={sheetKey}
+                id={`sheet-${sheetKey}`}
+                title="Ficha do Personagem"
+                initialX={20 + (index * 40)}
+                initialY={100 + (index * 40)}
+                width={340}
+                onClose={() => handleCloseSheet(sheetKey)}
+              >
+                <ErrorBoundary componentName="Ficha (TargetTerminal)">
+                  <TargetTerminal tokenId={tokenId} wikiPath={wikiPath} isGM={true} />
+                </ErrorBoundary>
+              </DraggableWindow>
+            );
+          })}
 
-        {openWindows.chatWindow && (
-          <DraggableWindow 
-            id="chatWindow" 
-            title="Chat & Voz P2P" 
-            initialX={typeof window !== 'undefined' && window.innerWidth > 768 ? window.innerWidth - 420 : 10} 
-            initialY={typeof window !== 'undefined' && window.innerWidth > 768 ? 120 : 60} 
-            width={typeof window !== 'undefined' && window.innerWidth > 768 ? 380 : 'calc(100vw - 20px)'} 
-            height={typeof window !== 'undefined' && window.innerWidth > 768 ? 540 : 'calc(100vh - 140px)'} 
-            onClose={handleCloseChatWindow}
-          >
-            <ErrorBoundary componentName="ChatWindow"><ChatWindow /></ErrorBoundary>
-          </DraggableWindow>
-        )}
+          {openWikiDocs.map((doc: { id: string, filepath: string }, index: number) => (
+            <FloatingDocument
+              key={doc.id}
+              id={doc.id}
+              filepath={doc.filepath}
+              initialX={window.innerWidth / 2 - 200 + (index * 30)}
+              initialY={100 + (index * 30)}
+              onClose={() => handleCloseWikiDoc(doc.id)}
+            />
+          ))}
 
-        {/* Overlays Visuais e Funcionais */}
-        <ClimaxOverlay />
-        <SoftTimer />
-        <DiceOverlay />
-        <PPROverlay />
-        <GlobalAudioSync />
-        <Toaster />
-        <ConfirmDialog />
+          {openWindows.combatLog && (
+            <DraggableWindow id="chat" title="Registro" initialX={window.innerWidth - 340} initialY={160} width={320} height={400} onClose={handleCloseCombatLog}>
+              <ErrorBoundary componentName="CombatLog"><CombatLog /></ErrorBoundary>
+            </DraggableWindow>
+          )}
 
-        <WidgetLayer />
+          {openWindows.chatWindow && (
+            <DraggableWindow 
+              id="chatWindow" 
+              title="Chat & Voz P2P" 
+              initialX={typeof window !== 'undefined' && window.innerWidth > 768 ? window.innerWidth - 420 : 10} 
+              initialY={typeof window !== 'undefined' && window.innerWidth > 768 ? 120 : 60} 
+              width={typeof window !== 'undefined' && window.innerWidth > 768 ? 380 : 'calc(100vw - 20px)'} 
+              height={typeof window !== 'undefined' && window.innerWidth > 768 ? 540 : 'calc(100vh - 140px)'} 
+              onClose={handleCloseChatWindow}
+            >
+              <ErrorBoundary componentName="ChatWindow"><ChatWindow /></ErrorBoundary>
+            </DraggableWindow>
+          )}
+        </>
+      )}
 
-        {viewMode !== 'theater' && viewMode !== 'wiki' && (
-          <PlayerQuickBar playerName={localStorage.getItem('dozero_player_name') || 'Jogador'} />
-        )}
+      {/* Overlays Visuais e Funcionais */}
+      <ClimaxOverlay />
+      <SoftTimer />
+      <DiceOverlay />
+      <PPROverlay />
+      <GlobalAudioSync />
+      <Toaster />
+      <ConfirmDialog />
 
-        {/* WidgetHubModal */}
-        {activeModal === 'widgets' && (
-          <div className="modal-overlay" onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, pointerEvents: 'auto', padding: '20px' }}>
-            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
-              <ErrorBoundary componentName="Hub de Módulos (WidgetHubModal)">
-                <WidgetHubModal
-                  onClose={() => setActiveModal('none')}
-                  onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
-                  onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
-                  onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
-                  onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
-                  onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
-                  onOpenClockConfig={() => { setEditingClockId(null); setActiveModal('clockConfig'); }}
-                  onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
-                  onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
-                  onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
-                  onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
-                  onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
-                  onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
-                  onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
-                  onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
-                  onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
-                  onOpenDLCManager={() => { setActiveModal('settings-modulos'); }}
-                  onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
-                  onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
-                  onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
-                  onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
-                  onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
-                  onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
-                  onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
-                  onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
-                  onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
-                  onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
-                  onOpenRoomManager={() => { setActiveModal('players'); }}
-                  onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
-                  onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
-                  onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
-                  onOpenPlayerQuickBar={() => { toggleWindow('playerQuickBar'); setActiveModal('none'); }}
-                  onToggleAIBot={() => { setActiveModal('settings-ia'); }}
-                  onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
-                  onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
-                  onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
-                />
-              </ErrorBoundary>
-            </div>
+      {viewMode === 'canvas' && <WidgetLayer />}
+
+      {viewMode === 'canvas' && (
+        <PlayerQuickBar playerName={localStorage.getItem('dozero_player_name') || 'Jogador'} />
+      )}
+
+      {/* WidgetHubModal */}
+      {activeModal === 'widgets' && (
+        <div className="modal-overlay" onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, pointerEvents: 'auto', padding: '20px' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
+            <ErrorBoundary componentName="Hub de Módulos (WidgetHubModal)">
+              <WidgetHubModal
+                onClose={() => setActiveModal('none')}
+                onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
+                onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
+                onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
+                onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
+                onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
+                onOpenClockConfig={() => { setEditingClockId(null); setActiveModal('clockConfig'); }}
+                onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
+                onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
+                onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
+                onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
+                onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
+                onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
+                onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
+                onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
+                onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
+                onOpenDLCManager={() => { setActiveModal('settings-modulos'); }}
+                onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
+                onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
+                onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
+                onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
+                onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
+                onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
+                onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
+                onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
+                onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
+                onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
+                onOpenRoomManager={() => { setActiveModal('players'); }}
+                onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
+                onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
+                onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
+                onOpenPlayerQuickBar={() => { toggleWindow('playerQuickBar'); setActiveModal('none'); }}
+                onToggleAIBot={() => { setActiveModal('settings-ia'); }}
+                onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
+                onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
+                onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
+              />
+            </ErrorBoundary>
           </div>
-        )}
-        {viewMode !== 'theater' && viewMode !== 'wiki' && (
-          <>
-            <MobileBottomNav />
-            <MobileQuickActions />
-          </>
-        )}
+        </div>
+      )}
+      {viewMode === 'canvas' && (
+        <MobileQuickActions />
+      )}
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
         <LorePinsModal isOpen={isLorePinsOpen} onClose={() => setIsLorePinsOpen(false)} />
@@ -473,7 +473,6 @@ function App() {
         <AuthModal />
         <ProfileModal />
         <ResetPasswordModal />
-      </>
     </div>
   );
 }

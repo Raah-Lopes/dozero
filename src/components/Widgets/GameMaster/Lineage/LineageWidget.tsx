@@ -12,10 +12,10 @@ type SyncState = 'loading' | 'local' | 'saving' | 'cloud';
 export function LineageWidget({ onClose }: { onClose: () => void }) {
   const roomCode = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
   const [initialTree, setInitialTree] = useState<FamilyTree | null | undefined>(undefined);
-  const [treeRevision, setTreeRevision] = useState(0);
   const [syncState, setSyncState] = useState<SyncState>('loading');
   const saveTimer = useRef<number | null>(null);
   const lastSerialized = useRef('');
+  const isLocalUpdate = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -30,11 +30,13 @@ export function LineageWidget({ onClose }: { onClose: () => void }) {
     };
 
     const onSharedChange = () => {
+      if (isLocalUpdate.current) return;
       const shared = readSharedTree();
-      if (!shared || shared.serialize() === lastSerialized.current) return;
-      lastSerialized.current = shared.serialize();
+      if (!shared) return;
+      const serialized = shared.serialize();
+      if (serialized === lastSerialized.current) return;
+      lastSerialized.current = serialized;
       setInitialTree(shared);
-      setTreeRevision((revision) => revision + 1);
       saveTree(shared, roomCode);
     };
 
@@ -78,14 +80,21 @@ export function LineageWidget({ onClose }: { onClose: () => void }) {
     const serialized = tree.serialize();
     if (serialized === lastSerialized.current) return;
     lastSerialized.current = serialized;
-    state.lineage.set('atlas', serialized);
+    
+    isLocalUpdate.current = true;
+    try {
+      state.lineage.set('atlas', serialized);
+    } finally {
+      setTimeout(() => { isLocalUpdate.current = false; }, 50);
+    }
+    
     saveTree(tree, roomCode);
     setSyncState('saving');
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(async () => {
       const saved = await saveLineageAtlas(roomCode, tree.toJSON());
       setSyncState(saved ? 'cloud' : 'local');
-    }, 900);
+    }, 1500);
   }, [roomCode]);
 
   if (initialTree === undefined) {
@@ -107,7 +116,6 @@ export function LineageWidget({ onClose }: { onClose: () => void }) {
   return (
     <section className="lineage-shell fixed inset-0 z-[10000] overflow-hidden bg-ink-950 text-parchment" style={{ pointerEvents: 'auto' }} aria-label="Linhagem — Atlas de Casas e Dinastias">
       <App
-        key={treeRevision}
         roomCode={roomCode}
         initialTree={initialTree ?? undefined}
         onTreeChange={handleTreeChange}

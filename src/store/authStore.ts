@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const currentUser = get().user;
     if (!currentUser?.id) return;
     if (inflightLoadPreferences) return inflightLoadPreferences;
-    if (currentUser.id === lastLoadedUserId && Object.keys(get().preferences).length > 0) return;
+    if (currentUser.id === lastLoadedUserId) return;
 
     inflightLoadPreferences = (async () => {
       try {
@@ -84,11 +84,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           .eq('id', currentUser.id)
           .maybeSingle();
 
+        lastLoadedUserId = currentUser.id;
         if (!error && data?.preferences) {
-          lastLoadedUserId = currentUser.id;
           set({ preferences: data.preferences });
         }
       } catch (e) {
+        lastLoadedUserId = currentUser.id;
         console.warn('Erro ao carregar preferências de perfil:', e);
       } finally {
         inflightLoadPreferences = null;

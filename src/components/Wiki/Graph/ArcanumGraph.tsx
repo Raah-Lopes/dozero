@@ -1,0 +1,932 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  applyEdgeChanges,
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
+  type EdgeChange,
+  type NodeChange,
+} from "@xyflow/react";
+import { toPng } from "html-to-image";
+
+import GraphNode from "./GraphNode";
+import GraphEdge from "./GraphEdge";
+import Sidebar from "./Sidebar";
+import Inspector from "./Inspector";
+import TopBar from "./TopBar";
+import { EdgeModal, FichaModal, NodeCreateModal, SaveViewModal, StatsModal, Toasts, type Toast } from "./Modals";
+import { IX } from "./icons";
+
+import { uid, TypeRegistry, type SavedView, type TypeReg, type WEdge, type WNode, type WorldNodeData } from "./core";
+import { DEFAULT_EDGE_COLOR, ForceSimulator, Layouts, Pathfinder, StatsEngine, Vault, WorldGraph, type PathResult, type VaultPayload } from "./world";
+import { SEED_EDGES, SEED_NODES, TYPE_ORDER } from "./seed";
+import "./arcanum.css";
+
+const nodeTypes = { world: GraphNode };
+const edgeTypes = { world: GraphEdge };
+
+/* ---------- Carga inicial com fallback ---------- */
+function boot() {
+  const saved = Vault.load();
+  if (saved && Array.isArray(saved.nodes) && saved.nodes.length > 0) {
+    const allZero = saved.nodes.length > 1 && saved.nodes.every((n) => (!n.position?.x && !n.position?.y));
+    const nodes = allZero ? Layouts.clusterByType(saved.nodes as WNode[], TYPE_ORDER) : (saved.nodes as WNode[]);
+    return {
+      nodes,
+      edges: (saved.edges ?? []) as WEdge[],
+      customTypes: saved.customTypes ?? [],
+      savedViews: saved.savedViews ?? [],
+    };
+  }
+  return {
+    nodes: Layouts.clusterByType(SEED_NODES, TYPE_ORDER),
+    edges: SEED_EDGES,
+    customTypes: [] as TypeReg[],
+    savedViews: [] as SavedView[],
+  };
+}
+const BOOT = boot();
+
+type ModalState =
+  | { kind: "node"; x: number; y: number }
+  | { kind: "edge"; edgeId: string }
+  | { kind: "ficha"; nodeId: string }
+  | { kind: "stats" }
+  | { kind: "save" }
+  | null;
+
+export interface ArcanumGraphProps {
+  initialNodes?: WNode[];
+  initialEdges?: WEdge[];
+  onClose?: () => void;
+  onNodeDoubleClick?: (node: WNode) => void;
+  onSaveToWiki?: (nodeId: string, updatedSummary: string) => Promise<void>;
+  onCreateWikiRelation?: (sourcePath: string, targetName: string, label: string) => Promise<void>;
+}
+
+function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps) {
+  const rf = useReactFlow<WNode, WEdge>();
+
+  const [nodes, setNodes] = useState<WNode[]>(initialNodes && initialNodes.length > 0 ? initialNodes : BOOT.nodes);
+  const [edges, setEdges] = useState<WEdge[]>(initialEdges && initialEdges.length > 0 ? initialEdges : BOOT.edges);
+  const [customTypes, setCustomTypes] = useState<TypeReg[]>(BOOT.customTypes);
+  const [savedViews, setSavedViews] = useState<SavedView[]>(BOOT.savedViews);
+
+  // Sincroniza se initialNodes/initialEdges mudarem (ex: vindos da Wiki)
+  useEffect(() => {
+    if (initialNodes && initialNodes.length > 0) {
+      setNodes(initialNodes);
+    }
+  }, [initialNodes]);
+
+  useEffect(() => {
+    if (initialEdges && initialEdges.length > 0) {
+      setEdges(initialEdges);
+    }
+  }, [initialEdges]);
+
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [isolate, setIsolate] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [connectMode, setConnectMode] = useState(false);
+  const [connectSource, setConnectSource] = useState<string | null>(null);
+  const [pathMode, setPathMode] = useState<{ from: string } | null>(null);
+  const [path, setPath] = useState<PathResult | null>(null);
+
+  const [physicsOn, setPhysicsOn] = useState(false);
+  const [gliding, setGliding] = useState(false);
+  const [modal, setModal] = useState<ModalState>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [pending, setPending] = useState<{ sourceId: string; x: number; y: number } | null>(null);
+
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+  const simRef = useRef(new ForceSimulator());
+  const edgesRef = useRef(edges);
+  edgesRef.current = edges;
+  const toastSeq = useRef(0);
+
+  const registry = useMemo(() => new TypeRegistry(customTypes), [customTypes]);
+
+  const pushToast = useCallback((msg: string, kind: Toast["kind"] = "ok") => {
+    const id = ++toastSeq.current;
+    setToasts((ts) => [...ts.slice(-2), { id, msg, kind }]);
+    window.setTimeout(() => setToasts((ts) => ts.filter((t) => t.id !== id)), 3400);
+  }, []);
+
+  /* Ajuste de enquadramento inicial */
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      rf.fitView({ padding: 0.18, duration: 600 });
+    }, 180);
+    return () => window.clearTimeout(t);
+  }, [rf]);
+
+  /* Persistência automática no Vault local */
+  useEffect(() => {
+    const t = window.setTimeout(() => Vault.save({ v: 1, nodes, edges, customTypes, savedViews }), 350);
+    return () => window.clearTimeout(t);
+  }, [nodes, edges, customTypes, savedViews]);
+
+  /* Derivações visuais */
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const n of nodes) m.set(n.data.typeId, (m.get(n.data.typeId) ?? 0) + 1);
+    return m;
+  }, [nodes]);
+
+  const tagCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const n of nodes) {
+      for (const t of n.data.tags ?? []) {
+        m.set(t, (m.get(t) ?? 0) + 1);
+      }
+    }
+    return [...m.entries()]
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [nodes]);
+
+  const pathNodeSet = useMemo(() => new Set(path?.nodeIds ?? []), [path]);
+  const pathEdgeSet = useMemo(() => new Set(path?.edgeIds ?? []), [path]);
+
+  /* Vizinhança direta do nó selecionado (1º grau) */
+  const connectedNodeIds = useMemo(() => {
+    if (!selectedId) return null;
+    const set = new Set<string>([selectedId]);
+    for (const e of edges) {
+      if (e.source === selectedId) set.add(e.target);
+      if (e.target === selectedId) set.add(e.source);
+    }
+    return set;
+  }, [selectedId, edges]);
+
+  const connectedEdgeIds = useMemo(() => {
+    if (!selectedId) return null;
+    const set = new Set<string>();
+    for (const e of edges) {
+      if (e.source === selectedId || e.target === selectedId) {
+        set.add(e.id);
+      }
+    }
+    return set;
+  }, [selectedId, edges]);
+
+  const dimmedIds = useMemo(() => {
+    const s = new Set<string>();
+    if (!isolate && !path && !selectedTag && !connectedNodeIds) return s;
+    for (const n of nodes) {
+      const matchIsolate = !isolate || n.data.typeId === isolate;
+      const matchPath = !path || pathNodeSet.has(n.id);
+      const matchTag = !selectedTag || (n.data.tags ?? []).includes(selectedTag);
+      const matchConnected = !connectedNodeIds || connectedNodeIds.has(n.id);
+      if (!matchIsolate || !matchPath || !matchTag || !matchConnected) {
+        s.add(n.id);
+      }
+    }
+    return s;
+  }, [nodes, isolate, path, pathNodeSet, selectedTag, connectedNodeIds]);
+
+  const visibleIds = useMemo(() => new Set(nodes.filter((n) => !hidden.has(n.data.typeId)).map((n) => n.id)), [nodes, hidden]);
+
+  const selectedNodeObj = useMemo(() => {
+    if (!selectedId) return null;
+    return nodes.find((n) => n.id === selectedId) ?? null;
+  }, [nodes, selectedId]);
+
+  const renderNodes = useMemo<WNode[]>(
+    () =>
+      nodes
+        .filter((n) => visibleIds.has(n.id))
+        .map((n) => {
+          const t = registry.get(n.data.typeId);
+          const isSelected = n.id === selectedId;
+          const isNeighbor = !!connectedNodeIds?.has(n.id) && !isSelected;
+
+          return {
+            ...n,
+            position: n.position,
+            data: {
+              ...n.data,
+              typeColor: t.color,
+              typeName: t.name,
+              shape: n.data.shape || t.shape || "circle",
+              dim: dimmedIds.has(n.id),
+              onPath: pathNodeSet.has(n.id),
+              isSource: connectSource === n.id,
+              isNeighbor,
+            },
+          };
+        }),
+    [nodes, visibleIds, registry, dimmedIds, pathNodeSet, connectSource, selectedId, connectedNodeIds]
+  );
+
+  const renderEdges = useMemo<WEdge[]>(
+    () =>
+      edges
+        .filter((e) => visibleIds.has(e.source) && visibleIds.has(e.target))
+        .map((e) => {
+          const isConnectedToSelected = !!connectedEdgeIds?.has(e.id);
+          const isDimmed = connectedEdgeIds
+            ? !isConnectedToSelected
+            : dimmedIds.has(e.source) || dimmedIds.has(e.target) || (!!path && !pathEdgeSet.has(e.id));
+
+          return {
+            ...e,
+            data: {
+              ...(e.data ?? { label: "", color: DEFAULT_EDGE_COLOR }),
+              dim: isDimmed,
+              onPath: pathEdgeSet.has(e.id) || isConnectedToSelected,
+            },
+          };
+        }),
+    [edges, visibleIds, dimmedIds, path, pathEdgeSet, connectedEdgeIds]
+  );
+
+  const onNodesChange = useCallback((changes: NodeChange<WNode>[]) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
+  const onEdgesChange = useCallback((changes: EdgeChange<WEdge>[]) => setEdges((es) => applyEdgeChanges(changes, es)), []);
+
+  /* Física orgânica opcional */
+  useEffect(() => {
+    if (!physicsOn) return;
+    simRef.current.reheat(0.85);
+    let raf = 0;
+    const step = () => {
+      setNodes((ns) => simRef.current.tick(ns, edgesRef.current));
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [physicsOn]);
+
+  const focusNode = useCallback(
+    (id: string) => {
+      const n = nodes.find((m) => m.id === id);
+      if (!n) return;
+      setNodes((ns) => ns.map((m) => ({ ...m, selected: m.id === id })));
+      setSelectedId(id);
+      const w = n.measured?.width ?? 60;
+      const h = n.measured?.height ?? 60;
+      rf.setCenter(n.position.x + w / 2, n.position.y + h / 2, { zoom: Math.max(rf.getZoom(), 1.05), duration: 700 });
+    },
+    [nodes, rf]
+  );
+
+  const finishConnect = useCallback(
+    (a: string, b: string) => {
+      const edge = WorldGraph.createEdge(a, b);
+      setEdges((es) => [...es, edge]);
+      setModal({ kind: "edge", edgeId: edge.id });
+      pushToast("Laço criado — defina o tipo da relação");
+    },
+    [pushToast]
+  );
+
+  const handleNodeClick = useCallback(
+    (_: React.MouseEvent, node: WNode) => {
+      if (pathMode) {
+        if (node.id !== pathMode.from) {
+          const res = Pathfinder.shortest(nodes, edges, pathMode.from, node.id);
+          if (res) {
+            setPath(res);
+            pushToast(`Caminho traçado: ${res.edgeIds.length === 0 ? "mesmo nó" : `${res.edgeIds.length} laço(s)`}`);
+          } else {
+            pushToast("Nenhum laço une estes dois fragmentos", "warn");
+          }
+        }
+        setPathMode(null);
+        return;
+      }
+      if (connectMode) {
+        if (!connectSource) {
+          setConnectSource(node.id);
+          pushToast("Origem marcada — agora clique no destino");
+        } else if (connectSource !== node.id) {
+          finishConnect(connectSource, node.id);
+          setConnectSource(null);
+          setConnectMode(false);
+        }
+        return;
+      }
+
+      setSelectedId(node.id);
+      const w = node.measured?.width ?? 60;
+      const h = node.measured?.height ?? 60;
+      rf.setCenter(node.position.x + w / 2, node.position.y + h / 2, {
+        zoom: Math.max(rf.getZoom(), 0.95),
+        duration: 650,
+      });
+    },
+    [pathMode, connectMode, connectSource, nodes, edges, finishConnect, pushToast, rf]
+  );
+
+  const handleNodeDoubleClick = useCallback(
+    (_: React.MouseEvent, node: WNode) => {
+      setSelectedId(node.id);
+      setModal({ kind: "ficha", nodeId: node.id });
+    },
+    []
+  );
+
+  const glide = useCallback(
+    (next: WNode[], msg: string) => {
+      setGliding(true);
+      setNodes(next);
+      window.setTimeout(() => {
+        rf.fitView({ padding: 0.18, duration: 650 });
+        setGliding(false);
+      }, 660);
+      pushToast(msg);
+    },
+    [rf, pushToast]
+  );
+
+  const focusCenter = useCallback(
+    (id: string) => {
+      glide(Layouts.radialFocus(nodes, edges, id), "Nó centralizado: o mundo orbita ao seu redor");
+    },
+    [nodes, edges, glide]
+  );
+
+  const clusterAll = useCallback(() => {
+    const order = [...TYPE_ORDER, ...customTypes.map((t) => t.id)];
+    glide(Layouts.clusterByType(nodes, order), "Nós organizados em constelações por camada");
+  }, [nodes, customTypes, glide]);
+
+  const exportWebp = useCallback(async () => {
+    pushToast("Renderizando pergaminho em alta definição…");
+    try {
+      const el = document.querySelector(".react-flow__viewport") as HTMLElement;
+      if (!el) throw new Error("Viewport não encontrado");
+      const png = await toPng(el, {
+        backgroundColor: "#080b12",
+        pixelRatio: 2,
+        filter: (node) => {
+          const c = (node as HTMLElement).classList;
+          if (!c) return true;
+          return !c.contains("react-flow__minimap") && !c.contains("react-flow__controls") && !c.contains("react-flow__attribution");
+        },
+      });
+      const img = new Image();
+      await new Promise<void>((res, rej) => {
+        img.onload = () => res();
+        img.onerror = () => rej(new Error("img"));
+        img.src = png;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            pushToast("Falha ao gerar .webp", "warn");
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `dozero-arcanum-grafo-${new Date().toISOString().slice(0, 10)}.webp`;
+          a.click();
+          URL.revokeObjectURL(url);
+          pushToast("Grafo exportado com sucesso como .webp");
+        },
+        "image/webp",
+        0.95
+      );
+    } catch {
+      pushToast("Não foi possível exportar a imagem agora", "warn");
+    }
+  }, [pushToast]);
+
+  const applyView = useCallback(
+    (v: SavedView) => {
+      setHidden(new Set(v.hidden));
+      setIsolate(v.isolate);
+      rf.setViewport(v.viewport, { duration: 700 });
+      pushToast(`Vista aplicada: ${v.name}`);
+    },
+    [rf, pushToast]
+  );
+
+  const deleteNode = useCallback(
+    (id: string) => {
+      setNodes((ns) => {
+        const r = WorldGraph.removeNode(ns, edgesRef.current, id);
+        setEdges(r.edges);
+        return r.nodes;
+      });
+      setSelectedId(null);
+      if (path?.nodeIds.includes(id)) setPath(null);
+      pushToast("Fragmento removido do mundo");
+    },
+    [path, pushToast]
+  );
+
+  const handleExportDB = useCallback(() => {
+    const payload: VaultPayload = {
+      v: 1,
+      nodes,
+      edges,
+      customTypes,
+      savedViews,
+    };
+    Vault.exportJSON(payload);
+    pushToast("Backup JSON do banco de dados baixado");
+  }, [nodes, edges, customTypes, savedViews, pushToast]);
+
+  const handleImportDB = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = JSON.parse(e.target?.result as string) as VaultPayload;
+        if (Array.isArray(parsed.nodes) && Array.isArray(parsed.edges)) {
+          setNodes(parsed.nodes);
+          setEdges(parsed.edges);
+          setCustomTypes(parsed.customTypes ?? []);
+          setSavedViews(parsed.savedViews ?? []);
+          setSelectedId(null);
+          setIsolate(null);
+          setSelectedTag(null);
+          setHidden(new Set());
+          window.setTimeout(() => rf.fitView({ padding: 0.18, duration: 600 }), 100);
+          pushToast("Banco de dados do grafo importado com sucesso!");
+        } else {
+          pushToast("Arquivo JSON inválido", "warn");
+        }
+      } catch {
+        pushToast("Erro ao ler arquivo JSON", "warn");
+      }
+    };
+    reader.readAsText(file);
+  }, [rf, pushToast]);
+
+  /* Atalhos de teclado */
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key !== "Escape") return;
+      setConnectMode(false);
+      setConnectSource(null);
+      setPathMode(null);
+      setPending(null);
+    };
+    const onEditEdge = (ev: Event) => setModal({ kind: "edge", edgeId: (ev as CustomEvent).detail as string });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("arcanum:edit-edge", onEditEdge);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("arcanum:edit-edge", onEditEdge);
+    };
+  }, []);
+
+  /* Shift + Arraste para conectar */
+  useEffect(() => {
+    if (!pending) return;
+    const move = (ev: MouseEvent) => {
+      const rect = wrapRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPending((p) => (p ? { ...p, x: ev.clientX - rect.left, y: ev.clientY - rect.top } : p));
+    };
+    const up = (ev: MouseEvent) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("[data-node-id]") as HTMLElement | null;
+      const targetId = el?.getAttribute("data-node-id") ?? null;
+      const src = pendingRef.current?.sourceId ?? null;
+      setPending(null);
+      if (src && targetId && targetId !== src) finishConnect(src, targetId);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+  }, [pending?.sourceId, finishConnect]);
+
+  const onWrapperMouseDownCapture = useCallback((e: React.MouseEvent) => {
+    if (!e.shiftKey) return;
+    const el = (e.target as HTMLElement).closest("[data-node-id]") as HTMLElement | null;
+    if (!el) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setPending({ sourceId: el.getAttribute("data-node-id")!, x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, []);
+
+  const onWrapperDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest(".react-flow__node") || t.closest(".react-flow__edge") || t.closest(".edge-chip")) return;
+      if (t.closest(".react-flow__minimap") || t.closest(".react-flow__controls")) return;
+      if (!t.closest(".react-flow__pane")) return;
+      const pos = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      setModal({ kind: "node", x: pos.x - 30, y: pos.y - 30 });
+    },
+    [rf]
+  );
+
+  const pendingLine = useMemo(() => {
+    if (!pending) return null;
+    const src = nodes.find((n) => n.id === pending.sourceId);
+    if (!src) return null;
+    const start = rf.flowToScreenPosition({
+      x: src.position.x + (src.measured?.width ?? 60) / 2,
+      y: src.position.y + (src.measured?.height ?? 60) / 2,
+    });
+    return { x1: start.x, y1: start.y, x2: pending.x, y2: pending.y };
+  }, [pending, nodes, rf]);
+
+  const selectedNode = selectedId ? nodes.find((n) => n.id === selectedId) ?? null : null;
+  const modalEdge = modal?.kind === "edge" ? edges.find((e) => e.id === modal.edgeId) ?? null : null;
+  const fichaNode = modal?.kind === "ficha" ? nodes.find((n) => n.id === modal.nodeId) ?? null : null;
+  const stats = useMemo(() => StatsEngine.compute(nodes, edges, registry), [nodes, edges, registry]);
+
+  const banner = connectMode
+    ? connectSource
+      ? "Origem marcada — clique no nó de destino"
+      : "Modo conectar — clique no nó de origem"
+    : pathMode
+      ? "Traçando caminho — clique no nó de destino"
+      : pending
+        ? "Solte sobre outro nó para selar o laço"
+        : selectedTag
+          ? `Filtro ativo por tag: ${selectedTag}`
+          : path
+            ? `Caminho traçado · ${path.edgeIds.length} laço(s) iluminado(s)`
+            : null;
+
+  return (
+    <div className="arcanum-workspace arcanum-sky">
+      <TopBar
+        nodes={renderNodes.map((n) => ({ ...n, data: { ...n.data, typeName: registry.get(n.data.typeId).name } }))}
+        edgeCount={edges.length}
+        connectMode={connectMode}
+        physicsOn={physicsOn}
+        onToggleConnect={() => {
+          setConnectMode((v) => !v);
+          setConnectSource(null);
+          setPathMode(null);
+        }}
+        onTogglePhysics={() => {
+          setPhysicsOn((v) => {
+            if (!v) pushToast("O grafo começa a respirar com física orgânica");
+            return !v;
+          });
+        }}
+        onNewNode={() => {
+          const c = rf.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+          setModal({ kind: "node", x: c.x - 30, y: c.y - 30 });
+        }}
+        onCluster={clusterAll}
+        onFit={() => rf.fitView({ padding: 0.18, duration: 650 })}
+        onZoomIn={() => rf.zoomIn({ duration: 250 })}
+        onZoomOut={() => rf.zoomOut({ duration: 250 })}
+        onExport={exportWebp}
+        onStats={() => setModal({ kind: "stats" })}
+        onFocusNode={focusNode}
+        onClose={onClose}
+      />
+
+      <div className="flex-1 flex min-h-0 relative">
+        <Sidebar
+          types={registry.all()}
+          counts={counts}
+          tags={tagCounts}
+          selectedTag={selectedTag}
+          onSelectTag={(t) => {
+            setSelectedTag(t);
+            if (t) pushToast(`Tag filtrada: ${t}`);
+          }}
+          hidden={hidden}
+          isolate={isolate}
+          onToggleVisible={(id) =>
+            setHidden((h) => {
+              const n = new Set(h);
+              if (n.has(id)) {
+                n.delete(id);
+              } else {
+                n.add(id);
+                if (selectedId && nodes.find((x) => x.id === selectedId)?.data.typeId === id) setSelectedId(null);
+              }
+              return n;
+            })
+          }
+          onIsolate={(id) => {
+            setIsolate(id);
+            if (id) pushToast(`Camada destacada: ${registry.get(id).name}`);
+          }}
+          onAddCustom={(name, color, icon) => {
+            let reg = registry.addCustom(name, color, icon);
+            if (registry.all().some((t) => t.id === reg.id)) {
+              reg = { ...reg, id: uid("tipo") };
+            }
+            setCustomTypes((ct) => [...ct, reg]);
+            pushToast(`Nova camada criada: ${name}`);
+          }}
+          onRemoveCustom={(id) => {
+            if ((counts.get(id) ?? 0) > 0) {
+              setNodes((ns) => ns.map((n) => (n.data.typeId === id ? { ...n, data: { ...n.data, typeId: "conceito", icon: "💠" } } : n)));
+            }
+            setCustomTypes((ct) => ct.filter((t) => t.id !== id));
+            setHidden((h) => {
+              const n = new Set(h);
+              n.delete(id);
+              return n;
+            });
+            if (isolate === id) setIsolate(null);
+            pushToast("Camada removida — nós transferidos para Conceito");
+          }}
+          savedViews={savedViews}
+          onApplyView={applyView}
+          onDeleteView={(id) => setSavedViews((vs) => vs.filter((v) => v.id !== id))}
+          onSaveView={() => setModal({ kind: "save" })}
+          onRestore={() => {
+            setNodes(Layouts.clusterByType(SEED_NODES, TYPE_ORDER));
+            setEdges(SEED_EDGES);
+            setHidden(new Set());
+            setIsolate(null);
+            setSelectedTag(null);
+            setPath(null);
+            setSelectedId(null);
+            window.setTimeout(() => rf.fitView({ padding: 0.18, duration: 700 }), 80);
+            pushToast("Mundo de exemplo renasceu completo!");
+          }}
+          onOpenStats={() => setModal({ kind: "stats" })}
+          onExportDB={handleExportDB}
+          onImportDB={handleImportDB}
+        />
+
+        {/* Canvas ReactFlow */}
+        <div
+          ref={wrapRef}
+          className={`flex-1 relative min-w-0 ${gliding ? "gliding" : ""}`}
+          onDoubleClick={onWrapperDoubleClick}
+          onMouseDownCapture={onWrapperMouseDownCapture}
+        >
+          <ReactFlow<WNode, WEdge>
+            nodes={renderNodes}
+            edges={renderEdges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onSelectionChange={({ nodes: sel }) => setSelectedId(sel[0]?.id ?? null)}
+            onNodeClick={handleNodeClick}
+            onNodeDoubleClick={handleNodeDoubleClick}
+            onEdgeClick={(_, edge) => setModal({ kind: "edge", edgeId: edge.id })}
+            onPaneClick={() => {
+              setConnectSource(null);
+              setSelectedId(null);
+            }}
+            onNodeDragStop={() => physicsOn && simRef.current.reheat(0.25)}
+            deleteKeyCode={["Backspace", "Delete"]}
+            nodesConnectable={false}
+            nodesDraggable={!gliding}
+            elementsSelectable={true}
+            panOnDrag={true}
+            selectionOnDrag={false}
+            zoomOnScroll={true}
+            zoomOnPinch={true}
+            zoomOnDoubleClick={false}
+            autoPanOnNodeDrag={true}
+            minZoom={0.05}
+            maxZoom={3.5}
+            fitView
+            fitViewOptions={{ padding: 0.18 }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={28} size={1.8} color="#223050" />
+            <MiniMap
+              pannable
+              zoomable
+              position="bottom-right"
+              nodeStrokeWidth={4}
+              nodeColor={(n) => registry.get(((n.data ?? {}) as WorldNodeData).typeId ?? "conceito").color}
+              maskColor="rgba(8, 11, 18, 0.84)"
+              style={{
+                background: "#0d1220",
+                transform: selectedNode ? "translateX(-350px)" : undefined,
+                transition: "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            />
+            <Controls 
+              position="bottom-left" 
+              showInteractive={true}
+              showZoom={true}
+              showFitView={true}
+            />
+          </ReactFlow>
+
+          {/* Estado vazio */}
+          {nodes.length === 0 && (
+            <div className="absolute inset-0 grid place-items-center pointer-events-none z-10">
+              <div className="text-center bg-[#0d1220]/80 p-6 rounded-2xl border border-[#1c2740]">
+                <div className="font-serif text-[22px] font-bold text-[#d8b45a]">O mundo está em branco</div>
+                <p className="text-[13px] text-[#8b93a7] mt-2">
+                  Dê um duplo clique no vazio ou clique em <b className="text-[#ece5d3]">Novo Nó</b> acima.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Banner de modo ativo */}
+          {banner && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 rise-in">
+              <div className="flex items-center gap-2.5 rounded-full border border-[#d8b45a] bg-[#0d1220]/98 px-5 py-2 hud-shadow shadow-2xl">
+                <span className="w-2 h-2 rounded-full bg-[#d8b45a] animate-pulse" />
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#d8b45a]">{banner}</span>
+                {path && !pathMode && (
+                  <button type="button" onClick={() => setPath(null)} className="font-mono text-[10px] uppercase text-[#8b93a7] hover:text-[#e0705f] flex items-center gap-1 ml-1">
+                    <IX className="w-3.5 h-3.5" /> limpar rota
+                  </button>
+                )}
+                {selectedTag && (
+                  <button type="button" onClick={() => setSelectedTag(null)} className="font-mono text-[10px] uppercase text-[#8b93a7] hover:text-[#e0705f] flex items-center gap-1 ml-1">
+                    <IX className="w-3.5 h-3.5" /> remover filtro
+                  </button>
+                )}
+                {(pathMode || connectMode || pending) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPathMode(null);
+                      setConnectMode(false);
+                      setConnectSource(null);
+                      setPending(null);
+                    }}
+                    className="font-mono text-[10px] uppercase text-[#8b93a7] hover:text-[#e0705f] ml-1 font-bold"
+                  >
+                    esc (cancelar)
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Linha provisória do shift+arraste */}
+          {pendingLine && (
+            <svg className="absolute inset-0 pointer-events-none z-40" width="100%" height="100%">
+              <line
+                x1={pendingLine.x1}
+                y1={pendingLine.y1}
+                x2={pendingLine.x2}
+                y2={pendingLine.y2}
+                stroke="#d8b45a"
+                strokeWidth="3"
+                strokeDasharray="8 6"
+                strokeLinecap="round"
+              />
+              <circle cx={pendingLine.x2} cy={pendingLine.y2} r="6" fill="#d8b45a" />
+            </svg>
+          )}
+
+          {/* Inspector (1 clique) */}
+          {selectedNode && (
+            <Inspector
+              node={selectedNode}
+              nodes={nodes}
+              edges={edges}
+              types={registry.all()}
+              onChange={(id, patch) => setNodes((ns) => WorldGraph.updateNode(ns, id, patch))}
+              onDelete={deleteNode}
+              onFocusCenter={focusCenter}
+              onStartPath={(id) => {
+                setPathMode({ from: id });
+                setConnectMode(false);
+                setConnectSource(null);
+              }}
+              onEditEdge={(id) => setModal({ kind: "edge", edgeId: id })}
+              onDeleteEdge={(id) => {
+                setEdges((es) => WorldGraph.removeEdge(es, id));
+                pushToast("Laço desfeito");
+              }}
+              onJumpNode={focusNode}
+              onHighlightGroup={(typeId) => {
+                setIsolate(typeId);
+                pushToast(`Camada destacada: ${registry.get(typeId).name}`);
+              }}
+              onOpenFicha={(id) => setModal({ kind: "ficha", nodeId: id })}
+              onClose={() => {
+                setSelectedId(null);
+                setNodes((ns) => ns.map((n) => ({ ...n, selected: false })));
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Legenda de atalhos */}
+      <div className="pointer-events-none fixed bottom-3 left-1/2 -translate-x-1/2 z-30 hidden md:block">
+        <div className="rounded-full border border-[#2a3854] bg-[#0d1220]/90 backdrop-blur-md px-5 py-1.5 font-mono text-[10px] text-[#b3ad9c] tracking-wide whitespace-nowrap shadow-xl">
+          🔍 <span className="text-[#d8b45a] font-bold">1 Clique</span> Configurações
+          <span className="text-[#3d4d6e] mx-2">·</span>
+          📜 <span className="text-[#d8b45a] font-bold">2 Cliques</span> Ficha Completa RPG
+          <span className="text-[#3d4d6e] mx-2">·</span>
+          🔗 <span className="text-[#d8b45a] font-bold">Shift + arraste</span> Conectar
+          <span className="text-[#3d4d6e] mx-2">·</span>
+          ✦ <span className="text-[#d8b45a] font-bold">Duplo clique no vazio</span> Novo nó
+        </div>
+      </div>
+
+      {/* Modais */}
+      {modal?.kind === "ficha" && fichaNode && (
+        <FichaModal
+          node={fichaNode}
+          nodes={nodes}
+          edges={edges}
+          types={registry.all()}
+          onChange={(id, patch) => setNodes((ns) => WorldGraph.updateNode(ns, id, patch))}
+          onJumpNode={focusNode}
+          onOpenFicha={(id) => {
+            setSelectedId(id);
+            setModal({ kind: "ficha", nodeId: id });
+          }}
+          onClose={() => setModal(null)}
+        />
+      )}
+
+      {modal?.kind === "node" && (
+        <NodeCreateModal
+          types={registry.all()}
+          onClose={() => setModal(null)}
+          onCreate={(d) => {
+            const type = registry.get(d.typeId);
+            const node = WorldGraph.createNode(
+              d.typeId,
+              modal.x,
+              modal.y,
+              type,
+              d.label,
+              d.tags,
+              d.ficha ?? { status: "Ativo" },
+              d.summary,
+              d.shape || type.shape || "circle"
+            );
+            node.data.icon = d.icon || type.icon;
+            setNodes((ns) => [...ns, node]);
+            setSelectedId(node.id);
+            setModal(null);
+            pushToast(`Fragmento inscrito: ${d.label}`);
+          }}
+        />
+      )}
+
+      {modal?.kind === "edge" && modalEdge && (
+        <EdgeModal
+          edge={modalEdge}
+          fromLabel={nodes.find((n) => n.id === modalEdge.source)?.data.label ?? "?"}
+          toLabel={nodes.find((n) => n.id === modalEdge.target)?.data.label ?? "?"}
+          onClose={() => setModal(null)}
+          onSave={(id, label, color) => {
+            setEdges((es) => WorldGraph.updateEdge(es, id, label, color));
+            setModal(null);
+            pushToast(label ? `Relação selada: “${label}”` : "Relação atualizada");
+          }}
+          onDelete={(id) => {
+            setEdges((es) => WorldGraph.removeEdge(es, id));
+            setModal(null);
+            pushToast("Laço desfeito");
+          }}
+        />
+      )}
+
+      {modal?.kind === "stats" && <StatsModal stats={stats} onClose={() => setModal(null)} />}
+
+      {modal?.kind === "save" && (
+        <SaveViewModal
+          onClose={() => setModal(null)}
+          onSave={(name) => {
+            const v: SavedView = {
+              id: uid("v"),
+              name,
+              ts: Date.now(),
+              viewport: rf.getViewport(),
+              hidden: [...hidden],
+              isolate,
+            };
+            setSavedViews((vs) => [v, ...vs]);
+            setModal(null);
+            pushToast(`Vista favoritada: ${name}`);
+          }}
+        />
+      )}
+
+      <Toasts items={toasts} />
+    </div>
+  );
+}
+
+export default function ArcanumGraph(props: ArcanumGraphProps) {
+  return (
+    <ReactFlowProvider>
+      <ArcanumInner {...props} />
+    </ReactFlowProvider>
+  );
+}

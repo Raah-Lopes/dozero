@@ -4,7 +4,7 @@ import {
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
   Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare,
-  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork
+  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -247,6 +247,13 @@ export function GMToolbar() {
                 onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} 
                 tooltip="Wiki da Campanha"
                 description="Acesse anotações, monstros, fichas e compêndios"
+              />
+              <ToolButton 
+                icon={<GitMerge size={19} />} 
+                active={viewMode === 'brain'} 
+                onClick={() => setViewMode(viewMode === 'brain' ? 'canvas' : 'brain')} 
+                tooltip="Cérebro Grafo (Arcanum)"
+                description="Grafo interativo de conexões, orbes e fichas do mundo"
               />
               <ToolButton
                 icon={<CalendarRange size={19} />}

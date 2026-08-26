@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload, LogOut, Dices
+  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload, LogOut, Dices, GitMerge
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
@@ -62,6 +62,7 @@ export function MainToolbar() {
   const tools = [
     { id: 'hub', label: 'Menu Geral (Hub de Ferramentas)', icon: <LayoutGrid size={20} />, action: () => toggleModal('widgets'), isActive: activeModal === 'widgets', colorClass: 'theme-purple' },
     { id: 'wiki', label: 'Wiki da Campanha', icon: <BookOpen size={20} />, action: () => handleSetViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki'), isActive: viewMode === 'wiki', colorClass: 'theme-cyan' },
+    { id: 'brain', label: 'Cérebro Grafo (Arcanum)', icon: <GitMerge size={20} />, action: () => handleSetViewMode(viewMode === 'brain' ? 'canvas' : 'brain'), isActive: viewMode === 'brain', colorClass: 'theme-amber' },
     { id: 'theater', label: 'Teatro da Mente', icon: <Film size={20} />, action: () => handleSetViewMode(viewMode === 'theater' ? 'canvas' : 'theater'), isActive: viewMode === 'theater', colorClass: 'theme-violet' },
     { id: 'layouts', label: 'Layouts & Multi-Monitor', icon: <LayoutGrid size={20} />, action: () => { window.dispatchEvent(new CustomEvent('open-layout-presets')); setIsMenuOpen(false); }, isActive: false, colorClass: 'theme-violet' },
     { id: 'players', label: 'Central da Mesa & Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },

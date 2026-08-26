@@ -25,16 +25,38 @@ export interface SceneRecord {
   updated_at?: string;
 }
 
+// Cache em memória para evitar queries repetitivas para a mesma sala
+const campaignIdCache = new Map<string, { id: string | null; timestamp: number }>();
+const CACHE_TTL_MS = 60 * 1000; // 1 minuto
+
 export async function getCampaignIdForRoom(roomCode: string): Promise<string | null> {
   if (!isSupabaseConfigured || !roomCode) return null;
-  const { data, error } = await supabase
-    .from('campaigns')
-    .select('id')
-    .eq('room_code', roomCode)
-    .maybeSingle();
 
-  if (error) console.warn('[SceneCloud] Não foi possível resolver a campanha:', error);
-  return data?.id ?? null;
+  const cached = campaignIdCache.get(roomCode);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.id;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('id')
+      .eq('room_code', roomCode)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[SceneCloud] Não foi possível resolver a campanha:', error);
+      campaignIdCache.set(roomCode, { id: null, timestamp: Date.now() });
+      return null;
+    }
+
+    const resolvedId = data?.id ?? null;
+    campaignIdCache.set(roomCode, { id: resolvedId, timestamp: Date.now() });
+    return resolvedId;
+  } catch (err) {
+    campaignIdCache.set(roomCode, { id: null, timestamp: Date.now() });
+    return null;
+  }
 }
 
 /**
