@@ -157,7 +157,7 @@ export async function saveImageToCloud(base64: string, filename: string): Promis
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {
   if (import.meta.env.PROD) {
-    console.warn("Modo Vercel: Salvamento local desativado.");
+    WikiIndexer.saveLocalWikiFile(path, content);
     return;
   }
   const config = getWikiConfig();
@@ -262,4 +262,3 @@ export async function pushToGithub(): Promise<void> {
     throw new Error(errorData.error || "Erro ao sincronizar com GitHub");
   }
 }
-

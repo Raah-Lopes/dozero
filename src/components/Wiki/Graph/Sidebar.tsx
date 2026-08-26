@@ -249,6 +249,13 @@ export default function Sidebar(p: SidebarProps) {
                       {ic}
                     </button>
                   ))}
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(event) => setColor(event.target.value)}
+                    aria-label="Cor da nova camada"
+                    className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border border-ink-600 p-0"
+                  />
                 </div>
 
                 <div className="flex justify-end gap-1.5 pt-1">

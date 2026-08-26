@@ -2,12 +2,27 @@ import React, { useCallback, useEffect, useState } from 'react';
 import ArcanumGraph from './Graph/ArcanumGraph';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
-import { toast } from '../UI/Toast';
 import { DEFAULT_TYPES, type NodeShape, type WEdge, type WNode } from './Graph/core';
-import { Layouts, Vault } from './Graph/world';
+import { Layouts } from './Graph/world';
 import { TYPE_ORDER } from './Graph/seed';
 import { formatWikiConnection, type WikiConnectionDraft } from '../../utils/wikiConnections';
 import { useWindowManager } from '../../hooks/useWindowManager';
+import { WikiIndexer } from '../../services/wiki/WikiIndexer';
+import type { WikiGraphLinkSource, WikiGraphNodeSource } from '../../services/wiki/wikiGraphData';
+import { saveMarkdownContent } from '../../utils/githubApi';
+
+const bundledWikiModules = import.meta.glob('../../../wikidozero/**/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const bundledWikiFiles = Object.fromEntries(
+  Object.entries(bundledWikiModules).map(([path, content]) => [
+    path.replace('../../../wikidozero/', '').replace(/^\.\//, ''),
+    content,
+  ]),
+);
 
 /**
  * LivingBrain — O Cérebro do Mundo (Arcanum)
@@ -15,22 +30,23 @@ import { useWindowManager } from '../../hooks/useWindowManager';
  */
 export const LivingBrain: React.FC = () => {
   const { setViewMode } = useWindowManager();
-  const [wikiNodes, setWikiNodes] = useState<WNode[] | undefined>(undefined);
-  const [wikiEdges, setWikiEdges] = useState<WEdge[] | undefined>(undefined);
+  const [wikiNodes, setWikiNodes] = useState<WNode[]>([]);
+  const [wikiEdges, setWikiEdges] = useState<WEdge[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [graphVersion, setGraphVersion] = useState(0);
 
   const fetchGraphData = useCallback(async () => {
     try {
       const config = getWikiConfig();
-      const repoPath = config.repoUrl;
-      if (!repoPath) return;
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+      setIsLoading(true);
+      setError(null);
 
-      const res = await fetch(`/api/wiki/graph?repoPath=${encodeURIComponent(repoPath)}&t=${Date.now()}`);
-      if (!res.ok) return;
+      const json = await WikiIndexer.buildGraph(bundledWikiFiles);
+      if (json.nodes.length === 0) throw new Error('Nenhuma entidade foi encontrada na Wiki desta campanha.');
 
-      const json = await res.json();
-      if (!Array.isArray(json.nodes) || json.nodes.length === 0) return;
-
-      const mappedNodes: WNode[] = json.nodes.map((n: any) => {
+      const mappedNodes: WNode[] = json.nodes.map((n: WikiGraphNodeSource) => {
         const pathLower = String(n.path || '').toLowerCase();
         const rawGroup = String(n.group || '').toLowerCase();
         const rawEntity = String(n.entityType || '').toLowerCase();
@@ -98,9 +114,9 @@ export const LivingBrain: React.FC = () => {
       const nameToId = new Map(clusteredNodes.map((cn) => [cn.data.label.toLowerCase(), cn.id]));
 
       const mappedEdges: WEdge[] = (json.links || [])
-        .map((l: any, i: number) => {
-          const src = typeof l.source === 'object' ? l.source.id : l.source;
-          const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+        .map((l: WikiGraphLinkSource, i: number) => {
+          const src = l.source;
+          const tgt = l.target;
 
           const resolvedTarget = validNodeIds.has(tgt) ? tgt : nameToId.get(String(tgt).toLowerCase());
           if (validNodeIds.has(src) && resolvedTarget) {
@@ -112,7 +128,7 @@ export const LivingBrain: React.FC = () => {
               data: {
                 label: l.label || '',
                 color: l.color || '#d8b45a',
-                wikiSourcePath: l.sourcePath,
+                wikiSourcePath: l.sourcePath || src,
               },
             };
           }
@@ -122,49 +138,74 @@ export const LivingBrain: React.FC = () => {
 
       setWikiNodes(clusteredNodes);
       setWikiEdges(mappedEdges);
+      setGraphVersion((version) => version + 1);
     } catch (err) {
-      console.warn("Utilizando banco Vault / dados semente do Arcanum:", err);
+      const message = err instanceof Error ? err.message : 'Falha desconhecida ao carregar o Grafo.';
+      console.error('[LivingBrain] Não foi possível carregar a Wiki:', err);
+      setError(message);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchGraphData();
-    window.addEventListener('wiki-updated', fetchGraphData);
-    return () => window.removeEventListener('wiki-updated', fetchGraphData);
+    const initialLoad = window.setTimeout(() => void fetchGraphData(), 0);
+    const refresh = () => void fetchGraphData();
+    window.addEventListener('wiki-updated', refresh);
+    return () => {
+      window.clearTimeout(initialLoad);
+      window.removeEventListener('wiki-updated', refresh);
+    };
   }, [fetchGraphData]);
 
   // Criação de conexão direta no markdown da Wiki
   const handleCreateWikiRelation = async (sourcePath: string, targetName: string, label: string) => {
     try {
-      const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+      if (!sourcePath.toLowerCase().endsWith('.md')) throw new Error('A origem da relação não é um artigo da Wiki.');
+      const content = await WikiIndexer.loadRawFileContent(sourcePath);
+      if (content == null) throw new Error('Não foi possível ler o artigo de origem.');
 
-      const res = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(sourcePath)}`);
-      if (!res.ok) throw new Error("Falha ao ler arquivo fonte");
-      const content = (await res.json()).content;
-
-      const draft: WikiConnectionDraft = { label, isBidirectional: false };
+      const draft: WikiConnectionDraft = { type: label || 'Relacionado a', description: '' };
       const linkText = formatWikiConnection(targetName, draft);
-      const newContent = content.trim() + `\n${linkText}\n`;
-
-      const saveRes = await fetch('/api/wiki/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath, path: sourcePath, content: newContent }),
-      });
-      if (!saveRes.ok) throw new Error('Falha ao salvar conexão');
-
-      await fetchGraphData();
-      toast.success('Relação sincronizada com a Wiki!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro ao registrar na Wiki: ' + err);
+      const newContent = content.includes(linkText) ? content : `${content.trimEnd()}\n${linkText}\n`;
+      await saveMarkdownContent(sourcePath, newContent);
+    } catch (error) {
+      console.error('[LivingBrain] Erro ao registrar relação:', error);
+      throw error;
     }
   };
+
+  if (isLoading && wikiNodes.length === 0) {
+    return (
+      <div className="h-full w-full grid place-items-center bg-[#080b12] text-[#ece5d3]" role="status" aria-live="polite">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-[#2a3854] border-t-[#d8b45a]" />
+          <strong className="font-serif text-lg text-[#d8b45a]">Abrindo o Cérebro do Mundo…</strong>
+          <p className="mt-2 text-sm text-[#8b93a7]">Lendo entidades e relações da Wiki da campanha.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && wikiNodes.length === 0) {
+    return (
+      <div className="h-full w-full grid place-items-center bg-[#080b12] px-6 text-[#ece5d3]" role="alert">
+        <div className="max-w-md rounded-2xl border border-[#5b2e35] bg-[#12101a] p-6 text-center">
+          <strong className="text-lg text-[#e0705f]">O Grafo não conseguiu ler a Wiki</strong>
+          <p className="mt-2 text-sm text-[#b3ad9c]">{error}</p>
+          <div className="mt-5 flex justify-center gap-3">
+            <button type="button" onClick={() => void fetchGraphData()} className="rounded-lg bg-[#d8b45a] px-4 py-2 font-bold text-[#080b12]">Tentar novamente</button>
+            <button type="button" onClick={() => setViewMode('canvas')} className="rounded-lg border border-[#2a3854] px-4 py-2 text-[#b3ad9c]">Voltar à mesa</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ArcanumGraph
+        key={graphVersion}
         initialNodes={wikiNodes}
         initialEdges={wikiEdges}
         onClose={() => setViewMode('canvas')}
@@ -173,4 +214,3 @@ export const LivingBrain: React.FC = () => {
     </div>
   );
 };
-

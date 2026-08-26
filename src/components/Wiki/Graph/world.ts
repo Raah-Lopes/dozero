@@ -234,7 +234,7 @@ export class ForceSimulator {
 
   tick(nodes: WNode[], edges: WEdge[]): WNode[] {
     if (this.cooled()) return nodes;
-    this.alpha *= 0.992;
+    this.alpha *= 0.95;
     const disp = new Map<string, { x: number; y: number }>();
     for (const n of nodes) disp.set(n.id, { x: 0, y: 0 });
 

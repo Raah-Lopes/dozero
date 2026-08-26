@@ -6,7 +6,7 @@ import type { NodeShape, WNode } from "./core";
  * Nó do Arcanum — Orbe Geométrico Arcano do Grafo de RPG.
  * Visual nítido, limpo e altamente legível para o mapa fechado.
  */
-export default function GraphNode({ id, data, selected }: NodeProps<WNode>) {
+function GraphNode({ id, data, selected }: NodeProps<WNode>) {
   const color = data.tint || data.typeColor || "#d8b45a";
   const dim = !!data.dim;
   const onPath = !!data.onPath;
@@ -32,7 +32,7 @@ export default function GraphNode({ id, data, selected }: NodeProps<WNode>) {
   return (
     <div
       data-node-id={id}
-      className={`group relative flex flex-col items-center select-none cursor-pointer transition-all duration-300 ${
+      className={`group relative flex flex-col items-center select-none cursor-pointer transition-[opacity,transform,filter] duration-200 ${
         dim ? "opacity-10 saturate-0 scale-90" : isNeighbor ? "scale-105" : "hover:scale-110"
       }`}
       style={{ minWidth: "110px" }}
@@ -56,18 +56,20 @@ export default function GraphNode({ id, data, selected }: NodeProps<WNode>) {
       {/* Orbe / Forma Geométrica do Nó */}
       <div className="relative flex items-center justify-center">
         {/* Glow exterior da cor do nó */}
-        <div
-          className={`absolute inset-0 ${shapeClasses} blur-md transition-opacity duration-300 pointer-events-none`}
-          style={{
-            background: color,
-            opacity: selected || onPath ? 0.85 : isNeighbor ? 0.65 : 0.25,
-            transform: shape === "diamond" ? "rotate(45deg) scale(1.2)" : "scale(1.2)",
-          }}
-        />
+        {(selected || onPath || isNeighbor || isSource) && (
+          <div
+            className={`absolute inset-0 ${shapeClasses} blur-sm transition-opacity duration-200 pointer-events-none`}
+            style={{
+              background: color,
+              opacity: selected || onPath ? 0.75 : 0.55,
+              transform: shape === "diamond" ? "rotate(45deg) scale(1.18)" : "scale(1.18)",
+            }}
+          />
+        )}
 
         {/* Corpo do Orbe */}
         <div
-          className={`w-[58px] h-[58px] ${shapeClasses} flex items-center justify-center border-2 transition-all duration-300 shadow-2xl ${
+          className={`w-[58px] h-[58px] ${shapeClasses} flex items-center justify-center border-2 transition-[transform,border-color,box-shadow] duration-200 shadow-xl ${
             onPath ? "path-pulse ring-2 ring-gold" : ""
           } ${isSource ? "connect-source-ring ring-2 ring-teal" : ""} ${
             selected && !onPath
@@ -88,6 +90,10 @@ export default function GraphNode({ id, data, selected }: NodeProps<WNode>) {
               <img
                 src={data.image}
                 alt=""
+                width={40}
+                height={40}
+                loading="lazy"
+                decoding="async"
                 className="w-10 h-10 rounded-full object-cover pointer-events-none shadow-inner"
                 onError={(ev) => ((ev.target as HTMLElement).style.display = "none")}
               />
@@ -115,7 +121,7 @@ export default function GraphNode({ id, data, selected }: NodeProps<WNode>) {
       {/* Rótulo e Nome com Tipografia Elegante e Alto Contraste */}
       <div className="mt-2 flex flex-col items-center text-center max-w-[140px] pointer-events-none transition-transform duration-200">
         <div
-          className={`px-2.5 py-1 rounded-lg border backdrop-blur-md shadow-lg transition-all duration-200 ${
+          className={`px-2.5 py-1 rounded-lg border shadow-md transition-[color,border-color,box-shadow,background-color] duration-150 ${
             selected
               ? "bg-ink-950 border-gold ring-1 ring-gold shadow-[0_0_14px_rgba(216,180,90,0.4)]"
               : isNeighbor
@@ -143,3 +149,5 @@ export default function GraphNode({ id, data, selected }: NodeProps<WNode>) {
     </div>
   );
 }
+
+export default React.memo(GraphNode);

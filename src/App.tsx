@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import './App.css';
 import { X, DoorOpen } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
-import { LivingBrain } from './components/Wiki/LivingBrain';
 import { GameCanvas } from './engine/GameCanvas';
 import { GMToolbar } from './components/HUD/GMToolbar';
 import { TokenContextHUD } from './components/HUD/TokenContextHUD';
@@ -57,6 +56,8 @@ import { StreamOverlay } from './components/Stream/StreamOverlay';
 import { useAutoSaveSession } from './services/useAutoSaveSession';
 import { useRoomPresence } from './services/useRoomPresence';
 import { useAuthStore } from './store/authStore';
+
+const LivingBrain = React.lazy(() => import('./components/Wiki/LivingBrain').then((module) => ({ default: module.LivingBrain })));
 
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby' | 'vault' | 'tokenConfig';
 
@@ -153,7 +154,9 @@ function App() {
       <div className={`view-layer brain-layer ${viewMode === 'brain' ? 'active' : ''}`}>
         {viewMode === 'brain' && (
           <ErrorBoundary componentName="Cérebro Gráfico (Brain)">
-            <LivingBrain />
+            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#080b12] text-[#d8b45a]" role="status">Carregando módulo do Grafo…</div>}>
+              <LivingBrain />
+            </React.Suspense>
           </ErrorBoundary>
         )}
       </div>

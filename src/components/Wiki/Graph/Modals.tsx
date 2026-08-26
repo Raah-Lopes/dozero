@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { NodeShape, RPGFicha, TypeReg, WEdge, WNode } from "./core";
-import { EDGE_COLORS, ICON_PRESETS, RELATION_HINTS, RPG_TEMPLATES, extractLinkedNodes, normalizeTag } from "./core";
+import { EDGE_COLORS, RELATION_HINTS, RPG_TEMPLATES, extractLinkedNodes, normalizeTag } from "./core";
 import type { WorldStats } from "./world";
 import { LinkedText, LinkInserter } from "./LinkedText";
 import { ITrash, IX } from "./icons";

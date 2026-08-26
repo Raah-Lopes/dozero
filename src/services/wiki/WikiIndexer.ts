@@ -1,29 +1,17 @@
 import type { WikiEntry } from './WikiQuery';
 import { getWikiConfig } from '../../store';
 import { state } from '../yjs';
-import * as yaml from 'js-yaml';
-
-function parseFrontmatter(content: string) {
-  try {
-    const parts = content.split('---');
-    if (parts.length >= 3 && content.trim().startsWith('---')) {
-      const data = yaml.load(parts[1]) as any;
-      return { data: data || {}, content: parts.slice(2).join('---') };
-    }
-    return { data: {}, content };
-  } catch (e) {
-    console.error("Erro ao fazer parse do Frontmatter usando js-yaml:", e);
-    return { data: {}, content };
-  }
-}
+import { buildWikiGraphFromFiles, parseWikiDocument, type WikiGraphSource } from './wikiGraphData';
 
 const LOCAL_WIKI_STORAGE_KEY = 'dozero_wiki_custom_files_v1';
 
 export class WikiIndexer {
   private static index: WikiEntry[] | null = null;
+  private static rawFiles = new Map<string, string>();
 
   static clearCache() {
     this.index = null;
+    this.rawFiles.clear();
   }
 
   /**
@@ -64,7 +52,7 @@ export class WikiIndexer {
     }
   }
 
-  static async buildIndex(): Promise<WikiEntry[]> {
+  static async buildIndex(bundledFiles?: Record<string, string>): Promise<WikiEntry[]> {
     if (this.index) {
       return this.index;
     }
@@ -73,53 +61,71 @@ export class WikiIndexer {
     const config = getWikiConfig();
     const repoPath = config.repoUrl;
 
+    // O Grafo entrega a Wiki em um único chunk sob demanda, evitando uma
+    // requisição separada para cada Markdown no Vercel.
+    Object.entries(bundledFiles ?? {}).forEach(([filePath, rawContent]) => {
+      const parsed = parseWikiDocument(rawContent);
+      const filename = filePath.split('/').pop() || filePath.split('\\').pop() || '';
+      const slug = filename.replace(/\.md$/i, '');
+
+      this.rawFiles.set(filePath, rawContent);
+      entriesMap.set(filePath, { path: filePath, slug, metadata: parsed.metadata });
+    });
+
     // 1. Carrega arquivos da API local (se disponível no Node/Vite)
-    try {
+    if (!bundledFiles) try {
       const res = await fetch(`/api/wiki/search?q=.md&repoPath=${encodeURIComponent(repoPath)}`);
       if (res.ok) {
         const data = await res.json();
         const files: string[] = data.results || [];
 
-        for (const filePath of files) {
-          if (!filePath.endsWith('.md') || filePath.toLowerCase().includes('readme.md')) continue;
-
-          try {
+        const loadedFiles = await Promise.all(files
+          .filter((filePath) => filePath.endsWith('.md') && !filePath.toLowerCase().includes('readme.md'))
+          .map(async (filePath) => {
+            try {
             const fileRes = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(filePath)}`);
-            if (!fileRes.ok) continue;
+              if (!fileRes.ok) return null;
             
             const fileData = await fileRes.json();
-            const rawContent = fileData.content;
-            const parsed = parseFrontmatter(rawContent);
+              return { filePath, rawContent: String(fileData.content || '') };
+            } catch (err) {
+              console.error(`[WikiIndexer] Erro ao ler arquivo ${filePath}:`, err);
+              return null;
+            }
+          }));
 
-            const filename = filePath.split('/').pop() || filePath.split('\\').pop() || '';
+        for (const loaded of loadedFiles) {
+          if (!loaded) continue;
+          const { filePath, rawContent } = loaded;
+          const parsed = parseWikiDocument(rawContent);
+          const filename = filePath.split('/').pop() || filePath.split('\\').pop() || '';
             const slug = filename.replace(/\.md$/i, '');
 
+          this.rawFiles.set(filePath, rawContent);
             entriesMap.set(filePath, {
               path: filePath,
               slug,
-              metadata: parsed.data || {}
+            metadata: parsed.metadata,
             });
-          } catch (err) {
-            console.error(`[WikiIndexer] Erro ao ler arquivo ${filePath}:`, err);
-          }
         }
       }
-    } catch (err) {
+    } catch {
       console.warn('[WikiIndexer] API local da wiki indisponível, usando armazenamento local-first');
     }
 
     // 2. Mescla arquivos salvos no Yjs / IndexedDB (state.wiki)
-    Array.from(state.wiki.keys()).forEach((filePath: any) => {
+    Array.from(state.wiki.keys()).forEach((filePath) => {
       const pathStr = String(filePath);
       const rawContent = String(state.wiki.get(filePath) || '');
-      const parsed = parseFrontmatter(rawContent);
+      const parsed = parseWikiDocument(rawContent);
       const filename = pathStr.split('/').pop() || pathStr.split('\\').pop() || '';
       const slug = filename.replace(/\.md$/i, '');
 
+      this.rawFiles.set(pathStr, rawContent);
       entriesMap.set(pathStr, {
         path: pathStr,
         slug,
-        metadata: parsed.data || {}
+        metadata: parsed.metadata,
       });
     });
 
@@ -128,56 +134,57 @@ export class WikiIndexer {
       const localWiki: Record<string, string> = JSON.parse(localStorage.getItem(LOCAL_WIKI_STORAGE_KEY) || '{}');
       Object.entries(localWiki).forEach(([filePath, rawContent]) => {
         if (!entriesMap.has(filePath)) {
-          const parsed = parseFrontmatter(rawContent);
+          const parsed = parseWikiDocument(rawContent);
           const filename = filePath.split('/').pop() || filePath.split('\\').pop() || '';
           const slug = filename.replace(/\.md$/i, '');
 
+          this.rawFiles.set(filePath, rawContent);
           entriesMap.set(filePath, {
             path: filePath,
             slug,
-            metadata: parsed.data || {}
+            metadata: parsed.metadata,
           });
         }
       });
-    } catch (e) {}
+    } catch {
+      // localStorage pode estar indisponível em contextos privados/restritos.
+    }
 
     this.index = Array.from(entriesMap.values());
     return this.index;
   }
 
-  static async loadFileContent(path: string): Promise<string | null> {
-    // 1. Tenta buscar no state.wiki (Yjs / IndexedDB local da sala)
-    if (state.wiki.has(path)) {
-      const rawContent = String(state.wiki.get(path) || '');
-      const parsed = parseFrontmatter(rawContent);
-      return parsed.content;
-    }
+  static async buildGraph(bundledFiles?: Record<string, string>): Promise<WikiGraphSource> {
+    await this.buildIndex(bundledFiles);
+    return buildWikiGraphFromFiles(this.rawFiles);
+  }
 
-    // 2. Tenta buscar no localStorage
+  static async loadRawFileContent(path: string): Promise<string | null> {
+    if (state.wiki.has(path)) return String(state.wiki.get(path) || '');
+
     try {
       const localWiki: Record<string, string> = JSON.parse(localStorage.getItem(LOCAL_WIKI_STORAGE_KEY) || '{}');
-      if (localWiki[path]) {
-        const parsed = parseFrontmatter(localWiki[path]);
-        return parsed.content;
-      }
-    } catch (e) {}
+      if (localWiki[path]) return localWiki[path];
+    } catch {
+      // Continua com o cache em memória ou a fonte empacotada.
+    }
 
-    // 3. Fallback: API local
+    if (this.rawFiles.has(path)) return this.rawFiles.get(path) ?? null;
+
     try {
-      const config = getWikiConfig();
-      const repoPath = config.repoUrl;
-
+      const repoPath = getWikiConfig().repoUrl;
       const fileRes = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(path)}`);
       if (!fileRes.ok) return null;
-      
       const fileData = await fileRes.json();
-      const rawContent = fileData.content;
-      
-      const parsed = parseFrontmatter(rawContent);
-      return parsed.content;
+      return String(fileData.content || '');
     } catch (err) {
-      console.error(`[WikiIndexer] Erro ao carregar conteúdo de ${path}:`, err);
+      console.error(`[WikiIndexer] Erro ao carregar conteúdo bruto de ${path}:`, err);
       return null;
     }
+  }
+
+  static async loadFileContent(path: string): Promise<string | null> {
+    const rawContent = await this.loadRawFileContent(path);
+    return rawContent == null ? null : parseWikiDocument(rawContent).content;
   }
 }

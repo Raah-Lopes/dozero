@@ -70,26 +70,13 @@ export interface ArcanumGraphProps {
   onCreateWikiRelation?: (sourcePath: string, targetName: string, label: string) => Promise<void>;
 }
 
-function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps) {
+function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelation }: ArcanumGraphProps) {
   const rf = useReactFlow<WNode, WEdge>();
 
-  const [nodes, setNodes] = useState<WNode[]>(initialNodes && initialNodes.length > 0 ? initialNodes : BOOT.nodes);
-  const [edges, setEdges] = useState<WEdge[]>(initialEdges && initialEdges.length > 0 ? initialEdges : BOOT.edges);
+  const [nodes, setNodes] = useState<WNode[]>(() => initialNodes && initialNodes.length > 0 ? initialNodes : BOOT.nodes);
+  const [edges, setEdges] = useState<WEdge[]>(() => initialEdges && initialEdges.length > 0 ? initialEdges : BOOT.edges);
   const [customTypes, setCustomTypes] = useState<TypeReg[]>(BOOT.customTypes);
   const [savedViews, setSavedViews] = useState<SavedView[]>(BOOT.savedViews);
-
-  // Sincroniza se initialNodes/initialEdges mudarem (ex: vindos da Wiki)
-  useEffect(() => {
-    if (initialNodes && initialNodes.length > 0) {
-      setNodes(initialNodes);
-    }
-  }, [initialNodes]);
-
-  useEffect(() => {
-    if (initialEdges && initialEdges.length > 0) {
-      setEdges(initialEdges);
-    }
-  }, [initialEdges]);
 
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [isolate, setIsolate] = useState<string | null>(null);
@@ -102,18 +89,20 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
   const [path, setPath] = useState<PathResult | null>(null);
 
   const [physicsOn, setPhysicsOn] = useState(false);
+  const [physicsRun, setPhysicsRun] = useState(0);
   const [gliding, setGliding] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [pending, setPending] = useState<{ sourceId: string; x: number; y: number } | null>(null);
 
   const wrapRef = useRef<HTMLDivElement>(null);
-  const pendingRef = useRef(pending);
-  pendingRef.current = pending;
   const simRef = useRef(new ForceSimulator());
   const edgesRef = useRef(edges);
-  edgesRef.current = edges;
   const toastSeq = useRef(0);
+
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
 
   const registry = useMemo(() => new TypeRegistry(customTypes), [customTypes]);
 
@@ -203,6 +192,29 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
     return nodes.find((n) => n.id === selectedId) ?? null;
   }, [nodes, selectedId]);
 
+  const neighborPositions = useMemo(() => {
+    if (!selectedId || !selectedNodeObj || !connectedNodeIds) return new Map<string, { x: number; y: number }>();
+    const neighbors = nodes.filter((node) => connectedNodeIds.has(node.id) && node.id !== selectedId && visibleIds.has(node.id));
+    if (neighbors.length === 0) return new Map<string, { x: number; y: number }>();
+
+    const ordered = neighbors
+      .map((node) => ({
+        node,
+        angle: Math.atan2(node.position.y - selectedNodeObj.position.y, node.position.x - selectedNodeObj.position.x),
+      }))
+      .sort((a, b) => a.angle - b.angle);
+    const radius = Math.max(225, 180 + ordered.length * 9);
+    const startAngle = ordered[0].angle;
+
+    return new Map(ordered.map(({ node }, index) => {
+      const angle = startAngle + (index / ordered.length) * Math.PI * 2;
+      return [node.id, {
+        x: selectedNodeObj.position.x + Math.cos(angle) * radius,
+        y: selectedNodeObj.position.y + Math.sin(angle) * radius,
+      }];
+    }));
+  }, [selectedId, selectedNodeObj, connectedNodeIds, nodes, visibleIds]);
+
   const renderNodes = useMemo<WNode[]>(
     () =>
       nodes
@@ -211,23 +223,35 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
           const t = registry.get(n.data.typeId);
           const isSelected = n.id === selectedId;
           const isNeighbor = !!connectedNodeIds?.has(n.id) && !isSelected;
+          const position = isNeighbor ? neighborPositions.get(n.id) ?? n.position : n.position;
+          const dim = dimmedIds.has(n.id);
+          const onPath = pathNodeSet.has(n.id);
+          const isSource = connectSource === n.id;
+          const shape = n.data.shape || t.shape || "circle";
+          const sameData = n.data.typeColor === t.color
+            && n.data.typeName === t.name
+            && n.data.shape === shape
+            && n.data.dim === dim
+            && n.data.onPath === onPath
+            && n.data.isSource === isSource
+            && n.data.isNeighbor === isNeighbor;
 
           return {
             ...n,
-            position: n.position,
-            data: {
+            position,
+            data: sameData ? n.data : {
               ...n.data,
               typeColor: t.color,
               typeName: t.name,
-              shape: n.data.shape || t.shape || "circle",
-              dim: dimmedIds.has(n.id),
-              onPath: pathNodeSet.has(n.id),
-              isSource: connectSource === n.id,
+              shape,
+              dim,
+              onPath,
+              isSource,
               isNeighbor,
             },
           };
         }),
-    [nodes, visibleIds, registry, dimmedIds, pathNodeSet, connectSource, selectedId, connectedNodeIds]
+    [nodes, visibleIds, registry, dimmedIds, pathNodeSet, connectSource, selectedId, connectedNodeIds, neighborPositions]
   );
 
   const renderEdges = useMemo<WEdge[]>(
@@ -260,13 +284,20 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
     if (!physicsOn) return;
     simRef.current.reheat(0.85);
     let raf = 0;
-    const step = () => {
+    let previousFrame = 0;
+    const step = (time: number) => {
+      if (simRef.current.cooled()) return;
+      if (time - previousFrame < 32) {
+        raf = requestAnimationFrame(step);
+        return;
+      }
+      previousFrame = time;
       setNodes((ns) => simRef.current.tick(ns, edgesRef.current));
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [physicsOn]);
+  }, [physicsOn, physicsRun]);
 
   const focusNode = useCallback(
     (id: string) => {
@@ -489,8 +520,9 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
   }, []);
 
   /* Shift + Arraste para conectar */
+  const pendingSourceId = pending?.sourceId;
   useEffect(() => {
-    if (!pending) return;
+    if (!pendingSourceId) return;
     const move = (ev: MouseEvent) => {
       const rect = wrapRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -499,9 +531,8 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
     const up = (ev: MouseEvent) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("[data-node-id]") as HTMLElement | null;
       const targetId = el?.getAttribute("data-node-id") ?? null;
-      const src = pendingRef.current?.sourceId ?? null;
       setPending(null);
-      if (src && targetId && targetId !== src) finishConnect(src, targetId);
+      if (targetId && targetId !== pendingSourceId) finishConnect(pendingSourceId, targetId);
     };
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
@@ -509,7 +540,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", up);
     };
-  }, [pending?.sourceId, finishConnect]);
+  }, [pendingSourceId, finishConnect]);
 
   const onWrapperMouseDownCapture = useCallback((e: React.MouseEvent) => {
     if (!e.shiftKey) return;
@@ -567,7 +598,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
   return (
     <div className="arcanum-workspace arcanum-sky">
       <TopBar
-        nodes={renderNodes.map((n) => ({ ...n, data: { ...n.data, typeName: registry.get(n.data.typeId).name } }))}
+        nodes={renderNodes}
         edgeCount={edges.length}
         connectMode={connectMode}
         physicsOn={physicsOn}
@@ -577,10 +608,12 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
           setPathMode(null);
         }}
         onTogglePhysics={() => {
-          setPhysicsOn((v) => {
-            if (!v) pushToast("O grafo começa a respirar com física orgânica");
-            return !v;
-          });
+          const next = !physicsOn;
+          if (next) {
+            pushToast("O grafo começa a respirar com física orgânica");
+            setPhysicsRun((run) => run + 1);
+          }
+          setPhysicsOn(next);
         }}
         onNewNode={() => {
           const c = rf.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -687,7 +720,11 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
               setConnectSource(null);
               setSelectedId(null);
             }}
-            onNodeDragStop={() => physicsOn && simRef.current.reheat(0.25)}
+            onNodeDragStop={() => {
+              if (!physicsOn) return;
+              simRef.current.reheat(0.25);
+              setPhysicsRun((run) => run + 1);
+            }}
             deleteKeyCode={["Backspace", "Delete"]}
             nodesConnectable={false}
             nodesDraggable={!gliding}
@@ -889,6 +926,13 @@ function ArcanumInner({ initialNodes, initialEdges, onClose }: ArcanumGraphProps
             setEdges((es) => WorldGraph.updateEdge(es, id, label, color));
             setModal(null);
             pushToast(label ? `Relação selada: “${label}”` : "Relação atualizada");
+            const source = nodes.find((node) => node.id === modalEdge.source);
+            const target = nodes.find((node) => node.id === modalEdge.target);
+            if (onCreateWikiRelation && source?.data.wikiPath && target?.data.label) {
+              void onCreateWikiRelation(source.data.wikiPath, target.data.label, label)
+                .then(() => pushToast('Relação sincronizada com a Wiki'))
+                .catch((error) => pushToast(error instanceof Error ? error.message : 'Falha ao sincronizar relação', 'error'));
+            }
           }}
           onDelete={(id) => {
             setEdges((es) => WorldGraph.removeEdge(es, id));
