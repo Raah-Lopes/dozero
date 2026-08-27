@@ -3,7 +3,7 @@ import {
   Map, MousePointer2, CloudFog, Ruler, Users, Eye, EyeOff, Paintbrush, 
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
-  Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare,
+  Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, ScrollText,
   LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
@@ -247,6 +247,13 @@ export function GMToolbar() {
                 onClick={() => setViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki')} 
                 tooltip="Wiki da Campanha"
                 description="Acesse anotações, monstros, fichas e compêndios"
+              />
+              <ToolButton
+                icon={<ScrollText size={19} />}
+                active={viewMode === 'sheets'}
+                onClick={() => setViewMode(viewMode === 'sheets' ? 'canvas' : 'sheets')}
+                tooltip="Forja de Fichas"
+                description="Crie e gerencie fichas da mesa e do seu Vault"
               />
               <ToolButton 
                 icon={<GitMerge size={19} />} 

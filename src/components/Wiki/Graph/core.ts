@@ -71,17 +71,17 @@ export interface SavedView {
 
 /* ---------- 11 Camadas Padrão do Mundo RPG com Formas Geométricas ---------- */
 export const DEFAULT_TYPES: TypeReg[] = [
-  { id: "conceito", name: "Conceito", color: "#38bdf8", icon: "💠", shape: "diamond" },
-  { id: "criatura", name: "Criatura", color: "#4ade80", icon: "🐉", shape: "circle" },
-  { id: "divindade", name: "Divindade", color: "#facc15", icon: "✨", shape: "diamond" },
-  { id: "evento", name: "Evento", color: "#fb923c", icon: "⚡", shape: "diamond" },
-  { id: "item", name: "Item", color: "#f472b6", icon: "🗡️", shape: "circle" },
-  { id: "local", name: "Local", color: "#2dd4bf", icon: "🏰", shape: "hexagon" },
-  { id: "organizacao", name: "Organização", color: "#f87171", icon: "🛡️", shape: "shield" },
-  { id: "personagem", name: "Personagem", color: "#a78bfa", icon: "🧝", shape: "circle" },
-  { id: "racas", name: "Raças", color: "#a3e635", icon: "🧬", shape: "hexagon" },
-  { id: "resumo", name: "Resumo de Sessão", color: "#94a3b8", icon: "📜", shape: "square" },
-  { id: "rota", name: "Rota", color: "#d4a373", icon: "🛤️", shape: "square" },
+  { id: "conceito", name: "Conceito", color: "#8f9e63", icon: "💠", shape: "diamond" },
+  { id: "criatura", name: "Criatura", color: "#c66f4e", icon: "🐉", shape: "circle" },
+  { id: "divindade", name: "Divindade", color: "#cd973c", icon: "✨", shape: "diamond" },
+  { id: "evento", name: "Evento", color: "#b85a3d", icon: "⚡", shape: "diamond" },
+  { id: "item", name: "Item", color: "#a5762a", icon: "🗡️", shape: "circle" },
+  { id: "local", name: "Local", color: "#6f9a78", icon: "🏰", shape: "hexagon" },
+  { id: "organizacao", name: "Organização", color: "#8a7350", icon: "🛡️", shape: "shield" },
+  { id: "personagem", name: "Personagem", color: "#b58b61", icon: "🧝", shape: "circle" },
+  { id: "racas", name: "Raças", color: "#8f9e63", icon: "🧬", shape: "hexagon" },
+  { id: "resumo", name: "Resumo de Sessão", color: "#9a8e7b", icon: "📜", shape: "square" },
+  { id: "rota", name: "Rota", color: "#a99e88", icon: "🛤️", shape: "square" },
 ];
 
 /* ---------- Modelos Predefinidos por Camada de RPG ---------- */
@@ -248,14 +248,14 @@ export const RPG_TEMPLATES: Record<string, RPGTemplate> = {
 };
 
 export const EDGE_COLORS = [
-  "#d8b45a", // Ouro Arcano
-  "#5fd0c5", // Éter Teal
-  "#e0705f", // Brasa Rubra
-  "#6aa5e8", // Céu Astral
-  "#c778d9", // Magia Violeta
-  "#6fbf8f", // Floresta Esmeralda
-  "#e8a86b", // Âmbar Quente
-  "#9aa3b5", // Aço Prateado
+  "#cd973c", // Ouro Arcanum
+  "#6f9a78", // Verde vivo
+  "#c14e39", // Brasa Rubra
+  "#8b7a5c", // Terra antiga
+  "#b58b61", // Madeira
+  "#7a8e65", // Musgo
+  "#a5762a", // Âmbar queimado
+  "#a99e88", // Aço fosco
 ];
 
 export const RELATION_HINTS = [
@@ -285,15 +285,15 @@ export const ICON_PRESETS = [
 
 export const NODE_TINTS = [
   "",
-  "#d8b45a",
-  "#e0705f",
-  "#6fbf8f",
-  "#6aa5e8",
-  "#c778d9",
-  "#e8a86b",
-  "#5fd0c5",
-  "#a3e635",
-  "#f472b6"
+  "#cd973c",
+  "#c14e39",
+  "#6f9a78",
+  "#8b7a5c",
+  "#b58b61",
+  "#a5762a",
+  "#7a8e65",
+  "#8f9e63",
+  "#9a8e7b"
 ];
 
 export function uid(prefix: string): string {

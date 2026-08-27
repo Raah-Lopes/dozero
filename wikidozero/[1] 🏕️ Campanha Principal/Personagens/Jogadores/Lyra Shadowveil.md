@@ -27,7 +27,7 @@ imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Sha
 usos_cura: 3
 status_efeitos: []
 saqueado: false
-ativo: true
+ativo: false
 inventario:
   - id: pocao_1
     nome: Poção de Vida P
@@ -87,15 +87,37 @@ magias_preparadas:
   nivel_3:
     current: 0
     max: 0
-macros: []
+macros:
+  - nome: Golpe Desarmado
+    formula: 1d20 + @for
+    tipo: ataque
+    descricao: 'Dano: 1d4 + @for'
+  - nome: Arremesso de Pedra
+    formula: 1d20 + @des
+    tipo: ataque
+    descricao: 'Dano: 1d4 + @for'
+  - nome: Esquiva
+    formula: 1d20 + @des
+    tipo: defesa
+    descricao: Você tenta se esquivar do próximo ataque.
 showName: true
-visionRadius: 200
+visionRadius: 100
 hasVision: true
 avatar: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Shadowveil_1787239382477.webp
 imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Shadowveil_1787239382477.webp
 titulo: Lyra Shadowveil
 title: Lyra Shadowveil
+tokenShape: figure
+ataques_armas.proficiencia:
+  simples: 2
 ---
+
+
+
+
+
+
+
 
 
 

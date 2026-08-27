@@ -361,7 +361,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
     <div
       id={`window-${id}`}
       ref={windowRef}
-      className={`draggable-window-container ${isMinimized ? 'minimized' : ''} ${variant === 'glass' ? 'glass-panel' : ''} ${isDragging ? 'is-dragging' : ''}`}
+      className={`draggable-window-container window-variant-${variant} ${isMinimized ? 'minimized' : ''} ${variant === 'glass' ? 'glass-panel' : ''} ${isDragging ? 'is-dragging' : ''}`}
       data-pinned={isPinned}
       style={{
         position: isPopout ? 'relative' : (isFullscreen ? 'fixed' : 'absolute'),
@@ -430,6 +430,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
           {/* Drag Handle */}
           {(variant === 'default' || variant === 'glass') ? (
         <div
+          className="draggable-window-header"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -596,7 +597,7 @@ export const DraggableWindow: React.FC<DraggableWindowProps> = React.memo(({ id,
 
       {/* Content Area */}
       {!isMinimized && (
-        <div style={{ flex: 1, padding: variant === 'default' ? '1rem' : '0', display: 'flex', flexDirection: 'column', overflow: (variant === 'default' || variant === 'glass') ? 'auto' : 'visible', containerType: (variant === 'default' || variant === 'glass') ? 'inline-size' : 'normal', containerName: 'windowcontainer' }}>
+        <div className="draggable-window-content" style={{ flex: 1, padding: variant === 'default' ? '1rem' : '0', display: 'flex', flexDirection: 'column', overflow: (variant === 'default' || variant === 'glass') ? 'auto' : 'visible', containerType: (variant === 'default' || variant === 'glass') ? 'inline-size' : 'normal', containerName: 'windowcontainer' }}>
           <ErrorBoundary fallbackMessage={`Erro no módulo: ${title}`}>
             {children}
           </ErrorBoundary>

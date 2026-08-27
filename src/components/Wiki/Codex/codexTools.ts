@@ -90,6 +90,19 @@ export function serializeCodex(document: CodexDocument): string {
   return JSON.stringify({ kind: 'dozero-codex', version: 1, exportedAt: new Date().toISOString(), document }, null, 2);
 }
 
+export function serializeCodexNote(note: CodexNote): string {
+  return JSON.stringify({ kind: 'dozero-codex-note', version: 1, exportedAt: new Date().toISOString(), note }, null, 2);
+}
+
+export function parseCodexNoteImport(raw: string): CodexNote {
+  const parsed: unknown = JSON.parse(raw);
+  if (!parsed || typeof parsed !== 'object' || (parsed as { kind?: string }).kind !== 'dozero-codex-note') throw new Error('Arquivo não é uma nota DOZERO válida.');
+  const note = (parsed as { note?: unknown }).note;
+  const normalized = normalizeCodex({ notes: note ? [note] : [] }).notes[0];
+  if (!normalized?.id || !normalized.name) throw new Error('A nota importada está incompleta.');
+  return normalized;
+}
+
 export function parseCodexImport(raw: string): CodexDocument {
   const parsed: unknown = JSON.parse(raw);
   if (!parsed || typeof parsed !== 'object' || (parsed as { kind?: string }).kind !== 'dozero-codex') throw new Error('Arquivo não é um Códice DOZERO válido.');

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ArcanumGraph from './Graph/ArcanumGraph';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
@@ -11,7 +11,8 @@ import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import type { WikiGraphLinkSource, WikiGraphNodeSource } from '../../services/wiki/wikiGraphData';
 import { saveMarkdownContent } from '../../utils/githubApi';
 import { state } from '../../services/yjs';
-import { normalizeCodex } from './Codex/codexModel';
+import { CodexDocument, normalizeCodex } from './Codex/codexModel';
+import { Icone } from './Codex/CodexIcons';
 
 const bundledWikiModules = import.meta.glob('../../../wikidozero/**/*.md', {
   query: '?raw',
@@ -26,15 +27,96 @@ const bundledWikiFiles = Object.fromEntries(
   ]),
 );
 
+function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: WNode[]; edges: WEdge[] } {
+  if (!codex || codex.notes.length === 0) return { nodes: [], edges: [] };
+  const typeAliases: Record<string, string> = {
+    person: 'personagem',
+    place: 'local',
+    faction: 'organizacao',
+    item: 'item',
+    event: 'evento',
+    creature: 'criatura',
+    lore: 'conceito',
+  };
+
+  const mappedNodes: WNode[] = codex.notes.map((note) => {
+    const rawType = String(note.typeId || '').toLowerCase();
+    const matchedType = DEFAULT_TYPES.find((t) => t.id === (typeAliases[rawType] || rawType)) || DEFAULT_TYPES[0];
+    const shape: NodeShape = (matchedType.shape || 'circle') as NodeShape;
+
+    return {
+      id: note.id,
+      type: 'world',
+      position: { x: 0, y: 0 },
+      data: {
+        label: note.name || note.id,
+        typeId: matchedType.id,
+        summary: note.description || '',
+        icon: matchedType.icon,
+        image: note.imageUrl ? resolveMediaUrl(note.imageUrl, repoPath) : undefined,
+        shape,
+        tags: note.tags || [],
+        ficha: {
+          status: String(note.fields.status || 'Ativo'),
+          level: note.fields.level as string | number | undefined,
+          gmNotes: note.description || '',
+          inventory: '',
+        },
+        wikiPath: note.id,
+      },
+    };
+  });
+
+  const clusteredNodes = Layouts.clusterByType(mappedNodes, TYPE_ORDER);
+  const validNodeIds = new Set(clusteredNodes.map((cn) => cn.id));
+  const nameToId = new Map(clusteredNodes.map((cn) => [cn.data.label.toLowerCase(), cn.id]));
+
+  const mappedEdges: WEdge[] = codex.relations
+    .map((r, i) => {
+      const src = r.sourceId;
+      const tgt = validNodeIds.has(r.targetId) ? r.targetId : nameToId.get(String(r.targetId).toLowerCase());
+      if (validNodeIds.has(src) && tgt) {
+        return {
+          id: r.id || `e_${src}_${tgt}_${i}`,
+          source: src,
+          target: tgt,
+          type: 'world',
+          data: {
+            label: r.label || '',
+            color: r.color || '#d8b45a',
+            wikiSourcePath: r.sourceId,
+          },
+        };
+      }
+      return null;
+    })
+    .filter(Boolean) as WEdge[];
+
+  return { nodes: clusteredNodes, edges: mappedEdges };
+}
+
 /**
  * LivingBrain — O Cérebro do Mundo (Arcanum)
- * Integração completa e nativa do Arcanum Cérebro-Grafo com o DOZERO.
+ * Integração imediata (0ms) do Grafo Semântico com o Códice e Wiki.
  */
 export const LivingBrain: React.FC = () => {
   const { setViewMode } = useWindowManager();
-  const [wikiNodes, setWikiNodes] = useState<WNode[]>([]);
-  const [wikiEdges, setWikiEdges] = useState<WEdge[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Carregamento síncrono instantâneo a partir do Códice em memória
+  const initialData = useMemo(() => {
+    try {
+      const config = getWikiConfig();
+      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+      const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
+      return buildGraphFromCodex(codex, repoPath);
+    } catch {
+      return { nodes: [], edges: [] };
+    }
+  }, []);
+
+  const [wikiNodes, setWikiNodes] = useState<WNode[]>(initialData.nodes);
+  const [wikiEdges, setWikiEdges] = useState<WEdge[]>(initialData.edges);
+  const [isLoading, setIsLoading] = useState(initialData.nodes.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [graphVersion, setGraphVersion] = useState(0);
 
@@ -42,46 +124,52 @@ export const LivingBrain: React.FC = () => {
     try {
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-      
       const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
-      const currentRoom = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
-      
-      if (!isBackgroundRefresh && codex.notes.length === 0) setIsLoading(true);
+
+      if (!isBackgroundRefresh && codex.notes.length === 0 && wikiNodes.length === 0) {
+        setIsLoading(true);
+      }
       setError(null);
 
-      let json;
       if (codex.notes.length > 0) {
-        json = {
-          nodes: codex.notes.map((note) => ({
-            id: note.id,
-            name: note.name,
-            path: note.id,
-            group: note.folderId || '',
-            isFolder: false,
-            avatar: note.imageUrl,
-            entityType: note.typeId,
-            description: note.description,
-            tags: note.tags,
-            status: String(note.fields.status || ''),
-            level: note.fields.level as string | number | undefined,
-            nd: note.fields.threat as string | number | undefined,
-          })),
-          links: codex.relations.map((relation) => ({ id: relation.id, source: relation.sourceId, target: relation.targetId, label: relation.label, color: relation.color, sourcePath: relation.sourceId })),
-        };
-      } else if (currentRoom === 'dozero-mesa-principal-v2') {
+        const { nodes, edges } = buildGraphFromCodex(codex, repoPath);
+        setWikiNodes(nodes);
+        setWikiEdges(edges);
+        if (!isBackgroundRefresh) setGraphVersion((v) => v + 1);
+        setIsLoading(false);
+        return;
+      }
+
+      // Se o códice estiver vazio, busca da Wiki Markdown empacotada
+      let json: { nodes: WikiGraphNodeSource[]; links: WikiGraphLinkSource[] };
+      try {
         json = await WikiIndexer.buildGraph(bundledWikiFiles);
-      } else {
+      } catch {
         json = { nodes: [], links: [] };
       }
 
-      if (json.nodes.length === 0) throw new Error('Nenhuma entidade foi encontrada na Wiki desta campanha.');
+      if (json.nodes.length === 0) {
+        setWikiNodes([]);
+        setWikiEdges([]);
+        setIsLoading(false);
+        return;
+      }
+
+      const typeAliases: Record<string, string> = {
+        person: 'personagem',
+        place: 'local',
+        faction: 'organizacao',
+        item: 'item',
+        event: 'evento',
+        creature: 'criatura',
+        lore: 'conceito',
+      };
 
       const mappedNodes: WNode[] = json.nodes.map((n: WikiGraphNodeSource) => {
         const pathLower = String(n.path || '').toLowerCase();
         const rawGroup = String(n.group || '').toLowerCase();
         const rawEntity = String(n.entityType || '').toLowerCase();
 
-        // Inferência inteligente de camada por metadados e caminho da pasta
         let detectedType = rawEntity || rawGroup;
         if (!detectedType || detectedType === 'conceito') {
           if (pathLower.includes('personag') || pathLower.includes('npc') || pathLower.includes('jogador')) {
@@ -107,19 +195,13 @@ export const LivingBrain: React.FC = () => {
           }
         }
 
-        const typeAliases: Record<string, string> = { person: 'personagem', place: 'local', faction: 'organizacao', item: 'item', event: 'evento', creature: 'criatura', lore: 'conceito' };
         const matchedType = DEFAULT_TYPES.find((t) => t.id === (typeAliases[detectedType] || detectedType)) || DEFAULT_TYPES[0];
-
-        let imageUrl: string | undefined = undefined;
-        if (n.avatar) {
-          imageUrl = resolveMediaUrl(n.avatar, repoPath);
-        }
-
+        const imageUrl = n.avatar ? resolveMediaUrl(n.avatar, repoPath) : undefined;
         const shape: NodeShape = n.shape || matchedType.shape || 'circle';
 
         return {
           id: n.id || n.name,
-          type: "world",
+          type: 'world',
           position: { x: 0, y: 0 },
           data: {
             label: n.name || n.id,
@@ -130,7 +212,7 @@ export const LivingBrain: React.FC = () => {
             shape,
             tags: n.tags || [],
             ficha: {
-              status: n.status || "Ativo",
+              status: n.status || 'Ativo',
               level: n.level || n.nd,
               gmNotes: n.gmNotes || '',
               inventory: n.inventory || '',
@@ -148,14 +230,13 @@ export const LivingBrain: React.FC = () => {
         .map((l: WikiGraphLinkSource, i: number) => {
           const src = l.source;
           const tgt = l.target;
-
           const resolvedTarget = validNodeIds.has(tgt) ? tgt : nameToId.get(String(tgt).toLowerCase());
           if (validNodeIds.has(src) && resolvedTarget) {
             return {
               id: l.id || `e_${src}_${resolvedTarget}_${i}`,
               source: src,
               target: resolvedTarget,
-              type: "world",
+              type: 'world',
               data: {
                 label: l.label || '',
                 color: l.color || '#d8b45a',
@@ -169,34 +250,30 @@ export const LivingBrain: React.FC = () => {
 
       setWikiNodes(clusteredNodes);
       setWikiEdges(mappedEdges);
-      // Evitamos incrementar a versão se não for necessário recriar o canvas D3/ReactFlow inteiro
       if (!isBackgroundRefresh) {
         setGraphVersion((version) => version + 1);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha desconhecida ao carregar o Grafo.';
-      console.error('[LivingBrain] Não foi possível carregar a Wiki:', err);
-      setError(message);
+      console.warn('[LivingBrain] Aviso ao atualizar dados do Grafo:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [wikiNodes.length]);
 
   useEffect(() => {
-    // Primeira carga síncrona/imediata
     void fetchGraphData(false);
-    
+
     const refresh = () => void fetchGraphData(true);
     let debounceTimer: number;
     const refreshFromSharedState = () => {
       window.clearTimeout(debounceTimer);
-      debounceTimer = window.setTimeout(() => fetchGraphData(true), 1500);
+      debounceTimer = window.setTimeout(() => fetchGraphData(true), 1200);
     };
-    
+
     state.wiki.observe(refreshFromSharedState);
     window.addEventListener('wiki-updated', refresh);
     window.addEventListener('codex-updated', refresh);
-    
+
     return () => {
       window.clearTimeout(debounceTimer);
       window.removeEventListener('wiki-updated', refresh);
@@ -205,15 +282,25 @@ export const LivingBrain: React.FC = () => {
     };
   }, [fetchGraphData]);
 
-  // Criação de conexão direta no markdown da Wiki
+  // Criação de conexão direta no markdown da Wiki ou Códice
   const handleCreateWikiRelation = async (sourcePath: string, targetName: string, label: string) => {
     try {
       const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
       const source = codex.notes.find((note) => note.id === sourcePath);
-      const target = codex.notes.find((note) => note.id === targetName || note.name.toLocaleLowerCase('pt-BR') === targetName.toLocaleLowerCase('pt-BR'));
+      const target = codex.notes.find(
+        (note) => note.id === targetName || note.name.toLocaleLowerCase('pt-BR') === targetName.toLocaleLowerCase('pt-BR')
+      );
       if (source && target) {
         if (!codex.relations.some((relation) => relation.sourceId === source.id && relation.targetId === target.id)) {
-          codex.relations.push({ id: `relation_${crypto.randomUUID()}`, sourceId: source.id, targetId: target.id, label: label || 'Relacionado a', color: '#d8b45a', icon: 'link', bidirectional: false });
+          codex.relations.push({
+            id: `relation_${crypto.randomUUID()}`,
+            sourceId: source.id,
+            targetId: target.id,
+            label: label || 'Relacionado a',
+            color: '#d8b45a',
+            icon: 'link',
+            bidirectional: false,
+          });
           state.wiki.set('__codex_v1__', { ...codex, updatedAt: new Date().toISOString() });
           window.dispatchEvent(new CustomEvent('codex-updated'));
         }
@@ -235,25 +322,41 @@ export const LivingBrain: React.FC = () => {
 
   if (isLoading && wikiNodes.length === 0) {
     return (
-      <div className="h-full w-full grid place-items-center bg-[#080b12] text-[#ece5d3]" role="status" aria-live="polite">
+      <div className="grid h-full w-full place-items-center bg-[#15120e] text-[#ede4d0]" role="status" aria-live="polite">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-[#2a3854] border-t-[#d8b45a]" />
-          <strong className="font-serif text-lg text-[#d8b45a]">Abrindo o Cérebro do Mundo…</strong>
-          <p className="mt-2 text-sm text-[#8b93a7]">Lendo entidades e relações da Wiki da campanha.</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-[#3b3222] border-t-[#d9a441]" />
+          <strong className="font-display text-lg text-[#d9a441]">Abrindo o Cérebro do Mundo…</strong>
+          <p className="mt-2 text-sm text-[#7f7660]">Lendo entidades e relações da Wiki da campanha.</p>
         </div>
       </div>
     );
   }
 
-  if (error && wikiNodes.length === 0) {
+  // Estado vazio gracioso sem travar o usuário nem disparar exceção
+  if (wikiNodes.length === 0) {
     return (
-      <div className="h-full w-full grid place-items-center bg-[#080b12] px-6 text-[#ece5d3]" role="alert">
-        <div className="max-w-md rounded-2xl border border-[#5b2e35] bg-[#12101a] p-6 text-center">
-          <strong className="text-lg text-[#e0705f]">O Grafo não conseguiu ler a Wiki</strong>
-          <p className="mt-2 text-sm text-[#b3ad9c]">{error}</p>
-          <div className="mt-5 flex justify-center gap-3">
-            <button type="button" onClick={() => void fetchGraphData()} className="rounded-lg bg-[#d8b45a] px-4 py-2 font-bold text-[#080b12]">Tentar novamente</button>
-            <button type="button" onClick={() => setViewMode('canvas')} className="rounded-lg border border-[#2a3854] px-4 py-2 text-[#b3ad9c]">Voltar à mesa</button>
+      <div className="grid h-full w-full place-items-center bg-[#15120e] px-6 text-[#ede4d0]">
+        <div className="max-w-md rounded-2xl border border-[#3b3222] bg-[#1d1913] p-8 text-center shadow-2xl shadow-black/80">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-[#d9a441]/40 bg-[#d9a441]/10 text-[#d9a441]">
+            <Icone nome="cerebro" tam={30} />
+          </span>
+          <h3 className="font-display text-xl font-bold text-[#ede4d0]">O Cérebro do Mundo aguarda entidades</h3>
+          <p className="mt-2 text-sm text-[#b3a78c]">
+            Nenhuma página ou relação foi encontrada nesta mesa ainda. Abra o Códice para criar personagens, locais e tecer histórias.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button
+              onClick={() => setViewMode('wiki')}
+              className="rounded-lg bg-[#d9a441] px-5 py-2.5 text-xs font-bold text-[#241a06] transition hover:bg-[#e8b654]"
+            >
+              Abrir Códice Arcanum
+            </button>
+            <button
+              onClick={() => setViewMode('canvas')}
+              className="rounded-lg border border-[#3b3222] px-4 py-2.5 text-xs font-bold text-[#b3a78c] transition hover:text-[#ede4d0]"
+            >
+              Voltar à Mesa
+            </button>
           </div>
         </div>
       </div>

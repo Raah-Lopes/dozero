@@ -16,6 +16,7 @@ export function useAutoSaveSession(roomCode: string) {
     if (!roomCode || roomCode === 'default-room') return;
 
     const performSave = async () => {
+      if (!user?.id) return;
       try {
         const snapshot = {
           tokens: state.tokens.toJSON(),
@@ -24,6 +25,7 @@ export function useAutoSaveSession(roomCode: string) {
           clocks: state.clocks.toJSON(),
           mapConfig: state.mapConfig.toJSON(),
           wiki: state.wiki.toJSON(),
+          sheets: state.sheets.toJSON(),
           savedAt: new Date().toISOString(),
           savedBy: user?.id || 'anon'
         };

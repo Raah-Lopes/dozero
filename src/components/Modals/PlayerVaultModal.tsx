@@ -102,13 +102,8 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
   // Form handlers
   // ----------------------------------------------------------------
   const handleOpenNew = () => {
-    setEditing({});
-    setForm(EMPTY_FORM);
-  };
-
-  const handleOpenEdit = (c: CharacterRecord) => {
-    setEditing(c);
-    setForm({ ...c });
+    onClose();
+    window.dispatchEvent(new CustomEvent('open-arcanum-sheet', { detail: { scope: 'vault' } }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -228,7 +223,7 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
             onClick={handleOpenNew}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#a46830', border: '1px solid #c49a6c', borderRadius: '10px', color: '#fff', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer' }}
           >
-            <Plus size={14} /> Novo Personagem
+            <Plus size={14} /> Abrir Forja
           </button>
           <button onClick={onClose} style={{ padding: '6px', background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}>
             <X size={18} />
@@ -409,8 +404,11 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
                       <Download size={12} /> Importar
                     </button>
                     <button
-                      onClick={() => handleOpenEdit(c)}
-                      title="Editar"
+                      onClick={() => {
+                        onClose();
+                        window.dispatchEvent(new CustomEvent('open-arcanum-sheet', { detail: { id: c.id, scope: 'vault' } }));
+                      }}
+                      title="Abrir na Forja de Fichas"
                       style={{ padding: '5px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid #5a4234', borderRadius: '7px', color: '#d7c9b8', cursor: 'pointer' }}
                     >
                       <Edit2 size={13} />

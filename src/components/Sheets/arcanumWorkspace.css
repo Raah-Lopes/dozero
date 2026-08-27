@@ -1,0 +1,56 @@
+.arcanum-host, .arcanum-library {
+  width: 100%;
+  height: 100dvh;
+  color: #e9dfc6;
+  background: #0c0911;
+}
+.arcanum-host { display: flex; flex-direction: column; }
+.arcanum-editor-scroll { flex: 1; min-height: 0; overflow: auto; }
+.arcanum-ecosystem-bar {
+  min-height: 54px; height: 54px; display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  background: var(--bg-secondary, #120e19); border-bottom: 1px solid var(--glass-border, rgba(205,151,60,.26)); font-family: var(--font-body, "Alegreya Sans", "Segoe UI", sans-serif);
+}
+.arcanum-ecosystem-bar button, .arcanum-ecosystem-bar label {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 5px 9px;
+  color: #d9cba8; background: #1d1729; border: 1px solid #372c4b; border-radius: 6px; cursor: pointer;
+}
+.arcanum-ecosystem-bar label { margin-left: auto; }
+.arcanum-ecosystem-bar select { max-width: 220px; color: #f3ead6; background: transparent; border: 0; outline: 0; }
+.arcanum-ecosystem-bar option { background: #171221; }
+.arcanum-ecosystem-bar .danger { color: #f0917c; }
+.arcanum-ecosystem-name { color: #e0b054; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.arcanum-library {
+  overflow: auto; padding: 0;
+  background: radial-gradient(900px 500px at 15% 0%, rgba(205,151,60,.15), transparent 60%), linear-gradient(160deg, #171221, #0c0911 60%);
+  font-family: "Alegreya Sans", "Segoe UI", sans-serif;
+}
+.arcanum-library-chrome { width: 100%; }
+.arcanum-library > .workspace-chrome { max-width: none; margin: 0; }
+.arcanum-library > .arcanum-library-actions,
+.arcanum-library > .arcanum-card-grid { padding-inline: clamp(20px, 5vw, 64px); }
+.arcanum-library > .arcanum-library-actions { padding-top: clamp(24px, 5vw, 64px); }
+.arcanum-library header { display: flex; align-items: flex-start; justify-content: space-between; max-width: 1200px; margin: 0 auto 28px; }
+.arcanum-library header span { color: #cd973c; font-size: 11px; font-weight: 800; letter-spacing: .28em; }
+.arcanum-library h1 { margin: 8px 0 4px; color: #f3ead6; font-family: Cinzel, serif; font-size: clamp(32px, 5vw, 58px); }
+.arcanum-library p { color: #a99e88; }
+.arcanum-close { padding: 10px; color: #a99e88; background: #1d1729; border: 1px solid #372c4b; border-radius: 8px; cursor: pointer; }
+.arcanum-library-actions { max-width: 1200px; margin: 0 auto 22px; display: flex; gap: 12px; justify-content: space-between; }
+.arcanum-scope-tabs { display: flex; gap: 6px; }
+.arcanum-scope-tabs button, .arcanum-create { display: flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 7px; cursor: pointer; font-weight: 700; }
+.arcanum-scope-tabs button { color: #a99e88; background: #171221; border: 1px solid #372c4b; }
+.arcanum-scope-tabs button.active { color: #f7dfa4; border-color: #a5762a; background: #4a341355; }
+.arcanum-create { color: #171221; background: #e0b054; border: 1px solid #f7dfa4; }
+.arcanum-card-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.arcanum-sheet-card { position: relative; min-height: 300px; padding: 0 0 18px; overflow: hidden; text-align: left; background: #171221; border: 1px solid #372c4b; border-radius: 12px; cursor: pointer; transition: .2s ease; }
+.arcanum-sheet-card:hover { transform: translateY(-4px); border-color: #a5762a; box-shadow: 0 18px 38px #0008; }
+.arcanum-sheet-card img { width: 100%; height: 205px; object-fit: cover; border-bottom: 1px solid #372c4b; }
+.arcanum-sheet-card strong, .arcanum-sheet-card small, .arcanum-card-kind { display: block; margin-inline: 16px; }
+.arcanum-card-kind { margin-top: 14px; color: #cd973c; font-size: 10px; font-weight: 900; letter-spacing: .2em; }
+.arcanum-sheet-card strong { margin-top: 5px; color: #f3ead6; font-family: Cinzel, serif; font-size: 18px; }
+.arcanum-sheet-card small { margin-top: 4px; color: #a99e88; }
+.arcanum-empty { grid-column: 1 / -1; padding: 60px 20px; text-align: center; border: 1px dashed #372c4b; border-radius: 12px; }
+@media (max-width: 760px) {
+  .arcanum-library-actions, .arcanum-ecosystem-bar { flex-wrap: wrap; }
+  .arcanum-ecosystem-bar label { margin-left: 0; width: 100%; }
+  .arcanum-ecosystem-bar select { max-width: calc(100vw - 80px); }
+}

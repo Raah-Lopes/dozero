@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyCodex } from './codexModel';
-import { createCreatureNote, getCodexStats, migrateMarkdownFiles, parseCodexImport, serializeCodex } from './codexTools';
+import { createCreatureNote, getCodexStats, migrateMarkdownFiles, parseCodexImport, parseCodexNoteImport, serializeCodex, serializeCodexNote } from './codexTools';
 
 describe('codexTools', () => {
   it('calcula estatísticas sem perder tags repetidas', () => {
@@ -15,6 +15,15 @@ describe('codexTools', () => {
     const restored = parseCodexImport(serializeCodex(codex));
     expect(restored.notes[0].name).toBe('Dragão'); expect(restored.types.length).toBeGreaterThan(0);
     expect(() => parseCodexImport('{}')).toThrow('válido');
+  });
+
+  it('exporta e importa uma nota individual', () => {
+    const note = createCreatureNote({ name: 'Dragão', description: 'Antigo', threat: 10, habitat: 'Montanha', tags: ['lendário'] });
+    note.gallery = ['data:image/webp;base64,abc'];
+    const restored = parseCodexNoteImport(serializeCodexNote(note));
+    expect(restored.name).toBe('Dragão');
+    expect(restored.gallery).toEqual(['data:image/webp;base64,abc']);
+    expect(() => parseCodexNoteImport('{}')).toThrow('nota DOZERO válida');
   });
 
   it('migra Markdown selecionado sem criar nós de pasta', () => {

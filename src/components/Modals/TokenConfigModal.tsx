@@ -7,7 +7,7 @@ import {
   Sliders, User, Palette, Lock, Unlock, Trash2, Shield
 } from 'lucide-react';
 import { useWiki } from '../../hooks/useWiki';
-import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
+import { syncMultipleFieldsToWiki, syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { toast } from '../UI/Toast';
 import { convertImageToWebP } from '../../utils/imageUtils';
@@ -28,6 +28,7 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { index } = useWiki();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     if (!tokenId) {
@@ -60,9 +61,7 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
     setTokenData((prev: any) => ({ ...prev, ...updates }));
 
     if (tokenData.wikiPath) {
-      Object.entries(updates).forEach(([k, v]) => {
-        syncTokenFieldToWiki(tokenData.wikiPath, k, v);
-      });
+      void syncMultipleFieldsToWiki(tokenData.wikiPath, updates);
       WikiIndexer.clearCache();
     }
   };
@@ -86,8 +85,6 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
       setIsUploading(false);
     }
   };
-
-  const { user } = useAuthStore();
 
   const handleSaveToVault = async () => {
     if (!tokenData || !tokenData.name) {
@@ -636,11 +633,22 @@ export const TokenConfigModal: React.FC<TokenConfigModalProps> = ({ tokenId, onC
                   style={selectStyle}
                 >
                   <option value="">Livre / Acesso Aberto (Mestre & Jogadores)</option>
-                  {Array.from(state.players.values() as Iterable<any>).map((p: any, pIdx: number) => (
-                    <option key={p.userId || p.name || pIdx} value={p.name}>
-                      👤 {p.name} {p.userId ? '(Autenticado)' : ''}
-                    </option>
-                  ))}
+                  {(() => {
+                    const seen = new Set<string>();
+                    const players: any[] = [];
+                    for (const p of Array.from(state.players.values() as Iterable<any>)) {
+                      const identifier = p.userId || p.name;
+                      if (identifier && !seen.has(identifier)) {
+                        seen.add(identifier);
+                        players.push(p);
+                      }
+                    }
+                    return players.map((p, idx) => (
+                      <option key={`${p.userId || p.name}_${idx}`} value={p.name}>
+                        👤 {p.name} {p.userId ? '(Autenticado)' : ''}
+                      </option>
+                    ));
+                  })()}
                 </select>
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
                   Apenas o jogador atribuído e o Mestre poderão mover ou alterar este token.

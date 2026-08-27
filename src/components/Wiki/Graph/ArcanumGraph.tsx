@@ -414,7 +414,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
       const el = document.querySelector(".react-flow__viewport") as HTMLElement;
       if (!el) throw new Error("Viewport não encontrado");
       const png = await toPng(el, {
-        backgroundColor: "#080b12",
+        backgroundColor: "#0c0911",
         pixelRatio: 2,
         filter: (node) => {
           const c = (node as HTMLElement).classList;
@@ -755,16 +755,16 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
             fitView
             fitViewOptions={{ padding: 0.18 }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={28} size={1.8} color="#223050" />
+            <Background variant={BackgroundVariant.Dots} gap={28} size={1.8} color="#5a4a68" />
             <MiniMap
               pannable
               zoomable
               position="bottom-right"
               nodeStrokeWidth={4}
               nodeColor={(n) => registry.get(((n.data ?? {}) as WorldNodeData).typeId ?? "conceito").color}
-              maskColor="rgba(8, 11, 18, 0.84)"
+              maskColor="rgba(12, 9, 17, 0.84)"
               style={{
-                background: "#0d1220",
+                background: "#120e19",
                 transform: selectedNode ? "translateX(-350px)" : undefined,
                 transition: "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
               }}
@@ -780,10 +780,10 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
           {/* Estado vazio */}
           {nodes.length === 0 && (
             <div className="absolute inset-0 grid place-items-center pointer-events-none z-10">
-              <div className="text-center bg-[#0d1220]/80 p-6 rounded-2xl border border-[#1c2740]">
-                <div className="font-serif text-[22px] font-bold text-[#d8b45a]">O mundo está em branco</div>
-                <p className="text-[13px] text-[#8b93a7] mt-2">
-                  Dê um duplo clique no vazio ou clique em <b className="text-[#ece5d3]">Novo Nó</b> acima.
+              <div className="text-center bg-[#120e19]/80 p-6 rounded-2xl border border-[#2a2236]">
+                <div className="font-display text-[22px] font-bold text-[#cd973c]">O mundo está em branco</div>
+                <p className="text-[13px] text-[#a99e88] mt-2">
+                  Dê um duplo clique no vazio ou clique em <b className="text-[#f3ead6]">Novo Nó</b> acima.
                 </p>
               </div>
             </div>
@@ -792,16 +792,16 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
           {/* Banner de modo ativo */}
           {banner && (
             <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 rise-in">
-              <div className="flex items-center gap-2.5 rounded-full border border-[#d8b45a] bg-[#0d1220]/98 px-5 py-2 hud-shadow shadow-2xl">
-                <span className="w-2 h-2 rounded-full bg-[#d8b45a] animate-pulse" />
-                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#d8b45a]">{banner}</span>
+              <div className="flex items-center gap-2.5 rounded-full border border-[#cd973c] bg-[#120e19]/98 px-5 py-2 hud-shadow shadow-2xl">
+                <span className="w-2 h-2 rounded-full bg-[#cd973c] animate-pulse" />
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#cd973c]">{banner}</span>
                 {path && !pathMode && (
-                  <button type="button" onClick={() => setPath(null)} className="font-mono text-[10px] uppercase text-[#8b93a7] hover:text-[#e0705f] flex items-center gap-1 ml-1">
+                  <button type="button" onClick={() => setPath(null)} className="font-mono text-[10px] uppercase text-[#a99e88] hover:text-[#c14e39] flex items-center gap-1 ml-1">
                     <IX className="w-3.5 h-3.5" /> limpar rota
                   </button>
                 )}
                 {selectedTag && (
-                  <button type="button" onClick={() => setSelectedTag(null)} className="font-mono text-[10px] uppercase text-[#8b93a7] hover:text-[#e0705f] flex items-center gap-1 ml-1">
+                  <button type="button" onClick={() => setSelectedTag(null)} className="font-mono text-[10px] uppercase text-[#a99e88] hover:text-[#c14e39] flex items-center gap-1 ml-1">
                     <IX className="w-3.5 h-3.5" /> remover filtro
                   </button>
                 )}
@@ -814,7 +814,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
                       setConnectSource(null);
                       setPending(null);
                     }}
-                    className="font-mono text-[10px] uppercase text-[#8b93a7] hover:text-[#e0705f] ml-1 font-bold"
+                    className="font-mono text-[10px] uppercase text-[#a99e88] hover:text-[#c14e39] ml-1 font-bold"
                   >
                     esc (cancelar)
                   </button>
@@ -831,12 +831,12 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
                 y1={pendingLine.y1}
                 x2={pendingLine.x2}
                 y2={pendingLine.y2}
-                stroke="#d8b45a"
+                stroke="#cd973c"
                 strokeWidth="3"
                 strokeDasharray="8 6"
                 strokeLinecap="round"
               />
-              <circle cx={pendingLine.x2} cy={pendingLine.y2} r="6" fill="#d8b45a" />
+                <circle cx={pendingLine.x2} cy={pendingLine.y2} r="6" fill="#cd973c" />
             </svg>
           )}
 
@@ -877,14 +877,14 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
 
       {/* Legenda de atalhos */}
       <div className="pointer-events-none fixed bottom-3 left-1/2 -translate-x-1/2 z-30 hidden md:block">
-        <div className="rounded-full border border-[#2a3854] bg-[#0d1220]/90 backdrop-blur-md px-5 py-1.5 font-mono text-[10px] text-[#b3ad9c] tracking-wide whitespace-nowrap shadow-xl">
-          🔍 <span className="text-[#d8b45a] font-bold">1 Clique</span> Configurações
-          <span className="text-[#3d4d6e] mx-2">·</span>
-          📜 <span className="text-[#d8b45a] font-bold">2 Cliques</span> Ficha Completa RPG
-          <span className="text-[#3d4d6e] mx-2">·</span>
-          🔗 <span className="text-[#d8b45a] font-bold">Shift + arraste</span> Conectar
-          <span className="text-[#3d4d6e] mx-2">·</span>
-          ✦ <span className="text-[#d8b45a] font-bold">Duplo clique no vazio</span> Novo nó
+        <div className="rounded-full border border-[#3b2e4a] bg-[#120e19]/90 backdrop-blur-md px-5 py-1.5 font-mono text-[10px] text-[#c5b99f] tracking-wide whitespace-nowrap shadow-xl">
+          🔍 <span className="text-[#cd973c] font-bold">1 Clique</span> Configurações
+          <span className="text-[#5a4a68] mx-2">·</span>
+          📜 <span className="text-[#cd973c] font-bold">2 Cliques</span> Ficha Completa RPG
+          <span className="text-[#5a4a68] mx-2">·</span>
+          🔗 <span className="text-[#cd973c] font-bold">Shift + arraste</span> Conectar
+          <span className="text-[#5a4a68] mx-2">·</span>
+          ✦ <span className="text-[#cd973c] font-bold">Duplo clique no vazio</span> Novo nó
         </div>
       </div>
 

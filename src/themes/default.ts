@@ -2,35 +2,35 @@ import type { ThemeDefinition } from './index';
 
 export const defaultTheme: ThemeDefinition = {
   id: 'purple-void',
-  name: 'Purple Void',
-  description: 'O tema padrão. Escuridão cósmica com neon roxo e glassmorphism.',
+  name: 'Arcanum',
+  description: 'A linguagem visual padrão da mesa: tinta, pergaminho, metal e brasa.',
   author: 'DOZERO Team',
-  preview: '#a855f7',
+  preview: '#cd973c',
 
-  bgPrimary: '#020617',
-  bgSecondary: '#0f172a',
-  bgTertiary: '#1e293b',
+  bgPrimary: '#0c0911',
+  bgSecondary: '#120e19',
+  bgTertiary: '#1d1729',
 
-  textPrimary: '#f8fafc',
-  textSecondary: '#94a3b8',
+  textPrimary: '#f3ead6',
+  textSecondary: '#a99e88',
 
-  accentPrimary: '#a855f7',
-  accentHover: '#9333ea',
-  accentGlow: 'rgba(168, 85, 247, 0.5)',
+  accentPrimary: '#cd973c',
+  accentHover: '#e0b054',
+  accentGlow: 'rgba(205, 151, 60, 0.24)',
 
-  danger: '#ef4444',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  mana: '#3b82f6',
+  danger: '#c14e39',
+  success: '#4c9470',
+  warning: '#e0b054',
+  mana: '#6b87b3',
 
-  glassBg: 'rgba(15, 23, 42, 0.65)',
-  glassBorder: 'rgba(255, 255, 255, 0.08)',
-  glassBorderHighlight: 'rgba(168, 85, 247, 0.3)',
-  glassShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
+  glassBg: '#171221',
+  glassBorder: 'rgba(205, 151, 60, 0.26)',
+  glassBorderHighlight: 'rgba(224, 176, 84, 0.62)',
+  glassShadow: '0 14px 40px rgba(5, 3, 10, 0.6), inset 0 1px 0 rgba(233, 223, 198, 0.05)',
 
-  fontBody: "'Inter', sans-serif",
-  fontDisplay: "'Outfit', sans-serif",
+  fontBody: "'Alegreya Sans', 'Segoe UI', sans-serif",
+  fontDisplay: "'Cinzel', 'Times New Roman', serif",
 
-  gradientText: 'linear-gradient(to right, #a855f7, #ec4899)',
-  scrollbarThumb: '#1e293b',
+  gradientText: 'linear-gradient(90deg, #e0b054, #cd973c)',
+  scrollbarThumb: '#3b3154',
 };

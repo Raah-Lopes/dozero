@@ -7,12 +7,14 @@ import { useYjsCleanup } from './useYjsCleanup';
 
 interface UseAppEventListenersProps {
   viewMode: string;
-  setViewMode: (mode: 'canvas' | 'wiki' | 'brain' | 'theater') => void;
+  setViewMode: (mode: 'canvas' | 'wiki' | 'brain' | 'theater' | 'sheets') => void;
   setActiveModal: (modal: any) => void;
   setOpenSheets: React.Dispatch<React.SetStateAction<string[]>>;
   setOpenWikiDocs: React.Dispatch<React.SetStateAction<{ id: string, filepath: string }[]>>;
   setEditingClockId: (id: string | null) => void;
   setWikiInitialFile: (file: string | null) => void;
+  setActiveCharacterId: (id: string | null) => void;
+  setSheetScope: (scope: 'campaign' | 'vault') => void;
 }
 
 export const useAppEventListeners = ({
@@ -22,7 +24,9 @@ export const useAppEventListeners = ({
   setOpenSheets,
   setOpenWikiDocs,
   setEditingClockId,
-  setWikiInitialFile
+  setWikiInitialFile,
+  setActiveCharacterId,
+  setSheetScope
 }: UseAppEventListenersProps) => {
   const [isLayoutPresetsOpen, setIsLayoutPresetsOpen] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
@@ -139,6 +143,12 @@ export const useAppEventListeners = ({
     const handleOpenWiki = () => setViewMode('wiki');
     const handleOpenWikiGraph = () => setViewMode('brain');
     const handleOpenBrain = () => setViewMode('brain');
+    const handleOpenArcanumSheet = (event: Event) => {
+      const detail = (event as CustomEvent<{ id?: string; scope?: 'campaign' | 'vault' }>).detail;
+      setActiveCharacterId(detail?.id || null);
+      setSheetScope(detail?.scope || 'campaign');
+      setViewMode('sheets');
+    };
 
     const handleOpenSheetByWiki = (e: Event) => {
       const wikiPath = (e as CustomEvent).detail;
@@ -205,6 +215,7 @@ export const useAppEventListeners = ({
     window.addEventListener('open-wiki', handleOpenWiki);
     window.addEventListener('open-wiki-graph', handleOpenWikiGraph);
     window.addEventListener('open-brain', handleOpenBrain);
+    window.addEventListener('open-arcanum-sheet', handleOpenArcanumSheet);
     window.addEventListener('open-sheet-by-wiki', handleOpenSheetByWiki);
     window.addEventListener('spawn-token-from-wiki', handleSpawnTokenFromWiki);
 
@@ -240,10 +251,11 @@ export const useAppEventListeners = ({
       window.removeEventListener('open-wiki', handleOpenWiki);
       window.removeEventListener('open-wiki-graph', handleOpenWikiGraph);
       window.removeEventListener('open-brain', handleOpenBrain);
+      window.removeEventListener('open-arcanum-sheet', handleOpenArcanumSheet);
       window.removeEventListener('open-sheet-by-wiki', handleOpenSheetByWiki);
       window.removeEventListener('spawn-token-from-wiki', handleSpawnTokenFromWiki);
     };
-  }, [setViewMode, setOpenSheets, setOpenWikiDocs, setEditingClockId, setWikiInitialFile, setActiveModal]);
+  }, [setViewMode, setOpenSheets, setOpenWikiDocs, setEditingClockId, setWikiInitialFile, setActiveModal, setActiveCharacterId, setSheetScope]);
 
   return {
     isLayoutPresetsOpen, setIsLayoutPresetsOpen,

@@ -1,0 +1,170 @@
+@reference "../../src/index.css";
+
+.arcanum-sheet-workspace {
+  scroll-behavior: smooth;
+  background-color: var(--color-ink-950);
+  color: var(--color-parch-200);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow: auto;
+  user-select: text;
+}
+.arcanum-sheet-workspace .font-display { font-family: "Cinzel", "Times New Roman", serif; }
+.arcanum-sheet-workspace .font-body { font-family: "Alegreya Sans", "Segoe UI", sans-serif; }
+.arcanum-sheet-workspace .font-tale { font-family: "Spectral", Georgia, serif; }
+
+/* ---- ambient layers --------------------------------------------------- */
+.bg-arcane {
+  background:
+    radial-gradient(1100px 620px at 12% -8%, rgba(205, 151, 60, 0.13), transparent 60%),
+    radial-gradient(900px 560px at 92% 4%, rgba(193, 78, 57, 0.1), transparent 62%),
+    radial-gradient(1000px 800px at 55% 118%, rgba(107, 135, 179, 0.09), transparent 60%),
+    linear-gradient(180deg, #120e19 0%, #0c0911 42%, #0e0a14 100%);
+}
+
+.noise-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* ---- ember particles --------------------------------------------------- */
+@keyframes ember-rise {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  12% { opacity: var(--ember-op, 0.7); }
+  85% { opacity: var(--ember-op, 0.7); }
+  100% { transform: translateY(-108vh) translateX(var(--ember-drift, 30px)) scale(0.4); opacity: 0; }
+}
+.ember {
+  position: fixed;
+  bottom: -12px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #f7dfa4 0%, #e0b054 45%, rgba(224, 176, 84, 0) 72%);
+  animation: ember-rise linear infinite;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(0.4px);
+}
+
+/* ---- scroll reveal ----------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.75s cubic-bezier(0.22, 0.8, 0.3, 1), transform 0.75s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- micro animations --------------------------------------------------- */
+@keyframes bar-shine {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+.bar-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 34%;
+  background: linear-gradient(105deg, transparent, rgba(255, 244, 214, 0.28), transparent);
+  animation: bar-shine 3.4s ease-in-out infinite;
+}
+
+@keyframes low-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(193, 78, 57, 0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(193, 78, 57, 0); }
+}
+.low-pulse { animation: low-pulse 1.6s ease-out infinite; }
+
+@keyframes dice-pop {
+  0% { transform: scale(0.4) rotate(-24deg); opacity: 0; }
+  60% { transform: scale(1.14) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.dice-pop { animation: dice-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+
+@keyframes toast-in {
+  from { transform: translateY(16px) scale(0.96); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.toast-in { animation: toast-in 0.32s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+
+@keyframes glow-ring {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+.sigil-glow { animation: glow-ring 4.5s ease-in-out infinite; }
+
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.spin-slow { animation: spin-slow 26s linear infinite; }
+
+/* ---- form chrome -------------------------------------------------------- */
+.field {
+  @apply w-full rounded-md border border-line-soft bg-ink-900/70 px-3 py-2 text-[15px] text-parch-100 outline-none transition-all duration-200;
+}
+.field::placeholder {
+  color: var(--color-dim);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-style: italic;
+}
+.field:hover { border-color: var(--color-ink-600); }
+.field:focus {
+  border-color: var(--color-gold-500);
+  box-shadow: 0 0 0 3px rgba(205, 151, 60, 0.16), 0 0 18px rgba(205, 151, 60, 0.08);
+  background: var(--color-ink-850);
+}
+select.field { appearance: none; }
+
+.panel {
+  @apply relative rounded-lg border border-line bg-ink-850/90;
+  box-shadow: 0 14px 40px rgba(5, 3, 10, 0.5), inset 0 1px 0 rgba(233, 223, 198, 0.05);
+}
+
+.ornate-corners::before,
+.ornate-corners::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: var(--color-gold-500);
+  pointer-events: none;
+}
+.ornate-corners::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid; border-left: 2px solid;
+}
+.ornate-corners::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid; border-right: 2px solid;
+}
+
+.num-input {
+  @apply rounded border border-line-soft bg-ink-900/80 px-1.5 py-0.5 text-center text-sm text-parch-100 outline-none transition-colors;
+  font-family: var(--font-body);
+  width: 4.2rem;
+}
+.num-input:focus { border-color: var(--color-gold-500); }
+
+.arcanum-sheet-workspace::-webkit-scrollbar,
+.arcanum-sheet-workspace *::-webkit-scrollbar { width: 10px; height: 10px; }
+.arcanum-sheet-workspace::-webkit-scrollbar-track,
+.arcanum-sheet-workspace *::-webkit-scrollbar-track { background: #120e19; }
+.arcanum-sheet-workspace::-webkit-scrollbar-thumb,
+.arcanum-sheet-workspace *::-webkit-scrollbar-thumb { background: #3b3154; border-radius: 6px; border: 2px solid #120e19; }
+.arcanum-sheet-workspace::-webkit-scrollbar-thumb:hover,
+.arcanum-sheet-workspace *::-webkit-scrollbar-thumb:hover { background: #a5762a; }
+
+.arcanum-sheet-workspace ::selection { background: rgba(205, 151, 60, 0.35); color: #f3ead6; }
+
+/* ---- print -------------------------------------------------------------- */
+@media print {
+  .arcanum-sheet-workspace { background: #fff !important; color: #1a1408 !important; }
+  .no-print { display: none !important; }
+  .panel { box-shadow: none; border-color: #c9b98a; background: #fffdf6 !important; break-inside: avoid; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+}

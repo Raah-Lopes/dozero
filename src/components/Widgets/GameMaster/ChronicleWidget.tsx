@@ -8,6 +8,7 @@ import { uploadToSupabaseStorage } from '../../../services/storageService';
 import { createChronicleArchive, downloadChronicle, parseChronicleArchive, type ChronicleArchive } from '../../../utils/chronicleArchive';
 import { VisualCalendarView } from './VisualCalendarView';
 import { LoreWorkspaceSwitcher } from '../../Navigation/LoreWorkspaceSwitcher';
+import { WorkspaceChrome } from '../../Navigation/WorkspaceChrome';
 import './ChronicleWidget.css';
 
 const KINDS: Record<ChronicleEventKind, { label: string; icon: LucideIcon }> = {
@@ -143,46 +144,44 @@ export const ChronicleWidget: React.FC<{ onClose: () => void }> = ({ onClose }) 
   return (
     <div className="chronica" role="application" aria-label="Chronica — linha do tempo e calendário histórico">
       <ChronicaBackdrop eras={eras} />
-      <header className="chronica-topbar">
-        <div className="chronica-topbar-inner">
-          <button className="chronica-back" onClick={onClose}><ArrowLeft size={17} /> Voltar à mesa</button>
-          <div className="chronica-brand"><CalendarDays size={21} /><strong>CHRONICA</strong></div>
-          <LoreWorkspaceSwitcher current="chronicle" />
-          <button className="chronica-world-button" onClick={() => setSettingsOpen(true)} title="Configurações do mundo">
-            <Globe2 size={15} /><span>{meta.worldName}</span><Edit3 size={12} />
-          </button>
-
-          <div className="chronica-workspace-switch" role="group" aria-label="Modo de Visualização">
-            <button
-              type="button"
-              className={workspaceMode === 'timeline' ? 'active' : ''}
-              onClick={() => changeWorkspaceMode('timeline')}
-            >
-              <ListTree size={14} /> Linha do Tempo
+      <WorkspaceChrome
+        className="chronica-topbar"
+        title="Chronica"
+        subtitle="Linha do tempo & calendários"
+        icon={<CalendarDays size={21} />}
+        navigation={(
+          <>
+            <LoreWorkspaceSwitcher current="chronicle" />
+            <button className="chronica-world-button" onClick={() => setSettingsOpen(true)} title="Configurações do mundo">
+              <Globe2 size={15} /><span>{meta.worldName}</span><Edit3 size={12} />
             </button>
-            <button
-              type="button"
-              className={workspaceMode === 'calendar' ? 'active' : ''}
-              onClick={() => changeWorkspaceMode('calendar')}
-            >
-              <CalendarDays size={14} /> Calendário Visual
+            <div className="chronica-workspace-switch" role="group" aria-label="Modo de Visualização">
+              <button type="button" className={workspaceMode === 'timeline' ? 'active' : ''} onClick={() => changeWorkspaceMode('timeline')}>
+                <ListTree size={14} /> Linha do Tempo
+              </button>
+              <button type="button" className={workspaceMode === 'calendar' ? 'active' : ''} onClick={() => changeWorkspaceMode('calendar')}>
+                <CalendarDays size={14} /> Calendário Visual
+              </button>
+            </div>
+          </>
+        )}
+        actions={(
+          <>
+            <button className="chronica-back workspace-chrome-button" onClick={onClose}><ArrowLeft size={17} /> Voltar à mesa</button>
+            <input ref={importRef} hidden type="file" accept="application/json,.json" onChange={event => void importWorld(event.target.files?.[0])} />
+            <button className="chronica-button ghost workspace-chrome-button" aria-label="Importar cronologia" title="Importar cronologia" onClick={() => importRef.current?.click()}>
+              <Upload size={15} /><span>Importar</span>
             </button>
-          </div>
-
-          <div className="chronica-grow" />
-          <input ref={importRef} hidden type="file" accept="application/json,.json" onChange={event => void importWorld(event.target.files?.[0])} />
-          <button className="chronica-button ghost" aria-label="Importar cronologia" title="Importar cronologia" onClick={() => importRef.current?.click()}>
-            <Upload size={15} /><span>Importar</span>
-          </button>
-          <button className="chronica-button ghost" aria-label="Exportar cronologia" title="Exportar cronologia" onClick={exportWorld}>
-            <Download size={15} /><span>Exportar</span>
-          </button>
-          <button className="chronica-button primary" onClick={() => setEraEditor(nextEraDraft(eras))}>
-            <Plus size={16} /> Nova era
-          </button>
-          <button className="chronica-icon-button mobile-close" onClick={onClose} aria-label="Fechar Chronica"><X size={18} /></button>
-        </div>
-      </header>
+            <button className="chronica-button ghost workspace-chrome-button" aria-label="Exportar cronologia" title="Exportar cronologia" onClick={exportWorld}>
+              <Download size={15} /><span>Exportar</span>
+            </button>
+            <button className="chronica-button primary workspace-chrome-button workspace-chrome-button--primary" onClick={() => setEraEditor(nextEraDraft(eras))}>
+              <Plus size={16} /> Nova era
+            </button>
+            <button className="chronica-icon-button mobile-close workspace-chrome-icon-button" onClick={onClose} aria-label="Fechar Chronica"><X size={18} /></button>
+          </>
+        )}
+      />
 
       <main className="chronica-main">
         {workspaceMode === 'calendar' ? (

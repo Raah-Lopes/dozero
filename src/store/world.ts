@@ -190,10 +190,10 @@ export function saveChronicleEvent(input: Partial<ChronosEvent> & Pick<ChronosEv
 
 export function addChronosEvent(title: string, date = getChronosState(), details: { layer?: ChronosEventLayer; wikiPath?: string } = {}) {
   const cleanTitle = title.trim();
-  if (!cleanTitle) return;
+  if (!cleanTitle) return null;
   const config = getChronosConfig();
   const month = Math.min(config.months.length, Math.max(1, date.month));
-  state.chronos.set('events', [...getChronosEvents(), {
+  const event: ChronosEvent = {
     id: `chronos_event_${Date.now()}`,
     title: cleanTitle,
     day: Math.min(config.months[month - 1].days, Math.max(1, date.day)),
@@ -201,7 +201,9 @@ export function addChronosEvent(title: string, date = getChronosState(), details
     year: Math.max(1, date.year),
     layer: details.layer || 'world',
     wikiPath: details.wikiPath || undefined
-  }]);
+  };
+  state.chronos.set('events', [...getChronosEvents(), event]);
+  return event;
 }
 
 export function updateChronosEvent(id: string, patch: Partial<Omit<ChronosEvent, 'id'>>) {

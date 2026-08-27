@@ -4,7 +4,7 @@ import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
 import { 
   Folder, FileText, ChevronRight, ChevronDown, 
-  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Edit2, ImagePlus, FolderOpen, Trash2, Eye, EyeOff
+  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Brain, DoorOpen, Edit2, ImagePlus, FolderOpen, Trash2, Eye, EyeOff
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
 import { FrontmatterPanel } from './FrontmatterPanel';
@@ -19,6 +19,8 @@ import { useWiki } from '../../hooks/useWiki';
 import { getEntityDate, getEntityStatus, getEntityTags, getWikiEntityStyle, WIKI_ENTITY_STYLES } from '../../utils/wikiEntities';
 import { GenealogyTree } from './GenealogyTree';
 import { WikiIndexer, WikiEntry } from '../../services/wiki/WikiIndexer';
+import { LoreWorkspaceSwitcher } from '../Navigation/LoreWorkspaceSwitcher';
+import { WorkspaceChrome } from '../Navigation/WorkspaceChrome';
 import './wiki.css';
 
 interface TreeNode {
@@ -187,9 +189,11 @@ const TreeView: React.FC<{
 interface WikiViewerProps {
   /** Arquivo a abrir imediatamente (ex: enviado pelo CampaignManagerWidget) */
   initialFile?: string | null;
+  onClose?: () => void;
+  onBackToCodex?: () => void;
 }
 
-export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
+export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile, onClose, onBackToCodex }) => {
   const [treeItems, setTreeItems] = useState<GithubTreeItem[]>([]);
   const [ignoredFolders, setIgnoredFolders] = useState<string[]>([]);
   const [loadingTree, setLoadingTree] = useState(false);
@@ -544,18 +548,52 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
     });
 
   return (
-    <div className="wiki-container animate-fade-in" style={{ position: 'relative' }}>
+    <div className="wiki-legacy-workspace">
+      <WorkspaceChrome
+        className="wiki-workspace-chrome"
+        title="Wiki"
+        subtitle="Acervo Markdown da campanha"
+        icon={<BookOpen size={22} />}
+        navigation={<LoreWorkspaceSwitcher current="wiki" />}
+        search={(
+          <input
+            className="workspace-chrome-search-input"
+            type="text"
+            placeholder="Buscar nota ou pasta..."
+            aria-label="Buscar nota ou pasta"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        )}
+        actions={(
+          <>
+            <button className="workspace-chrome-icon-button" onClick={handlePush} disabled={syncing} title="Sincronizar arquivos" aria-label="Sincronizar arquivos">
+              <RefreshCw size={15} className={syncing ? 'spin' : ''} />
+            </button>
+            <span className="workspace-chrome__divider" aria-hidden="true" />
+            <button className="workspace-chrome-button" onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-graph'))} title="Abrir Cérebro (Grafo)">
+              <Brain size={15} /> <span className="wiki-workspace-action-label">Cérebro</span>
+            </button>
+            {onBackToCodex && (
+              <button className="workspace-chrome-button" onClick={onBackToCodex} title="Voltar ao Códice">
+                <BookOpen size={15} /> <span className="wiki-workspace-action-label">Códice</span>
+              </button>
+            )}
+            {onClose && (
+              <button className="workspace-chrome-button workspace-chrome-button--danger" onClick={onClose} title="Voltar para a mesa">
+                <DoorOpen size={15} /> <span className="wiki-workspace-action-label">Mesa</span>
+              </button>
+            )}
+          </>
+        )}
+      />
+
+      <div className="wiki-container animate-fade-in" style={{ position: 'relative' }}>
       {/* Mobile Sidebar Toggle Button */}
       {isMobile && !isSidebarOpen && (
         <button 
+          className="wiki-mobile-sidebar-toggle"
           onClick={() => setIsSidebarOpen(true)}
-          style={{
-            position: 'absolute', top: '10px', left: '10px', zIndex: 10,
-            background: 'rgba(15, 23, 42, 0.9)', border: '1px solid var(--glass-border)',
-            color: 'var(--text-primary)', padding: '8px 12px', borderRadius: '8px',
-            display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.5)'
-          }}
         >
           <Folder size={18} /> <span>Índice</span>
         </button>
@@ -586,58 +624,36 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
           boxShadow: isSidebarOpen ? '5px 0 20px rgba(0,0,0,0.5)' : 'none'
         } : {}}
       >
-        <div className="wiki-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+        <div className="wiki-sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
               <BookOpen size={18} color="var(--accent-primary)" />
-              Sua Wiki Local
+              Índice da Wiki
             </div>
-            <div style={{ display: 'flex', gap: '5px' }}>
-              <button className="btn-icon" onClick={handlePush} disabled={syncing} title="Sincronizar Arquivos" style={{ padding: '0.3rem', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--mana)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px' }}>
-                <RefreshCw size={14} className={syncing ? 'spin' : ''} />
-              </button>
-              {isMobile && (
-                <button className="btn-icon" onClick={() => setIsSidebarOpen(false)} style={{ padding: '0.3rem', color: 'var(--text-secondary)' }}>
+            {isMobile && (
+                <button className="wiki-sidebar-close" onClick={() => setIsSidebarOpen(false)} title="Fechar índice" aria-label="Fechar índice">
                   <EyeOff size={16} />
                 </button>
-              )}
-            </div>
+            )}
           </div>
           
-          <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid var(--glass-border)', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <button className="btn-icon" onClick={handleCreateFile} title="Novo Pergaminho" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem' }}>
+          <div className="wiki-sidebar-toolbar">
+            <div className="wiki-sidebar-toolbar__group">
+              <button className="wiki-sidebar-tool" onClick={handleCreateFile} title="Novo Pergaminho" aria-label="Novo Pergaminho">
                 <FilePlus size={16} />
               </button>
-              <button className="btn-icon" onClick={handleCreateFolder} title="Nova Pasta" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem' }}>
+              <button className="wiki-sidebar-tool" onClick={handleCreateFolder} title="Nova Pasta" aria-label="Nova Pasta">
                 <FolderPlus size={16} />
               </button>
-              <button className="btn-icon" onClick={handleUploadClick} disabled={syncing} title="Upload de Imagem" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem' }}>
+              <button className="wiki-sidebar-tool" onClick={handleUploadClick} disabled={syncing} title="Upload de Imagem" aria-label="Upload de Imagem">
                 <UploadCloud size={16} />
               </button>
             </div>
-            <div style={{ width: '1px', background: 'var(--glass-border)', margin: '0.2rem 0' }}></div>
-            <button className="btn-icon" onClick={() => openLocalFolder()} title="Abrir Pasta no Windows" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '4px', padding: '0.4rem', color: 'var(--text-secondary)' }}>
+            <span className="wiki-sidebar-toolbar__divider" aria-hidden="true" />
+            <button className="wiki-sidebar-tool" onClick={() => openLocalFolder()} title="Abrir Pasta no Windows" aria-label="Abrir Pasta no Windows">
               <FolderOpen size={16} />
             </button>
           </div>
-          
-          <input 
-            type="text" 
-            placeholder="Pesquisar fichas..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              borderRadius: '6px',
-              border: '1px solid var(--glass-border)',
-              background: 'rgba(0,0,0,0.3)',
-              color: 'var(--text-primary)',
-              outline: 'none',
-              fontSize: '0.9rem'
-            }}
-          />
 
           <input 
                 type="file" 
@@ -648,17 +664,10 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
             />
           
           <button 
+            className="wiki-graph-button"
             onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-graph'))} 
-            style={{ 
-              width: '100%', padding: '0.6rem', 
-              background: 'rgba(168, 85, 247, 0.1)', 
-              color: 'var(--accent-primary)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', 
-              justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 'bold',
-              transition: 'all 0.2s'
-            }}>
-            <BookOpen size={16} /> Abrir Cérebro (Grafo)
+          >
+            <Brain size={16} /> Abrir Cérebro (Grafo)
           </button>
         </div>
         <div className="wiki-sidebar-content">
@@ -685,7 +694,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
                 }}
                 disabled={syncing}
                 className="glass-panel hover-glow"
-                style={{ padding: '0.5rem', cursor: 'pointer', background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.5)', color: '#c084fc', borderRadius: '6px', fontWeight: 'bold' }}
+                style={{ padding: '0.5rem', cursor: 'pointer', background: 'color-mix(in srgb, var(--accent-primary) 14%, var(--bg-tertiary))', border: '1px solid var(--glass-border-highlight)', color: 'var(--accent-primary)', borderRadius: '6px', fontWeight: 'bold' }}
               >
                 Inicializar Template Padrão
               </button>
@@ -948,6 +957,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile }) => {
             </div>}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

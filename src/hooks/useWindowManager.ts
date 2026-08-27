@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { startTransition } from 'react';
 
-export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain';
+export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain' | 'sheets';
 export type ModalMode = 'none' | 'players' | 'lobby' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager' | 'tokenConfig';
 export type InteractionTool = 'CURSOR' | 'FOG' | 'RULER' | 'MEASURE';
 
@@ -16,6 +16,10 @@ interface WindowManagerState {
   // App Level View & Modals
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
+  activeCharacterId: string | null;
+  setActiveCharacterId: (id: string | null) => void;
+  sheetScope: 'campaign' | 'vault';
+  setSheetScope: (scope: 'campaign' | 'vault') => void;
   activeModal: ModalMode;
   setActiveModal: (modal: ModalMode) => void;
 
@@ -76,7 +80,7 @@ export const useWindowManager = create<WindowManagerState>((set) => ({
 
   viewMode: (() => {
     const urlView = new URLSearchParams(window.location.search).get('view') as ViewMode;
-    if (urlView && ['canvas', 'wiki', 'theater', 'brain'].includes(urlView)) {
+    if (urlView && ['canvas', 'wiki', 'theater', 'brain', 'sheets'].includes(urlView)) {
       return urlView;
     }
     return (localStorage.getItem('dozero_viewMode') as ViewMode) || 'canvas';
@@ -87,6 +91,11 @@ export const useWindowManager = create<WindowManagerState>((set) => ({
       set({ viewMode: mode });
     });
   },
+
+  activeCharacterId: null,
+  setActiveCharacterId: (id) => set({ activeCharacterId: id }),
+  sheetScope: 'campaign',
+  setSheetScope: (scope) => set({ sheetScope: scope }),
 
   activeModal: 'none',
   setActiveModal: (modal) => set({ activeModal: modal }),

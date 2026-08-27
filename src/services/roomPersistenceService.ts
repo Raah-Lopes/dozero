@@ -23,6 +23,7 @@ export interface RoomBundle {
     customItems?: any[];
     dlcs?: any[];
     wiki?: Array<[string, unknown]>;
+    sheets?: Array<[string, unknown]>;
   };
 }
 
@@ -97,7 +98,8 @@ export function getRoomBundle(): RoomBundle {
       roomSettings: state.roomSettings ? (state.roomSettings as any).toJSON() : {},
       customItems: state.customItems ? Array.from(state.customItems.entries()) : [],
       dlcs: state.dlcs ? Array.from(state.dlcs.entries()) : [],
-      wiki: Array.from(state.wiki.entries())
+      wiki: Array.from(state.wiki.entries()),
+      sheets: Array.from(state.sheets.entries())
     }
   };
 }
@@ -194,6 +196,10 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
     if (Array.isArray(data.wiki)) {
       state.wiki.clear();
       data.wiki.forEach(([key, val]) => state.wiki.set(key, val));
+    }
+    if (Array.isArray(data.sheets)) {
+      state.sheets.clear();
+      data.sheets.forEach(([key, val]) => state.sheets.set(key, val));
     }
 
     if (state.roomSettings) {

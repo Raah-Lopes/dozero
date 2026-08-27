@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyCodex, deleteCodexFolder, deleteCodexNote, deleteCodexType, filterCodexNotes, normalizeCodex, upsertCodexFolder, upsertCodexRelation } from './codexModel';
+import { createCodexNote, createEmptyCodex, deleteCodexFolder, deleteCodexNote, deleteCodexType, filterCodexNotes, normalizeCodex, upsertCodexFolder, upsertCodexRelation } from './codexModel';
 
 describe('codexModel', () => {
   it('cria campanhas sem conteúdo de demonstração', () => {
@@ -10,17 +10,27 @@ describe('codexModel', () => {
     expect(codex.types.length).toBeGreaterThan(0);
   });
 
+  it('cria nota com os campos predefinidos do tipo', () => {
+    const type = createEmptyCodex().types.find(item => item.id === 'criatura')!;
+    const note = createCodexNote(type, 'bestias', '2026-08-27T00:00:00.000Z');
+    expect(note.name).toBe('Criatura sem nome');
+    expect(note.folderId).toBe('bestias');
+    expect(note.typeId).toBe('criatura');
+    expect(note.fields.porte).toBe('');
+    expect(note.gallery).toEqual([]);
+  });
+
   it('restaura tipos padrão sem apagar tipos personalizados', () => {
-    const codex = normalizeCodex({ version: 1, types: [{ id: 'deity', name: 'Divindade', color: '#fff', icon: 'star', fields: [] }] });
-    expect(codex.types.some(type => type.id === 'person')).toBe(true);
-    expect(codex.types.some(type => type.id === 'deity')).toBe(true);
+    const codex = normalizeCodex({ version: 1, types: [{ id: 'deity_custom', name: 'Divindade Custom', color: '#fff', icon: 'star', fields: [] }] });
+    expect(codex.types.some(type => type.id === 'personagem')).toBe(true);
+    expect(codex.types.some(type => type.id === 'deity_custom')).toBe(true);
   });
 
   it('remove relações órfãs ao excluir uma nota', () => {
     const codex = createEmptyCodex();
     codex.notes = [
-      { id: 'a', name: 'A', description: '', typeId: 'lore', folderId: null, tags: [], fields: {}, favorite: false, createdAt: '', updatedAt: '' },
-      { id: 'b', name: 'B', description: '', typeId: 'lore', folderId: null, tags: [], fields: {}, favorite: false, createdAt: '', updatedAt: '' },
+      { id: 'a', name: 'A', description: '', typeId: 'conceito', folderId: null, tags: [], fields: {}, favorite: false, links: [], createdAt: '', updatedAt: '' },
+      { id: 'b', name: 'B', description: '', typeId: 'conceito', folderId: null, tags: [], fields: {}, favorite: false, links: [], createdAt: '', updatedAt: '' },
     ];
     codex.relations = [{ id: 'r', sourceId: 'a', targetId: 'b', label: 'conhece', color: '#fff', icon: 'link', bidirectional: true }];
     const next = deleteCodexNote(codex, 'a');
@@ -30,17 +40,17 @@ describe('codexModel', () => {
 
   it('busca também em tags e campos personalizados', () => {
     const codex = createEmptyCodex();
-    codex.notes = [{ id: 'a', name: 'Sentinela', description: '', typeId: 'creature', folderId: null, tags: ['floresta'], fields: { habitat: 'Ruínas Antigas' }, favorite: true, createdAt: '', updatedAt: '' }];
+    codex.notes = [{ id: 'a', name: 'Sentinela', description: '', typeId: 'criatura', folderId: null, tags: ['floresta'], fields: { habitat: 'Ruínas Antigas' }, favorite: true, links: [], createdAt: '', updatedAt: '' }];
     expect(filterCodexNotes(codex.notes, { search: 'ruínas', favoritesOnly: true })).toHaveLength(1);
     expect(filterCodexNotes(codex.notes, { search: 'deserto' })).toHaveLength(0);
   });
 
-  it('move notas para Conhecimento ao excluir um tipo personalizado', () => {
+  it('move notas para Conceito ao excluir um tipo personalizado', () => {
     const codex = createEmptyCodex();
-    codex.types.push({ id: 'deity', name: 'Divindade', color: '#fff', icon: 'star', fields: [] });
-    codex.notes = [{ id: 'a', name: 'Lua', description: '', typeId: 'deity', folderId: null, tags: [], fields: {}, favorite: false, createdAt: '', updatedAt: '' }];
-    expect(deleteCodexType(codex, 'deity').notes[0].typeId).toBe('lore');
-    expect(deleteCodexType(codex, 'person')).toBe(codex);
+    codex.types.push({ id: 'deity_custom', name: 'Divindade Custom', color: '#fff', icon: 'star', fields: [] });
+    codex.notes = [{ id: 'a', name: 'Lua', description: '', typeId: 'deity_custom', folderId: null, tags: [], fields: {}, favorite: false, links: [], createdAt: '', updatedAt: '' }];
+    expect(deleteCodexType(codex, 'deity_custom').notes[0].typeId).toBe('conceito');
+    expect(deleteCodexType(codex, 'personagem')).toBe(codex);
   });
 
   it('recusa relações duplicadas e autorrelações', () => {

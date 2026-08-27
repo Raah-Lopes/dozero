@@ -17,17 +17,24 @@ export interface CloudChatMessage {
 export async function saveChatMessageToCloud(roomCode: string, msg: any, userId?: string | null) {
   if (!supabase || !roomCode || !msg?.text) return;
   try {
+    const { data: auth } = await supabase.auth.getUser();
+    const activeUserId = userId || auth.user?.id;
+    if (!activeUserId) {
+      // Usuário não autenticado: opera local-first / P2P via Yjs sem disparar 401 no Supabase REST
+      return;
+    }
+
     const typeMap: Record<string, CloudChatMessage['message_type']> = {
       sistema: 'system',
       whisper: 'whisper',
       roll: 'roll',
       geral: 'chat',
-      'in-game': 'chat'
+      'in-game': 'chat',
     };
 
     const payload: CloudChatMessage = {
       campaign_id: roomCode,
-      user_id: userId || null,
+      user_id: activeUserId,
       sender_name: msg.autor || (msg.tipo === 'sistema' ? 'Sistema' : 'Jogador'),
       content: msg.text,
       message_type: typeMap[msg.tipo] || 'chat',
@@ -38,8 +45,8 @@ export async function saveChatMessageToCloud(roomCode: string, msg: any, userId?
         autor_color: msg.autor_color,
         alvo: msg.alvo,
         idioma: msg.idioma,
-        timestamp: msg.timestamp || Date.now()
-      }
+        timestamp: msg.timestamp || Date.now(),
+      },
     };
 
     await supabase.from('chat_messages').insert(payload);
@@ -55,6 +62,9 @@ export async function saveChatMessageToCloud(roomCode: string, msg: any, userId?
 export async function loadCampaignChatHistory(roomCode: string, limit = 50): Promise<CloudChatMessage[]> {
   if (!supabase || !roomCode) return [];
   try {
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return [];
+
     const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
@@ -62,10 +72,9 @@ export async function loadCampaignChatHistory(roomCode: string, limit = 50): Pro
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (error) throw error;
+    if (error) return [];
     return (data || []).reverse();
   } catch (err) {
-    console.warn('[ChatCloud] Falha ao carregar histórico:', err);
     return [];
   }
 }

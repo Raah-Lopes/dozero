@@ -1,12 +1,12 @@
 .lore-workspace-switcher {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  background: rgba(18, 14, 10, 0.82);
-  border: 1px solid rgba(120, 90, 45, 0.45);
-  border-radius: 8px;
+  gap: 2px;
+  background: var(--bg-tertiary, #171221);
+  border: 1px solid var(--glass-border, rgba(205, 151, 60, 0.26));
+  border-radius: 7px;
   padding: 3px 4px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: none;
   flex-shrink: 0;
   z-index: 10;
 }
@@ -21,26 +21,26 @@
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
-  color: #9f8e75;
+  color: var(--text-secondary, #a99e88);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .lore-workspace-switcher .lore-nav-btn:hover {
-  color: #fff1ce;
-  background: rgba(224, 169, 54, 0.15);
-  border-color: rgba(224, 169, 54, 0.35);
+  color: var(--text-primary, #f3ead6);
+  background: color-mix(in srgb, var(--accent-primary, #cd973c) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary, #cd973c) 42%, transparent);
   transform: translateY(-1px);
 }
 
 .lore-workspace-switcher .lore-nav-btn.active {
-  color: #fce39f;
-  background: rgba(224, 169, 54, 0.25);
-  border-color: #e0a936;
-  box-shadow: 0 0 10px rgba(224, 169, 54, 0.3);
+  color: var(--accent-primary, #cd973c);
+  background: color-mix(in srgb, var(--accent-primary, #cd973c) 18%, transparent);
+  border-color: var(--accent-primary, #cd973c);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-primary, #cd973c) 24%, transparent);
 }
 
 .lore-workspace-switcher .lore-nav-btn:focus-visible {
-  outline: 2px solid #e0a936;
+  outline: 2px solid var(--accent-primary, #cd973c);
   outline-offset: 1px;
 }

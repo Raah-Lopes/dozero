@@ -10,7 +10,7 @@ import type { WEdge } from "./core";
 export default function GraphEdge(props: EdgeProps<WEdge>) {
   const { sourceX, sourceY, targetX, targetY, markerEnd, data, id } = props;
 
-  const color = data?.color || "#d8b45a";
+  const color = data?.color || "#cd973c";
   const onPath = !!data?.onPath;
   const dim = !!data?.dim;
   const label = data?.label ?? "";
@@ -62,7 +62,7 @@ export default function GraphEdge(props: EdgeProps<WEdge>) {
           id={`${id}-halo`}
           path={edgePath}
           className="edge-path-live"
-          style={{ stroke: "#d8b45a", strokeWidth: 3, pointerEvents: "none" }}
+          style={{ stroke: "#cd973c", strokeWidth: 3, pointerEvents: "none" }}
         />
       )}
 
@@ -87,8 +87,8 @@ export default function GraphEdge(props: EdgeProps<WEdge>) {
               title="Clique para editar este laço"
               className="px-2 py-0.5 rounded font-mono text-[9.5px] font-medium tracking-tight text-parchment-dim hover:text-gold bg-ink-950/85 hover:bg-ink-900 border border-ink-700/60 hover:border-gold/80 transition-all shadow-sm backdrop-blur-xs select-none"
               style={{
-                color: onPath ? "#ecd9a0" : undefined,
-                borderColor: onPath ? "#d8b45a" : undefined,
+                color: onPath ? "#f7dfa4" : undefined,
+                borderColor: onPath ? "#cd973c" : undefined,
               }}
             >
               {label}

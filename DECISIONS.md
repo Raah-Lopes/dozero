@@ -2,6 +2,14 @@
 
 Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o changelog.
 
+## 2026-08-27 — Arcanum como padrão visual da mesa
+
+**Status:** Ativa
+
+**Decisão:** usar a linguagem visual da Forja de Fichas Arcanum como padrão das janelas, menus e superfícies do VTT: tinta escura, texto de pergaminho, âmbar/cobre, tipografia serifada e painéis opacos sem glassmorfismo. Temas alternativos continuam disponíveis como variações intencionais.
+
+**Motivo:** unificar a experiência entre mesa, Códice, fichas, calendário e ferramentas, substituindo o padrão cyberpunk/neon por uma identidade coerente com o worldbuilding do DOZERO.
+
 ## 2026-08-26 — Códice por campanha como fonte do ecossistema
 
 **Status:** Ativa

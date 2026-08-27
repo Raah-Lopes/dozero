@@ -6847,4 +6847,147 @@
   }
 }
 
+/* ================================================================
+   ARCANUM DEFAULT SKIN
+   The stage keeps its cinematic imagery, but its controls use the
+   same ink, parchment and brass surfaces as the character forge.
+   ================================================================ */
+html[data-theme="purple-void"] .floating-window,
+html[data-theme="purple-void"] .theater-submenu-panel,
+html[data-theme="purple-void"] .theater-hero-context-menu,
+html[data-theme="purple-void"] .theater-drop-modal,
+html[data-theme="purple-void"] .theater-soundscape-modal,
+html[data-theme="purple-void"] .theater-clues-modal,
+html[data-theme="purple-void"] .theater-secrets-modal,
+html[data-theme="purple-void"] .cinematic-dialogue-studio-modal,
+html[data-theme="purple-void"] .pixabay-modal,
+html[data-theme="purple-void"] .theater-spotlight-modal {
+  background: var(--glass-bg) !important;
+  border-color: var(--glass-border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--glass-shadow) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 
+html[data-theme="purple-void"] .floating-window.active {
+  box-shadow: var(--glass-shadow), 0 0 0 1px var(--accent-primary) !important;
+}
+
+html[data-theme="purple-void"] .floating-window-header,
+html[data-theme="purple-void"] .pixabay-modal-header,
+html[data-theme="purple-void"] .theater-submenu-header {
+  background: linear-gradient(180deg, rgba(205, 151, 60, 0.1), transparent 90%), var(--bg-tertiary) !important;
+  border-bottom-color: var(--glass-border) !important;
+}
+
+html[data-theme="purple-void"] .floating-window-title,
+html[data-theme="purple-void"] .pixabay-modal-header h2,
+html[data-theme="purple-void"] .theater-drop-modal-header h3 {
+  color: var(--text-primary) !important;
+  font-family: var(--font-display) !important;
+}
+
+html[data-theme="purple-void"] .floating-window-actions button,
+html[data-theme="purple-void"] .theater-submenu-close,
+html[data-theme="purple-void"] .theater-drop-modal-close {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="purple-void"] .floating-window-actions button:hover,
+html[data-theme="purple-void"] .theater-submenu-close:hover,
+html[data-theme="purple-void"] .theater-drop-modal-close:hover {
+  background: var(--bg-tertiary) !important;
+  color: var(--accent-primary) !important;
+}
+
+html[data-theme="purple-void"] .theater-modal-overlay,
+html[data-theme="purple-void"] .theater-drop-modal-overlay,
+html[data-theme="purple-void"] .pixabay-modal-overlay {
+  background: rgba(5, 3, 10, 0.8) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="purple-void"] .floating-window-content::-webkit-scrollbar-thumb,
+html[data-theme="purple-void"] .pixabay-results-body::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb) !important;
+}
+
+/* TEATRO segue o mesmo chrome dos workspaces, sem perder o palco no centro. */
+.theater-topbar {
+  height: 54px;
+  min-height: 54px;
+  padding: 6px 12px;
+  gap: 12px;
+  background: var(--bg-secondary, #120e19);
+  border-bottom: 1px solid var(--glass-border, rgba(205, 151, 60, 0.26));
+  font-family: var(--font-body, 'Alegreya Sans', 'Segoe UI', sans-serif);
+}
+.theater-topbar-left,
+.theater-topbar-right { gap: 4px; }
+.theater-topbar-center { flex: 1 1 auto; justify-content: center; max-width: none; }
+.theater-topbar-right { max-width: 44vw; overflow-x: auto; scrollbar-width: none; }
+.theater-topbar-right::-webkit-scrollbar { display: none; }
+.theater-workspace-brand { display: flex; align-items: center; gap: 8px; margin-right: 4px; }
+.theater-workspace-brand-icon { display: grid; width: 28px; height: 28px; place-items: center; color: var(--accent-primary); }
+.theater-workspace-brand-copy { display: grid; gap: 3px; line-height: 1; }
+.theater-workspace-brand-copy strong {
+  color: var(--text-primary);
+  font-family: var(--font-display, Cinzel, Georgia, serif);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.theater-workspace-brand-copy small {
+  color: var(--text-secondary);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.theater-topbar .theater-exit-btn,
+.theater-topbar .theater-director-btn,
+.theater-topbar .theater-tv-badge,
+.theater-topbar .theater-icon-btn {
+  box-sizing: border-box;
+  min-height: 32px;
+  border: 1px solid var(--glass-border, rgba(205, 151, 60, 0.26));
+  border-radius: 6px;
+  background: var(--bg-tertiary, #171221);
+  color: var(--text-secondary, #a99e88);
+  font-family: var(--font-body, 'Alegreya Sans', 'Segoe UI', sans-serif);
+  font-size: 11px;
+}
+.theater-topbar .theater-exit-btn,
+.theater-topbar .theater-director-btn,
+.theater-topbar .theater-tv-badge { padding: 0 9px; }
+.theater-topbar .theater-exit-btn:hover,
+.theater-topbar .theater-director-btn:hover,
+.theater-topbar .theater-tv-badge:hover,
+.theater-topbar .theater-icon-btn:hover,
+.theater-topbar .theater-icon-btn.active {
+  border-color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 12%, var(--bg-tertiary, #171221));
+  color: var(--text-primary, #f3ead6);
+}
+.theater-topbar .theater-director-btn.active { color: var(--accent-primary); }
+.theater-topbar .theater-topbar-title-box {
+  max-width: min(360px, 42vw);
+  border: 1px solid var(--glass-border, rgba(205, 151, 60, 0.26));
+  border-radius: 6px;
+  background: var(--bg-tertiary, #171221);
+}
+.theater-topbar-title-text { color: var(--text-primary, #f3ead6); font-family: var(--font-display, Cinzel, Georgia, serif); font-size: 12px; }
+.theater-topbar-sub-text { color: var(--text-secondary, #a99e88); font-size: 10px; }
+.theater-topbar-divider { height: 22px; margin-inline: 3px; background: var(--glass-border, rgba(205, 151, 60, 0.26)); }
+
+@media (max-width: 900px) {
+  .theater-workspace-brand-copy small,
+  .theater-exit-btn-text,
+  .theater-director-btn span,
+  .theater-topbar-sub-text { display: none; }
+  .theater-topbar { gap: 6px; padding-inline: 8px; }
+  .theater-topbar-right { max-width: 38vw; }
+}

@@ -7,7 +7,7 @@ import type { NodeShape, WNode } from "./core";
  * Visual nítido, limpo e altamente legível para o mapa fechado.
  */
 function GraphNode({ id, data, selected }: NodeProps<WNode>) {
-  const color = data.tint || data.typeColor || "#d8b45a";
+  const color = data.tint || data.typeColor || "#cd973c";
   const dim = !!data.dim;
   const onPath = !!data.onPath;
   const isSource = !!data.isSource;
@@ -73,14 +73,14 @@ function GraphNode({ id, data, selected }: NodeProps<WNode>) {
             onPath ? "path-pulse ring-2 ring-gold" : ""
           } ${isSource ? "connect-source-ring ring-2 ring-teal" : ""} ${
             selected && !onPath
-              ? "ring-4 ring-gold -translate-y-0.5 shadow-[0_0_36px_rgba(216,180,90,0.7)]"
+              ? "ring-4 ring-gold -translate-y-0.5 shadow-[0_0_36px_rgba(205,151,60,0.7)]"
               : isNeighbor
-              ? "ring-2 ring-gold/80 border-gold shadow-[0_0_24px_rgba(216,180,90,0.45)]"
+              ? "ring-2 ring-gold/80 border-gold shadow-[0_0_24px_rgba(205,151,60,0.45)]"
               : ""
           }`}
           style={{
-            backgroundColor: "#0a0f1d",
-            borderColor: selected ? "#ecd9a0" : isNeighbor ? "#d8b45a" : color,
+            backgroundColor: "#0c0911",
+            borderColor: selected ? "#f7dfa4" : isNeighbor ? "#cd973c" : color,
             boxShadow: `0 8px 24px -4px rgba(0,0,0,0.9), inset 0 0 16px ${color}26`,
           }}
         >
@@ -98,7 +98,7 @@ function GraphNode({ id, data, selected }: NodeProps<WNode>) {
                 onError={(ev) => ((ev.target as HTMLElement).style.display = "none")}
               />
             ) : (
-              <span className="text-[25px] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+          <span className="text-[25px] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                 {data.icon || "◆"}
               </span>
             )}
@@ -123,9 +123,9 @@ function GraphNode({ id, data, selected }: NodeProps<WNode>) {
         <div
           className={`px-2.5 py-1 rounded-lg border shadow-md transition-[color,border-color,box-shadow,background-color] duration-150 ${
             selected
-              ? "bg-ink-950 border-gold ring-1 ring-gold shadow-[0_0_14px_rgba(216,180,90,0.4)]"
+              ? "bg-ink-950 border-gold ring-1 ring-gold shadow-[0_0_14px_rgba(205,151,60,0.4)]"
               : isNeighbor
-              ? "bg-ink-950/95 border-gold/70 shadow-[0_0_10px_rgba(216,180,90,0.25)]"
+              ? "bg-ink-950/95 border-gold/70 shadow-[0_0_10px_rgba(205,151,60,0.25)]"
               : "bg-ink-950/90 border-ink-700/80 group-hover:border-gold/60"
           }`}
         >

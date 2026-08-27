@@ -89,8 +89,8 @@ export const IRestore: React.FC<IconProps> = ({ className }) => (
 /** Sigilo do Arcanum — losango com núcleo */
 export const Sigil: React.FC<IconProps> = ({ className }) => (
   <svg viewBox="0 0 32 32" fill="none" className={`${base} ${className ?? "w-6 h-6"}`} aria-hidden>
-    <path d="M16 3 29 16 16 29 3 16Z" stroke="#d8b45a" strokeWidth="2" />
-    <path d="M16 9.5 22.5 16 16 22.5 9.5 16Z" stroke="#5fd0c5" strokeWidth="1.2" opacity="0.8" />
-    <circle cx="16" cy="16" r="2.4" fill="#d8b45a" />
+    <path d="M16 3 29 16 16 29 3 16Z" stroke="#cd973c" strokeWidth="2" />
+    <path d="M16 9.5 22.5 16 16 22.5 9.5 16Z" stroke="#6f9a78" strokeWidth="1.2" opacity="0.8" />
+    <circle cx="16" cy="16" r="2.4" fill="#cd973c" />
   </svg>
 );

@@ -2,36 +2,36 @@
 
 @theme {
   --font-display: "Cinzel", "Georgia", serif;
-  --font-sans: "Spline Sans", "Trebuchet MS", sans-serif;
+  --font-sans: "Alegreya Sans", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --color-ink-950: #080b12;
-  --color-ink-900: #0d1220;
-  --color-ink-850: #10172a;
-  --color-ink-800: #141c30;
-  --color-ink-700: #1c2740;
-  --color-ink-600: #2a3854;
-  --color-ink-500: #3d4d6e;
-  --color-ink-400: #5d6d8c;
+  --color-ink-950: #0c0911;
+  --color-ink-900: #120e19;
+  --color-ink-850: #171221;
+  --color-ink-800: #1d1729;
+  --color-ink-700: #2a2236;
+  --color-ink-600: #3b2e4a;
+  --color-ink-500: #5a4a68;
+  --color-ink-400: #7c7160;
 
-  --color-parchment: #ece5d3;
-  --color-parchment-dim: #b3ad9c;
-  --color-fog: #8b93a7;
+  --color-parchment: #f3ead6;
+  --color-parchment-dim: #c5b99f;
+  --color-fog: #a99e88;
 
-  --color-gold-300: #ecd9a0;
-  --color-gold: #d8b45a;
-  --color-gold-700: #9c7c2f;
-  --color-teal: #5fd0c5;
-  --color-ember: #e0705f;
+  --color-gold-300: #f7dfa4;
+  --color-gold: #cd973c;
+  --color-gold-700: #8e6524;
+  --color-teal: #6f9a78;
+  --color-ember: #c14e39;
 }
 
 /* ============================================================
  * Arcanum Workspace & Estética RPG Arcano
  * ============================================================ */
 .arcanum-workspace {
-  font-family: var(--font-sans, "Spline Sans", "Trebuchet MS", sans-serif);
-  background-color: #080b12;
-  color: #ece5d3;
+  font-family: var(--font-body, "Alegreya Sans", "Segoe UI", sans-serif);
+  background-color: #0c0911;
+  color: #f3ead6;
   width: 100%;
   height: 100%;
   position: relative;
@@ -44,33 +44,33 @@
 .arcanum-workspace input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
 .arcanum-workspace select,
 .arcanum-workspace textarea {
-  background-color: #10172a !important;
-  color: #ece5d3 !important;
-  border: 1px solid #1c2740 !important;
-  font-family: var(--font-sans, "Spline Sans", sans-serif) !important;
+  background-color: #171221 !important;
+  color: #f3ead6 !important;
+  border: 1px solid #2a2236 !important;
+  font-family: var(--font-body, "Alegreya Sans", sans-serif) !important;
 }
 
 .arcanum-workspace input:focus,
 .arcanum-workspace select:focus,
 .arcanum-workspace textarea:focus {
-  border-color: #d8b45a !important;
-  box-shadow: 0 0 0 2px rgba(216, 180, 90, 0.3) !important;
+  border-color: #cd973c !important;
+  box-shadow: 0 0 0 2px rgba(205, 151, 60, 0.3) !important;
   outline: none !important;
 }
 
 .arcanum-workspace input::placeholder,
 .arcanum-workspace textarea::placeholder {
-  color: #5d6d8c !important;
+  color: #7c7160 !important;
   opacity: 0.8 !important;
 }
 
 /* atmosphere: layered glows + vignette under the graph */
 .arcanum-sky {
   background:
-    radial-gradient(1100px 640px at 12% -8%, rgba(216, 180, 90, 0.09), transparent 62%),
-    radial-gradient(900px 620px at 108% 18%, rgba(95, 208, 197, 0.07), transparent 60%),
-    radial-gradient(1200px 800px at 50% 118%, rgba(122, 92, 191, 0.07), transparent 62%),
-    linear-gradient(180deg, #0b0f1b 0%, #0d1220 46%, #0a0e18 100%);
+    radial-gradient(1100px 640px at 12% -8%, rgba(205, 151, 60, 0.09), transparent 62%),
+    radial-gradient(900px 620px at 108% 18%, rgba(111, 154, 120, 0.06), transparent 60%),
+    radial-gradient(1200px 800px at 50% 118%, rgba(205, 151, 60, 0.05), transparent 62%),
+    linear-gradient(180deg, #171221 0%, #120e19 46%, #0c0911 100%);
 }
 .arcanum-sky::after {
   content: "";
@@ -85,13 +85,13 @@
 /* scrollbars */
 .arcanum-workspace *::-webkit-scrollbar { width: 9px; height: 9px; }
 .arcanum-workspace *::-webkit-scrollbar-track { background: transparent; }
-.arcanum-workspace *::-webkit-scrollbar-thumb { background: #263350; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
-.arcanum-workspace *::-webkit-scrollbar-thumb:hover { background: #3d4d6e; background-clip: content-box; border: 2px solid transparent; }
+.arcanum-workspace *::-webkit-scrollbar-thumb { background: #2a2236; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+.arcanum-workspace *::-webkit-scrollbar-thumb:hover { background: #5a4a68; background-clip: content-box; border: 2px solid transparent; }
 
 /* React Flow skin */
 .arcanum-workspace .react-flow { background: transparent; }
-.arcanum-workspace .react-flow__attribution { background: rgba(13, 18, 32, 0.6) !important; color: #5d6d8c !important; font-size: 9px !important; }
-.arcanum-workspace .react-flow__attribution a { color: #8b93a7 !important; }
+.arcanum-workspace .react-flow__attribution { background: rgba(18, 14, 25, 0.6) !important; color: #7c7160 !important; font-size: 9px !important; }
+.arcanum-workspace .react-flow__attribution a { color: #a99e88 !important; }
 
 /* Movimentação instantânea e ultra-fluida dos nós (60fps) */
 .arcanum-workspace .react-flow__node {
@@ -106,10 +106,10 @@
 
 /* Controles de Zoom e Movimentação Arcanos */
 .arcanum-workspace .react-flow__controls {
-  background: rgba(13, 18, 32, 0.96) !important;
-  border: 1px solid #1c2740 !important;
+  background: rgba(18, 14, 25, 0.96) !important;
+  border: 1px solid #2a2236 !important;
   border-radius: 12px !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(216, 180, 90, 0.15) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(205, 151, 60, 0.15) !important;
   overflow: hidden !important;
   padding: 4px !important;
   display: flex !important;
@@ -118,10 +118,10 @@
 }
 
 .arcanum-workspace .react-flow__controls-button {
-  background: #141c30 !important;
-  border: 1px solid #1c2740 !important;
+  background: #1d1729 !important;
+  border: 1px solid #2a2236 !important;
   border-radius: 8px !important;
-  color: #d8b45a !important;
+  color: #cd973c !important;
   width: 32px !important;
   height: 32px !important;
   display: grid !important;
@@ -131,11 +131,11 @@
 }
 
 .arcanum-workspace .react-flow__controls-button:hover {
-  background: #2a3854 !important;
-  border-color: #d8b45a !important;
-  color: #ecd9a0 !important;
+  background: #2a2236 !important;
+  border-color: #cd973c !important;
+  color: #f7dfa4 !important;
   transform: scale(1.08) !important;
-  box-shadow: 0 0 12px rgba(216, 180, 90, 0.3) !important;
+  box-shadow: 0 0 12px rgba(205, 151, 60, 0.3) !important;
 }
 
 .arcanum-workspace .react-flow__controls-button svg {
@@ -149,7 +149,7 @@
 .edge-path-live {
   stroke-dasharray: 8 6;
   animation: dashflow 0.7s linear infinite;
-  filter: drop-shadow(0 0 8px rgba(216, 180, 90, 0.9));
+  filter: drop-shadow(0 0 8px rgba(205, 151, 60, 0.9));
 }
 @keyframes dashflow { to { stroke-dashoffset: -14; } }
 
@@ -161,9 +161,9 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: lowercase;
-  color: var(--c, #d8b45a);
-  background: rgba(13, 18, 32, 0.95);
-  border: 1px solid color-mix(in srgb, var(--c, #d8b45a) 60%, transparent);
+  color: var(--c, #cd973c);
+  background: rgba(18, 14, 25, 0.95);
+  border: 1px solid color-mix(in srgb, var(--c, #cd973c) 60%, transparent);
   border-radius: 999px;
   padding: 3px 9px;
   white-space: nowrap;
@@ -172,30 +172,30 @@
 }
 .edge-chip:hover {
   transform: translate(-50%, -50%) scale(1.15) !important;
-  background: #141c30;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, #d8b45a) 30%, transparent);
+  background: #1d1729;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, #cd973c) 30%, transparent);
 }
 
 .arcanum-workspace .react-flow__selection {
-  background: rgba(216, 180, 90, 0.08);
-  border: 1px dashed rgba(216, 180, 90, 0.6);
+  background: rgba(205, 151, 60, 0.08);
+  border: 1px dashed rgba(205, 151, 60, 0.6);
 }
 .arcanum-workspace .react-flow__nodesselection-rect {
-  background: rgba(216, 180, 90, 0.06);
-  border: 1px dashed rgba(216, 180, 90, 0.5);
+  background: rgba(205, 151, 60, 0.06);
+  border: 1px dashed rgba(205, 151, 60, 0.5);
 }
 
 @keyframes pathPulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(216, 180, 90, 0.4), 0 0 0 2px #d8b45a; }
-  50% { box-shadow: 0 0 36px rgba(216, 180, 90, 0.9), 0 0 0 4px #ecd9a0; }
+  0%, 100% { box-shadow: 0 0 16px rgba(205, 151, 60, 0.4), 0 0 0 2px #cd973c; }
+  50% { box-shadow: 0 0 36px rgba(205, 151, 60, 0.9), 0 0 0 4px #f7dfa4; }
 }
 .path-pulse {
   animation: pathPulse 1.8s ease-in-out infinite;
 }
 
 @keyframes connectRing {
-  0%, 100% { box-shadow: 0 0 16px rgba(95, 208, 197, 0.6), 0 0 0 2px #5fd0c5; }
-  50% { box-shadow: 0 0 28px rgba(95, 208, 197, 1), 0 0 0 4px #5fd0c5; }
+  0%, 100% { box-shadow: 0 0 16px rgba(111, 154, 120, 0.6), 0 0 0 2px #6f9a78; }
+  50% { box-shadow: 0 0 28px rgba(111, 154, 120, 1), 0 0 0 4px #6f9a78; }
 }
 .connect-source-ring {
   animation: connectRing 1.4s ease-in-out infinite;

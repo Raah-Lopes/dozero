@@ -3,7 +3,7 @@ import { Cloud, CloudOff, LoaderCircle } from 'lucide-react';
 import App from './App';
 import { FamilyTree } from './model/tree';
 import { loadSavedTree, saveTree } from './lib/utils';
-import { indexeddbProvider, state } from '../../../../services/yjs';
+import { state } from '../../../../services/yjs';
 import { loadLineageAtlas, saveLineageAtlas } from '../../../../services/lineageCloudService';
 import './index.css';
 
@@ -11,17 +11,21 @@ type SyncState = 'loading' | 'local' | 'saving' | 'cloud';
 
 export function LineageWidget({ onClose }: { onClose: () => void }) {
   const roomCode = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
-  const [initialTree, setInitialTree] = useState<FamilyTree | null | undefined>(() => {
+
+  // Carrega instantaneamente do Yjs ou do localStorage (0ms de espera)
+  const [initialTree, setInitialTree] = useState<FamilyTree | null>(() => {
     const raw = state.lineage.get('atlas');
     if (typeof raw === 'string') {
       try {
         return FamilyTree.from(JSON.parse(raw));
       } catch {}
     }
-    return undefined;
+    const local = loadSavedTree(roomCode);
+    if (local) return local;
+    return null;
   });
-  
-  const [syncState, setSyncState] = useState<SyncState>(initialTree ? 'cloud' : 'loading');
+
+  const [syncState, setSyncState] = useState<SyncState>(initialTree ? 'local' : 'loading');
   const saveTimer = useRef<number | null>(null);
   const lastSerialized = useRef(initialTree ? initialTree.serialize() : '');
   const isLocalUpdate = useRef(false);
@@ -50,75 +54,60 @@ export function LineageWidget({ onClose }: { onClose: () => void }) {
     };
 
     state.lineage.observe(onSharedChange);
-    
-    // Se não carregou síncronamente no mount, busca do banco local/nuvem
-    if (initialTree === undefined) {
-      void (async () => {
-        try {
-          await Promise.race([
-            indexeddbProvider?.whenSynced ?? Promise.resolve(),
-            new Promise((resolve) => window.setTimeout(resolve, 900)),
-          ]);
-          let tree = readSharedTree();
-          if (!tree) {
-            const cloud = await loadLineageAtlas(roomCode);
-            if (cloud?.data) tree = FamilyTree.from(cloud.data);
-          }
-          tree ??= loadSavedTree(roomCode);
-          if (!active) return;
-          if (tree) {
-            lastSerialized.current = tree.serialize();
-            state.lineage.set('atlas', lastSerialized.current);
-          }
-          setInitialTree(tree);
-          setSyncState(tree ? 'cloud' : 'local');
-        } catch (error) {
-          console.warn('[Lineage] Inicialização local concluída sem nuvem:', error);
-          if (active) {
-            setInitialTree(loadSavedTree(roomCode));
-            setSyncState('local');
-          }
+
+    // Sincronização em segundo plano (não-bloqueante) com a nuvem/IndexedDB
+    void (async () => {
+      try {
+        let tree = readSharedTree();
+        if (!tree) {
+          const cloud = await loadLineageAtlas(roomCode).catch(() => null);
+          if (cloud?.data) tree = FamilyTree.from(cloud.data);
         }
-      })();
-    }
+        tree ??= loadSavedTree(roomCode);
+        if (!active) return;
+        if (tree) {
+          const serialized = tree.serialize();
+          if (serialized !== lastSerialized.current) {
+            lastSerialized.current = serialized;
+            state.lineage.set('atlas', serialized);
+            setInitialTree(tree);
+          }
+          setSyncState('cloud');
+        } else {
+          setSyncState('local');
+        }
+      } catch (error) {
+        if (active) setSyncState('local');
+      }
+    })();
 
     return () => {
       active = false;
       state.lineage.unobserve(onSharedChange);
       if (saveTimer.current) window.clearTimeout(saveTimer.current);
     };
-  }, [roomCode, initialTree]);
+  }, [roomCode]);
 
   const handleTreeChange = useCallback((tree: FamilyTree) => {
     const serialized = tree.serialize();
     if (serialized === lastSerialized.current) return;
     lastSerialized.current = serialized;
-    
+
     isLocalUpdate.current = true;
     try {
       state.lineage.set('atlas', serialized);
     } finally {
       setTimeout(() => { isLocalUpdate.current = false; }, 50);
     }
-    
+
     saveTree(tree, roomCode);
     setSyncState('saving');
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(async () => {
-      const saved = await saveLineageAtlas(roomCode, tree.toJSON());
+      const saved = await saveLineageAtlas(roomCode, tree.toJSON()).catch(() => false);
       setSyncState(saved ? 'cloud' : 'local');
     }, 1500);
   }, [roomCode]);
-
-  if (initialTree === undefined) {
-    return (
-      <div className="lineage-shell fixed inset-0 z-[10000] grid place-items-center bg-ink-950 text-parchment" style={{ pointerEvents: 'auto' }}>
-        <div className="flex items-center gap-3 font-display text-sm tracking-[0.2em] text-brass-bright">
-          <LoaderCircle className="animate-spin" size={20} /> Abrindo o atlas…
-        </div>
-      </div>
-    );
-  }
 
   const syncLabel = syncState === 'cloud'
     ? 'Salvo na nuvem'

@@ -399,6 +399,14 @@ export const TheaterView: React.FC = () => {
           <div className="theater-topbar">
             {/* Left: Exit & Director toggle */}
             <div className="theater-topbar-left">
+              <div className="theater-workspace-brand" aria-label="Teatro da mesa">
+                <span className="theater-workspace-brand-icon"><Sparkles size={18} /></span>
+                <span className="theater-workspace-brand-copy">
+                  <strong>TEATRO</strong>
+                  <small>Mesa cinematográfica</small>
+                </span>
+              </div>
+
               <button
                 className="theater-exit-btn"
                 onClick={() => setViewMode('canvas')}
@@ -496,7 +504,7 @@ export const TheaterView: React.FC = () => {
                 onClick={() => setSoundscapeOpen(!soundscapeOpen)}
                 title="Jukebox & Efeitos Sonoros / Ambientes Rápidos"
               >
-                <Music size={15} color={soundscapeOpen ? '#ec4899' : 'currentColor'} />
+                <Music size={15} color={soundscapeOpen ? 'var(--accent-primary)' : 'currentColor'} />
               </button>
 
               <button
@@ -504,7 +512,7 @@ export const TheaterView: React.FC = () => {
                 onClick={() => setCluesOpen(!cluesOpen)}
                 title="Mural de Pistas & Handouts da Cena"
               >
-                <BookOpen size={15} color={cluesOpen ? '#f59e0b' : 'currentColor'} />
+                <BookOpen size={15} color={cluesOpen ? 'var(--accent-primary)' : 'currentColor'} />
               </button>
 
               <button
@@ -512,7 +520,7 @@ export const TheaterView: React.FC = () => {
                 onClick={() => setClocksOpen(!clocksOpen)}
                 title="Relógios de Tensão (Ativar na Tela)"
               >
-                <Clock size={15} color={clocksOpen ? '#f59e0b' : 'currentColor'} />
+                <Clock size={15} color={clocksOpen ? 'var(--accent-primary)' : 'currentColor'} />
                 {clocks.length > 0 && (
                   <span className="theater-badge-counter">{clocks.length}</span>
                 )}
@@ -524,7 +532,7 @@ export const TheaterView: React.FC = () => {
                   onClick={() => setSecretsOpen(!secretsOpen)}
                   title="Segredos do Mestre (Confidencial)"
                 >
-                  <Lock size={15} color={secretsOpen ? '#ef4444' : 'currentColor'} />
+                  <Lock size={15} color={secretsOpen ? 'var(--danger, #c14e39)' : 'currentColor'} />
                 </button>
               )}
 
@@ -533,7 +541,7 @@ export const TheaterView: React.FC = () => {
                 onClick={() => setChronicleOpen(!chronicleOpen)}
                 title="Feed de Acontecimentos / Log (L)"
               >
-                <Scroll size={15} color={chronicleOpen ? '#38bdf8' : 'currentColor'} />
+                <Scroll size={15} color={chronicleOpen ? 'var(--accent-primary)' : 'currentColor'} />
               </button>
 
               <div className="theater-topbar-divider" />
@@ -562,7 +570,7 @@ export const TheaterView: React.FC = () => {
                   onClick={() => setDialogueStudioOpen(true)}
                   title="Estúdio de Diálogo Cinematográfico (Falas & Visual Novel)"
                 >
-                  <MessageSquare size={15} color={dialogueStudioOpen ? '#a855f7' : 'currentColor'} />
+                  <MessageSquare size={15} color={dialogueStudioOpen ? 'var(--accent-primary)' : 'currentColor'} />
                 </button>
               )}
 
@@ -571,7 +579,7 @@ export const TheaterView: React.FC = () => {
                 onClick={toggleShowHeroCards}
                 title={showHeroCards ? 'Ocultar Cards de Heróis' : 'Exibir Cards de Heróis'}
               >
-                <Users size={15} color={showHeroCards ? '#38bdf8' : 'currentColor'} />
+                <Users size={15} color={showHeroCards ? 'var(--accent-primary)' : 'currentColor'} />
               </button>
 
               {isGM && (
@@ -582,7 +590,7 @@ export const TheaterView: React.FC = () => {
                     onClick={() => setIsTvMode(!isTvMode)}
                     title={isTvMode ? 'Sair do Modo Telão (Voltar ao Mestre)' : 'Modo Telão / Pré-visualizar como Jogador'}
                   >
-                    <Tv size={15} color={isTvMode ? '#38bdf8' : 'currentColor'} />
+                    <Tv size={15} color={isTvMode ? 'var(--accent-primary)' : 'currentColor'} />
                   </button>
                 </>
               )}

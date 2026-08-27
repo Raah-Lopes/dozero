@@ -150,16 +150,16 @@ export const MapContextMenu: React.FC = () => {
   const isGrouped = firstGroupId && bgs.every(bg => bg.groupId === firstGroupId);
 
   return (
-    <div style={{
+    <div className="map-context-menu" style={{
       position: 'fixed', top: pos.y, left: pos.x,
-      background: 'rgba(15, 23, 42, 0.65)',
-      backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255,255,255,0.05)',
-      borderRadius: '12px', 
+      background: 'var(--glass-bg)',
+      backdropFilter: 'var(--glass-blur)',
+      border: '1px solid var(--glass-border)',
+      borderRadius: '6px',
       padding: '0.4rem', 
       display: 'flex', 
       gap: '0.2rem',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.5)', 
+      boxShadow: 'var(--glass-shadow)',
       zIndex: 9999,
       alignItems: 'center'
     }}>

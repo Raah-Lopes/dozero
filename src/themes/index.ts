@@ -30,7 +30,7 @@ export interface ThemeDefinition {
   warning: string;
   mana: string;
 
-  // ── Glassmorphism ──
+  // ── Shared panel surface contract (legacy field names) ──
   glassBg: string;
   glassBorder: string;
   glassBorderHighlight: string;

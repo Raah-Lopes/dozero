@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import './App.css';
-import { X, DoorOpen, BookOpen } from 'lucide-react';
 import { WikiViewer } from './components/Wiki/WikiViewer';
 import { CodexWorkspace } from './components/Wiki/Codex/CodexWorkspace';
 import { GameCanvas } from './engine/GameCanvas';
@@ -59,6 +58,7 @@ import { useRoomPresence } from './services/useRoomPresence';
 import { useAuthStore } from './store/authStore';
 
 const LivingBrain = React.lazy(() => import('./components/Wiki/LivingBrain').then((module) => ({ default: module.LivingBrain })));
+const ArcanumSheetsWorkspace = React.lazy(() => import('./components/Sheets/ArcanumSheetsWorkspace').then((module) => ({ default: module.ArcanumSheetsWorkspace })));
 
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby' | 'vault' | 'tokenConfig';
 
@@ -82,6 +82,8 @@ function App() {
   const {
     openWindows, toggleWindow,
     viewMode, setViewMode,
+    activeCharacterId, setActiveCharacterId,
+    sheetScope, setSheetScope,
     activeModal, setActiveModal,
     showActors, setShowActors,
     showToolsDropdown, setShowToolsDropdown,
@@ -117,7 +119,9 @@ function App() {
     setOpenSheets,
     setOpenWikiDocs,
     setEditingClockId,
-    setWikiInitialFile
+    setWikiInitialFile,
+    setActiveCharacterId,
+    setSheetScope
   });
 
   const toggleModal = useCallback((mode: ModalMode) => {
@@ -142,6 +146,12 @@ function App() {
     return <StreamOverlay roomCode={currentRoom} />;
   }
 
+  const [hasOpenedBrain, setHasOpenedBrain] = useState(viewMode === 'brain');
+
+  React.useEffect(() => {
+    if (viewMode === 'brain') setHasOpenedBrain(true);
+  }, [viewMode]);
+
   return (
     <div className="app-container">
       <OfflineStatus />
@@ -151,11 +161,14 @@ function App() {
         <CutsceneOverlay config={activeCutscene} onEnd={() => setActiveCutscene(null)} />
       )}
 
-      {/* PÁGINA DO CÉREBRO GRÁFICO */}
-      <div className={`view-layer brain-layer ${viewMode === 'brain' ? 'active' : ''}`}>
-        {viewMode === 'brain' && (
+      {/* PÁGINA DO CÉREBRO GRÁFICO (Carregamento instantâneo em cache) */}
+      <div
+        className={`view-layer brain-layer ${viewMode === 'brain' ? 'active' : ''}`}
+        style={{ display: viewMode === 'brain' ? 'block' : 'none' }}
+      >
+        {hasOpenedBrain && (
           <ErrorBoundary componentName="Cérebro Gráfico (Brain)">
-            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#080b12] text-[#d8b45a]" role="status">Carregando módulo do Grafo…</div>}>
+            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#15120e] text-[#d9a441]" role="status">Carregando Cérebro do Mundo…</div>}>
               <LivingBrain />
             </React.Suspense>
           </ErrorBoundary>
@@ -167,7 +180,14 @@ function App() {
         {viewMode === 'wiki' && (
           <ErrorBoundary componentName="Códice Arcanum">
             {showLegacyWiki
-              ? <WikiViewer initialFile={wikiInitialFile} />
+              ? <WikiViewer
+                initialFile={wikiInitialFile}
+                  onClose={() => {
+                    setShowLegacyWiki(false);
+                    setViewMode('canvas');
+                  }}
+                  onBackToCodex={() => setShowLegacyWiki(false)}
+                />
               : <CodexWorkspace
                   initialFile={wikiInitialFile}
                   onClose={() => setViewMode('canvas')}
@@ -187,18 +207,20 @@ function App() {
         )}
       </div>
 
-      {viewMode === 'wiki' && showLegacyWiki && (
-        <div className="exit-door-container-right">
-          <button onClick={() => setShowLegacyWiki(false)} className="glass-panel exit-door-btn-hoverable">
-            <span className="exit-text">Voltar ao Códice</span>
-            <BookOpen size={20} color="var(--accent-primary)" className="exit-icon" />
-          </button>
-          <button onClick={() => setViewMode('canvas')} className="glass-panel exit-door-btn-hoverable">
-            <span className="exit-text">Voltar para a Mesa</span>
-            <DoorOpen size={20} color="var(--accent-primary)" className="exit-icon" />
-          </button>
-        </div>
-      )}
+      <div className={`view-layer sheets-layer ${viewMode === 'sheets' ? 'active' : ''}`}>
+        {viewMode === 'sheets' && (
+          <ErrorBoundary componentName="Forja de Fichas Arcanum">
+            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#0c0911] text-[#e0b054]" role="status">Abrindo a Forja...</div>}>
+              <ArcanumSheetsWorkspace
+                campaignId={currentRoom}
+                initialCharacterId={activeCharacterId}
+                initialScope={sheetScope}
+                onClose={() => setViewMode('canvas')}
+              />
+            </React.Suspense>
+          </ErrorBoundary>
+        )}
+      </div>
 
       {/* PÁGINA DA MESA (HUD + MAPA) */}
       <div className={`view-layer canvas-layer-container ${viewMode === 'canvas' ? 'active' : ''}`}>

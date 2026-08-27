@@ -71,6 +71,7 @@ export const state = {
   trades: doc.getMap('trades'),
   conspiracy: doc.getMap('conspiracy'),
   players: doc.getMap('players'),
+  sheets: doc.getMap('sheets'),
   chatConfig: doc.getMap('chatConfig'),
   gmNotes: doc.getMap('gmNotes'),
   customItems: doc.getMap('customItems'),

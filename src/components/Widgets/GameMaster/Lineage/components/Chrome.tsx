@@ -5,6 +5,7 @@ import {
   IconPlus, IconRedo, IconSearch, IconUndo, IconUsers, IconX,
 } from "./icons";
 import { LoreWorkspaceSwitcher } from "../../../../Navigation/LoreWorkspaceSwitcher";
+import { WorkspaceChrome } from "../../../../Navigation/WorkspaceChrome";
 
 /* ---------------- barra superior ---------------- */
 
@@ -26,60 +27,47 @@ export interface ToolbarProps {
 
 export function Toolbar(p: ToolbarProps) {
   return (
-    <header className="relative z-30 flex h-[54px] shrink-0 items-center gap-3 border-b border-line bg-ink-900/85 px-3 backdrop-blur-md">
-      <div className="flex items-center gap-2.5 pr-1">
-        <BrandSigil size={27} />
-        <div className="leading-none">
-          <span className="block font-display text-[15px] font-black tracking-[0.22em] text-parchment">
-            LINHAGEM
-          </span>
-          <span className="mt-1 block text-[8px] font-bold uppercase tracking-[0.3em] text-muted">
-            Atlas de Casas &amp; Dinastias
-          </span>
+    <WorkspaceChrome
+      title="Linhagem"
+      subtitle="Atlas de casas & dinastias"
+      icon={<BrandSigil size={27} />}
+      navigation={<LoreWorkspaceSwitcher current="lineage" />}
+      search={(
+        <div className="relative">
+          <IconSearch size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            value={p.query}
+            onChange={(e) => p.onQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") p.onFocusFirst();
+            }}
+            placeholder="Buscar nome, casa, nota…"
+            className="workspace-chrome-search-input pl-8 pr-14"
+          />
+          {p.query && (
+            <span className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={p.onFocusFirst}
+                title="Localizar no mapa (Enter)"
+                className="rounded-sm bg-brass/15 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-brass-bright transition-colors hover:bg-brass/30"
+              >
+                {p.matchCount}
+              </button>
+              <button
+                type="button"
+                onClick={() => p.onQuery("")}
+                aria-label="Limpar busca"
+                className="rounded-sm p-1 text-muted transition-colors hover:text-parchment"
+              >
+                <IconX size={12} />
+              </button>
+            </span>
+          )}
         </div>
-      </div>
-
-      <div className="hidden sm:block">
-        <LoreWorkspaceSwitcher current="lineage" />
-      </div>
-
-      <span className="mx-1 hidden h-6 w-px bg-line sm:block" />
-
-      {/* busca */}
-      <div className="relative w-full max-w-[340px] flex-1">
-        <IconSearch size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
-        <input
-          value={p.query}
-          onChange={(e) => p.onQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") p.onFocusFirst();
-          }}
-          placeholder="Buscar nome, casa, nota…"
-          className="h-9 w-full rounded-sm border border-line bg-ink-800/80 pl-8 pr-14 text-[13px] text-parchment placeholder:text-muted/60 transition-colors focus:border-brass/60 focus:outline-none"
-        />
-        {p.query && (
-          <span className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
-            <button
-              type="button"
-              onClick={p.onFocusFirst}
-              title="Localizar no mapa (Enter)"
-              className="rounded-sm bg-brass/15 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-brass-bright transition-colors hover:bg-brass/30"
-            >
-              {p.matchCount}
-            </button>
-            <button
-              type="button"
-              onClick={() => p.onQuery("")}
-              aria-label="Limpar busca"
-              className="rounded-sm p-1 text-muted transition-colors hover:text-parchment"
-            >
-              <IconX size={12} />
-            </button>
-          </span>
-        )}
-      </div>
-
-      <div className="ml-auto flex items-center gap-1">
+      )}
+      actions={(
+      <div className="flex items-center gap-1">
         {p.syncLabel && (
           <span className="mr-1 hidden items-center gap-1.5 rounded-full border border-line bg-ink-800/75 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-muted lg:inline-flex">
             <span className="h-1.5 w-1.5 rounded-full bg-moss shadow-[0_0_8px_rgba(111,161,115,0.8)]" />
@@ -92,18 +80,18 @@ export function Toolbar(p: ToolbarProps) {
         <ToolBtn label="Refazer (Ctrl+Shift+Z)" disabled={!p.canRedo} onClick={p.onRedo}>
           <IconRedo size={15} />
         </ToolBtn>
-        <span className="mx-1 h-6 w-px bg-line" />
+        <span className="workspace-chrome__divider" />
         <ToolBtn label="Nova árvore em branco" onClick={p.onNew}>
           <IconFile size={15} />
         </ToolBtn>
         <ToolBtn label="Importar / exportar JSON" onClick={p.onData}>
           <IconData size={15} />
         </ToolBtn>
-        <span className="mx-1 h-6 w-px bg-line" />
+        <span className="workspace-chrome__divider" />
         <button
           type="button"
           onClick={p.onAddRoot}
-          className="inline-flex items-center gap-1.5 rounded-sm bg-brass px-3 py-2 font-display text-[11.5px] font-bold tracking-wide text-ink-950 shadow-[0_4px_16px_rgba(201,162,39,0.25)] transition-all hover:-translate-y-px hover:bg-brass-bright"
+          className="workspace-chrome-button workspace-chrome-button--primary"
         >
           <IconPlus size={14} /> Membro
         </button>
@@ -113,7 +101,8 @@ export function Toolbar(p: ToolbarProps) {
           </ToolBtn>
         )}
       </div>
-    </header>
+      )}
+    />
   );
 }
 
@@ -135,7 +124,7 @@ function ToolBtn({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="rounded-sm border border-transparent p-2 text-parchment-dim transition-all enabled:hover:border-line enabled:hover:bg-ink-800 enabled:hover:text-brass-bright disabled:opacity-30"
+      className="workspace-chrome-icon-button rounded-sm border-transparent text-parchment-dim enabled:hover:text-brass-bright"
     >
       {children}
     </button>

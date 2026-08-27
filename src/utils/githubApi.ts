@@ -156,23 +156,27 @@ export async function saveImageToCloud(base64: string, filename: string): Promis
 }
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {
-  if (import.meta.env.PROD) {
-    WikiIndexer.saveLocalWikiFile(path, content);
-    return;
-  }
   const config = getWikiConfig();
-  let repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-  
-  const response = await fetchWithTimeout('/api/wiki/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repoPath, path, content })
-  });
+  const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
 
-  if (!response.ok) throw new Error("Erro ao salvar arquivo");
+  if (!import.meta.env.PROD) {
+    try {
+      const response = await fetchWithTimeout('/api/wiki/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoPath, path, content }),
+      });
+      if (response.ok) {
+        WikiIndexer.clearCache();
+        window.dispatchEvent(new Event('wiki-updated'));
+        return;
+      }
+    } catch {
+      // Fallback para persistência local se o servidor de arquivos local não estiver acessível
+    }
+  }
 
-  WikiIndexer.clearCache();
-  window.dispatchEvent(new Event('wiki-updated'));
+  WikiIndexer.saveLocalWikiFile(path, content);
 }
 
 export async function createFolder(path: string): Promise<void> {
