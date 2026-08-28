@@ -1,9 +1,9 @@
 import React from 'react';
-import { BookOpen, Brain, Crown, Hourglass } from 'lucide-react';
+import { BookOpen, Brain, Crown, Hourglass, ScrollText } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import './LoreWorkspaceSwitcher.css';
 
-export type LoreWorkspace = 'wiki' | 'brain' | 'lineage' | 'chronicle';
+export type LoreWorkspace = 'wiki' | 'brain' | 'lineage' | 'chronicle' | 'sheets';
 
 interface LoreWorkspaceSwitcherProps {
   current: LoreWorkspace;
@@ -23,6 +23,10 @@ export const LoreWorkspaceSwitcher: React.FC<LoreWorkspaceSwitcherProps> = ({ cu
       closeWindow('lineage');
       closeWindow('chronicle');
       setViewMode('brain');
+    } else if (target === 'sheets') {
+      closeWindow('lineage');
+      closeWindow('chronicle');
+      setViewMode('sheets');
     } else if (target === 'lineage') {
       closeWindow('chronicle');
       setViewMode('canvas');
@@ -35,7 +39,7 @@ export const LoreWorkspaceSwitcher: React.FC<LoreWorkspaceSwitcherProps> = ({ cu
   };
 
   return (
-    <nav className={`lore-workspace-switcher ${className}`} role="navigation" aria-label="Espaços de Lore">
+    <nav className={`lore-workspace-switcher ${className}`} role="navigation" aria-label="Espaços de Lore & Fichas">
       <button
         type="button"
         className={`lore-nav-btn ${current === 'wiki' ? 'active' : ''}`}
@@ -56,6 +60,17 @@ export const LoreWorkspaceSwitcher: React.FC<LoreWorkspaceSwitcherProps> = ({ cu
         aria-current={current === 'brain' ? 'page' : undefined}
       >
         <Brain size={16} />
+      </button>
+
+      <button
+        type="button"
+        className={`lore-nav-btn ${current === 'sheets' ? 'active' : ''}`}
+        onClick={() => navigateTo('sheets')}
+        title="Forja de Fichas — Fichas Arcanum da mesa e do Vault"
+        aria-label="Forja de Fichas (Arcanum)"
+        aria-current={current === 'sheets' ? 'page' : undefined}
+      >
+        <ScrollText size={16} />
       </button>
 
       <button

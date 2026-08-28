@@ -44,6 +44,7 @@ import {
   CampaignMemberRecord 
 } from '../../services/campaignCloudService';
 import { exportAdventureBundle, importAdventureBundle } from '../../services/adventureBundleService';
+import { AdventureBundleModal } from './AdventureBundleModal';
 import { updateWikiConfig } from '../../store/wiki';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { toast } from '../UI/Toast';
@@ -84,6 +85,11 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
   const [selectedCampaignForMembers, setSelectedCampaignForMembers] = useState<CampaignCloudRecord | null>(null);
   const [members, setMembers] = useState<CampaignMemberRecord[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  // Modal de Pacotes de Aventura (.dozero)
+  const [isBundleModalOpen, setIsBundleModalOpen] = useState(false);
+  const [bundleModalMode, setBundleModalMode] = useState<'export' | 'import'>('export');
+  const [bundleCampaignId, setBundleCampaignId] = useState('');
+  const [bundleCampaignName, setBundleCampaignName] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -364,7 +370,13 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
               </button>
             )}
 
-            <label
+            <button
+              onClick={() => {
+                setBundleModalMode('import');
+                setBundleCampaignId(campaigns[0]?.room_code || 'nova-mesa');
+                setBundleCampaignName(campaigns[0]?.name || 'Nova Aventura');
+                setIsBundleModalOpen(true);
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -381,24 +393,30 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
               }}
             >
               <Package size={15} color="#c49a6c" /> Importar Pacote
-              <input
-                type="file"
-                accept=".dozero,.json"
-                style={{ display: 'none' }}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const defaultName = file.name.replace(/\.[^/.]+$/, '');
-                    const room = prompt('Digite o código da sala de destino para importar este pacote:', defaultName.toLowerCase().replace(/[^a-z0-9_-]/g, '-'));
-                    if (room) {
-                      await importAdventureBundle(file, room, user?.id);
-                      loadList();
-                    }
-                  }
-                  e.target.value = '';
-                }}
-              />
-            </label>
+            </button>
+
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('open-campaign-book-publisher'));
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '9px 14px',
+                background: 'rgba(212,175,55,0.12)',
+                border: '1px solid #d4af37',
+                borderRadius: '12px',
+                color: '#fef3c7',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+              title="Gerar e imprimir Livro de Campanha em PDF de alta qualidade"
+            >
+              <BookOpen size={15} color="#d4af37" /> Publicar Livro (PDF)
+            </button>
 
             <button
               onClick={handleOpenCreate}
@@ -937,7 +955,10 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              exportAdventureBundle(camp.room_code, camp.name, user?.id);
+                              setBundleModalMode('export');
+                              setBundleCampaignId(camp.room_code);
+                              setBundleCampaignName(camp.name);
+                              setIsBundleModalOpen(true);
                             }}
                             title="Exportar Pacote de Aventura (.dozero)"
                             style={{ padding: '5px', borderRadius: '6px', background: 'rgba(196,154,108,0.15)', border: '1px solid #c49a6c', color: '#c49a6c', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -981,6 +1002,16 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
           </div>
         )}
       </div>
+
+      <AdventureBundleModal
+        isOpen={isBundleModalOpen}
+        onClose={() => setIsBundleModalOpen(false)}
+        mode={bundleModalMode}
+        campaignId={bundleCampaignId}
+        campaignName={bundleCampaignName}
+        userId={user?.id}
+        onImportComplete={loadList}
+      />
     </div>
   );
 };

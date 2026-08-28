@@ -5,7 +5,7 @@
   background: #0c0911;
 }
 .arcanum-host { display: flex; flex-direction: column; }
-.arcanum-editor-scroll { flex: 1; min-height: 0; overflow: auto; }
+.arcanum-editor-scroll { flex: 1; min-height: 0; overflow: auto; scroll-behavior: smooth; }
 .arcanum-ecosystem-bar {
   min-height: 54px; height: 54px; display: flex; align-items: center; gap: 8px; padding: 6px 12px;
   background: var(--bg-secondary, #120e19); border-bottom: 1px solid var(--glass-border, rgba(205,151,60,.26)); font-family: var(--font-body, "Alegreya Sans", "Segoe UI", sans-serif);

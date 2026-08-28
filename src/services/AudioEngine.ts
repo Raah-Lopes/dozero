@@ -358,6 +358,9 @@ class AudioEngine {
     this.emitState({ isPlayingAmbience: false, currentAmbienceId: undefined, currentAmbienceTitle: undefined });
 
     if (old) {
+      if (fadeDuration > 0) {
+        await this.fadeAudio(old, 0, fadeDuration);
+      }
       old.removeEventListener('ended', this.handleAmbienceEnded);
       old.pause();
       old.src = '';
@@ -365,6 +368,70 @@ class AudioEngine {
         URL.revokeObjectURL(this.activeAmbienceObjectUrl);
         this.activeAmbienceObjectUrl = null;
       }
+    }
+  }
+
+  /**
+   * Transiciona suavemente para um novo som ambiente fazendo fade-out do anterior e fade-in do novo.
+   */
+  async crossfadeToAmbience(
+    trackOrUrl: AudioTrack | string,
+    volumeOrName?: number | string,
+    nameOrId?: string,
+    id?: string,
+    crossfadeDurationMs = 2000
+  ) {
+    const oldAudio = this.ambienceAudio;
+    const oldSynth = this.isUsingSynthAmbience;
+
+    let targetVolume = this.currentAmbienceVolume;
+    if (typeof volumeOrName === 'number') targetVolume = volumeOrName;
+
+    // Se houver áudio anterior, inicia fade-out suave
+    if (oldAudio) {
+      this.fadeAudio(oldAudio, 0, crossfadeDurationMs).then(() => {
+        this.killAudio(oldAudio, this.handleAmbienceEnded);
+      });
+    } else if (oldSynth) {
+      proceduralAudio.stopAmbience();
+    }
+
+    // Inicia o novo som ambiente e faz fade-in até o volume alvo
+    await this.playAmbience(trackOrUrl, 0.001, nameOrId, id);
+
+    if (this.ambienceAudio) {
+      await this.fadeAudio(this.ambienceAudio, targetVolume, crossfadeDurationMs);
+    }
+  }
+
+  /**
+   * Transiciona suavemente para uma nova faixa de música fazendo crossfade.
+   */
+  async crossfadeToMusic(
+    trackOrUrl: AudioTrack | string,
+    volumeOrName?: number | string,
+    nameOrId?: string,
+    id?: string,
+    crossfadeDurationMs = 2500
+  ) {
+    const oldAudio = this.nativeMusicAudio;
+    const oldSynth = this.isUsingSynthMusic;
+
+    let targetVolume = this.currentMusicVolume;
+    if (typeof volumeOrName === 'number') targetVolume = volumeOrName;
+
+    if (oldAudio) {
+      this.fadeAudio(oldAudio, 0, crossfadeDurationMs).then(() => {
+        this.killAudio(oldAudio, this.handleMusicEnded);
+      });
+    } else if (oldSynth) {
+      proceduralAudio.stopMusic();
+    }
+
+    await this.playMusic(trackOrUrl, 0.001, nameOrId, id);
+
+    if (this.nativeMusicAudio) {
+      await this.fadeAudio(this.nativeMusicAudio, targetVolume, crossfadeDurationMs);
     }
   }
 

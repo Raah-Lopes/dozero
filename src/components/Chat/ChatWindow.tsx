@@ -15,7 +15,6 @@ import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { PollComposerModal } from './PollComposerModal';
 import { ImagePreviewModal } from './ImagePreviewModal';
-import { ChatVoicePanel } from './ChatVoicePanel';
 import { CombatLog } from './CombatLog';
 
 // Hooks
@@ -280,9 +279,7 @@ export const ChatWindow: React.FC = () => {
       />
 
       {/* ─── CONTEÚDO PRINCIPAL CONFORME A ABA ─── */}
-      {mainTab === 'voz' ? (
-        <ChatVoicePanel roomCode={roomCode} />
-      ) : mainTab === 'combate' ? (
+      {mainTab === 'combate' ? (
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <CombatLog />
         </div>

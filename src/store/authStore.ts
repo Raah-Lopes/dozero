@@ -29,6 +29,7 @@ let isAuthInitialized = false;
 
 let inflightLoadPreferences: Promise<void> | null = null;
 let lastLoadedUserId: string | null = null;
+let lastLoadPreferencesTimestamp = 0;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -70,27 +71,52 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   loadPreferences: async () => {
-    if (!isSupabaseConfigured) return;
     const currentUser = get().user;
     if (!currentUser?.id) return;
+
+    // 1. Carregamento instantâneo do cache local (0ms de latência)
+    try {
+      const cached = localStorage.getItem(`dozero_user_prefs_${currentUser.id}`);
+      if (cached) {
+        set({ preferences: JSON.parse(cached) });
+      }
+    } catch {}
+
+    if (!isSupabaseConfigured) return;
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+    const now = Date.now();
+    if (now - lastLoadPreferencesTimestamp < 30000 && currentUser.id === lastLoadedUserId) return;
     if (inflightLoadPreferences) return inflightLoadPreferences;
-    if (currentUser.id === lastLoadedUserId) return;
 
     inflightLoadPreferences = (async () => {
+      lastLoadPreferencesTimestamp = Date.now();
+      lastLoadedUserId = currentUser.id;
       try {
-        const { data, error } = await supabase
+        const queryPromise = supabase
           .from('profiles')
           .select('preferences')
           .eq('id', currentUser.id)
           .maybeSingle();
 
-        lastLoadedUserId = currentUser.id;
+        const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout ao buscar preferências')), 3500)
+        );
+
+        const res = await Promise.race([queryPromise, timeoutPromise]) as any;
+        const { data, error } = res || {};
+
         if (!error && data?.preferences) {
           set({ preferences: data.preferences });
+          try {
+            localStorage.setItem(`dozero_user_prefs_${currentUser.id}`, JSON.stringify(data.preferences));
+          } catch {}
+        } else if (error) {
+          // Se houver erro de rede / RLS, aguarda 60s antes de tentar novamente
+          lastLoadPreferencesTimestamp = Date.now() + 60000;
         }
       } catch (e) {
-        lastLoadedUserId = currentUser.id;
-        console.warn('Erro ao carregar preferências de perfil:', e);
+        // Cooldown de 60s em caso de conexão fechada/timeout/ERR_CONNECTION_RESET
+        lastLoadPreferencesTimestamp = Date.now() + 60000;
       } finally {
         inflightLoadPreferences = null;
       }
@@ -99,21 +125,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return inflightLoadPreferences;
   },
   updatePreferences: async (newPrefs) => {
+    const currentUser = get().user;
     const merged = { ...get().preferences, ...newPrefs };
     set({ preferences: merged });
 
-    if (!isSupabaseConfigured) return;
-    const currentUser = get().user;
-    if (!currentUser?.id) return;
+    if (currentUser?.id) {
+      try {
+        localStorage.setItem(`dozero_user_prefs_${currentUser.id}`, JSON.stringify(merged));
+      } catch {}
+    }
+
+    if (!isSupabaseConfigured || !currentUser?.id) return;
 
     try {
       await supabase
         .from('profiles')
         .update({ preferences: merged })
         .eq('id', currentUser.id);
-    } catch (e) {
-      console.warn('Erro ao salvar preferências no Supabase:', e);
-    }
+    } catch {}
   },
   updateUserProfile: async (data) => {
     if (!isSupabaseConfigured) return;

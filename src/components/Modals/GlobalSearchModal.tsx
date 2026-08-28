@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, BookOpen, LayoutGrid, Terminal, User, ArrowRight, MapPin } from 'lucide-react';
+import { Search, X, BookOpen, LayoutGrid, Terminal, User, ArrowRight, MapPin, Film, ScrollText, Activity } from 'lucide-react';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { state } from '../../store';
@@ -40,6 +40,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
 
   // Search Results
   const tools = [
+    { name: 'Teatro da Mente (Cenas Cinematográficas)', type: 'Visão', icon: Film, action: () => { setViewMode('theater'); onClose(); } },
+    { name: 'Forja de Fichas (Arcanum)', type: 'Visão', icon: ScrollText, action: () => { setViewMode('sheets'); onClose(); } },
     { name: 'Pins de Lore no Mapa', type: 'Ferramenta', icon: MapPin, action: () => { window.dispatchEvent(new CustomEvent('open-lore-pins')); onClose(); } },
     { name: 'Hub de Ferramentas (Menu Geral)', type: 'Widget', icon: LayoutGrid, action: () => { setActiveModal('widgets'); onClose(); } },
     { name: 'Wiki da Campanha', type: 'Visão', icon: BookOpen, action: () => { setViewMode('wiki'); onClose(); } },
@@ -51,6 +53,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     { name: 'Biblioteca de Atores / Personagens', type: 'Ferramenta', icon: User, action: () => { setShowActors(true); onClose(); } },
     { name: 'Estúdio de Inteligência Artificial (IA)', type: 'Widget', icon: LayoutGrid, action: () => { toggleWindow('aiStudio'); onClose(); } },
     { name: 'Painel de Conspiração (MindMap)', type: 'Widget', icon: LayoutGrid, action: () => { toggleWindow('mindMap'); onClose(); } },
+    { name: 'Sincronizador Obsidian (Tempo Real)', type: 'Ferramenta', icon: Activity, action: () => { window.dispatchEvent(new CustomEvent('open-obsidian-sync')); onClose(); } },
+    { name: 'Publicador de Livros de Campanha (PDF & Web)', type: 'Ferramenta', icon: BookOpen, action: () => { window.dispatchEvent(new CustomEvent('open-campaign-book-publisher')); onClose(); } },
     { name: 'Configurações de Layout & Multi-Monitor', type: 'Ferramenta', icon: LayoutGrid, action: () => { window.dispatchEvent(new CustomEvent('open-layout-presets')); onClose(); } },
   ].filter(t => !q || t.name.toLowerCase().includes(q));
 

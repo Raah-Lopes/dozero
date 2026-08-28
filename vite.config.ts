@@ -64,6 +64,21 @@ export default defineConfig({
       }
     })
   ],
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'lucide-react',
+      'zustand',
+      'yjs',
+      'idb-keyval',
+      'qrcode.react',
+      '@dice-roller/rpg-dice-roller'
+    ]
+  },
   build: {
     rollupOptions: {
       input: {
@@ -75,11 +90,15 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('pixi.js') || id.includes('@pixi')) return 'vendor-canvas';
             if (id.includes('@google/generative-ai')) return 'vendor-ai';
-            if (id.includes('@mdxeditor')) return 'vendor-editor';
-            if (id.includes('mermaid') || id.includes('d3')) return 'vendor-charts';
-            if (id.includes('yjs')) return 'vendor-sync';
-            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
-            return 'vendor-core'; // everything else in node_modules goes here
+            if (id.includes('@mdxeditor') || id.includes('lexical')) return 'vendor-editor';
+            if (id.includes('mermaid')) return 'vendor-mermaid';
+            if (id.includes('d3') || id.includes('@xyflow')) return 'vendor-graph';
+            if (id.includes('yjs') || id.includes('y-websocket') || id.includes('y-indexeddb') || id.includes('y-partykit') || id.includes('y-webrtc')) return 'vendor-sync';
+            if (id.includes('@supabase')) return 'vendor-supabase';
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('@dice-roller')) return 'vendor-dice';
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) return 'vendor-react';
+            return 'vendor-core'; // remaining light utilities
           }
         }
       }

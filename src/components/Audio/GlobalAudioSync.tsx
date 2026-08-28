@@ -2,9 +2,18 @@ import React, { useEffect, useState, useRef } from 'react';
 import { state } from '../../services/yjs';
 import { useAudioStore } from '../../store/audioStore';
 
+type SyncedMedia = { url: string; isPlaying: boolean; ts: number };
+
+function asSyncedMedia(value: unknown): SyncedMedia | null {
+  if (!value || typeof value !== 'object') return null;
+  const candidate = value as Record<string, unknown>;
+  if (typeof candidate.url !== 'string' || typeof candidate.isPlaying !== 'boolean') return null;
+  return { url: candidate.url, isPlaying: candidate.isPlaying, ts: typeof candidate.ts === 'number' ? candidate.ts : Date.now() };
+}
+
 export function GlobalAudioSync() {
-  const [musicState, setMusicState] = useState<{ url: string, isPlaying: boolean, ts: number } | null>(null);
-  const [ambienceState, setAmbienceState] = useState<{ url: string, isPlaying: boolean, ts: number } | null>(null);
+  const [musicState, setMusicState] = useState<SyncedMedia | null>(null);
+  const [ambienceState, setAmbienceState] = useState<SyncedMedia | null>(null);
 
   const { musicVolume, ambienceVolume, loopMode } = useAudioStore();
   const musicAudioRef = useRef<HTMLAudioElement>(null);
@@ -14,8 +23,8 @@ export function GlobalAudioSync() {
     const handleAudioUpdate = () => {
       const music = state.audio.get('music');
       const ambience = state.audio.get('ambience');
-      setMusicState((music as any) || null);
-      setAmbienceState((ambience as any) || null);
+      setMusicState(asSyncedMedia(music));
+      setAmbienceState(asSyncedMedia(ambience));
     };
 
     state.audio.observe(handleAudioUpdate);
@@ -26,6 +35,23 @@ export function GlobalAudioSync() {
     };
   }, []);
 
+  // O soundboard principal vive no módulo SOUND, mas a transmissão precisa
+  // seguir o mesmo canal Yjs usado pelo restante da mesa.
+  useEffect(() => {
+    const handleSoundboardBroadcast = (event: Event) => {
+      const detail = (event as CustomEvent<{ url?: string; isPlaying?: boolean; ts?: number }>).detail;
+      if (!detail || typeof detail.url !== 'string' || typeof detail.isPlaying !== 'boolean') return;
+      state.audio.set('music', {
+        url: detail.url,
+        isPlaying: detail.isPlaying,
+        ts: detail.ts ?? Date.now(),
+      });
+    };
+
+    window.addEventListener('dozero-soundboard-broadcast', handleSoundboardBroadcast);
+    return () => window.removeEventListener('dozero-soundboard-broadcast', handleSoundboardBroadcast);
+  }, []);
+
   useEffect(() => {
     if (musicAudioRef.current) musicAudioRef.current.volume = musicVolume;
   }, [musicVolume]);
@@ -34,11 +60,25 @@ export function GlobalAudioSync() {
     if (ambienceAudioRef.current) ambienceAudioRef.current.volume = ambienceVolume;
   }, [ambienceVolume]);
 
-  const renderPlayer = (mediaState: { url: string, isPlaying: boolean, ts: number } | null, type: 'music' | 'ambience', volume: number, loop: boolean, ref: React.RefObject<HTMLAudioElement>) => {
+  useEffect(() => {
+    const audio = musicAudioRef.current;
+    if (!audio || !musicState?.url) return;
+    if (musicState.isPlaying) void audio.play().catch(() => undefined);
+    else audio.pause();
+  }, [musicState?.isPlaying, musicState?.url]);
+
+  useEffect(() => {
+    const audio = ambienceAudioRef.current;
+    if (!audio || !ambienceState?.url) return;
+    if (ambienceState.isPlaying) void audio.play().catch(() => undefined);
+    else audio.pause();
+  }, [ambienceState?.isPlaying, ambienceState?.url]);
+
+  const renderPlayer = (mediaState: SyncedMedia | null, type: 'music' | 'ambience', volume: number, loop: boolean, ref: React.RefObject<HTMLAudioElement>) => {
     if (!mediaState || !mediaState.url) return null;
     
     // Check if YouTube
-    const ytMatch = mediaState.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    const ytMatch = mediaState.url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
     if (ytMatch && ytMatch[1]) {
       const videoId = ytMatch[1];
       const iframeId = `yt-iframe-${type}`;

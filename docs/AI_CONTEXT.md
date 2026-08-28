@@ -1,6 +1,6 @@
 # Contexto operacional do DOZERO
 
-Atualizado em 25 de agosto de 2026. Este arquivo resume o estado confirmado pelo código; detalhes de implementação continuam nos arquivos-fonte.
+Atualizado em 27 de agosto de 2026. Este arquivo resume o estado confirmado pelo código; detalhes de implementação continuam nos arquivos-fonte.
 
 ## Produto
 
@@ -37,7 +37,7 @@ Prioridade do produto: funções completas primeiro; estética deve sustentar cl
 | Auth e campanhas | `src/store/authStore.ts`, `src/services/campaignCloudService.ts`, `src/components/Modals/CampaignLobbyModal.tsx` |
 | Mesa e tokens | `src/engine/GameCanvas.tsx`, `src/store/map.ts`, `src/store/modules/tokenModule.ts` |
 | Sync | `src/services/yjs.ts`, `src/services/supabaseRealtimeProvider.ts`, `src/services/sessionSnapshotManager.ts` |
-| Voz | `src/services/webrtcVoiceManager.ts`, `src/components/Chat/ChatVoicePanel.tsx`, `src/components/Widgets/System/VoiceChatBar.tsx` |
+| Voz & Comunicação | `src/store/voiceStore.ts`, `src/services/webrtcVoiceManager.ts`, `src/components/HUD/FloatingVoiceHUD.tsx`, `src/components/Widgets/System/VoiceRoomWidget.tsx`, `src/components/Chat/ChatVoicePanel.tsx` |
 | Wiki | `src/components/Wiki/`, `src/services/wiki/`, `vite-plugins/wiki-api.ts` |
 | Teatro | `src/components/Theater/`, `src/store/theater.ts` |
 | História/calendário | `src/components/Widgets/GameMaster/ChronicleWidget.tsx` (eras e história), `src/components/Widgets/GameMaster/ChronosWidget.tsx` (tempo operacional), `src/store/world.ts`, `src/utils/fantasyCalendar.ts` |

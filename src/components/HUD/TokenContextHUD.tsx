@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { state, toggleTarget, localState, pushChatMessage } from '../../store';
 import { Tokens } from '../../store/modules/tokenModule';
-import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus, Crosshair, Coins } from 'lucide-react';
+import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus, Crosshair, Coins, BookOpen, FileText, ScrollText } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
@@ -228,6 +228,46 @@ export function TokenContextHUD() {
           {tokenData.locked ? <Lock size={18} color="#f59e0b" /> : <Unlock size={18} color="rgba(255,255,255,0.7)" />}
         </button>
       </Tooltip>
+
+      <Tooltip label="Ficha Flutuante" position="top">
+        <button 
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('open-token-sheet', { detail: { tokenId: tokenData.id } }));
+          }} 
+          style={{ ...actionButtonStyle, background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+        >
+          <FileText size={18} color="#60a5fa" />
+        </button>
+      </Tooltip>
+
+      {tokenData.characterId && (
+        <Tooltip label="Abrir Ficha Arcanum Completa" position="top">
+          <button 
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-arcanum-sheet', { detail: { id: tokenData.characterId } }));
+            }} 
+            style={{ ...actionButtonStyle, background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.5)' }}
+          >
+            <ScrollText size={18} color="#f59e0b" />
+          </button>
+        </Tooltip>
+      )}
+
+      {(tokenData.wikiPath || entry?.path) && (
+        <Tooltip label="Abrir Artigo na Wiki / Códice" position="top">
+          <button 
+            onClick={() => {
+              const targetPath = tokenData.wikiPath || entry?.path;
+              if (targetPath) {
+                window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: targetPath } }));
+              }
+            }} 
+            style={{ ...actionButtonStyle, background: 'rgba(216, 180, 90, 0.2)', border: '1px solid rgba(216, 180, 90, 0.5)' }}
+          >
+            <BookOpen size={18} color="#d8b45a" />
+          </button>
+        </Tooltip>
+      )}
 
       <Tooltip label="Configurações do Token" position="top">
         <button 

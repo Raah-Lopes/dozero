@@ -23,9 +23,16 @@ interface SidebarProps {
   onOpenStats: () => void;
   onExportDB: () => void;
   onImportDB: (file: File) => void;
+  attraction?: number;
+  onSetAttraction?: (val: number) => void;
+  idealDistance?: number;
+  onSetIdealDistance?: (val: number) => void;
+  physicsOn?: boolean;
+  onTogglePhysics?: () => void;
+  onReheatPhysics?: () => void;
 }
 
-type TabKey = "camadas" | "tags" | "vistas" | "cofre";
+type TabKey = "camadas" | "tags" | "vistas" | "fisica" | "cofre";
 
 export default function Sidebar(p: SidebarProps) {
   const [tab, setTab] = useState<TabKey>("camadas");
@@ -93,6 +100,14 @@ export default function Sidebar(p: SidebarProps) {
           >
             <IBookmark className="w-4 h-4" />
           </button>
+          <button
+            type="button"
+            onClick={() => { setTab("fisica"); setCollapsed(false); }}
+            className={`w-8 h-8 rounded-lg grid place-items-center text-[13px] ${tab === "fisica" ? "bg-gold/20 text-gold" : "text-fog hover:text-parchment"}`}
+            title="Física & Atração"
+          >
+            ⚡
+          </button>
         </div>
         <button
           type="button"
@@ -116,6 +131,7 @@ export default function Sidebar(p: SidebarProps) {
               { id: "camadas", label: "🔮 Camadas" },
               { id: "tags", label: "🏷️ Tags" },
               { id: "vistas", label: "📌 Vistas" },
+              { id: "fisica", label: "⚡ Física" },
               { id: "cofre", label: "💾 Cofre" },
             ] as const
           ).map((t) => (
@@ -123,7 +139,7 @@ export default function Sidebar(p: SidebarProps) {
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              className={`px-2.5 py-1 rounded-lg font-mono text-[11px] font-bold transition-colors ${
+              className={`px-2 py-1 rounded-lg font-mono text-[10.5px] font-bold transition-colors ${
                 tab === t.id ? "bg-gold text-ink-950 shadow-sm" : "text-fog hover:text-parchment hover:bg-ink-800"
               }`}
             >
@@ -354,6 +370,80 @@ export default function Sidebar(p: SidebarProps) {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        )}
+
+        {tab === "fisica" && (
+          <div className="space-y-4">
+            <div className="p-3 rounded-xl bg-ink-850 border border-ink-700 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase text-gold font-bold">Força de Atração</span>
+                <span className="font-mono text-[10px] text-parchment font-bold">{(p.attraction ?? 1.0).toFixed(1)}x</span>
+              </div>
+              <input
+                type="range"
+                min="0.3"
+                max="2.5"
+                step="0.1"
+                value={p.attraction ?? 1.0}
+                onChange={(e) => p.onSetAttraction?.(parseFloat(e.target.value))}
+                className="w-full accent-[#d9a441] cursor-pointer"
+              />
+              <div className="flex justify-between text-[9px] text-fog font-mono">
+                <span>Espalhado (0.3x)</span>
+                <span>Compacto (2.5x)</span>
+              </div>
+              <p className="text-[10.5px] text-fog leading-tight">
+                Controla a força gravitacional que atrai os nós para perto uns dos outros.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-ink-850 border border-ink-700 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase text-gold font-bold">Distância entre Nós</span>
+                <span className="font-mono text-[10px] text-parchment font-bold">{p.idealDistance ?? 120}px</span>
+              </div>
+              <input
+                type="range"
+                min="70"
+                max="250"
+                step="10"
+                value={p.idealDistance ?? 120}
+                onChange={(e) => p.onSetIdealDistance?.(parseInt(e.target.value, 10))}
+                className="w-full accent-[#d9a441] cursor-pointer"
+              />
+              <div className="flex justify-between text-[9px] text-fog font-mono">
+                <span>Bem Próximos (70px)</span>
+                <span>Amplo (250px)</span>
+              </div>
+              <p className="text-[10.5px] text-fog leading-tight">
+                Espaçamento ideal entre os fragmentos conectados por laços.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-ink-850 border border-ink-700 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase text-gold font-bold">Gravidade Orgânica</span>
+                <button
+                  type="button"
+                  onClick={p.onTogglePhysics}
+                  className={`px-2.5 py-1 rounded-md text-[10.5px] font-bold transition-colors ${
+                    p.physicsOn
+                      ? "bg-emerald-600/30 text-emerald-400 border border-emerald-500/50"
+                      : "bg-ink-700 text-fog hover:text-parchment"
+                  }`}
+                >
+                  {p.physicsOn ? "Ativada" : "Pausada"}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={p.onReheatPhysics}
+                className="w-full flex items-center justify-center gap-1.5 p-2 rounded-xl bg-gold text-ink-950 font-bold text-[11px] hover:bg-gold-300 transition-colors shadow-sm mt-1"
+              >
+                ⚡ Reagrupar Nós
+              </button>
             </div>
           </div>
         )}

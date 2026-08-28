@@ -633,6 +633,89 @@ export function wikiLocalApi(): Plugin {
             return;
           }
 
+          if (req.method === 'GET' && pathname === '/api/wiki/status') {
+            const exists = fs.existsSync(repoPath);
+            let count = 0;
+            let lastModified = 0;
+            if (exists) {
+              try {
+                const countFiles = (dir: string) => {
+                  const files = fs.readdirSync(dir);
+                  for (const f of files) {
+                    if (f === '.git' || f === 'node_modules' || f === 'ANEXOS') continue;
+                    const full = path.join(dir, f);
+                    const stat = fs.statSync(full);
+                    if (stat.isDirectory()) countFiles(full);
+                    else if (f.endsWith('.md')) {
+                      count++;
+                      if (stat.mtimeMs > lastModified) lastModified = stat.mtimeMs;
+                    }
+                  }
+                };
+                countFiles(repoPath);
+              } catch {}
+            }
+            return sendResponse(200, {
+              connected: true,
+              repoPath,
+              exists,
+              fileCount: count,
+              lastModified,
+              timestamp: Date.now()
+            });
+          }
+
+          if (req.method === 'GET' && pathname === '/api/wiki/events') {
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.write(`data: ${JSON.stringify({ type: 'connected', repoPath, timestamp: Date.now() })}\n\n`);
+
+            if (!fs.existsSync(repoPath)) {
+              res.write(`data: ${JSON.stringify({ type: 'error', error: 'repoPath not found' })}\n\n`);
+              res.end();
+              return;
+            }
+
+            let debounceTimer: any = null;
+            const changedFiles = new Set<string>();
+
+            const watcher = fs.watch(repoPath, { recursive: true }, (eventType, filename) => {
+              if (!filename || filename.includes('.git') || filename.includes('node_modules') || filename.includes('ANEXOS') || !filename.endsWith('.md')) {
+                return;
+              }
+              const relPath = filename.replace(/\\/g, '/');
+              changedFiles.add(relPath);
+
+              if (debounceTimer) clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(() => {
+                const files = Array.from(changedFiles);
+                changedFiles.clear();
+                for (const f of files) {
+                  const full = path.join(repoPath, f);
+                  const exists = fs.existsSync(full);
+                  const stat = exists ? fs.statSync(full) : null;
+                  const eventData = {
+                    type: exists ? (eventType === 'rename' ? 'create' : 'change') : 'delete',
+                    path: f,
+                    mtime: stat ? stat.mtimeMs : Date.now(),
+                    timestamp: Date.now()
+                  };
+                  res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+                }
+              }, 300);
+            });
+
+            req.on('close', () => {
+              if (debounceTimer) clearTimeout(debounceTimer);
+              try { watcher.close(); } catch {}
+            });
+            return;
+          }
+
           if (req.method === 'POST' && pathname === '/api/wiki/sync-cloud') {
             const { exec } = await import('child_process');
             const projectRoot = path.resolve(process.cwd());

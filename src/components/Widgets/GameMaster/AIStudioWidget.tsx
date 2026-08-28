@@ -4,14 +4,17 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { generateAI, AI_MODELS, type AIProviderType, type AIModel } from '../../../services/ai/AIProvider';
 import { buildSystemPrompt, buildUserPrompt, type RPGContentType } from '../../../services/ai/prompts/rpgPrompts';
+import { indexCampaign, getIndexStats, clearCampaignIndex, type IndexStats } from '../../../services/ai/ragIndexService';
+import { searchContext, hasIndexedContent } from '../../../services/ai/ragSearchService';
 import { saveMarkdownContent } from '../../../utils/githubApi';
 import { useWiki } from '../../../hooks/useWiki';
 import { state } from '../../../store';
 import {
   Bot, Wand2, User, Skull, Map, Sword, BookOpen, Dices, Search,
   MessageSquare, Settings, Copy, Download, Save, Loader2, ChevronDown,
-  Key, Zap, Wifi, WifiOff, RefreshCw, Trash2, Send, X, Plus, Quote, ToyBrick
+  Key, Zap, Wifi, WifiOff, RefreshCw, Trash2, Send, X, Plus, Quote, ToyBrick, Database
 } from 'lucide-react';
+
 
 interface AIStudioWidgetProps {
   onClose?: () => void;
@@ -138,8 +141,21 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
   const [chatInput, setChatInput]    = useState('');
   const chatEndRef                    = useRef<HTMLDivElement>(null);
 
+  // RAG — indexação semântica
+  const campaignId = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+  const geminiKey  = provider === 'gemini' ? apiKey : (savedConfig.geminiKey || '');
+  const [ragStats, setRagStats]       = useState<IndexStats>({ total: 0, lastIndexed: null });
+  const [isIndexing, setIsIndexing]   = useState(false);
+  const [indexProgress, setIndexProgress] = useState(0);
+  const [indexStatus, setIndexStatus] = useState('');
+  const [geminiKeyForRag, setGeminiKeyForRag] = useState(savedConfig.geminiKey || '');
+
   // Modelos filtrados pelo provedor selecionado
   const filteredModels = AI_MODELS.filter(m => m.provider === provider);
+
+  // Carrega stats RAG ao montar e persiste geminiKeyForRag
+  useEffect(() => { getIndexStats(campaignId).then(setRagStats); }, [campaignId]);
+  useEffect(() => { saveConfig({ geminiKey: geminiKeyForRag }); }, [geminiKeyForRag]);
 
   // Quando troca de tab, ajusta tipo específico padrão
   useEffect(() => {
@@ -198,79 +214,80 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
     return ctx;
   }, [index, useWikiCtx, activeDLCs]);
 
+  // ── Indexação RAG ────────────────────────────────────────────────────────────
+  const handleIndexCampaign = useCallback(async () => {
+    if (!geminiKeyForRag) { setIndexStatus('⚠️ Configure a chave Gemini para RAG acima.'); return; }
+    if (!index?.length)   { setIndexStatus('⚠️ Nenhum documento na wiki para indexar.'); return; }
+    setIsIndexing(true); setIndexProgress(0); setIndexStatus('Indexando...');
+    try {
+      // ponytail: getContent via fetch simples — usa o mesmo mecanismo do useWiki
+      const getContent = async (path: string): Promise<string | null> => {
+        try {
+          const { fetchMarkdownContent } = await import('../../../utils/githubApi');
+          return await fetchMarkdownContent(path);
+        } catch { return null; }
+      };
+      const { indexed } = await indexCampaign(campaignId, index, getContent, setIndexProgress);
+      const newStats = await getIndexStats(campaignId);
+      setRagStats(newStats);
+      setIndexStatus(`✅ ${indexed} trechos indexados (total: ${newStats.total})`);
+    } catch (err: any) {
+      setIndexStatus(`❌ Erro: ${err.message}`);
+    } finally { setIsIndexing(false); }
+  }, [campaignId, index, geminiKeyForRag]);
+
   // ── Geração principal ───────────────────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
     if (isGenerating) return;
-    setIsGenerating(true);
-    setError('');
-    setOutput('');
-    setSaveStatus('');
-
+    setIsGenerating(true); setError(''); setOutput(''); setSaveStatus('');
     try {
       const selectedModel = filteredModels.find(m => m.id === modelId);
       if (selectedModel?.requiresKey && !apiKey && provider !== 'pollinations' && provider !== 'ollama') {
         throw new Error(`O modelo ${selectedModel.label} requer uma API Key. Configure em ⚙️ Configurações.`);
       }
+      // RAG: busca contexto semântico se houver embeddings indexados
+      const ragKey = geminiKeyForRag || (provider === 'gemini' ? apiKey : '');
+      const ragCtx = useWikiCtx ? await searchContext(
+        `${tipoEsp} ${nome} ${conceito}`.trim(), campaignId, ragKey
+      ) : '';
+      const wikiCtx = ragCtx || buildWikiContext() || undefined;
 
       const system = buildSystemPrompt(activeTab, activeDLCs);
       const user = buildUserPrompt({
-        type: activeTab,
-        nome: nome || undefined,
-        nivel,
-        tipoEspecifico: tipoEsp,
+        type: activeTab, nome: nome || undefined, nivel, tipoEspecifico: tipoEsp,
         conceito: activeTab === 'chat' ? undefined : (conceito || undefined),
-        contextoWiki: buildWikiContext() || undefined,
-        textoExtra: textoExtra || undefined,
-        grupoNivel: nivel,
-        categorias_dlc: categoriasDlc,
+        contextoWiki: wikiCtx, textoExtra: textoExtra || undefined,
+        grupoNivel: nivel, categorias_dlc: categoriasDlc,
         dlcMode: activeTab === 'dlc_factory' ? dlcMode : undefined,
       });
-
-      const result = await generateAI({
-        provider,
-        model: modelId,
-        apiKey: apiKey || undefined,
-        systemPrompt: system,
-        userPrompt: user,
-        temperature,
-        maxTokens: 6000,
-        ollamaUrl: provider === 'ollama' ? ollamaUrl : undefined,
-      });
-
+      const result = await generateAI({ provider, model: modelId, apiKey: apiKey || undefined, systemPrompt: system, userPrompt: user, temperature, maxTokens: 6000, ollamaUrl: provider === 'ollama' ? ollamaUrl : undefined });
       setOutput(result.text);
       setShowSavePanel(activeTab !== 'chat');
     } catch (err: any) {
       setError(err.message || 'Erro desconhecido ao chamar a IA.');
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [isGenerating, provider, modelId, apiKey, ollamaUrl, activeTab, nome, nivel, tipoEsp, conceito, textoExtra, temperature, buildWikiContext, filteredModels]);
+    } finally { setIsGenerating(false); }
+  }, [isGenerating, provider, modelId, apiKey, ollamaUrl, activeTab, nome, nivel, tipoEsp, conceito, textoExtra, temperature, buildWikiContext, filteredModels, campaignId, geminiKeyForRag, useWikiCtx, activeDLCs, categoriasDlc, dlcMode]);
 
   // ── Chat ────────────────────────────────────────────────────────────────────
   const handleChat = useCallback(async () => {
     if (!chatInput.trim() || isGenerating) return;
     const userMsg = chatInput.trim();
-    setChatInput('');
-    setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
+    setChatInput(''); setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsGenerating(true);
-
     try {
+      const ragKey = geminiKeyForRag || (provider === 'gemini' ? apiKey : '');
+      const ragCtx = await searchContext(userMsg, campaignId, ragKey);
+      const ctx = ragCtx || buildWikiContext() || 'Sem contexto disponível.';
       const result = await generateAI({
-        provider,
-        model: modelId,
-        apiKey: apiKey || undefined,
-        systemPrompt: buildSystemPrompt('chat', activeDLCs) + '\n\nContexto da campanha:\n' + (buildWikiContext() || 'Sem contexto disponível.'),
-        userPrompt: userMsg,
-        temperature,
-        ollamaUrl: provider === 'ollama' ? ollamaUrl : undefined,
+        provider, model: modelId, apiKey: apiKey || undefined,
+        systemPrompt: buildSystemPrompt('chat', activeDLCs) + '\n\nContexto da campanha:\n' + ctx,
+        userPrompt: userMsg, temperature, ollamaUrl: provider === 'ollama' ? ollamaUrl : undefined,
       });
       setChatHistory(prev => [...prev, { role: 'ai', text: result.text }]);
     } catch (err: any) {
       setChatHistory(prev => [...prev, { role: 'ai', text: `❌ Erro: ${err.message}` }]);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [chatInput, isGenerating, provider, modelId, apiKey, ollamaUrl, temperature, buildWikiContext]);
+    } finally { setIsGenerating(false); }
+  }, [chatInput, isGenerating, provider, modelId, apiKey, ollamaUrl, temperature, buildWikiContext, campaignId, geminiKeyForRag, activeDLCs]);
 
   // ── Salvar na wiki ───────────────────────────────────────────────────────────
   const handleSaveToWiki = useCallback(async () => {
@@ -445,6 +462,60 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
                 <div>🔵 Gemini: <a href="https://aistudio.google.com" target="_blank" rel="noreferrer" style={{ color: '#4285f4' }}>aistudio.google.com</a></div>
                 <div>🟣 OpenRouter: <a href="https://openrouter.ai" target="_blank" rel="noreferrer" style={{ color: '#a855f7' }}>openrouter.ai</a></div>
               </div>
+            </div>
+
+            {/* ── PAINEL RAG ─────────────────────────────────────────────── */}
+            <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                <Database size={11} style={{ color: '#a78bfa' }} />
+                <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Base de Conhecimento (RAG)</span>
+                {ragStats.total > 0 && (
+                  <span style={{ fontSize: '0.55rem', background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '10px', padding: '1px 7px', color: '#a78bfa' }}>
+                    {ragStats.total} trechos
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label className="ai-field-label"><Key size={9} style={{ display: 'inline', marginRight: '2px' }} /> Chave Gemini (para RAG)</label>
+                  <input
+                    type="password"
+                    value={geminiKeyForRag}
+                    onChange={e => setGeminiKeyForRag(e.target.value)}
+                    placeholder="Cole sua chave Gemini para indexação semântica..."
+                    className="ai-input"
+                  />
+                  <div style={{ fontSize: '0.5rem', color: '#475569', marginTop: '2px' }}>
+                    Usada apenas para gerar embeddings da wiki. Fica só no seu browser.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <button
+                    className="ai-btn"
+                    onClick={handleIndexCampaign}
+                    disabled={isIndexing}
+                    style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.4)', color: '#a78bfa' }}
+                  >
+                    {isIndexing ? <><Loader2 size={11} className="spin" /> {indexProgress}%</> : <><Database size={11} /> Indexar Campanha</>}
+                  </button>
+                  {ragStats.total > 0 && (
+                    <button
+                      className="ai-btn"
+                      onClick={async () => { await clearCampaignIndex(campaignId); setRagStats({ total: 0, lastIndexed: null }); setIndexStatus('🗑️ Índice apagado.'); }}
+                      style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#475569', fontSize: '0.6rem' }}
+                    >
+                      <Trash2 size={10} /> Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+              {isIndexing && (
+                <div style={{ marginTop: '6px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', height: '4px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${indexProgress}%`, background: 'linear-gradient(90deg, #7c3aed, #a78bfa)', transition: 'width 0.3s' }} />
+                </div>
+              )}
+              {indexStatus && <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginTop: '4px' }}>{indexStatus}</div>}
+              {ragStats.lastIndexed && <div style={{ fontSize: '0.5rem', color: '#475569', marginTop: '2px' }}>Última indexação: {new Date(ragStats.lastIndexed).toLocaleString('pt-BR')}</div>}
             </div>
           </div>
         )}

@@ -1,12 +1,11 @@
-@reference "../../src/index.css";
+@reference "../../../index.css";
 
 .arcanum-sheet-workspace {
-  scroll-behavior: smooth;
   background-color: var(--color-ink-950);
   color: var(--color-parch-200);
   font-family: var(--font-body);
   min-height: 100vh;
-  overflow: auto;
+  overflow: visible;
   user-select: text;
 }
 .arcanum-sheet-workspace .font-display { font-family: "Cinzel", "Times New Roman", serif; }
@@ -160,6 +159,77 @@ select.field { appearance: none; }
 .arcanum-sheet-workspace *::-webkit-scrollbar-thumb:hover { background: #a5762a; }
 
 .arcanum-sheet-workspace ::selection { background: rgba(205, 151, 60, 0.35); color: #f3ead6; }
+
+.arcanum-movement-nav {
+  min-width: 0;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.arcanum-movement-nav::-webkit-scrollbar { display: none; }
+.arcanum-movement-nav:not(:hover) { scrollbar-color: transparent transparent; }
+.arcanum-movement-nav__items {
+  display: flex;
+  flex: 0 0 max-content;
+  min-width: 100%;
+  width: max-content;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 2.2vw, 24px);
+}
+
+.arcanum-movement-item {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: #c8b88a;
+  font-family: var(--font-display, "Cinzel", "Times New Roman", serif);
+  font-size: clamp(14px, 1.15vw, 16.5px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 6px 6px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  user-select: none;
+}
+
+.arcanum-movement-item:hover {
+  color: #f7dfa4;
+  text-shadow: 0 0 12px rgba(247, 223, 164, 0.5);
+  transform: translateY(-1px);
+}
+
+.arcanum-movement-item.active {
+  color: #ffd980;
+  font-weight: 800;
+  text-shadow: 0 0 16px rgba(224, 176, 84, 0.65);
+}
+
+.arcanum-movement-item::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #e0b054, transparent);
+  transform: translateX(-50%);
+  transition: width 0.25s ease;
+  border-radius: 9999px;
+  box-shadow: 0 0 8px #e0b054;
+}
+
+.arcanum-movement-item.active::after,
+.arcanum-movement-item:hover::after {
+  width: 100%;
+}
+
+.arcanum-sheet-workspace section[id] {
+  scroll-margin-top: 4rem;
+}
+
+@media (max-width: 1023px) {
+  .arcanum-sheet-workspace section[id] { scroll-margin-top: 6.25rem; }
+}
 
 /* ---- print -------------------------------------------------------------- */
 @media print {

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { BookOpen, Copy, Plus, Shield, Trash2, UserRound, Users, X } from 'lucide-react';
+import { BookOpen, Copy, Plus, Shield, Trash2, UserRound, Users, X, LayoutGrid, ScrollText } from 'lucide-react';
 import ArcanumSheet from './Arcanum/ArcanumSheetApp';
 import { DEFAULT_CHARACTER, type Character, type RollResult } from './Arcanum/lib';
 import { usePersonagens } from '../../hooks/usePersonagens';
@@ -14,6 +14,7 @@ import { state } from '../../services/yjs';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../UI/Toast';
 import { WorkspaceChrome } from '../Navigation/WorkspaceChrome';
+import { LoreWorkspaceSwitcher } from '../Navigation/LoreWorkspaceSwitcher';
 import { ARCANUM_SHEET_KIND, characterFromRecord, recordData } from './arcanumSheetAdapter';
 import './arcanumWorkspace.css';
 
@@ -53,10 +54,21 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
   }, [load]);
 
   useEffect(() => {
-    const refreshFromRoom = () => void load();
+    const refreshFromRoom = () => {
+      const sharedCampaign = Array.from(state.sheets.values()).filter((record: unknown) => {
+        const value = record as Partial<CharacterRecord>;
+        return value.campaign_id === campaignId;
+      }) as CharacterRecord[];
+      setRecords((current) => {
+        const map = new Map<string, CharacterRecord>();
+        current.forEach((r) => map.set(r.id, r));
+        sharedCampaign.forEach((r) => map.set(r.id, r));
+        return Array.from(map.values());
+      });
+    };
     state.sheets.observe(refreshFromRoom);
     return () => state.sheets.unobserve(refreshFromRoom);
-  }, [load]);
+  }, [campaignId]);
 
   useEffect(() => setScope(initialScope), [initialScope]);
 
@@ -176,38 +188,19 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
     const wikiPath = String(active.data?.wikiPath || '');
     return (
       <div className="arcanum-host">
-        <WorkspaceChrome
-          className="arcanum-ecosystem-bar no-print"
-          title="Ficha Arcanum"
-          subtitle={active.campaign_id ? 'Ficha da mesa' : 'Ficha do vault'}
-          icon={<Shield size={22} />}
-          navigation={(
-            <>
-              <button className="workspace-chrome-button" onClick={() => setActive(null)}><X size={15} /> Lista</button>
-              <label>
-                <BookOpen size={14} />
-                <select value={wikiPath} onChange={(event) => void updateWikiLink(event.target.value)} aria-label="Vincular ficha a uma nota do Códice">
-                  <option value="">Sem vínculo no Códice</option>
-                  {personagens.map((personagem) => <option key={personagem.caminhoArquivo} value={personagem.caminhoArquivo}>{personagem.nome}</option>)}
-                </select>
-              </label>
-            </>
-          )}
-          actions={(
-            <>
-              {wikiPath && <button className="workspace-chrome-button" onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: wikiPath } }))}><BookOpen size={14} /> Abrir Códice</button>}
-              <button className="workspace-chrome-button" onClick={spawnToken}><Shield size={14} /> Criar token</button>
-              {active.campaign_id && <button className="workspace-chrome-button" onClick={() => void duplicateToVault()}><Copy size={14} /> Salvar no Vault</button>}
-              <button className="workspace-chrome-button workspace-chrome-button--danger" onClick={() => void removeActive()}><Trash2 size={14} /> Excluir</button>
-            </>
-          )}
-        />
         <div className="arcanum-editor-scroll">
           <ArcanumSheet
             key={active.id}
             initialCharacter={characterFromRecord(active)}
+            wikiPath={wikiPath}
+            personagens={personagens}
+            onUpdateWikiLink={updateWikiLink}
+            onSpawnToken={spawnToken}
+            onDuplicateToVault={active.campaign_id ? duplicateToVault : undefined}
+            onDelete={removeActive}
             onSave={persistCharacter}
             onClose={() => setActive(null)}
+            onExitToCanvas={onClose}
             onNew={() => void createSheet()}
             onRoll={sendRollToChat}
           />
@@ -221,8 +214,16 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
       <WorkspaceChrome
         className="arcanum-library-chrome"
         title="Forja de Fichas"
-        subtitle="Ecossistema DOZERO · modelos de personagens"
-        icon={<Shield size={22} />}
+        subtitle="Ecossistema DOZERO · Modelos de personagens"
+        icon={<ScrollText size={22} />}
+        navigation={(
+          <>
+            <button className="workspace-chrome-button" onClick={onClose} title="Voltar ao Mapa / Mesa">
+              <LayoutGrid size={15} /> Mesa
+            </button>
+            <LoreWorkspaceSwitcher current="sheets" />
+          </>
+        )}
         actions={<button className="arcanum-close workspace-chrome-icon-button" onClick={onClose} aria-label="Voltar para a mesa"><X size={20} /></button>}
       />
       <div className="arcanum-library-actions">

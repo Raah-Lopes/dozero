@@ -300,28 +300,53 @@ export interface CampaignMemberRecord {
   };
 }
 
+const inflightMembers = new Map<string, Promise<CampaignMemberRecord[]>>();
+const lastMembersFetchTime = new Map<string, number>();
+const cachedMembersList = new Map<string, CampaignMemberRecord[]>();
+
 /**
  * Busca os participantes e mestre de uma campanha
  */
 export async function getCampaignMembers(campaignId: string): Promise<CampaignMemberRecord[]> {
   if (!isSupabaseConfigured || !campaignId) return [];
-  try {
-    const { data, error } = await supabase
-      .from('players')
-      .select('id, campaign_id, user_id, role, character_name, joined_at, last_seen_at, profile:profiles(id, username, full_name, avatar_url)')
-      .eq('campaign_id', campaignId)
-      .order('joined_at', { ascending: true });
 
-    if (error) {
-      console.warn('[CampaignCloud] Erro ao buscar membros da campanha:', error.message);
-      return [];
-    }
-
-    return (data || []) as unknown as CampaignMemberRecord[];
-  } catch (err) {
-    console.warn('[CampaignCloud] Falha na rede ao buscar membros:', err);
-    return [];
+  const now = Date.now();
+  const lastTime = lastMembersFetchTime.get(campaignId) || 0;
+  const cached = cachedMembersList.get(campaignId);
+  if (cached && now - lastTime < 4000) {
+    return cached;
   }
+
+  const existing = inflightMembers.get(campaignId);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('id, campaign_id, user_id, role, character_name, joined_at, last_seen_at, profile:profiles(id, username, full_name, avatar_url)')
+        .eq('campaign_id', campaignId)
+        .order('joined_at', { ascending: true });
+
+      if (error) {
+        console.warn('[CampaignCloud] Erro ao buscar membros da campanha:', error.message);
+        return cached || [];
+      }
+
+      const records = (data || []) as unknown as CampaignMemberRecord[];
+      cachedMembersList.set(campaignId, records);
+      lastMembersFetchTime.set(campaignId, Date.now());
+      return records;
+    } catch (err) {
+      console.warn('[CampaignCloud] Falha na rede ao buscar membros:', err);
+      return cached || [];
+    } finally {
+      inflightMembers.delete(campaignId);
+    }
+  })();
+
+  inflightMembers.set(campaignId, promise);
+  return promise;
 }
 
 /**

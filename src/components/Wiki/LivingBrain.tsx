@@ -14,18 +14,24 @@ import { state } from '../../services/yjs';
 import { CodexDocument, normalizeCodex } from './Codex/codexModel';
 import { Icone } from './Codex/CodexIcons';
 
-const bundledWikiModules = import.meta.glob('../../../wikidozero/**/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
-
-const bundledWikiFiles = Object.fromEntries(
-  Object.entries(bundledWikiModules).map(([path, content]) => [
-    path.replace('../../../wikidozero/', '').replace(/^\.\//, ''),
-    content,
-  ]),
-);
+const getBundledWikiFiles = async (): Promise<Record<string, string>> => {
+  const modules = import.meta.glob('../../../wikidozero/**/*.md', {
+    query: '?raw',
+    import: 'default',
+  });
+  const entries = await Promise.all(
+    Object.entries(modules).map(async ([path, loader]) => {
+      try {
+        const content = (await loader()) as string;
+        const cleanPath = path.replace('../../../wikidozero/', '').replace(/^\.\//, '');
+        return [cleanPath, content] as [string, string];
+      } catch {
+        return null;
+      }
+    })
+  );
+  return Object.fromEntries(entries.filter((e): e is [string, string] => e !== null));
+};
 
 function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: WNode[]; edges: WEdge[] } {
   if (!codex || codex.notes.length === 0) return { nodes: [], edges: [] };
@@ -143,6 +149,7 @@ export const LivingBrain: React.FC = () => {
       // Se o códice estiver vazio, busca da Wiki Markdown empacotada
       let json: { nodes: WikiGraphNodeSource[]; links: WikiGraphLinkSource[] };
       try {
+        const bundledWikiFiles = await getBundledWikiFiles();
         json = await WikiIndexer.buildGraph(bundledWikiFiles);
       } catch {
         json = { nodes: [], links: [] };

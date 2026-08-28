@@ -14,6 +14,8 @@ node_modules/
 .DS_Store
 desktop.ini
 supabase/.temp/
+stats.html
+SOUND/
 .env
 .env.local
 .env.development.local

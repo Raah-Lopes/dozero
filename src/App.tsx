@@ -1,13 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import './App.css';
-import { WikiViewer } from './components/Wiki/WikiViewer';
-import { CodexWorkspace } from './components/Wiki/Codex/CodexWorkspace';
 import { GameCanvas } from './engine/GameCanvas';
 import { GMToolbar } from './components/HUD/GMToolbar';
 import { TokenContextHUD } from './components/HUD/TokenContextHUD';
 import { CombatLog } from './components/Chat/CombatLog';
 import { ChatWindow } from './components/Chat/ChatWindow';
-import { SettingsModal } from './components/Modals/SettingsModal';
 import { AIAssistantBot } from './components/HUD/AIAssistantBot';
 import { DraggableWindow } from './components/HUD/DraggableWindow';
 import { TargetTerminal } from './components/Widgets/PlayerTools/TargetTerminal';
@@ -18,7 +15,6 @@ import { ImageContextBar } from './components/HUD/ImageContextBar';
 import { PropInteractionPanel } from './components/HUD/PropInteractionPanel';
 import { NPCPanel } from './components/HUD/NPCPanel';
 import { CutsceneOverlay } from './components/Theater/CutsceneOverlay';
-import { InviteModal } from './components/Modals/InviteModal';
 import { ClimaxOverlay } from './components/UI/ClimaxOverlay';
 import { SoftTimer } from './components/UI/SoftTimer';
 import { DiceOverlay } from './components/UI/DiceOverlay';
@@ -26,19 +22,14 @@ import { PPROverlay } from './components/UI/PPROverlay';
 import { CombatTracker } from './components/HUD/CombatTracker';
 import { MapContextMenu } from './components/UI/MapContextMenu';
 import { GridToolbar } from './components/UI/GridToolbar';
-import { ClockConfigModal } from './components/Modals/ClockConfigModal';
-import { WidgetHubModal } from './components/Modals/WidgetHubModal';
+import { GridSoundboardLauncher } from './components/UI/GridSoundboardLauncher';
 import { TensionClockManager } from './components/HUD/TensionClockManager';
 import { FloatingDocument } from './components/UI/FloatingDocument';
-import { TheaterView } from './components/Theater/TheaterView';
 import { WidgetLayer } from './components/HUD/WidgetLayer';
 import { PlayerQuickBar } from './components/HUD/PlayerQuickBar';
 import { useWindowManager } from './hooks/useWindowManager';
 import { state, addTensionClock, updateTensionClockProps, pushChatMessage } from './store';
 import { MobileQuickActions } from './components/HUD/MobileQuickActions';
-import { LayoutPresetsModal } from './components/Modals/LayoutPresetsModal';
-import { GlobalSearchModal } from './components/Modals/GlobalSearchModal';
-import { LorePinsModal } from './components/Modals/LorePinsModal';
 import { PopoutViewer } from './components/Popout/PopoutViewer';
 import { GlobalAudioSync } from './components/Audio/GlobalAudioSync';
 import { CutsceneManager } from './components/Theater/CutsceneManager';
@@ -46,19 +37,32 @@ import { Toaster, ConfirmDialog } from './components/UI/Toast';
 import { useAppEventListeners } from './hooks/useAppEventListeners';
 import { ErrorBoundary } from './components/UI/ErrorBoundary';
 import { OfflineStatus } from './components/System/OfflineStatus';
-import { AuthModal } from './components/Modals/AuthModal';
-import { ProfileModal } from './components/Modals/ProfileModal';
-import { ResetPasswordModal } from './components/Modals/ResetPasswordModal';
-import { CampaignLobbyModal } from './components/Modals/CampaignLobbyModal';
-import { PlayerVaultModal } from './components/Modals/PlayerVaultModal';
-import { TokenConfigModal } from './components/Modals/TokenConfigModal';
 import { StreamOverlay } from './components/Stream/StreamOverlay';
 import { useAutoSaveSession } from './services/useAutoSaveSession';
 import { useRoomPresence } from './services/useRoomPresence';
 import { useAuthStore } from './store/authStore';
 
-const LivingBrain = React.lazy(() => import('./components/Wiki/LivingBrain').then((module) => ({ default: module.LivingBrain })));
-const ArcanumSheetsWorkspace = React.lazy(() => import('./components/Sheets/ArcanumSheetsWorkspace').then((module) => ({ default: module.ArcanumSheetsWorkspace })));
+// Workspaces e Modais pesados carregados sob demanda (0ms de impacto inicial no Canvas)
+const WikiViewer = React.lazy(() => import('./components/Wiki/WikiViewer').then(m => ({ default: m.WikiViewer })));
+const CodexWorkspace = React.lazy(() => import('./components/Wiki/Codex/CodexWorkspace').then(m => ({ default: m.CodexWorkspace })));
+const LivingBrain = React.lazy(() => import('./components/Wiki/LivingBrain').then(m => ({ default: m.LivingBrain })));
+const ArcanumSheetsWorkspace = React.lazy(() => import('./components/Sheets/ArcanumSheetsWorkspace').then(m => ({ default: m.ArcanumSheetsWorkspace })));
+const TheaterView = React.lazy(() => import('./components/Theater/TheaterView').then(m => ({ default: m.TheaterView })));
+const SettingsModal = React.lazy(() => import('./components/Modals/SettingsModal').then(m => ({ default: m.SettingsModal })));
+const InviteModal = React.lazy(() => import('./components/Modals/InviteModal').then(m => ({ default: m.InviteModal })));
+const ClockConfigModal = React.lazy(() => import('./components/Modals/ClockConfigModal').then(m => ({ default: m.ClockConfigModal })));
+const WidgetHubModal = React.lazy(() => import('./components/Modals/WidgetHubModal').then(m => ({ default: m.WidgetHubModal })));
+const LayoutPresetsModal = React.lazy(() => import('./components/Modals/LayoutPresetsModal').then(m => ({ default: m.LayoutPresetsModal })));
+const GlobalSearchModal = React.lazy(() => import('./components/Modals/GlobalSearchModal').then(m => ({ default: m.GlobalSearchModal })));
+const LorePinsModal = React.lazy(() => import('./components/Modals/LorePinsModal').then(m => ({ default: m.LorePinsModal })));
+const CampaignLobbyModal = React.lazy(() => import('./components/Modals/CampaignLobbyModal').then(m => ({ default: m.CampaignLobbyModal })));
+const PlayerVaultModal = React.lazy(() => import('./components/Modals/PlayerVaultModal').then(m => ({ default: m.PlayerVaultModal })));
+const TokenConfigModal = React.lazy(() => import('./components/Modals/TokenConfigModal').then(m => ({ default: m.TokenConfigModal })));
+const AuthModal = React.lazy(() => import('./components/Modals/AuthModal').then(m => ({ default: m.AuthModal })));
+const ProfileModal = React.lazy(() => import('./components/Modals/ProfileModal').then(m => ({ default: m.ProfileModal })));
+const ResetPasswordModal = React.lazy(() => import('./components/Modals/ResetPasswordModal').then(m => ({ default: m.ResetPasswordModal })));
+const ObsidianSyncModal = React.lazy(() => import('./components/Modals/ObsidianSyncModal').then(m => ({ default: m.ObsidianSyncModal })));
+const CampaignBookPublisherModal = React.lazy(() => import('./components/Modals/CampaignBookPublisherModal').then(m => ({ default: m.CampaignBookPublisherModal })));
 
 type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby' | 'vault' | 'tokenConfig';
 
@@ -111,6 +115,8 @@ function App() {
     isLayoutPresetsOpen, setIsLayoutPresetsOpen,
     isGlobalSearchOpen, setIsGlobalSearchOpen,
     isLorePinsOpen, setIsLorePinsOpen,
+    isObsidianSyncOpen, setIsObsidianSyncOpen,
+    isBookPublisherOpen, setIsBookPublisherOpen,
     activeCutscene, setActiveCutscene
   } = useAppEventListeners({
     viewMode,
@@ -179,21 +185,23 @@ function App() {
       <div className={`view-layer wiki-layer ${viewMode === 'wiki' ? 'active' : ''}`}>
         {viewMode === 'wiki' && (
           <ErrorBoundary componentName="Códice Arcanum">
-            {showLegacyWiki
-              ? <WikiViewer
-                initialFile={wikiInitialFile}
-                  onClose={() => {
-                    setShowLegacyWiki(false);
-                    setViewMode('canvas');
-                  }}
-                  onBackToCodex={() => setShowLegacyWiki(false)}
-                />
-              : <CodexWorkspace
+            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#15120e] text-[#d9a441]" role="status">Abrindo o Códice...</div>}>
+              {showLegacyWiki
+                ? <WikiViewer
                   initialFile={wikiInitialFile}
-                  onClose={() => setViewMode('canvas')}
-                  onOpenLegacy={currentRoom === 'dozero-mesa-principal-v2' ? () => setShowLegacyWiki(true) : undefined}
-                  onOpenBrain={() => setViewMode('brain')}
-                />}
+                    onClose={() => {
+                      setShowLegacyWiki(false);
+                      setViewMode('canvas');
+                    }}
+                    onBackToCodex={() => setShowLegacyWiki(false)}
+                  />
+                : <CodexWorkspace
+                    initialFile={wikiInitialFile}
+                    onClose={() => setViewMode('canvas')}
+                    onOpenLegacy={currentRoom === 'dozero-mesa-principal-v2' ? () => setShowLegacyWiki(true) : undefined}
+                    onOpenBrain={() => setViewMode('brain')}
+                  />}
+            </React.Suspense>
           </ErrorBoundary>
         )}
       </div>
@@ -202,7 +210,9 @@ function App() {
       <div className={`view-layer theater-layer ${viewMode === 'theater' ? 'active' : ''}`}>
         {viewMode === 'theater' && (
           <ErrorBoundary componentName="Teatro (TheaterView)">
-            <TheaterView />
+            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#0d0f14] text-[#818cf8]" role="status">Preparando o Teatro...</div>}>
+              <TheaterView />
+            </React.Suspense>
           </ErrorBoundary>
         )}
       </div>
@@ -243,6 +253,7 @@ function App() {
       {viewMode === 'canvas' && (
         <div className="hud-layer hud-grid">
           <ErrorBoundary componentName="Interface Principal (HUD)">
+            <GridSoundboardLauncher />
             <QuestTrackerHUD />
 
           {/* Combat Tracker Widget */}
@@ -291,62 +302,66 @@ function App() {
           {/* Modal Layer */}
           {(activeModal === 'players' || activeModal.startsWith('settings')) && (
             <div className="hud-modal-layer">
-              {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
-              {activeModal.startsWith('settings') && (
-                <SettingsModal 
-                  onClose={() => setActiveModal('none')} 
-                  initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : 'geral'} 
-                />
-              )}
+              <React.Suspense fallback={null}>
+                {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
+                {activeModal.startsWith('settings') && (
+                  <SettingsModal 
+                    onClose={() => setActiveModal('none')} 
+                    initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : 'geral'} 
+                  />
+                )}
+              </React.Suspense>
             </div>
           )}
 
           {/* Clock Config Modal */}
           {activeModal === 'clockConfig' && (
-            <ClockConfigModal
-              existingClock={editingClockId ? state.clocks.get(editingClockId) as TensionClock : undefined}
-              onClose={() => {
-                setActiveModal('none');
-                setEditingClockId(null);
-              }}
-              onConfirm={(config, isEdit) => {
-                if (isEdit && editingClockId) {
-                  const current = state.clocks.get(editingClockId) as TensionClock;
-                  if (current) {
-                    const now = Date.now();
-                    const durationChanged = current.durationMs !== config.durationMs;
-                    const newEndTime = durationChanged ? now + config.durationMs : current.endTime;
-                    const newPausedRemaining = durationChanged ? undefined : current.pausedRemainingMs;
+            <React.Suspense fallback={null}>
+              <ClockConfigModal
+                existingClock={editingClockId ? state.clocks.get(editingClockId) as TensionClock : undefined}
+                onClose={() => {
+                  setActiveModal('none');
+                  setEditingClockId(null);
+                }}
+                onConfirm={(config, isEdit) => {
+                  if (isEdit && editingClockId) {
+                    const current = state.clocks.get(editingClockId) as TensionClock;
+                    if (current) {
+                      const now = Date.now();
+                      const durationChanged = current.durationMs !== config.durationMs;
+                      const newEndTime = durationChanged ? now + config.durationMs : current.endTime;
+                      const newPausedRemaining = durationChanged ? undefined : current.pausedRemainingMs;
 
-                    updateTensionClockProps(editingClockId, {
+                      updateTensionClockProps(editingClockId, {
+                        label: config.label,
+                        durationMs: config.durationMs,
+                        endTime: newEndTime,
+                        pausedRemainingMs: newPausedRemaining,
+                        hpMod: config.hpMod,
+                        mpMod: config.mpMod
+                      });
+                      pushChatMessage(`⏱️ Relógio "${config.label}" foi atualizado.`);
+                    }
+                  } else {
+                    const id = 'clock_' + Date.now();
+                    pushChatMessage(`⏱️ Relógio de Tensão "${config.label}" criado.`);
+                    addTensionClock({
+                      id,
+                      x: 0,
+                      y: 0,
                       label: config.label,
                       durationMs: config.durationMs,
-                      endTime: newEndTime,
-                      pausedRemainingMs: newPausedRemaining,
+                      endTime: Date.now() + config.durationMs,
+                      isRunning: true,
                       hpMod: config.hpMod,
                       mpMod: config.mpMod
                     });
-                    pushChatMessage(`⏱️ Relógio "${config.label}" foi atualizado.`);
                   }
-                } else {
-                  const id = 'clock_' + Date.now();
-                  pushChatMessage(`⏱️ Relógio de Tensão "${config.label}" criado.`);
-                  addTensionClock({
-                    id,
-                    x: 0,
-                    y: 0,
-                    label: config.label,
-                    durationMs: config.durationMs,
-                    endTime: Date.now() + config.durationMs,
-                    isRunning: true,
-                    hpMod: config.hpMod,
-                    mpMod: config.mpMod
-                  });
-                }
-                setActiveModal('none');
-                setEditingClockId(null);
-              }}
-            />
+                  setActiveModal('none');
+                  setEditingClockId(null);
+                }}
+              />
+            </React.Suspense>
           )}
         </ErrorBoundary>
       </div>
@@ -438,44 +453,46 @@ function App() {
         <div className="modal-overlay" onClick={() => setActiveModal('none')} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, pointerEvents: 'auto', padding: '20px' }}>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'center' }}>
             <ErrorBoundary componentName="Hub de Módulos (WidgetHubModal)">
-              <WidgetHubModal
-                onClose={() => setActiveModal('none')}
-                onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
-                onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
-                onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
-                onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
-                onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
-                onOpenClockConfig={() => { setEditingClockId(null); setActiveModal('clockConfig'); }}
-                onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
-                onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
-                onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
-                onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
-                onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
-                onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
-                onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
-                onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
-                onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
-                onOpenDLCManager={() => { setActiveModal('settings-modulos'); }}
-                onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
-                onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
-                onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
-                onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
-                onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
-                onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
-                onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
-                onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
-                onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
-                onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
-                onOpenRoomManager={() => { setActiveModal('players'); }}
-                onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
-                onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
-                onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
-                onOpenPlayerQuickBar={() => { toggleWindow('playerQuickBar'); setActiveModal('none'); }}
-                onToggleAIBot={() => { setActiveModal('settings-ia'); }}
-                onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
-                onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
-                onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
-              />
+              <React.Suspense fallback={null}>
+                <WidgetHubModal
+                  onClose={() => setActiveModal('none')}
+                  onOpenTracker={() => { toggleWindow('combatTracker'); setActiveModal('none'); }}
+                  onOpenOracleV2={() => { toggleWindow('oracle'); setActiveModal('none'); }}
+                  onOpenNPCGenerator={() => { toggleWindow('npcGenerator'); setActiveModal('none'); }}
+                  onOpenLocationGenerator={() => { toggleWindow('locationGenerator'); setActiveModal('none'); }}
+                  onOpenEncounterGenerator={() => { toggleWindow('encounterGenerator'); setActiveModal('none'); }}
+                  onOpenClockConfig={() => { setEditingClockId(null); setActiveModal('clockConfig'); }}
+                  onOpenCampaignManager={() => { toggleWindow('campaignManager'); setActiveModal('none'); }}
+                  onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
+                  onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
+                  onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
+                  onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
+                  onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
+                  onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
+                  onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}
+                  onOpenLoreMachine={() => { toggleWindow('loreMachine'); setActiveModal('none'); }}
+                  onOpenDLCManager={() => { setActiveModal('settings-modulos'); }}
+                  onOpenWorldEngine={() => { toggleWindow('worldEngine'); setActiveModal('none'); }}
+                  onOpenEntityForge={() => { toggleWindow('entityForge'); setActiveModal('none'); }}
+                  onOpenStronghold={() => { toggleWindow('stronghold'); setActiveModal('none'); }}
+                  onOpenArsenalMestre={() => { toggleWindow('arsenalMestre'); setActiveModal('none'); }}
+                  onOpenAudioDirector={() => { toggleWindow('audioDirector'); setActiveModal('none'); }}
+                  onOpenWebFrame={() => { toggleWindow('webFrame'); setActiveModal('none'); }}
+                  onOpenDiceRoller={() => { toggleWindow('diceRoller'); setActiveModal('none'); }}
+                  onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
+                  onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
+                  onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
+                  onOpenRoomManager={() => { setActiveModal('players'); }}
+                  onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
+                  onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
+                  onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
+                  onOpenPlayerQuickBar={() => { toggleWindow('playerQuickBar'); setActiveModal('none'); }}
+                  onToggleAIBot={() => { setActiveModal('settings-ia'); }}
+                  onOpenAIStudio={() => { toggleWindow('aiStudio'); setActiveModal('none'); }}
+                  onOpenThemes={() => { setActiveModal('settings-aparencia'); }}
+                  onOpenCutsceneDirector={() => { toggleWindow('cutsceneDirector'); setActiveModal('none'); }}
+                />
+              </React.Suspense>
             </ErrorBoundary>
           </div>
         </div>
@@ -483,6 +500,7 @@ function App() {
       {viewMode === 'canvas' && (
         <MobileQuickActions />
       )}
+      <React.Suspense fallback={null}>
         <LayoutPresetsModal isOpen={isLayoutPresetsOpen} onClose={() => setIsLayoutPresetsOpen(false)} />
         <GlobalSearchModal isOpen={isGlobalSearchOpen} onClose={() => setIsGlobalSearchOpen(false)} />
         <LorePinsModal isOpen={isLorePinsOpen} onClose={() => setIsLorePinsOpen(false)} />
@@ -508,6 +526,9 @@ function App() {
         <AuthModal />
         <ProfileModal />
         <ResetPasswordModal />
+        <ObsidianSyncModal isOpen={isObsidianSyncOpen} onClose={() => setIsObsidianSyncOpen(false)} />
+        <CampaignBookPublisherModal isOpen={isBookPublisherOpen} onClose={() => setIsBookPublisherOpen(false)} />
+      </React.Suspense>
     </div>
   );
 }

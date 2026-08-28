@@ -13,8 +13,11 @@ export function useCodexAccess(roomCode: string) {
 
   useEffect(() => {
     let active = true;
-    if (!isSupabaseConfigured || !user?.id || !roomCode) {
-      if (active) setCanEdit(true);
+    if (!isSupabaseConfigured || !user?.id || !roomCode || localGM) {
+      if (active) {
+        setCanEdit(true);
+        setIsLoading(false);
+      }
       return () => { active = false; };
     }
 

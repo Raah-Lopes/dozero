@@ -364,73 +364,83 @@ export function normalizeCodex(value: unknown): CodexDocument {
   const typeMap = new Map(types.map((t) => [t.id, t]));
 
   const notes: CodexNote[] = Array.isArray(source.notes)
-    ? source.notes.map((note: any) => {
-        const rawTypeId = String(note?.typeId || 'conceito');
-        const typeId = mapTypeId(rawTypeId);
-        const matchedType = typeMap.get(typeId) || types[0];
-        const fields = typeof note?.fields === 'object' && note.fields !== null ? { ...note.fields } : {};
+    ? source.notes
+        .filter((note: any): note is Record<string, any> => Boolean(note && typeof note === 'object'))
+        .map((note: any) => {
+          const rawTypeId = String(note?.typeId || 'conceito');
+          const typeId = mapTypeId(rawTypeId);
+          const matchedType = typeMap.get(typeId) || types[0];
+          const fields = typeof note?.fields === 'object' && note.fields !== null ? { ...note.fields } : {};
 
-        // Normaliza campos legados para novo padrão se necessário
-        if (note.fields?.role && !fields.classe) fields.classe = note.fields.role;
-        if (note.fields?.region && !fields.tipoLocal) fields.tipoLocal = note.fields.region;
-        if (note.fields?.alignment && !fields.alinhamento) fields.alinhamento = note.fields.alignment;
-        if (note.fields?.threat !== undefined && fields.desafio === undefined) fields.desafio = note.fields.threat;
+          // Normaliza campos legados para novo padrão se necessário
+          if (note.fields?.role && !fields.classe) fields.classe = note.fields.role;
+          if (note.fields?.region && !fields.tipoLocal) fields.tipoLocal = note.fields.region;
+          if (note.fields?.alignment && !fields.alinhamento) fields.alinhamento = note.fields.alignment;
+          if (note.fields?.threat !== undefined && fields.desafio === undefined) fields.desafio = note.fields.threat;
 
-        return {
-          id: String(note.id || `note_${crypto.randomUUID()}`),
-          name: String(note.name || 'Sem nome'),
-          description: String(note.description || ''),
-          typeId: matchedType.id,
-          folderId: note.folderId ? String(note.folderId) : null,
-          tags: Array.isArray(note.tags) ? note.tags.map(String).map((t: string) => t.trim()).filter(Boolean) : [],
-          fields,
-          favorite: Boolean(note.favorite),
-          imageUrl: note.imageUrl || note.imagem || null,
-          icon: note.icon || note.icone || matchedType.icon,
-          gallery: Array.isArray(note.gallery) ? note.gallery.filter((g: unknown) => typeof g === 'string') : [],
-          chronosEventIds: Array.isArray(note.chronosEventIds) ? note.chronosEventIds.filter((e: unknown) => typeof e === 'string') : [],
-          lineagePersonId: note.lineagePersonId ? String(note.lineagePersonId) : undefined,
-          links: Array.isArray(note.links)
-            ? note.links.map((l: any) => ({ label: String(l?.label || l?.rotulo || ''), url: String(l?.url || '') })).filter((l: CodexLink) => l.url)
-            : note.externalUrl
-              ? [{ label: 'Link Externo', url: String(note.externalUrl) }]
-              : [],
-          createdAt: typeof note.createdAt === 'string' ? note.createdAt : (typeof note.criadoEm === 'number' ? new Date(note.criadoEm).toISOString() : new Date().toISOString()),
-          updatedAt: typeof note.updatedAt === 'string' ? note.updatedAt : (typeof note.atualizadoEm === 'number' ? new Date(note.atualizadoEm).toISOString() : new Date().toISOString()),
-        };
-      })
+          return {
+            id: String(note.id || `note_${crypto.randomUUID()}`),
+            name: String(note.name || 'Sem nome'),
+            description: String(note.description || ''),
+            typeId: matchedType.id,
+            folderId: note.folderId ? String(note.folderId) : null,
+            tags: Array.isArray(note.tags) ? note.tags.map(String).map((t: string) => t.trim()).filter(Boolean) : [],
+            fields,
+            favorite: Boolean(note.favorite),
+            imageUrl: note.imageUrl || note.imagem || null,
+            icon: note.icon || note.icone || matchedType.icon,
+            gallery: Array.isArray(note.gallery) ? note.gallery.filter((g: unknown) => typeof g === 'string') : [],
+            chronosEventIds: Array.isArray(note.chronosEventIds) ? note.chronosEventIds.filter((e: unknown) => typeof e === 'string') : [],
+            lineagePersonId: note.lineagePersonId ? String(note.lineagePersonId) : undefined,
+            links: Array.isArray(note.links)
+              ? note.links.map((l: any) => ({ label: String(l?.label || l?.rotulo || ''), url: String(l?.url || '') })).filter((l: CodexLink) => l.url)
+              : note.externalUrl
+                ? [{ label: 'Link Externo', url: String(note.externalUrl) }]
+                : [],
+            createdAt: typeof note.createdAt === 'string' ? note.createdAt : (typeof note.criadoEm === 'number' ? new Date(note.criadoEm).toISOString() : new Date().toISOString()),
+            updatedAt: typeof note.updatedAt === 'string' ? note.updatedAt : (typeof note.atualizadoEm === 'number' ? new Date(note.atualizadoEm).toISOString() : new Date().toISOString()),
+          };
+        })
     : [];
 
   const folders: CodexFolder[] = Array.isArray(source.folders)
-    ? source.folders.map((f: any) => ({
-        id: String(f.id || `folder_${crypto.randomUUID()}`),
-        name: String(f.name || f.nome || 'Pasta'),
-        color: String(f.color || f.cor || '#d9a441'),
-      }))
+    ? source.folders
+        .filter((f: any): f is Record<string, any> => Boolean(f && typeof f === 'object'))
+        .map((f: any) => ({
+          id: String(f.id || `folder_${crypto.randomUUID()}`),
+          name: String(f.name || f.nome || 'Pasta'),
+          color: String(f.color || f.cor || '#d9a441'),
+        }))
     : [];
 
   const relations: CodexRelation[] = Array.isArray(source.relations)
-    ? source.relations.map((r: any) => ({
-        id: String(r.id || `relation_${crypto.randomUUID()}`),
-        sourceId: String(r.sourceId || r.origemId || ''),
-        targetId: String(r.targetId || r.destinoId || ''),
-        label: String(r.label || r.tipo || 'Vinculado a'),
-        color: String(r.color || r.cor || '#8a7f6a'),
-        icon: String(r.icon || r.icone || 'link'),
-        bidirectional: Boolean(r.bidirectional || r.bidirecional),
-      })).filter((r: CodexRelation) => r.sourceId && r.targetId)
+    ? source.relations
+        .filter((r: any): r is Record<string, any> => Boolean(r && typeof r === 'object'))
+        .map((r: any) => ({
+          id: String(r.id || `relation_${crypto.randomUUID()}`),
+          sourceId: String(r.sourceId || r.origemId || ''),
+          targetId: String(r.targetId || r.destinoId || ''),
+          label: String(r.label || r.tipo || 'Vinculado a'),
+          color: String(r.color || r.cor || '#8a7f6a'),
+          icon: String(r.icon || r.icone || 'link'),
+          bidirectional: Boolean(r.bidirectional || r.bidirecional),
+        }))
+        .filter((r: CodexRelation) => r.sourceId && r.targetId)
     : [];
 
   const savedViews: CodexSavedView[] = Array.isArray(source.savedViews)
-    ? source.savedViews.map((v: any) => ({
-        id: String(v.id || `view_${crypto.randomUUID()}`),
-        name: String(v.name || v.nome || 'Vista'),
-        search: String(v.search || v.busca || ''),
-        typeIds: Array.isArray(v.typeIds) ? v.typeIds.map(String) : (Array.isArray(v.tipos) ? v.tipos.map(String) : []),
-        tags: Array.isArray(v.tags) ? v.tags.map(String) : (Array.isArray(v.etiquetas) ? v.etiquetas.map(String) : []),
-        folderId: v.folderId ? String(v.folderId) : (v.pastaId ? String(v.pastaId) : null),
-        favoritesOnly: Boolean(v.favoritesOnly || v.soFavoritas),
-      }))
+    ? source.savedViews
+        .filter((v: any): v is Record<string, any> => Boolean(v && typeof v === 'object'))
+        .map((v: any) => ({
+          id: String(v.id || `view_${crypto.randomUUID()}`),
+          name: String(v.name || v.nome || 'Visualização'),
+          viewMode: (['grid', 'list', 'graph', 'stats'].includes(v.viewMode || v.modo) ? (v.viewMode || v.modo) : 'grid') as CodexViewMode,
+          search: String(v.search || v.busca || ''),
+          selectedTypeId: v.selectedTypeId ? String(v.selectedTypeId) : (v.tipoId ? String(v.tipoId) : null),
+          tags: Array.isArray(v.tags) ? v.tags.map(String) : (Array.isArray(v.etiquetas) ? v.etiquetas.map(String) : []),
+          folderId: v.folderId ? String(v.folderId) : (v.pastaId ? String(v.pastaId) : null),
+          favoritesOnly: Boolean(v.favoritesOnly || v.soFavoritas),
+        }))
     : [];
 
   return {

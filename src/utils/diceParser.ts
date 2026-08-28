@@ -14,19 +14,19 @@ export interface ParsedDiceResult {
 }
 
 export function parseAndRollDice(expr: string): ParsedDiceResult {
-  const clean = expr.trim().toLowerCase().replace(/\s+/g, '');
+  const safeExpr = String(expr || '1d20').trim();
+  const clean = safeExpr.toLowerCase().replace(/\s+/g, '');
   
   // Format: (count)d(sides)([+-]modifier)
   // e.g., 1d20+5, 2d6-2, d20, 3d8, 1d100
   const match = clean.match(/^(\d*)d(\d+)([+-]\d+)?$/);
 
   if (!match) {
-    // Fallback: simple numeric or basic 1d20
-    const count = 1;
+    // Fallback: basic 1d20 roll
     const sides = 20;
     const roll = Math.floor(Math.random() * sides) + 1;
     return {
-      expression: expr,
+      expression: safeExpr,
       total: roll,
       rolls: [roll],
       modifier: 0,

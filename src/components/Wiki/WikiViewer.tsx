@@ -4,7 +4,7 @@ import { convertImageToWebP } from '../../utils/imageUtils';
 import type { GithubTreeItem } from '../../utils/githubApi';
 import { 
   Folder, FileText, ChevronRight, ChevronDown, 
-  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Brain, DoorOpen, Edit2, ImagePlus, FolderOpen, Trash2, Eye, EyeOff
+  RefreshCw, FolderPlus, FilePlus, UploadCloud, AlertCircle, Save, BookOpen, Brain, DoorOpen, Edit2, ImagePlus, FolderOpen, Trash2, Eye, EyeOff, Printer
 } from 'lucide-react';
 import { WikiEditor } from './WikiEditor';
 import { FrontmatterPanel } from './FrontmatterPanel';
@@ -13,6 +13,7 @@ import { CharacterSheet } from '../UI/CharacterSheet';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { syncFileToBoardTokens } from '../../services/wiki/syncWiki';
+import { printSingleMarkdown } from '../../services/campaignPublisherService';
 import * as yaml from 'js-yaml';
 import { toast } from '../UI/Toast';
 import { useWiki } from '../../hooks/useWiki';
@@ -762,6 +763,17 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile, onClose, on
                     }}
                     style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.5)', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
                     <Trash2 size={14} /> Excluir
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (!activeFile || !content) return;
+                      const title = activeFile.split('/').pop()?.replace('.md', '') || 'Nota da Wiki';
+                      printSingleMarkdown(title, content, 'parchment');
+                    }}
+                    style={{ background: 'rgba(212, 175, 55, 0.15)', color: '#fef3c7', border: '1px solid #d4af37', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+                    title="Imprimir nota no estilo pergaminho ou salvar como PDF"
+                  >
+                    <Printer size={14} /> Imprimir / PDF
                   </button>
                   <button 
                     onClick={handleSave} 

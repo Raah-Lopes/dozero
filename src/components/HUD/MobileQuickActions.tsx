@@ -15,8 +15,12 @@ export const MobileQuickActions: React.FC = () => {
 
   useEffect(() => {
     const loadFavs = () => {
-      let favs = JSON.parse(localStorage.getItem('dozero_hub_favorites') || '[]');
-      if (favs.length === 0) favs = getDefaultQuickActions();
+      let favs: string[] = [];
+      try {
+        const raw = localStorage.getItem('dozero_hub_favorites');
+        if (raw) favs = JSON.parse(raw);
+      } catch {}
+      if (!Array.isArray(favs) || favs.length === 0) favs = getDefaultQuickActions();
       setFavorites(favs.slice(0, 6)); // Max 6 items
     };
     loadFavs();

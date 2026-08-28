@@ -2,6 +2,14 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { pushChatMessage } from '../../../store';
 import { useRulesEngine } from '../../../hooks/useRulesEngine';
+import { 
+  ConditionalMacro, 
+  loadCustomMacros, 
+  executeConditionalMacro, 
+  deleteCustomMacro 
+} from '../../../services/conditionalMacroService';
+import { ConditionalMacroBuilder } from './ConditionalMacroBuilder';
+import { Zap, Sparkles, Plus } from 'lucide-react';
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────
 type DieType = 4 | 6 | 8 | 10 | 12 | 20 | 100;
@@ -126,6 +134,9 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
     { id: 'dmg', label: '🗡️ Dano', pool: { 6: 2 }, modifier: 0 },
     { id: 'ini', label: '⚡ Iniciativa', pool: { 20: 1 }, modifier: 2 },
   ]);
+  const [conditionalMacros, setConditionalMacros] = useState<ConditionalMacro[]>(() => loadCustomMacros());
+  const [showSmartBuilder, setShowSmartBuilder] = useState(false);
+  const [editingSmartMacro, setEditingSmartMacro] = useState<ConditionalMacro | null>(null);
   const [newMacroLabel, setNewMacroLabel] = useState('');
   const [showMacroEditor, setShowMacroEditor] = useState(false);
   const [sendToChat, setSendToChat] = useState(() => {
@@ -235,6 +246,57 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
       }
     }, 600);
   }, [rolling, dicePool, modifier, sendToChat]);
+
+  const handleExecuteSmartMacro = useCallback((macro: ConditionalMacro) => {
+    if (rolling) return;
+    setRolling(true);
+
+    const tempRolls: { die: DieType, result: number }[] = [];
+    Object.entries(macro.basePool).forEach(([dStr, qty]) => {
+      const die = parseInt(dStr, 10) as DieType;
+      for (let i = 0; i < (qty || 0); i++) {
+        tempRolls.push({ die, result: 0 });
+      }
+    });
+    setCurrentRolls(tempRolls);
+
+    setTimeout(() => {
+      const result = executeConditionalMacro(macro, undefined, sendToChat);
+      setCurrentRolls(result.baseRolls);
+      setRolling(false);
+
+      const rollId = Math.random().toString(36).slice(2);
+      const diceParts = Object.entries(macro.basePool).map(([d, q]) => `${q}d${d}`);
+      const diceStr = `${macro.name} (${diceParts.join('+')}+${macro.baseModifier})`;
+
+      const newResult: RollResult = {
+        id: rollId,
+        dice: diceStr,
+        rolls: result.baseRolls,
+        modifier: result.totalBonus,
+        total: result.finalTotal,
+        timestamp: Date.now()
+      };
+      setHistory(prev => [newResult, ...prev].slice(0, 10));
+      setLastResult({ total: result.finalTotal, dice: diceStr });
+
+      window.dispatchEvent(new CustomEvent('dice-roll', {
+        detail: { id: rollId, title: macro.name, result: result.finalTotal, type: 'utility' }
+      }));
+    }, 600);
+  }, [rolling, sendToChat]);
+
+  const handleSaveSmartMacro = (saved: ConditionalMacro) => {
+    setConditionalMacros(loadCustomMacros());
+    setShowSmartBuilder(false);
+    setEditingSmartMacro(null);
+  };
+
+  const handleDeleteSmartMacro = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = deleteCustomMacro(id);
+    setConditionalMacros(updated);
+  };
 
   const addMacro = () => {
     if (!newMacroLabel.trim()) return;
@@ -484,11 +546,37 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
         {/* MACROS */}
         <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid var(--glass-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', letterSpacing: '1px', textTransform: 'uppercase' }}>Macros de Atalho</div>
-            <button onClick={() => setShowMacroEditor(!showMacroEditor)} style={{ background: 'none', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.6rem' }}>
-              {showMacroEditor ? '✕ Cancelar' : '+ Novo'}
-            </button>
+            <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', letterSpacing: '1px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Zap size={11} color="#f59e0b" /> Macros & Ações Inteligentes
+            </div>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                onClick={() => {
+                  setEditingSmartMacro(null);
+                  setShowSmartBuilder(true);
+                }}
+                style={{
+                  background: 'rgba(245, 158, 11, 0.2)',
+                  border: '1px solid #f59e0b',
+                  color: '#fbbf24',
+                  borderRadius: '4px',
+                  padding: '0.2rem 0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.62rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px'
+                }}
+              >
+                <Plus size={10} /> ⚡ Forja Inteligente
+              </button>
+              <button onClick={() => setShowMacroEditor(!showMacroEditor)} style={{ background: 'none', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.6rem' }}>
+                {showMacroEditor ? '✕' : '+ Simples'}
+              </button>
+            </div>
           </div>
+
           {showMacroEditor && (
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <input
@@ -501,6 +589,48 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
               <button onClick={addMacro} style={{ background: colors.primary, border: 'none', borderRadius: '4px', color: 'var(--text-primary)', padding: '0.3rem 0.7rem', cursor: 'pointer', fontSize: '0.75rem' }}>Salvar</button>
             </div>
           )}
+
+          {/* CHIPS DE MACROS CONDICIONAIS */}
+          {conditionalMacros.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '6px' }}>
+              {conditionalMacros.map(cm => (
+                <div key={cm.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <button
+                    className="macro-chip"
+                    onClick={() => handleExecuteSmartMacro(cm)}
+                    style={{
+                      background: `${cm.color || colors.primary}20`,
+                      border: `1px solid ${cm.color || colors.primary}70`,
+                      borderRadius: '20px',
+                      color: '#f8fafc',
+                      padding: '0.25rem 0.6rem',
+                      cursor: 'pointer',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      transition: 'all 0.15s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      boxShadow: `0 0 8px ${cm.color || colors.primary}33`
+                    }}
+                    title={`${cm.name}: ${cm.description || 'Macro Condicional com regras automáticas'}`}
+                  >
+                    <span>{cm.icon || '⚡'}</span>
+                    <span>{cm.name.replace(/^[^\s]+\s/, '')}</span>
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteSmartMacro(cm.id, e)}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.65rem', padding: '0 2px' }}
+                    title="Remover macro"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* CHIPS DE MACROS SIMPLES */}
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             {macros.map(macro => (
               <div key={macro.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -555,7 +685,7 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
                 >
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, color: idx === 0 ? colors.text : 'var(--text-secondary)' }}>{h.dice}</span>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{h.rolls.join(', ')}{h.modifier !== 0 ? ` ${h.modifier > 0 ? '+' : ''}${h.modifier}` : ''}</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{h.rolls.map(r => r.result).join(', ')}{h.modifier !== 0 ? ` ${h.modifier > 0 ? '+' : ''}${h.modifier}` : ''}</span>
                     <span style={{ fontSize: '1rem', fontWeight: 900, color: idx === 0 ? '#fff' : 'var(--text-primary)', textShadow: idx === 0 ? `0 0 8px ${colors.primary}` : 'none' }}>{h.total}</span>
                   </div>
                 </div>
@@ -564,6 +694,17 @@ export const DiceRollerWidget: React.FC<{ onClose: () => void }> = ({ onClose })
           )}
         </div>
       </div>
+
+      {showSmartBuilder && (
+        <ConditionalMacroBuilder
+          initialMacro={editingSmartMacro}
+          onSave={handleSaveSmartMacro}
+          onClose={() => {
+            setShowSmartBuilder(false);
+            setEditingSmartMacro(null);
+          }}
+        />
+      )}
     </DraggableWindow>
   );
 };

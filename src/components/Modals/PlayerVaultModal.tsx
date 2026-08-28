@@ -1,16 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   X, Plus, Trash2, Download, User, BookOpen, Sword,
-  Shield, Search, Edit2, Check, ChevronRight, Play, Sparkles
+  Shield, Search, Edit2, Check, ChevronRight, Play, Sparkles,
+  Copy, History, Camera, FileJson, Upload, RotateCcw
 } from 'lucide-react';
 import { state } from '../../services/yjs';
 import { useAuthStore } from '../../store/authStore';
 import {
   CharacterRecord,
+  CharacterVersionRecord,
   getVaultCharacters,
   saveCharacter,
   deleteCharacter,
-  importCharacterToCampaign
+  importCharacterToCampaign,
+  createCharacterSnapshot,
+  getCharacterVersions,
+  restoreCharacterVersion,
+  deleteCharacterVersion,
+  cloneCharacter,
+  exportCharacterJson,
+  importCharacterFromJson
 } from '../../services/characterRepository';
 import { getCampaigns, CampaignCloudRecord } from '../../services/campaignCloudService';
 import { toast } from '../UI/Toast';
@@ -49,12 +58,79 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
   const [importTarget, setImportTarget] = useState<CharacterRecord | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>([]);
 
+  // Histórico de Versões
+  const [historyChar, setHistoryChar] = useState<CharacterRecord | null>(null);
+  const [versionsList, setVersionsList] = useState<CharacterVersionRecord[]>([]);
+  const [snapshotLabel, setSnapshotLabel] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     const list = await getVaultCharacters(user?.id);
     setChars(list);
     setLoading(false);
   }, [user?.id]);
+
+  const loadHistory = async (char: CharacterRecord) => {
+    setHistoryChar(char);
+    const vers = await getCharacterVersions(char.id, user?.id);
+    setVersionsList(vers);
+  };
+
+  const handleCreateSnapshot = async () => {
+    if (!historyChar) return;
+    const v = await createCharacterSnapshot(historyChar.id, snapshotLabel.trim() || undefined, user?.id);
+    if (v) {
+      toast.success(`Snapshot "${v.label}" criado com sucesso!`);
+      setSnapshotLabel('');
+      loadHistory(historyChar);
+    }
+  };
+
+  const handleRestoreVersion = async (v: CharacterVersionRecord) => {
+    if (!confirm(`Deseja restaurar a versão "${v.label}"? Os dados atuais da ficha serão substituídos por este snapshot.`)) return;
+    const restored = await restoreCharacterVersion(v.id, user?.id);
+    if (restored) {
+      toast.success(`Ficha restaurada para "${v.label}"!`);
+      load();
+      loadHistory(restored);
+    }
+  };
+
+  const handleDeleteVersion = async (versionId: string) => {
+    await deleteCharacterVersion(versionId);
+    if (historyChar) loadHistory(historyChar);
+    toast.info('Snapshot removido.');
+  };
+
+  const handleDuplicateChar = async (c: CharacterRecord) => {
+    const cloned = await cloneCharacter(c.id, null, `${c.name} (Cópia)`, user?.id);
+    if (cloned) {
+      toast.success(`"${cloned.name}" duplicado no seu Vault!`);
+      load();
+    }
+  };
+
+  const handleExportJson = (c: CharacterRecord) => {
+    exportCharacterJson(c);
+    toast.success(`Exportando "${c.name}.json"...`);
+  };
+
+  const handleImportJsonFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const imported = await importCharacterFromJson(text, user?.id);
+      toast.success(`Ficha "${imported.name}" importada com sucesso para o Vault!`);
+      load();
+    } catch (err: any) {
+      toast.error(`Falha ao importar JSON: ${err.message || 'Arquivo corrompido'}`);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => { 
     if (isOpen) {
@@ -216,9 +292,26 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
               Meu Vault de Personagens
             </h2>
             <p style={{ margin: 0, fontSize: '0.7rem', color: '#a1a1aa' }}>
-              Seus personagens salvos — disponíveis em qualquer mesa
+              Seus personagens salvos, snapshots de evolução e portabilidade entre mesas
             </p>
           </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".json"
+            onChange={handleImportJsonFile}
+            style={{ display: 'none' }}
+          />
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title="Importar ficha em arquivo JSON"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', background: 'rgba(255,255,255,0.06)', border: '1px solid #5a4234', borderRadius: '10px', color: '#d7c9b8', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer' }}
+          >
+            <Upload size={13} /> Importar JSON
+          </button>
+
           <button
             onClick={handleOpenNew}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', background: '#a46830', border: '1px solid #c49a6c', borderRadius: '10px', color: '#fff', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer' }}
@@ -232,6 +325,139 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
 
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+          {/* Histórico de Versões & Snapshots Drawer */}
+          {historyChar && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(30, 20, 15, 0.95), rgba(20, 12, 8, 0.98))',
+              border: '1px solid #c49a6c',
+              borderRadius: '14px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #5a4234', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <History size={16} color="#fbbf24" />
+                  <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#fde047' }}>
+                    Histórico de Versões & Snapshots — {historyChar.name}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setHistoryChar(null)}
+                  style={{ background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Criar novo snapshot */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={snapshotLabel}
+                  onChange={(e) => setSnapshotLabel(e.target.value)}
+                  placeholder="Rótulo da versão (ex: Nível 3 - Ladino, Antes da Boss Fight...)"
+                  style={{
+                    flex: 1,
+                    background: '#120b07',
+                    border: '1px solid #5a4234',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    color: '#fff',
+                    fontSize: '0.78rem'
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateSnapshot()}
+                />
+                <button
+                  onClick={handleCreateSnapshot}
+                  style={{
+                    background: '#a46830',
+                    border: '1px solid #c49a6c',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Camera size={13} /> Criar Snapshot
+                </button>
+              </div>
+
+              {/* Lista de Versões */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '200px', overflowY: 'auto' }}>
+                {versionsList.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#a1a1aa', fontStyle: 'italic', textAlign: 'center', padding: '12px' }}>
+                    Nenhum snapshot gravado para este personagem. Crie um ponto de restauração acima!
+                  </p>
+                ) : (
+                  versionsList.map((ver) => (
+                    <div
+                      key={ver.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid #3b281d',
+                        borderRadius: '8px',
+                        padding: '8px 12px'
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#fdfaf5' }}>{ver.label}</div>
+                        <div style={{ fontSize: '0.68rem', color: '#a1a1aa' }}>
+                          Salvo em: {new Date(ver.created_at).toLocaleString('pt-BR')}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          onClick={() => handleRestoreVersion(ver)}
+                          title="Restaurar esta versão da ficha"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'rgba(34,197,94,0.15)',
+                            border: '1px solid #22c55e',
+                            color: '#4ade80',
+                            borderRadius: '6px',
+                            padding: '4px 8px',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <RotateCcw size={12} /> Restaurar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteVersion(ver.id)}
+                          title="Excluir este snapshot"
+                          style={{
+                            background: 'rgba(239,68,68,0.1)',
+                            border: '1px solid #ef4444',
+                            color: '#f87171',
+                            borderRadius: '6px',
+                            padding: '4px 6px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Formulário de edição */}
           {editing !== null && (
@@ -388,20 +614,41 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
                   </div>
 
                   {/* Ações */}
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
                     <button
                       onClick={() => handleSpawnTokenToMap(c)}
                       title="Invocar Token no Mapa Ativo"
-                      style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', background: 'rgba(234,179,8,0.12)', border: '1px solid #eab308', borderRadius: '7px', color: '#facc15', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 8px', background: 'rgba(234,179,8,0.12)', border: '1px solid #eab308', borderRadius: '7px', color: '#facc15', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
                     >
-                      <Play size={12} /> Invocar
+                      <Play size={11} /> Invocar
+                    </button>
+                    <button
+                      onClick={() => handleDuplicateChar(c)}
+                      title="Duplicar / Clonar Personagem"
+                      style={{ padding: '5px 7px', background: 'rgba(255,255,255,0.04)', border: '1px solid #5a4234', borderRadius: '7px', color: '#fbbf24', cursor: 'pointer' }}
+                    >
+                      <Copy size={12} />
+                    </button>
+                    <button
+                      onClick={() => loadHistory(c)}
+                      title="Histórico de Versões & Snapshots"
+                      style={{ padding: '5px 7px', background: 'rgba(245,158,11,0.1)', border: '1px solid #f59e0b', borderRadius: '7px', color: '#fbbf24', cursor: 'pointer' }}
+                    >
+                      <History size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleExportJson(c)}
+                      title="Exportar como arquivo .json"
+                      style={{ padding: '5px 7px', background: 'rgba(56,189,248,0.1)', border: '1px solid #38bdf8', borderRadius: '7px', color: '#38bdf8', cursor: 'pointer' }}
+                    >
+                      <FileJson size={12} />
                     </button>
                     <button
                       onClick={() => handleOpenImport(c)}
-                      title="Importar para mesa"
-                      style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', background: 'rgba(34,197,94,0.1)', border: '1px solid #22c55e', borderRadius: '7px', color: '#4ade80', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                      title="Importar para mesa / campanha"
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 8px', background: 'rgba(34,197,94,0.1)', border: '1px solid #22c55e', borderRadius: '7px', color: '#4ade80', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
                     >
-                      <Download size={12} /> Importar
+                      <Download size={11} /> Mesa
                     </button>
                     <button
                       onClick={() => {
@@ -409,16 +656,16 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
                         window.dispatchEvent(new CustomEvent('open-arcanum-sheet', { detail: { id: c.id, scope: 'vault' } }));
                       }}
                       title="Abrir na Forja de Fichas"
-                      style={{ padding: '5px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid #5a4234', borderRadius: '7px', color: '#d7c9b8', cursor: 'pointer' }}
+                      style={{ padding: '5px 7px', background: 'rgba(255,255,255,0.04)', border: '1px solid #5a4234', borderRadius: '7px', color: '#d7c9b8', cursor: 'pointer' }}
                     >
-                      <Edit2 size={13} />
+                      <Edit2 size={12} />
                     </button>
                     <button
                       onClick={() => handleDelete(c)}
                       title="Excluir"
-                      style={{ padding: '5px 8px', background: 'rgba(239,68,68,0.08)', border: '1px solid #ef4444', borderRadius: '7px', color: '#f87171', cursor: 'pointer' }}
+                      style={{ padding: '5px 7px', background: 'rgba(239,68,68,0.08)', border: '1px solid #ef4444', borderRadius: '7px', color: '#f87171', cursor: 'pointer' }}
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>

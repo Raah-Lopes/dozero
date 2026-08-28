@@ -142,7 +142,7 @@ export class Pathfinder {
 /* ---------- Layouts ---------- */
 
 export class Layouts {
-  /** Constelações por camada: distribuição orbital limpa e bem espaçada. */
+  /** Constelações por camada: nós próximos e agrupados harmonicamente. */
   static clusterByType(nodes: WNode[], typeOrder: string[]): WNode[] {
     const groups = new Map<string, WNode[]>();
     for (const n of nodes) {
@@ -157,13 +157,13 @@ export class Layouts {
     const total = Math.max(present.length, 1);
     present.forEach((typeId, gi) => {
       const ring = gi % 2;
-      const R = 560 + ring * 300 + total * 18;
+      const R = 210 + ring * 100 + total * 8;
       const ang = (gi / total) * Math.PI * 2 - Math.PI / 2;
-      const cx = Math.cos(ang) * R * 1.2;
+      const cx = Math.cos(ang) * R * 1.05;
       const cy = Math.sin(ang) * R * 0.85;
       const members = groups.get(typeId) ?? [];
       members.forEach((n, k) => {
-        const r = 135 * Math.sqrt(k + 1);
+        const r = 55 * Math.sqrt(k + 1);
         const th = k * 2.39996 + gi * 1.7;
         result.push({ ...n, position: { x: cx + Math.cos(th) * r, y: cy + Math.sin(th) * r } });
       });
@@ -171,7 +171,7 @@ export class Layouts {
     return result;
   }
 
-  /** Foco radial: o nó escolhido vira o coração; os demais orbitam por distância de conexão. */
+  /** Foco radial: o nó escolhido vira o coração; os demais orbitam próximos por distância de conexão. */
   static radialFocus(nodes: WNode[], edges: WEdge[], centerId: string): WNode[] {
     const center = nodes.find((n) => n.id === centerId);
     if (!center) return nodes;
@@ -206,7 +206,7 @@ export class Layouts {
     const cy = center.position.y;
     const pos = new Map<string, { x: number; y: number }>();
     for (const [d, members] of [...layers.entries()].sort((a, b) => a[0] - b[0])) {
-      const radius = d <= maxD ? 260 * d : 260 * (maxD + 1) + 200;
+      const radius = d <= maxD ? 135 * d : 135 * (maxD + 1) + 80;
       members.forEach((n, i) => {
         const th = (i / members.length) * Math.PI * 2 + d * 0.55 - Math.PI / 2;
         pos.set(n.id, { x: cx + Math.cos(th) * radius, y: cy + Math.sin(th) * radius * 0.92 });
@@ -223,6 +223,16 @@ export class Layouts {
 
 export class ForceSimulator {
   alpha = 1;
+  attraction = 1.0;
+  idealDistance = 120;
+
+  setAttraction(attraction: number) {
+    this.attraction = Math.max(0.2, Math.min(3.0, attraction));
+  }
+
+  setIdealDistance(dist: number) {
+    this.idealDistance = Math.max(70, Math.min(280, dist));
+  }
 
   reheat(a = 1) {
     this.alpha = a;
@@ -238,7 +248,18 @@ export class ForceSimulator {
     const disp = new Map<string, { x: number; y: number }>();
     for (const n of nodes) disp.set(n.id, { x: 0, y: 0 });
 
-    // repulsão suave entre todos os pares
+    // Gravidade central: atração suave ao centro para manter o grafo coeso e próximo
+    for (const n of nodes) {
+      const dx = -n.position.x;
+      const dy = -n.position.y;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const grav = Math.min(d * 0.007 * this.attraction, 4);
+      disp.get(n.id)!.x += (dx / d) * grav;
+      disp.get(n.id)!.y += (dy / d) * grav;
+    }
+
+    // Repulsão suave controlada entre todos os pares
+    const repForce = 13000 / this.attraction;
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i];
@@ -252,7 +273,7 @@ export class ForceSimulator {
           d2 = 1;
         }
         const d = Math.sqrt(d2);
-        const f = Math.min(36000 / d2, 18);
+        const f = Math.min(repForce / d2, 10);
         const fx = (dx / d) * f;
         const fy = (dy / d) * f;
         disp.get(a.id)!.x += fx;
@@ -261,7 +282,8 @@ export class ForceSimulator {
         disp.get(b.id)!.y -= fy;
       }
     }
-    // molas equilibradas nas relações
+
+    // Molas de atração equilibradas nas relações conectadas
     const byId = new Map(nodes.map((n) => [n.id, n]));
     for (const e of edges) {
       const a = byId.get(e.source);
@@ -270,7 +292,7 @@ export class ForceSimulator {
       const dx = b.position.x - a.position.x;
       const dy = b.position.y - a.position.y;
       const d = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
-      const f = (d - 220) * 0.015;
+      const f = (d - this.idealDistance) * 0.024 * this.attraction;
       const fx = (dx / d) * f;
       const fy = (dy / d) * f;
       disp.get(a.id)!.x += fx;
@@ -278,6 +300,7 @@ export class ForceSimulator {
       disp.get(b.id)!.x -= fx;
       disp.get(b.id)!.y -= fy;
     }
+
     return nodes.map((n) => {
       if (n.dragging || n.selected) return n;
       const d = disp.get(n.id)!;

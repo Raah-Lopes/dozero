@@ -135,13 +135,25 @@ export const AIAssistantBot: React.FC = () => {
       const model = config.modelId || 'llama-3.3-70b-versatile';
       const apiKey = config.apiKey || '';
       const ollamaUrl = config.ollamaUrl;
-      
+      const geminiKeyForRag = config.geminiKey || (provider === 'gemini' ? apiKey : '');
+      const campaignId = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+
       const contextTokens = Array.from(tokensMap.values()).map(t => `- ${t.name} (HP: ${t.hp}/${t.maxHp})`).join('\n');
-      const systemContext = `\n\n--- CONTEXTO ATUAL DO JOGO ---\nCena Atual: ${backgroundStr}\nTokens no Mapa:\n${contextTokens || 'Nenhum token no mapa.'}`;
+      const tableCtx = `\n\n--- CONTEXTO ATUAL ---\nCena: ${backgroundStr}\nTokens:\n${contextTokens || 'Nenhum.'}`;
+
+      // RAG: busca contexto semântico da wiki (degrada graciosamente se não houver)
+      let ragCtx = '';
+      if (geminiKeyForRag) {
+        try {
+          const { searchContext } = await import('../../services/ai/ragSearchService');
+          ragCtx = await searchContext(prompt, campaignId, geminiKeyForRag);
+        } catch { /* silencioso */ }
+      }
 
       const res = await generateAI({
         provider, model, apiKey, ollamaUrl,
-        systemPrompt: "Você é um pequeno e sagaz robô assistente de mestre de RPG (sistema DoZero/Pathfinder 2e). Ajude o mestre dizendo quais rolagens pedir, quais atributos usar ou qual o custo de mana/hp dependendo da ação. Seja muito direto, prático, e amigável. Responda em formato markdown, de forma curta." + systemContext,
+        systemPrompt: "Você é um pequeno e sagaz robô assistente de mestre de RPG (sistema DoZero/Pathfinder 2e). Ajude o mestre dizendo quais rolagens pedir, quais atributos usar ou qual o custo de mana/hp dependendo da ação. Seja muito direto, prático, e amigável. Responda em formato markdown, de forma curta."
+          + tableCtx + (ragCtx ? '\n\n' + ragCtx : ''),
         userPrompt: prompt
       });
       setAiChat(prev => [...prev, { role: 'ai', text: res.text }]);

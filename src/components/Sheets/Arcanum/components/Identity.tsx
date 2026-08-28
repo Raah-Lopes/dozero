@@ -36,11 +36,10 @@ export default function Identity({ c, set, notify }: Props) {
 
   return (
     <Reveal>
-      <div className="panel ornate-corners overflow-hidden">
+      <div className="panel ornate-corners p-5 sm:p-6 space-y-5">
         {/* ---------- retrato ---------- */}
-        <div className="relative bg-ink-800/70 p-5 pb-4">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(400px_120px_at_50%_-20%,rgba(224,176,84,0.16),transparent)]" />
-          <div className="group relative mx-auto w-fit">
+        <div className="relative mx-auto w-fit pb-3 pt-1">
+          <div className="group relative">
             <div className="absolute -inset-2.5 rounded-xl border border-gold-600/30" />
             <div className="sigil-glow absolute -inset-2.5 rounded-xl bg-[radial-gradient(circle_at_50%_0%,rgba(224,176,84,0.22),transparent_70%)]" />
             <div className="relative h-44 w-44 overflow-hidden rounded-lg border-2 border-gold-500/70 shadow-[0_10px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(205,151,60,0.18)]">
@@ -61,7 +60,7 @@ export default function Identity({ c, set, notify }: Props) {
                 </span>
               </button>
             </div>
-            <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-gold-600/60 bg-ink-900 px-3 py-0.5 font-display text-[11px] font-bold tracking-[0.18em] text-gold-300 shadow-md">
+            <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-gold-600/60 bg-ink-900 px-3.5 py-0.5 font-display text-[11px] font-bold tracking-[0.18em] text-gold-300 shadow-md whitespace-nowrap z-10">
               NÍVEL {c.level}
             </span>
           </div>
@@ -75,22 +74,21 @@ export default function Identity({ c, set, notify }: Props) {
         </div>
 
         {/* ---------- identidade ---------- */}
-        <div className="space-y-4 p-5 pt-6">
-          <div>
-            <label className="block">
-              <span className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-fog/80">
-                <Sparkle size={12} className="text-gold-400" /> Nome do personagem
-              </span>
-              <input
-                value={c.name}
-                onChange={(e) => set({ name: e.target.value })}
-                placeholder="Nome verdadeiro…"
-                className="field font-display !text-2xl !font-bold text-gold-200 placeholder:text-base placeholder:not-italic"
-              />
-            </label>
-          </div>
+        <div>
+          <label className="block">
+            <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-fog/80">
+              <Sparkle size={12} className="text-gold-400" /> Nome do personagem
+            </span>
+            <input
+              value={c.name}
+              onChange={(e) => set({ name: e.target.value })}
+              placeholder="Nome verdadeiro…"
+              className="field font-display !text-2xl !font-bold text-gold-200 placeholder:text-base placeholder:not-italic"
+            />
+          </label>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
             <Field label="Raça">
               <input value={c.race} onChange={(e) => set({ race: e.target.value })} className="field" placeholder="Ex.: Meio-elfa" />
             </Field>
@@ -172,7 +170,7 @@ export default function Identity({ c, set, notify }: Props) {
               {c.affiliations.map((a) => (
                 <span
                   key={a}
-                  className="group/chip inline-flex items-center gap-1.5 rounded-full border border-ember-500/40 bg-ember-900/30 px-3 py-1 text-[13px] font-bold text-ember-300 transition-all duration-200 hover:border-ember-400 hover:bg-ember-900/60 hover:shadow-[0_0_14px_rgba(193,78,57,0.25)]"
+                  className="group/chip inline-flex items-center gap-1.5 rounded-full border border-ember-500/40 bg-ember-900/30 px-3 py-1 text-[13px] font-bold text-ember-300 transition-all duration-200 hover:border-ember-400 hover:bg-ember-900/60"
                 >
                   {a}
                   <button
@@ -216,7 +214,6 @@ export default function Identity({ c, set, notify }: Props) {
             <Sigil size={14} className="text-gold-500" />
           </div>
         </div>
-      </div>
-    </Reveal>
+      </Reveal>
   );
 }

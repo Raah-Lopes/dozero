@@ -5,8 +5,9 @@ import { updateGMChatConfig, getGMChatConfig, GMChatConfig } from '../../store/c
 import { toast } from '../UI/Toast';
 import { useAuthStore } from '../../store/authStore';
 import { formatChatAsMarkdown } from '../../services/chatCloudService';
+import { useVoiceStore } from '../../store/voiceStore';
 
-export type ChatMainTab = 'chat' | 'voz' | 'combate';
+export type ChatMainTab = 'chat' | 'combate';
 
 interface ChatHeaderProps {
   mainTab: ChatMainTab;
@@ -46,14 +47,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   }, []);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', boxSizing: 'border-box', background: 'var(--chat-bg-primary)' }}>
-      {/* ─── ABAS PRINCIPAIS SUPERIORES (CHAT / VOZ / COMBATE) ─── */}
+      {/* ─── ABAS PRINCIPAIS SUPERIORES (CHAT / COMBATE) ─── */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         background: '#18110b',
         borderBottom: '1px solid rgba(90, 66, 52, 0.7)',
-        padding: '3px 4px',
-        gap: '3px'
+        padding: '4px 6px',
+        gap: '4px'
       }}>
         <button
           onClick={() => setMainTab('chat')}
@@ -73,28 +74,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             cursor: 'pointer'
           }}
         >
-          <span>💬</span> Chat
-        </button>
-
-        <button
-          onClick={() => setMainTab('voz')}
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '4px',
-            padding: '6px 4px',
-            background: mainTab === 'voz' ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
-            border: `1px solid ${mainTab === 'voz' ? 'rgba(34, 197, 94, 0.5)' : 'transparent'}`,
-            borderRadius: '6px',
-            color: mainTab === 'voz' ? '#86efac' : '#a1a1aa',
-            fontSize: '0.75rem',
-            fontWeight: mainTab === 'voz' ? 700 : 500,
-            cursor: 'pointer'
-          }}
-        >
-          <span>🎙️</span> Voz & Tela
+          <span>💬</span> Chat da Mesa
         </button>
 
         <button
@@ -115,7 +95,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             cursor: 'pointer'
           }}
         >
-          <span>⚔️</span> Combate
+          <span>⚔️</span> Registro de Combate
         </button>
       </div>
 

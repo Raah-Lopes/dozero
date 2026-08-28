@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700;800&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;700;800&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap');
 @import url('./responsive.css');
 @import "tailwindcss";
+@source "../SOUND/src";
 
 @theme {
   --color-tinta: #0c0911;
@@ -26,7 +27,9 @@
   --color-parch-100: #f3ead6;
   --color-parch-200: #e9dfc6;
   --color-parch-300: #d9cba8;
+  --color-parch: #f3ead6;
   --color-fog: #a99e88;
+  --color-fog-dim: #7c7160;
   --color-dim: #7c7160;
   --color-gold-200: #f7dfa4;
   --color-gold-300: #eec777;
@@ -44,6 +47,17 @@
   --color-steel-300: #a9c0e2;
   --color-steel-400: #8aa4cc;
   --color-steel-500: #6b87b3;
+  --color-moss-300: #93d3ac;
+  --color-moss-400: #6db58d;
+  --color-moss-500: #4c9470;
+  --color-moss-600: #387456;
+  --color-arc-300: #d9c6ff;
+  --color-arc-400: #b89be8;
+  --color-arc-500: #8e6bc4;
+  --color-blood-400: #f0917c;
+  --color-blood-500: #c14e39;
+  --font-sans: 'Alegreya Sans', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
   --font-tale: "Spectral", Georgia, serif;
 }
 

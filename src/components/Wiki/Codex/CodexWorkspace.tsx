@@ -37,6 +37,7 @@ import { FamilyTree } from '../../Widgets/GameMaster/Lineage/model/tree';
 import { Icone, SeloTipo } from './CodexIcons';
 import { useWindowManager } from '../../../hooks/useWindowManager';
 import { WorkspaceChrome } from '../../Navigation/WorkspaceChrome';
+import { LoreWorkspaceSwitcher } from '../../Navigation/LoreWorkspaceSwitcher';
 import {
   CLS_BOTAO_AMBAR,
   CLS_BOTAO_FANTASMA,
@@ -395,11 +396,11 @@ export function CodexWorkspace({
   };
 
   const applyView = (view: CodexSavedView) => {
-    setSearch(view.search);
-    setTypeId(view.typeIds[0] || 'all');
-    setSelectedTags(view.tags);
+    setSearch(view.search || '');
+    setTypeId(view.typeIds && view.typeIds.length > 0 ? view.typeIds[0] : 'all');
+    setSelectedTags(view.tags || []);
     setFolderId(view.folderId === '__none__' ? 'none' : view.folderId || 'all');
-    setFavoritesOnly(view.favoritesOnly);
+    setFavoritesOnly(Boolean(view.favoritesOnly));
     avisar(`Vista "${view.name}" aplicada.`, 'amber');
   };
 
@@ -493,20 +494,121 @@ export function CodexWorkspace({
         title="Códice"
         subtitle={`${tituloVista} · ${notes.length} notas · ${document.relations.length} relações`}
         icon={<Icone nome="livro" tam={22} />}
-      >
-        <div className="codex-workspace-chrome-content">
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="codex-back-button"
-              title="Voltar para a mesa de jogo"
-            >
-              <Icone nome="voltar" tam={14} /> Voltar à mesa
-            </button>
-          )}
+        navigation={(
+          <div className="flex items-center gap-2">
+            <LoreWorkspaceSwitcher current="wiki" />
 
-          {/* busca */}
-          <div className="relative hidden w-64 md:block">
+            {/* seletor de vistas */}
+            <div className="flex items-center gap-1 rounded-lg border border-linha bg-tinta p-1">
+              {(
+                [
+                  { id: 'grade', icone: 'grade', rotulo: 'Grade' },
+                  { id: 'lista', icone: 'lista', rotulo: 'Lista' },
+                  { id: 'grafo', icone: 'grafo', rotulo: 'Grafo' },
+                  { id: 'stats', icone: 'stats', rotulo: 'Estatísticas' },
+                ] as const
+              ).map((m) => (
+                <button
+                  key={m.id}
+                  title={`Vista: ${m.rotulo}`}
+                  onClick={() => setViewMode(m.id)}
+                  className={`rounded-md px-2.5 py-1.5 transition ${
+                    viewMode === m.id
+                      ? 'bg-ambar/20 text-ambar shadow-[inset_0_0_0_1px_rgba(217,164,65,0.4)]'
+                      : 'text-papel3 hover:text-papel'
+                  }`}
+                >
+                  <Icone nome={m.icone} tam={17} />
+                </button>
+              ))}
+            </div>
+
+            {/* alternador de colunas quando em grade */}
+            {viewMode === 'grade' && (
+              <div className="relative" ref={refCol}>
+                <button
+                  title="Quantidade de colunas na grade"
+                  onClick={() => setMenuCol((v) => !v)}
+                  className={`flex items-center gap-2 rounded-md border px-2.5 py-2 text-xs font-bold transition ${
+                    menuCol ? 'border-ambar/60 bg-ambar/15 text-ambar' : 'border-linha bg-tinta text-papel3 hover:text-ambar'
+                  }`}
+                >
+                  <MiniColunas n={columns} />
+                  <span className="whitespace-nowrap hidden lg:inline">Colunas: {columns}</span>
+                  <Icone nome="setaBaixo" tam={12} />
+                </button>
+                {menuCol && (
+                  <div className="animar-modal absolute left-0 top-11 z-40 w-48 rounded-lg border border-linha2 bg-tinta2 p-1.5 shadow-2xl shadow-black/60">
+                    <p className="px-2.5 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-papel3">
+                      Colunas da grade
+                    </p>
+                    {OPCOES_COLUNAS.map((op) => (
+                      <button
+                        key={String(op)}
+                        onClick={() => handleSetColumns(op)}
+                        className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] transition ${
+                          columns === op ? 'bg-ambar/15 font-bold text-ambar' : 'text-papel2 hover:bg-tinta3 hover:text-papel'
+                        }`}
+                      >
+                        <MiniColunas n={op} />
+                        {op} colunas
+                        {columns === op && (
+                          <span className="ml-auto">
+                            <Icone nome="check" tam={14} />
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* gravar vista */}
+            {canEdit && (
+              <div className="relative" ref={refVista}>
+                <button
+                  title="Salvar filtros atuais como vista"
+                  onClick={() => {
+                    setMenuVista((v) => !v);
+                    setNomeVista('');
+                  }}
+                  className={`rounded-md border px-2.5 py-2 transition ${
+                    menuVista ? 'border-ambar/60 bg-ambar/15 text-ambar' : 'border-linha bg-tinta text-papel3 hover:text-ambar'
+                  }`}
+                >
+                  <Icone nome="estrela" tam={16} />
+                </button>
+                {menuVista && (
+                  <div className="animar-modal absolute left-0 top-11 z-40 w-64 rounded-lg border border-linha2 bg-tinta2 p-3 shadow-2xl shadow-black/60">
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-papel3">
+                      Gravar vista atual
+                    </p>
+                    <input
+                      autoFocus
+                      value={nomeVista}
+                      onChange={(e) => setNomeVista(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && nomeVista.trim()) saveView();
+                      }}
+                      placeholder="Ex.: Vilões da campanha"
+                      className={CLS_INPUT}
+                    />
+                    <button
+                      disabled={!nomeVista.trim()}
+                      onClick={saveView}
+                      className={`${CLS_BOTAO_AMBAR} mt-2 w-full disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      <Icone nome="check" tam={14} /> Salvar filtros e vista
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        search={(
+          <div className="relative">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#7f7660]">
               <Icone nome="busca" tam={14} />
             </span>
@@ -514,340 +616,157 @@ export function CodexWorkspace({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar no códice…"
-              className="w-full rounded-md border border-[#3b3222] bg-[#15120e] py-1.5 pr-3 text-xs text-[#ede4d0] placeholder:text-[#7f7660] outline-none transition focus:border-[#d9a441] focus:ring-1 focus:ring-[#d9a441]/30"
-              style={{ paddingLeft: '34px' }}
+              className="workspace-chrome-search-input pl-8 pr-3"
             />
           </div>
-
-          {/* seletor de vistas */}
-          <div className="flex items-center gap-1 rounded-lg border border-linha bg-tinta p-1">
-            {(
-              [
-                { id: 'grade', icone: 'grade', rotulo: 'Grade' },
-                { id: 'lista', icone: 'lista', rotulo: 'Lista' },
-                { id: 'grafo', icone: 'grafo', rotulo: 'Grafo' },
-                { id: 'stats', icone: 'stats', rotulo: 'Estatísticas' },
-              ] as const
-            ).map((m) => (
+        )}
+        actions={(
+          <div className="flex items-center gap-2">
+            {/* menu de opções adicionais (Import/Export/Legado) */}
+            <div className="relative" ref={refMenu}>
               <button
-                key={m.id}
-                title={`Vista: ${m.rotulo}`}
-                onClick={() => setViewMode(m.id)}
-                className={`rounded-md px-2.5 py-1.5 transition ${
-                  viewMode === m.id
-                    ? 'bg-ambar/20 text-ambar shadow-[inset_0_0_0_1px_rgba(217,164,65,0.4)]'
-                    : 'text-papel3 hover:text-papel'
-                }`}
+                title="Opções do Códice"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="rounded-md border border-linha bg-tinta p-2 text-papel3 transition hover:text-papel"
               >
-                <Icone nome={m.icone} tam={17} />
+                <Icone nome="bussola" tam={16} />
               </button>
-            ))}
-          </div>
-
-          {/* alternador de colunas quando em grade */}
-          {viewMode === 'grade' && (
-            <div className="relative" ref={refCol}>
-              <button
-                title="Quantidade de colunas na grade"
-                onClick={() => setMenuCol((v) => !v)}
-                className={`flex items-center gap-2 rounded-md border px-2.5 py-2 text-xs font-bold transition ${
-                  menuCol ? 'border-ambar/60 bg-ambar/15 text-ambar' : 'border-linha bg-tinta text-papel3 hover:text-ambar'
-                }`}
-              >
-                <MiniColunas n={columns} />
-                <span className="whitespace-nowrap">Colunas: {columns}</span>
-                <Icone nome="setaBaixo" tam={12} />
-              </button>
-              {menuCol && (
-                <div className="animar-modal absolute right-0 top-11 z-40 w-48 rounded-lg border border-linha2 bg-tinta2 p-1.5 shadow-2xl shadow-black/60">
-                  <p className="px-2.5 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-papel3">
-                    Colunas da grade
-                  </p>
-                  {OPCOES_COLUNAS.map((op) => (
-                    <button
-                      key={String(op)}
-                      onClick={() => handleSetColumns(op)}
-                      className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] transition ${
-                        columns === op ? 'bg-ambar/15 font-bold text-ambar' : 'text-papel2 hover:bg-tinta3 hover:text-papel'
-                      }`}
-                    >
-                      <MiniColunas n={op} />
-                      {op} colunas
-                      {columns === op && (
-                        <span className="ml-auto">
-                          <Icone nome="check" tam={14} />
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* gravar vista */}
-          {canEdit && (
-            <div className="relative" ref={refVista}>
-              <button
-                title="Salvar filtros atuais como vista"
-                onClick={() => {
-                  setMenuVista((v) => !v);
-                  setNomeVista('');
-                }}
-                className={`rounded-md border px-2.5 py-2 transition ${
-                  menuVista ? 'border-ambar/60 bg-ambar/15 text-ambar' : 'border-linha bg-tinta text-papel3 hover:text-ambar'
-                }`}
-              >
-                <Icone nome="estrela" tam={16} />
-              </button>
-              {menuVista && (
-                <div className="animar-modal absolute right-0 top-11 z-40 w-64 rounded-lg border border-linha2 bg-tinta2 p-3 shadow-2xl shadow-black/60">
-                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-papel3">
-                    Gravar vista atual
-                  </p>
-                  <input
-                    autoFocus
-                    value={nomeVista}
-                    onChange={(e) => setNomeVista(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && nomeVista.trim()) saveView();
-                    }}
-                    placeholder="Ex.: Vilões da campanha"
-                    className={CLS_INPUT}
-                  />
+              {menuOpen && (
+                <div className="animar-modal absolute right-0 top-11 z-40 w-60 rounded-lg border border-linha2 bg-tinta2 p-2 shadow-2xl shadow-black/60">
                   <button
-                    disabled={!nomeVista.trim()}
-                    onClick={saveView}
-                    className={`${CLS_BOTAO_AMBAR} mt-2 w-full disabled:cursor-not-allowed disabled:opacity-40`}
+                    onClick={() => {
+                      downloadCodex();
+                      setMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel"
                   >
-                    <Icone nome="check" tam={14} /> Salvar filtros e vista
+                    <Icone nome="baixar" tam={14} /> Exportar Códice (.json)
                   </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Navegador de Módulos Arcanum (4-em-1): Códice / Cérebro / Linhagem / Linha do Tempo */}
-          <div className="flex items-center gap-1 rounded-lg border border-[#3b3222] bg-[#15120e] p-1 shadow-sm">
-            <button
-              title="Códice (Wiki Arcanum)"
-              className="rounded-md border border-[#d9a441]/80 bg-[#d9a441]/20 px-2.5 py-1.5 text-[#d9a441] shadow-[inset_0_0_0_1px_rgba(217,164,65,0.4)]"
-            >
-              <Icone nome="livro" tam={17} />
-            </button>
-            <button
-              title="Cérebro do Mundo (Grafo Semântico 3D)"
-              onClick={handleOpenBrain}
-              className="rounded-md px-2.5 py-1.5 text-[#7f7660] transition hover:bg-[#272117] hover:text-[#ede4d0]"
-            >
-              <Icone nome="cerebro" tam={17} />
-            </button>
-            <button
-              title="Árvore Genealógica (Linhagem)"
-              onClick={handleOpenLineage}
-              className="rounded-md px-2.5 py-1.5 text-[#7f7660] transition hover:bg-[#272117] hover:text-[#ede4d0]"
-            >
-              <Icone nome="coroa" tam={17} />
-            </button>
-            <button
-              title="Linha do Tempo & Eras (Chronica)"
-              onClick={handleOpenChronicle}
-              className="rounded-md px-2.5 py-1.5 text-[#7f7660] transition hover:bg-[#272117] hover:text-[#ede4d0]"
-            >
-              <Icone nome="ampulheta" tam={17} />
-            </button>
-          </div>
-
-          {/* menu de opções adicionais (Import/Export/Legado) */}
-          <div className="relative" ref={refMenu}>
-            <button
-              title="Opções do Códice"
-              onClick={() => setMenuOpen((v) => !v)}
-              className="rounded-md border border-linha bg-tinta p-2 text-papel3 transition hover:text-papel"
-            >
-              <Icone nome="bussola" tam={16} />
-            </button>
-            {menuOpen && (
-              <div className="animar-modal absolute right-0 top-11 z-40 w-60 rounded-lg border border-linha2 bg-tinta2 p-2 shadow-2xl shadow-black/60">
-                <button
-                  onClick={() => {
-                    downloadCodex();
-                    setMenuOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel"
-                >
-                  <Icone nome="baixar" tam={14} /> Exportar Códice (.json)
-                </button>
-                {canEdit && (
-                  <label className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel">
-                    <Icone nome="mais" tam={14} /> Importar Códice (.json)
-                    <input
-                      type="file"
-                      accept="application/json,.json"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) void importCodex(file);
-                        e.currentTarget.value = '';
-                        setMenuOpen(false);
-                      }}
-                    />
-                  </label>
-                )}
-                {canEdit && (
-                  <label className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel">
-                    <Icone nome="livro" tam={14} /> Importar Nota (.dozero-note.json)
-                    <input
-                      type="file"
-                      accept="application/json,.json"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) void importNote(file);
-                        e.currentTarget.value = '';
-                        setMenuOpen(false);
-                      }}
-                    />
-                  </label>
-                )}
-                {onOpenLegacy && (
-                  <>
-                    <div className="my-1 border-t border-linha" />
-                    <button
-                      onClick={() => {
-                        onOpenLegacy();
-                        setMenuOpen(false);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel"
-                    >
-                      <Icone nome="pergaminho" tam={14} /> Acervo legado Markdown
-                    </button>
-                    {canEdit && (
+                  {canEdit && (
+                    <label className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel">
+                      <Icone nome="mais" tam={14} /> Importar Códice (.json)
+                      <input
+                        type="file"
+                        accept="application/json,.json"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void importCodex(file);
+                          e.currentTarget.value = '';
+                          setMenuOpen(false);
+                        }}
+                      />
+                    </label>
+                  )}
+                  {canEdit && (
+                    <label className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel">
+                      <Icone nome="livro" tam={14} /> Importar Nota (.dozero-note.json)
+                      <input
+                        type="file"
+                        accept="application/json,.json"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void importNote(file);
+                          e.currentTarget.value = '';
+                          setMenuOpen(false);
+                        }}
+                      />
+                    </label>
+                  )}
+                  {onOpenLegacy && (
+                    <>
+                      <div className="my-1 border-t border-linha" />
                       <button
                         onClick={() => {
-                          void openMigration();
+                          onOpenLegacy();
                           setMenuOpen(false);
                         }}
                         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel"
                       >
-                        <Icone nome="troca" tam={14} /> Migrar Markdown para o Códice
+                        <Icone nome="pergaminho" tam={14} /> Acervo legado Markdown
                       </button>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* botão principal "+ Nova nota" com grid de 12 tipos */}
-          {canEdit && (
-            <div className="relative" ref={refNovo}>
-              <button
-                onClick={() => setTypePickerOpen((v) => !v)}
-                className={`${CLS_BOTAO_AMBAR} !px-3.5`}
-              >
-                <Icone nome="mais" tam={16} /> Nova nota
-              </button>
-              {typePickerOpen && (
-                <div className="animar-modal absolute right-0 top-11 z-50 w-96 rounded-xl border border-linha2 bg-tinta2 p-3.5 shadow-2xl shadow-black/80">
-                  <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-papel3">
-                    Que página abrir no códice?
-                  </p>
-                  <div className="grid max-h-80 grid-cols-2 gap-1.5 overflow-y-auto pr-1">
-                    {document.types.map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => createNoteOfType(t)}
-                        className="flex items-center gap-2.5 rounded-lg border border-transparent bg-tinta3 p-2 text-left text-xs font-semibold text-papel transition hover:border-linha2 hover:bg-tinta4"
-                      >
-                        <span
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
-                          style={{ background: `${t.color}22`, color: t.color }}
+                      {canEdit && (
+                        <button
+                          onClick={() => {
+                            void openMigration();
+                            setMenuOpen(false);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-papel2 transition hover:bg-tinta3 hover:text-papel"
                         >
-                          <Icone nome={t.icon} tam={15} />
-                        </span>
-                        <span className="flex-1 truncate">{t.name}</span>
-                        {t.id === 'criatura' && (
-                          <span className="text-brasa" title="Abre a Forja de Criaturas">
-                            <Icone nome="faiscas" tam={12} />
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setTypePickerOpen(false);
-                      setTypeToEdit(null);
-                      setTypeModalOpen(true);
-                    }}
-                    className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-linha2 px-3 py-2 text-xs font-bold text-ambar transition hover:bg-ambar/10"
-                  >
-                    <Icone nome="pincel" tam={14} /> Inventar tipo personalizado…
-                  </button>
+                          <Icone nome="troca" tam={14} /> Migrar Markdown para o Códice
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        {/* chips de filtros ativos */}
-        {(selectedTags.length > 0 || typeId !== 'all' || folderId !== 'all' || favoritesOnly || search.trim()) && (
-            <div className="codex-active-filters flex flex-wrap items-center gap-2 pt-1">
-            {typeId !== 'all' && (
+
+            {/* botão principal "+ Nova nota" */}
+            {canEdit && (
+              <div className="relative" ref={refNovo}>
+                <button
+                  onClick={() => setTypePickerOpen((v) => !v)}
+                  className={`${CLS_BOTAO_AMBAR} !px-3.5`}
+                >
+                  <Icone nome="mais" tam={16} /> <span className="hidden sm:inline">Nova nota</span>
+                </button>
+                {typePickerOpen && (
+                  <div className="animar-modal absolute right-0 top-11 z-50 w-96 rounded-xl border border-linha2 bg-tinta2 p-3.5 shadow-2xl shadow-black/80">
+                    <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-papel3">
+                      Que página abrir no códice?
+                    </p>
+                    <div className="grid max-h-80 grid-cols-2 gap-1.5 overflow-y-auto pr-1">
+                      {document.types.map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => createNoteOfType(t)}
+                          className="flex items-center gap-2.5 rounded-lg border border-transparent bg-tinta3 p-2 text-left text-xs font-semibold text-papel transition hover:border-linha2 hover:bg-tinta4"
+                        >
+                          <span
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+                            style={{ background: `${t.color}22`, color: t.color }}
+                          >
+                            <Icone nome={t.icon} tam={15} />
+                          </span>
+                          <span className="flex-1 truncate">{t.name}</span>
+                          {t.id === 'criatura' && (
+                            <span className="text-brasa" title="Abre a Forja de Criaturas">
+                              <Icone nome="faiscas" tam={12} />
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setTypePickerOpen(false);
+                        setTypeToEdit(null);
+                        setTypeModalOpen(true);
+                      }}
+                      className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-linha2 px-3 py-2 text-xs font-bold text-ambar transition hover:bg-ambar/10"
+                    >
+                      <Icone nome="pincel" tam={14} /> Inventar tipo personalizado…
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* botão Voltar à mesa padrão */}
+            {onClose && (
               <button
-                onClick={() => setTypeId('all')}
-                className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
+                onClick={onClose}
+                className="codex-back-button workspace-chrome-button"
+                title="Voltar para a mesa de jogo"
               >
-                <PontoCor cor={getType(typeId).color} />
-                {getType(typeId).name}
-                <Icone nome="x" tam={11} />
+                <Icone nome="voltar" tam={14} /> <span className="hidden sm:inline">Voltar à mesa</span>
               </button>
             )}
-            {folderId !== 'all' && (
-              <button
-                onClick={() => setFolderId('all')}
-                className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
-              >
-                <Icone nome="pasta" tam={11} />
-                {folderId === 'none' ? 'Sem pasta' : document.folders.find((f) => f.id === folderId)?.name || 'Pasta'}
-                <Icone nome="x" tam={11} />
-              </button>
-            )}
-            {favoritesOnly && (
-              <button
-                onClick={() => setFavoritesOnly(false)}
-                className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
-              >
-                <Icone nome="estrela" tam={11} preenchido />
-                Favoritas
-                <Icone nome="x" tam={11} />
-              </button>
-            )}
-            {selectedTags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTags((tags) => tags.filter((t) => t !== tag))}
-                className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
-              >
-                #{tag}
-                <Icone nome="x" tam={11} />
-              </button>
-            ))}
-            <button
-              onClick={() => {
-                setSearch('');
-                setTypeId('all');
-                setFolderId('all');
-                setFavoritesOnly(false);
-                setSelectedTags([]);
-              }}
-              className="text-[11px] font-semibold text-papel3 underline decoration-dotted underline-offset-4 transition hover:text-papel"
-            >
-              limpar filtros
-            </button>
           </div>
         )}
-        </div>
-      </WorkspaceChrome>
+      />
 
       {/* corpo principal com Sidebar e Área de Conteúdo */}
       <section className="codex-body relative flex min-h-0 flex-1 overflow-hidden">
@@ -1159,6 +1078,64 @@ export function CodexWorkspace({
 
         {/* área de visualização e conteúdo */}
         <div className={`codex-content flex min-h-0 flex-1 flex-col ${viewMode === 'grafo' ? 'overflow-hidden p-4' : 'overflow-y-auto p-6'}`}>
+          {/* chips de filtros ativos */}
+          {(selectedTags.length > 0 || typeId !== 'all' || folderId !== 'all' || favoritesOnly || search.trim()) && (
+            <div className="codex-active-filters mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-linha bg-tinta2/80 px-3 py-2">
+              {typeId !== 'all' && (
+                <button
+                  onClick={() => setTypeId('all')}
+                  className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
+                >
+                  <PontoCor cor={getType(typeId).color} />
+                  {getType(typeId).name}
+                  <Icone nome="x" tam={11} />
+                </button>
+              )}
+              {folderId !== 'all' && (
+                <button
+                  onClick={() => setFolderId('all')}
+                  className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
+                >
+                  <Icone nome="pasta" tam={11} />
+                  {folderId === 'none' ? 'Sem pasta' : document.folders.find((f) => f.id === folderId)?.name || 'Pasta'}
+                  <Icone nome="x" tam={11} />
+                </button>
+              )}
+              {favoritesOnly && (
+                <button
+                  onClick={() => setFavoritesOnly(false)}
+                  className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
+                >
+                  <Icone nome="estrela" tam={11} preenchido />
+                  Favoritas
+                  <Icone nome="x" tam={11} />
+                </button>
+              )}
+              {selectedTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTags((tags) => tags.filter((t) => t !== tag))}
+                  className="animar-aparecer flex items-center gap-1.5 rounded-full border border-ambar/40 bg-ambar/10 px-2.5 py-1 text-[11px] font-semibold text-ambar transition hover:border-brasa/60 hover:bg-brasa/10 hover:text-brasa"
+                >
+                  #{tag}
+                  <Icone nome="x" tam={11} />
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setTypeId('all');
+                  setFolderId('all');
+                  setFavoritesOnly(false);
+                  setSelectedTags([]);
+                }}
+                className="text-[11px] font-semibold text-papel3 underline decoration-dotted underline-offset-4 transition hover:text-papel"
+              >
+                limpar filtros
+              </button>
+            </div>
+          )}
+
           {viewMode === 'grade' && (
             <>
               {notes.length === 0 ? (

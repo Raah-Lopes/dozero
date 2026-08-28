@@ -66,6 +66,8 @@ export interface SavedView {
   viewport: { x: number; y: number; zoom: number };
   hidden: string[];
   isolate: string | null;
+  selectedNodeId?: string | null;
+  nodePositions?: Record<string, { x: number; y: number }>;
   favorite?: boolean;
 }
 

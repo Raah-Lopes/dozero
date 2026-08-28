@@ -103,9 +103,9 @@ export class SupabaseRealtimeProvider {
         isSubscribed = true;
         console.log(`[SupabaseRealtime] Conectado à sala '${this.roomName}' em tempo real!`);
         
-        // Registra presença do usuário atual na sala
+        // Registra presença do usuário atual na sala (usando sessão local para evitar requisição de rede)
         try {
-          const authUser = (await supabase.auth.getUser()).data.user;
+          const authUser = (await supabase.auth.getSession()).data.session?.user;
           await this.channel?.track({
             user_id: authUser?.id || `anon_${Date.now()}`,
             user_name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Aventureiro',

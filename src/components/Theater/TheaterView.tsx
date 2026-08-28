@@ -2,7 +2,7 @@ import { toggleVnMode, toggleShowHeroCards } from '../../store/theater';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PanelLeft, Video, VideoOff, ChevronLeft, ChevronRight, PlusCircle, Bot, Sparkles, MessageSquare, DoorOpen, Scroll, Music, Lock, BookOpen, Clock, Tv, Users } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
-import { useIsGM } from '../../store/user';
+import { useIsGM, useUserStore } from '../../store/user';
 import { MoodEngine } from './MoodEngine';
 import { DirectorPanel } from './DirectorPanel';
 import { StagePropsLayer } from './StagePropsLayer';
@@ -37,6 +37,7 @@ import { CinematicDialogueStudio } from './CinematicDialogueStudio';
 import { PixabayMediaPickerModal } from '../Modals/PixabayMediaPickerModal';
 import { CharacterRosterWidget } from '../Widgets/PlayerTools/CharacterRosterWidget';
 import { AudioDirectorWidget } from '../Widgets/System/AudioDirectorWidget';
+import { AppProvider as SoundboardProvider } from '../../../SOUND/src/store';
 import './Theater.css';
 
 export const TheaterView: React.FC = () => {
@@ -277,7 +278,9 @@ export const TheaterView: React.FC = () => {
 
         {/* ── Audio Director Pro Modal ── */}
         {audioDirectorOpen && (
-          <AudioDirectorWidget onClose={() => setAudioDirectorOpen(false)} />
+          <SoundboardProvider>
+            <AudioDirectorWidget onClose={() => setAudioDirectorOpen(false)} />
+          </SoundboardProvider>
         )}
 
         {/* ── Scene Clues / Handouts Modal ── */}
@@ -418,32 +421,39 @@ export const TheaterView: React.FC = () => {
 
               <div className="theater-topbar-divider" />
 
-              {!isPlayerView && (
-                <button
-                  className={`theater-director-btn ${drawerOpen ? 'active' : ''}`}
-                  onClick={() => setDrawerOpen(!drawerOpen)}
-                  title="Abrir Painel do Diretor"
-                >
-                  <PanelLeft size={15} />
-                  <span>Diretor</span>
-                </button>
-              )}
+              {/* Botão Diretor — sempre acessível com ativação suave de Mestre */}
+              <button
+                className={`theater-director-btn ${drawerOpen ? 'active' : ''}`}
+                onClick={() => {
+                  if (!isGM) {
+                    useUserStore.getState().setIsGM(true);
+                  }
+                  if (isTvMode) {
+                    setIsTvMode(false);
+                  }
+                  setDrawerOpen(!drawerOpen);
+                }}
+                title="Abrir Painel do Diretor de Cenas"
+              >
+                <PanelLeft size={15} />
+                <span>Diretor</span>
+              </button>
 
-              {isTvMode && isGM && (
+              {isTvMode && (
                 <button
                   className="theater-tv-badge"
                   onClick={() => setIsTvMode(false)}
-                  title="Clique para voltar ao Modo Mestre"
+                  title="Clique para voltar ao Modo Mestre / Diretor"
                 >
                   <Tv size={13} />
-                  <span>Modo Telão / Jogador (Sair)</span>
+                  <span>Modo Telão (Sair)</span>
                 </button>
               )}
             </div>
 
             {/* Center: Scene title & prev/next */}
             <div className="theater-topbar-center">
-              {!isPlayerView && (
+              {!isTvMode && (
                 <button
                   className="theater-icon-btn"
                   onClick={goToPrevScene}
@@ -458,13 +468,13 @@ export const TheaterView: React.FC = () => {
               <div
                 className="theater-topbar-title-box"
                 onClick={() => {
-                  if (!isPlayerView) {
+                  if (!isTvMode) {
                     setDrawerTab('ambiente');
                     setDrawerOpen(true);
                   }
                 }}
-                style={{ cursor: isPlayerView ? 'default' : 'pointer' }}
-                title={isPlayerView ? 'Cena Atual' : 'Clique para abrir detalhes da cena'}
+                style={{ cursor: isTvMode ? 'default' : 'pointer' }}
+                title={isTvMode ? 'Cena Atual' : 'Clique para abrir detalhes da cena'}
               >
                 <span className="theater-topbar-title-text">
                   {currentScene?.title ?? 'Sem cena ativa'}
@@ -476,7 +486,7 @@ export const TheaterView: React.FC = () => {
                 )}
               </div>
 
-              {!isPlayerView && (
+              {!isTvMode && (
                 <button
                   className="theater-icon-btn"
                   onClick={goToNextScene}
@@ -526,7 +536,7 @@ export const TheaterView: React.FC = () => {
                 )}
               </button>
 
-              {!isPlayerView && (
+              {!isTvMode && (
                 <button
                   className={`theater-icon-btn ${secretsOpen ? 'active' : ''}`}
                   onClick={() => setSecretsOpen(!secretsOpen)}
@@ -554,7 +564,7 @@ export const TheaterView: React.FC = () => {
                 <Sparkles size={15} color={kenBurnsActive ? 'var(--accent-primary)' : 'currentColor'} />
               </button>
 
-              {!isPlayerView && (
+              {!isTvMode && (
                 <button
                   className={`theater-icon-btn ${isAiActive ? 'active' : ''}`}
                   onClick={() => setIsAiActive(!isAiActive)}
@@ -564,7 +574,7 @@ export const TheaterView: React.FC = () => {
                 </button>
               )}
 
-              {!isPlayerView && (
+              {!isTvMode && (
                 <button
                   className={`theater-icon-btn ${dialogueStudioOpen ? 'active' : ''}`}
                   onClick={() => setDialogueStudioOpen(true)}
@@ -582,18 +592,14 @@ export const TheaterView: React.FC = () => {
                 <Users size={15} color={showHeroCards ? 'var(--accent-primary)' : 'currentColor'} />
               </button>
 
-              {isGM && (
-                <>
-                  <div className="theater-topbar-divider" />
-                  <button
-                    className={`theater-icon-btn ${isTvMode ? 'active' : ''}`}
-                    onClick={() => setIsTvMode(!isTvMode)}
-                    title={isTvMode ? 'Sair do Modo Telão (Voltar ao Mestre)' : 'Modo Telão / Pré-visualizar como Jogador'}
-                  >
-                    <Tv size={15} color={isTvMode ? 'var(--accent-primary)' : 'currentColor'} />
-                  </button>
-                </>
-              )}
+              <div className="theater-topbar-divider" />
+              <button
+                className={`theater-icon-btn ${isTvMode ? 'active' : ''}`}
+                onClick={() => setIsTvMode(!isTvMode)}
+                title={isTvMode ? 'Sair do Modo Telão (Voltar ao Mestre)' : 'Modo Telão / Pré-visualizar como Jogador'}
+              >
+                <Tv size={15} color={isTvMode ? 'var(--accent-primary)' : 'currentColor'} />
+              </button>
 
               <div className="theater-topbar-divider" />
 
@@ -640,8 +646,8 @@ export const TheaterView: React.FC = () => {
             )}
           </div>
 
-          {/* COCKPIT / Director bar (GM Only) */}
-          {!isPlayerView && (
+          {/* COCKPIT / Director bar (sempre visível fora do modo Telão) */}
+          {!isTvMode && (
             <div className="theater-cockpit-wrapper" style={{ flexShrink: 0 }}>
               <DirectorBar />
             </div>

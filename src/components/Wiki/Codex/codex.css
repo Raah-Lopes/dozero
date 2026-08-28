@@ -102,34 +102,17 @@
   transform: translateX(-2px);
 }
 
-/* Cabeçalho compartilhado: mantém os filtros abaixo da mesma linha de identidade. */
+/* Cabeçalho compartilhado padronizado com o ecossistema DOZERO */
 .codex-workspace-chrome {
-  height: auto;
+  height: 54px;
   min-height: 54px;
-  align-items: flex-start;
-  padding-block: 8px;
 }
-.codex-workspace-chrome .workspace-chrome__identity { padding-top: 5px; }
-.codex-workspace-chrome .workspace-chrome__body {
-  min-width: 0;
-  flex: 1 1 auto;
-  align-items: stretch;
-}
-.codex-workspace-chrome-content {
+
+.codex-active-filters {
   display: flex;
-  flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.codex-workspace-chrome-content .codex-active-filters { flex-basis: 100%; }
-.codex-workspace-chrome-content > .relative.hidden { flex: 1 1 220px; min-width: 180px; }
-
-@media (max-width: 900px) {
-  .codex-workspace-chrome { height: auto; }
-  .codex-workspace-chrome .workspace-chrome__identity { flex: 0 0 auto; }
-  .codex-workspace-chrome-content > .relative.hidden { display: block; }
+  gap: 8px;
 }
 
 /* Animações e Efeitos */

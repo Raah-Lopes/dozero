@@ -26,10 +26,31 @@ export const FloatingWindow: React.FC<FloatingWindowProps> = ({
   width = 350,
   height = 400,
 }) => {
-  const savedState = JSON.parse(localStorage.getItem(`theater_window_${id}`) || 'null');
-  
-  const [pos, setPos] = useState({ x: savedState?.x ?? initialX, y: savedState?.y ?? initialY });
-  const [size, setSize] = useState({ w: savedState?.w ?? width, h: savedState?.h ?? height });
+  const [pos, setPos] = useState(() => {
+    try {
+      const raw = localStorage.getItem(`theater_window_${id}`);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (typeof saved?.x === 'number' && typeof saved?.y === 'number') {
+          return { x: saved.x, y: saved.y };
+        }
+      }
+    } catch {}
+    return { x: initialX, y: initialY };
+  });
+
+  const [size, setSize] = useState(() => {
+    try {
+      const raw = localStorage.getItem(`theater_window_${id}`);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (typeof saved?.w === 'number' && typeof saved?.h === 'number') {
+          return { w: saved.w, h: saved.h };
+        }
+      }
+    } catch {}
+    return { w: width, h: height };
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);

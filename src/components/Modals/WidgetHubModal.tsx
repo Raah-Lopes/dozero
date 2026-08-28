@@ -64,11 +64,16 @@ const ORDERED_CATEGORIES: WidgetCategory[] = [
 
 export const WidgetHubModal: React.FC<Props> = (props) => {
   const isGM = useIsGM();
-  const { toggleWindow, setActiveModal, setShowActors } = useWindowManager();
+  const { toggleWindow, setActiveModal, setShowActors, setViewMode } = useWindowManager();
   const [search, setSearch] = useState('');
-  const [favorites, setFavorites] = useState<string[]>(
-    () => JSON.parse(localStorage.getItem('dozero_hub_favorites') || '[]')
-  );
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('dozero_hub_favorites');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -92,7 +97,15 @@ export const WidgetHubModal: React.FC<Props> = (props) => {
 
   const widgets = WIDGET_REGISTRY.map(w => {
     let actionFn = () => {};
-    if (w.actionType === 'toggleWindow' || w.actionType === 'setActiveModal' || w.actionType === 'setShowActors') {
+    if (w.id === 'sheets' || w.actionPayload === 'sheets') {
+      actionFn = () => { setViewMode('sheets'); props.onClose(); };
+    } else if (w.id === 'theater' || w.actionPayload === 'theater') {
+      actionFn = () => { setViewMode('theater'); props.onClose(); };
+    } else if (w.id === 'obsidiansync' || w.actionPayload === 'obsidianSync') {
+      actionFn = () => { window.dispatchEvent(new CustomEvent('open-obsidian-sync')); props.onClose(); };
+    } else if (w.id === 'bookpublisher' || w.actionPayload === 'bookPublisher') {
+      actionFn = () => { window.dispatchEvent(new CustomEvent('open-campaign-book-publisher')); props.onClose(); };
+    } else if (w.actionType === 'toggleWindow' || w.actionType === 'setActiveModal' || w.actionType === 'setShowActors') {
       const propMap: Record<string, () => void> = {
         'masterForge': () => { toggleWindow('masterForge'); props.onClose(); },
         'aiStudio': props.onOpenAIStudio,

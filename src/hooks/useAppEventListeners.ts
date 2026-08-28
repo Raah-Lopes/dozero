@@ -4,6 +4,7 @@ import { state } from '../store';
 import { loadMarkdownFile } from '../utils/githubApi';
 import type { CutsceneConfig } from '../components/Theater/CutsceneOverlay';
 import { useYjsCleanup } from './useYjsCleanup';
+import { obsidianWatcherService } from '../services/wiki/obsidianWatcherService';
 
 interface UseAppEventListenersProps {
   viewMode: string;
@@ -31,24 +32,40 @@ export const useAppEventListeners = ({
   const [isLayoutPresetsOpen, setIsLayoutPresetsOpen] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [isLorePinsOpen, setIsLorePinsOpen] = useState(false);
+  const [isObsidianSyncOpen, setIsObsidianSyncOpen] = useState(false);
+  const [isBookPublisherOpen, setIsBookPublisherOpen] = useState(false);
   const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
 
   useYjsCleanup();
 
-  // 1. Layout Presets & Global Search & Lore Pins Shortcuts
+  // Inicia sincronizador em tempo real com cofre Obsidian
+  useEffect(() => {
+    obsidianWatcherService.startWatching();
+    return () => {
+      obsidianWatcherService.stopWatching();
+    };
+  }, []);
+
+  // 1. Layout Presets & Global Search & Lore Pins Shortcuts & Obsidian Sync & Book Publisher
   useEffect(() => {
     const handleOpenPresets = () => setIsLayoutPresetsOpen(true);
     const handleOpenSearch = () => setIsGlobalSearchOpen(true);
     const handleOpenLorePins = () => setIsLorePinsOpen(true);
+    const handleOpenObsidianSync = () => setIsObsidianSyncOpen(true);
+    const handleOpenBookPublisher = () => setIsBookPublisherOpen(true);
 
     window.addEventListener('open-layout-presets', handleOpenPresets);
     window.addEventListener('open-global-search', handleOpenSearch);
     window.addEventListener('open-lore-pins', handleOpenLorePins);
+    window.addEventListener('open-obsidian-sync', handleOpenObsidianSync);
+    window.addEventListener('open-campaign-book-publisher', handleOpenBookPublisher);
 
     return () => {
       window.removeEventListener('open-layout-presets', handleOpenPresets);
       window.removeEventListener('open-global-search', handleOpenSearch);
       window.removeEventListener('open-lore-pins', handleOpenLorePins);
+      window.removeEventListener('open-obsidian-sync', handleOpenObsidianSync);
+      window.removeEventListener('open-campaign-book-publisher', handleOpenBookPublisher);
     };
   }, []);
 
@@ -114,17 +131,17 @@ export const useAppEventListeners = ({
 
     const handleDblClick = (e: Event) => {
       const { tokenId } = (e as CustomEvent).detail;
-      const token = state.tokens.get(tokenId) as any;
-      
-      // Auto-open the premium wiki sheet if it exists
-      if (token && token.wikiPath) {
-        window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: token.wikiPath } }));
-      }
-
       setOpenSheets(prev => {
         if (prev.includes(tokenId)) return prev;
         return [...prev, tokenId];
       });
+    };
+
+    const handleOpenTokenSheet = (e: Event) => {
+      const { tokenId } = (e as CustomEvent).detail;
+      if (tokenId) {
+        setOpenSheets(prev => (prev.includes(tokenId) ? prev : [...prev, tokenId]));
+      }
     };
 
     const handleOpenClockConfig = () => {
@@ -210,6 +227,7 @@ export const useAppEventListeners = ({
     window.addEventListener('theater-cutscene', handleCutscene);
     window.addEventListener('open-wiki-doc', handleOpenWikiDoc);
     window.addEventListener('token-dblclick', handleDblClick);
+    window.addEventListener('open-token-sheet', handleOpenTokenSheet);
     window.addEventListener('open-clock-config', handleOpenClockConfig);
     window.addEventListener('open-wiki-file', handleOpenWikiFile);
     window.addEventListener('open-wiki', handleOpenWiki);
@@ -246,6 +264,7 @@ export const useAppEventListeners = ({
       window.removeEventListener('theater-cutscene', handleCutscene);
       window.removeEventListener('open-wiki-doc', handleOpenWikiDoc);
       window.removeEventListener('token-dblclick', handleDblClick);
+      window.removeEventListener('open-token-sheet', handleOpenTokenSheet);
       window.removeEventListener('open-clock-config', handleOpenClockConfig);
       window.removeEventListener('open-wiki-file', handleOpenWikiFile);
       window.removeEventListener('open-wiki', handleOpenWiki);
@@ -261,6 +280,8 @@ export const useAppEventListeners = ({
     isLayoutPresetsOpen, setIsLayoutPresetsOpen,
     isGlobalSearchOpen, setIsGlobalSearchOpen,
     isLorePinsOpen, setIsLorePinsOpen,
+    isObsidianSyncOpen, setIsObsidianSyncOpen,
+    isBookPublisherOpen, setIsBookPublisherOpen,
     activeCutscene, setActiveCutscene
   };
 };

@@ -105,6 +105,8 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
 
   const [physicsOn, setPhysicsOn] = useState(false);
   const [physicsRun, setPhysicsRun] = useState(0);
+  const [attraction, setAttraction] = useState(1.2);
+  const [idealDistance, setIdealDistance] = useState(120);
   const [gliding, setGliding] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -115,22 +117,42 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
   const edgesRef = useRef(edges);
   const toastSeq = useRef(0);
 
-  useEffect(() => {
-    edgesRef.current = edges;
-  }, [edges]);
-
-  const registry = useMemo(() => new TypeRegistry(customTypes), [customTypes]);
-
   const pushToast = useCallback((msg: string, kind: Toast["kind"] = "ok") => {
     const id = ++toastSeq.current;
     setToasts((ts) => [...ts.slice(-2), { id, msg, kind }]);
     window.setTimeout(() => setToasts((ts) => ts.filter((t) => t.id !== id)), 3400);
   }, []);
 
+  const handleSetAttraction = useCallback((val: number) => {
+    setAttraction(val);
+    simRef.current.setAttraction(val);
+    simRef.current.reheat(0.8);
+    setPhysicsRun((r) => r + 1);
+  }, []);
+
+  const handleSetIdealDistance = useCallback((val: number) => {
+    setIdealDistance(val);
+    simRef.current.setIdealDistance(val);
+    simRef.current.reheat(0.8);
+    setPhysicsRun((r) => r + 1);
+  }, []);
+
+  const handleReheatPhysics = useCallback(() => {
+    simRef.current.reheat(1.0);
+    setPhysicsRun((r) => r + 1);
+    pushToast("Nós reagrupados!");
+  }, [pushToast]);
+
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
+
+  const registry = useMemo(() => new TypeRegistry(customTypes), [customTypes]);
+
   /* Ajuste de enquadramento inicial */
   useEffect(() => {
     const t = window.setTimeout(() => {
-      rf.fitView({ padding: 0.18, duration: 600 });
+      rf.fitView({ padding: 0.2, minZoom: 0.55, maxZoom: 1.1, duration: 600 });
     }, 180);
     return () => window.clearTimeout(t);
   }, [rf]);
@@ -322,7 +344,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
       setSelectedId(id);
       const w = n.measured?.width ?? 60;
       const h = n.measured?.height ?? 60;
-      rf.setCenter(n.position.x + w / 2, n.position.y + h / 2, { zoom: Math.max(rf.getZoom(), 1.05), duration: 700 });
+      rf.setCenter(n.position.x + w / 2, n.position.y + h / 2, { zoom: 1.45, duration: 650 });
     },
     [nodes, rf]
   );
@@ -365,10 +387,11 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
       }
 
       setSelectedId(node.id);
+      setNodes((ns) => ns.map((m) => ({ ...m, selected: m.id === node.id })));
       const w = node.measured?.width ?? 60;
       const h = node.measured?.height ?? 60;
       rf.setCenter(node.position.x + w / 2, node.position.y + h / 2, {
-        zoom: Math.max(rf.getZoom(), 0.95),
+        zoom: 1.45,
         duration: 650,
       });
     },
@@ -388,7 +411,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
       setGliding(true);
       setNodes(next);
       window.setTimeout(() => {
-        rf.fitView({ padding: 0.18, duration: 650 });
+        rf.fitView({ padding: 0.2, minZoom: 0.55, maxZoom: 1.1, duration: 650 });
         setGliding(false);
       }, 660);
       pushToast(msg);
@@ -456,9 +479,30 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
 
   const applyView = useCallback(
     (v: SavedView) => {
-      setHidden(new Set(v.hidden));
-      setIsolate(v.isolate);
-      rf.setViewport(v.viewport, { duration: 700 });
+      setHidden(new Set(v.hidden || []));
+      setIsolate(v.isolate || null);
+
+      if (v.nodePositions && Object.keys(v.nodePositions).length > 0) {
+        setNodes((ns) =>
+          ns.map((n) => {
+            const savedPos = v.nodePositions?.[n.id];
+            return savedPos
+              ? { ...n, position: { ...savedPos }, selected: n.id === v.selectedNodeId }
+              : { ...n, selected: n.id === v.selectedNodeId };
+          })
+        );
+      } else if (v.selectedNodeId !== undefined) {
+        setNodes((ns) => ns.map((n) => ({ ...n, selected: n.id === v.selectedNodeId })));
+      }
+
+      setSelectedId(v.selectedNodeId ?? null);
+
+      if (v.viewport) {
+        requestAnimationFrame(() => {
+          rf.setViewport(v.viewport, { duration: 700 });
+        });
+      }
+
       pushToast(`Vista aplicada: ${v.name}`);
     },
     [rf, pushToast]
@@ -571,11 +615,24 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
   const onWrapperDoubleClick = useCallback(
     (e: React.MouseEvent) => {
       const t = e.target as HTMLElement;
-      if (t.closest(".react-flow__node") || t.closest(".react-flow__edge") || t.closest(".edge-chip")) return;
-      if (t.closest(".react-flow__minimap") || t.closest(".react-flow__controls")) return;
+      if (
+        t.closest(".react-flow__node") ||
+        t.closest(".react-flow__edge") ||
+        t.closest(".edge-chip") ||
+        t.closest(".react-flow__minimap") ||
+        t.closest(".react-flow__controls") ||
+        t.closest(".arcanum-sidebar") ||
+        t.closest(".arcanum-inspector") ||
+        t.closest(".arcanum-modal")
+      ) {
+        return;
+      }
       if (!t.closest(".react-flow__pane")) return;
-      const pos = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      setModal({ kind: "node", x: pos.x - 30, y: pos.y - 30 });
+
+      // Duplo-clique no fundo (fora dos nós): zoom out suave mostrando todo o grafo sem diminuir excessivamente
+      rf.fitView({ padding: 0.2, minZoom: 0.55, maxZoom: 1.1, duration: 700 });
+      setSelectedId(null);
+      setNodes((ns) => ns.map((n) => (n.selected ? { ...n, selected: false } : n)));
     },
     [rf]
   );
@@ -626,6 +683,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
           const next = !physicsOn;
           if (next) {
             pushToast("O grafo começa a respirar com física orgânica");
+            simRef.current.reheat(1.0);
             setPhysicsRun((run) => run + 1);
           }
           setPhysicsOn(next);
@@ -635,7 +693,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
           setModal({ kind: "node", x: c.x - 30, y: c.y - 30 });
         }}
         onCluster={clusterAll}
-        onFit={() => rf.fitView({ padding: 0.18, duration: 650 })}
+        onFit={() => rf.fitView({ padding: 0.2, minZoom: 0.55, maxZoom: 1.1, duration: 650 })}
         onZoomIn={() => rf.zoomIn({ duration: 250 })}
         onZoomOut={() => rf.zoomOut({ duration: 250 })}
         onExport={exportWebp}
@@ -695,7 +753,14 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
           }}
           savedViews={savedViews}
           onApplyView={applyView}
-          onDeleteView={(id) => setSavedViews((vs) => vs.filter((v) => v.id !== id))}
+          onDeleteView={(id) => {
+            setSavedViews((vs) => {
+              const updated = vs.filter((v) => v.id !== id);
+              Vault.save({ v: 1, nodes, edges, customTypes, savedViews: updated });
+              return updated;
+            });
+            pushToast("Vista removida");
+          }}
           onSaveView={() => setModal({ kind: "save" })}
           onRestore={() => {
             setNodes(Layouts.clusterByType(SEED_NODES, TYPE_ORDER));
@@ -705,12 +770,26 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
             setSelectedTag(null);
             setPath(null);
             setSelectedId(null);
-            window.setTimeout(() => rf.fitView({ padding: 0.18, duration: 700 }), 80);
+            window.setTimeout(() => rf.fitView({ padding: 0.2, minZoom: 0.55, maxZoom: 1.1, duration: 700 }), 80);
             pushToast("Mundo de exemplo renasceu completo!");
           }}
           onOpenStats={() => setModal({ kind: "stats" })}
           onExportDB={handleExportDB}
           onImportDB={handleImportDB}
+          attraction={attraction}
+          onSetAttraction={handleSetAttraction}
+          idealDistance={idealDistance}
+          onSetIdealDistance={handleSetIdealDistance}
+          physicsOn={physicsOn}
+          onTogglePhysics={() => {
+            const next = !physicsOn;
+            if (next) {
+              simRef.current.reheat(1.0);
+              setPhysicsRun((run) => run + 1);
+            }
+            setPhysicsOn(next);
+          }}
+          onReheatPhysics={handleReheatPhysics}
         />
 
         {/* Canvas ReactFlow */}
@@ -750,10 +829,10 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
             zoomOnPinch={true}
             zoomOnDoubleClick={false}
             autoPanOnNodeDrag={true}
-            minZoom={0.05}
-            maxZoom={3.5}
+            minZoom={0.42}
+            maxZoom={3.0}
             fitView
-            fitViewOptions={{ padding: 0.18 }}
+            fitViewOptions={{ padding: 0.2, minZoom: 0.55, maxZoom: 1.1 }}
           >
             <Background variant={BackgroundVariant.Dots} gap={28} size={1.8} color="#5a4a68" />
             <MiniMap
@@ -963,6 +1042,10 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
         <SaveViewModal
           onClose={() => setModal(null)}
           onSave={(name) => {
+            const positions: Record<string, { x: number; y: number }> = {};
+            for (const n of nodes) {
+              positions[n.id] = { x: n.position.x, y: n.position.y };
+            }
             const v: SavedView = {
               id: uid("v"),
               name,
@@ -970,8 +1053,14 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
               viewport: rf.getViewport(),
               hidden: [...hidden],
               isolate,
+              nodePositions: positions,
+              selectedNodeId: selectedId,
             };
-            setSavedViews((vs) => [v, ...vs]);
+            setSavedViews((vs) => {
+              const updated = [v, ...vs];
+              Vault.save({ v: 1, nodes, edges, customTypes, savedViews: updated });
+              return updated;
+            });
             setModal(null);
             pushToast(`Vista favoritada: ${name}`);
           }}
