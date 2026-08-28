@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;600;700;800&family=Cinzel:wght@500;600;700;800&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;700;800&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap');
 @import url('./responsive.css');
 @import "tailwindcss";
-@source "../SOUND/src";
+@source "./components/Soundboard";
 
 @theme {
   --color-tinta: #0c0911;

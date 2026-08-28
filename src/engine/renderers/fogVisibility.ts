@@ -1,7 +1,7 @@
 // fogVisibility.ts
 // Algoritmo de Raycasting e Fusão Geométrica de Paredes de Névoa (Boolean Union / Wall Fusion)
 
-import { FogGeomPolygon, FogGeomSquare, FogGeomCircle } from '../../../store';
+import { FogGeomPolygon, FogGeomSquare, FogGeomCircle } from '../../store';
 
 const EPSILON = 0.0001;
 

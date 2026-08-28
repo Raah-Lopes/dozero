@@ -37,7 +37,7 @@ import { CinematicDialogueStudio } from './CinematicDialogueStudio';
 import { PixabayMediaPickerModal } from '../Modals/PixabayMediaPickerModal';
 import { CharacterRosterWidget } from '../Widgets/PlayerTools/CharacterRosterWidget';
 import { AudioDirectorWidget } from '../Widgets/System/AudioDirectorWidget';
-import { AppProvider as SoundboardProvider } from '../../../SOUND/src/store';
+import { AppProvider as SoundboardProvider } from '../Soundboard/store';
 import './Theater.css';
 
 export const TheaterView: React.FC = () => {

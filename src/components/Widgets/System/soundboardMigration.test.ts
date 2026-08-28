@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { seedState } from "../../../../SOUND/src/data/seed";
-import { migrateLegacyAudio } from "../../../../SOUND/src/migration";
+import { seedState } from "../../Soundboard/data/seed";
+import { migrateLegacyAudio } from "../../Soundboard/migration";
 
 describe("migração do Audio Director legado", () => {
   it("usa o áudio real da Taverna do Javali", () => {

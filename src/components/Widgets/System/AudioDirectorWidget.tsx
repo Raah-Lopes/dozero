@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, Headphones, Maximize2, X } from 'lucide-react';
-import { SoundboardCompact, SoundboardWorkspace } from '../../../../SOUND/src/App';
+import { SoundboardCompact, SoundboardWorkspace } from '../../Soundboard/App';
 import './soundboard.css';
 
 interface Props {

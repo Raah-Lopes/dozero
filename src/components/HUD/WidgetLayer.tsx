@@ -4,7 +4,7 @@ import { ErrorBoundary } from '../ErrorBoundary';
 import { CommandPalette } from '../UI/CommandPalette';
 import { useCommandRegistry } from '../../store';
 import { ShieldAlert } from 'lucide-react';
-import { AppProvider as SoundboardProvider } from '../../../SOUND/src/store';
+import { AppProvider as SoundboardProvider } from '../Soundboard/store';
 import { FloatingVoiceHUD } from './FloatingVoiceHUD';
 
 // Lazy loading individual widgets
