@@ -1,12 +1,23 @@
 # Status operacional do roadmap DOZERO 360°
 
-Atualizado em 27 de agosto de 2026.
+Atualizado em 28 de agosto de 2026.
 
 Estados: `Concluído`, `Parcial`, `Próximo`, `Planejado`.
 
 ## Próxima ordem de execução (Fila de Prioridades)
 
 🎉 **Todas as Trilhas do Roadmap Operacional DOZERO 360° (A, B, C, D, E, F, G) estão 100% concluídas com testes e compilação limpos!**
+
+## Extensões pós-roadmap
+
+| Item | Estado | Evidência / O que falta |
+|---|---|---|
+| H.1 Cenas operacionais da mesa | **Concluído** | Cenas no documento Yjs preservam mapa, tokens, objetos, desenhos, névoa, textos, combate e configuração; criação, duplicação, troca e migração não destrutiva da mesa atual. |
+| H.2 Operação de cenas por papel | **Concluído** | Mestre cria, renomeia, duplica, remove e ativa cenas; jogador acompanha somente a cena ativa em modo leitura. A restrição atual acompanha o modelo local de papéis do VTT; autorização de escrita no transporte Realtime é uma evolução de segurança separada. |
+| H.3 Revelação de cenas aos jogadores | **Concluído** | Mestre revela ou oculta cenas inativas da lista do jogador; a cena ativa permanece visível. A revelação controla a experiência no cliente, não o acesso aos snapshots no documento colaborativo. |
+| H.4 Revelação individual para membros | **Concluído** | Cenas ocultas podem ser liberadas para membros autenticados específicos da campanha. Convidados sem conta continuam recebendo somente cenas publicadas para todos. |
+| H.5 Áreas táticas e iniciativa contextual | **Concluído** | Formas visíveis (retângulo, círculo, triângulo e fusões) viram áreas de encontro; o rastreador identifica os tokens posicionados dentro delas e permite rolar uma fila contextual sem alterar o auto-rolamento completo do mapa. |
+| H.6 Luz pulsante e paredes táticas | **Concluído** | Tokens com visão recebem halo blur pulsante; paredes são desenhadas, persistidas e renderizadas entre mapa e tokens, bloqueando o raycasting da luz e podendo ser removidas com clique direito. |
 
 ---
 

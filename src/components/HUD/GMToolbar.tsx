@@ -4,7 +4,7 @@ import {
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
   Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, ScrollText,
-  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge
+  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge, BrickWall
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -103,7 +103,7 @@ export function GMToolbar() {
       setGlobalFogMode(fogMode);
     } else if (activeTool === 'RULER') {
       setGlobalActiveTool('ruler');
-    } else if (['pan', 'pen', 'shape', 'arrow', 'text', 'eraser'].includes(activeTool as string)) {
+    } else if (['pan', 'pen', 'shape', 'arrow', 'text', 'eraser', 'wall'].includes(activeTool as string)) {
       setGlobalActiveTool(activeTool as any);
     } else {
       setGlobalActiveTool('select');
@@ -293,7 +293,7 @@ export function GMToolbar() {
 
               <ToolButton 
                 icon={<Map size={19} />} 
-                active={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser'].includes(activeTool as string)}
+                active={['CURSOR', 'pan', 'RULER'].includes(activeTool as string) || isFog || ['pen','shape','arrow','text','eraser','wall'].includes(activeTool as string)}
                 onClick={() => setActiveFolder('map_tools')} 
                 tooltip="Mapa & Cenário"
                 description="Ferramentas de Cursor, Medição, Névoa de Guerra, Camadas e Caneta"
@@ -497,6 +497,13 @@ export function GMToolbar() {
             onClick={() => handleSetTool('eraser')} 
             tooltip="Borracha"
             description="Remova os rabiscos tocando nos que deseja deletar (Ctrl+Z para voltar)"
+          />
+          <ToolButton
+            icon={<BrickWall size={20} />}
+            active={activeTool === 'wall'}
+            onClick={() => handleSetTool('wall')}
+            tooltip="Paredes Táticas"
+            description="Arraste para criar uma parede; clique direito sobre ela para remover. Paredes bloqueiam a luz."
           />
           <ToolButton 
             icon={<ImageIcon size={20} />} 

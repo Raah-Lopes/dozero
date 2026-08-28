@@ -2,6 +2,7 @@ import { state, doc } from './yjs';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { toast } from '../components/UI/Toast';
 import { enqueueSyncOperation } from './offlineSyncService';
+import { synchronizeActiveTableScene } from '../store/tableScenes';
 
 export interface RoomBundle {
   version: number;
@@ -11,6 +12,7 @@ export interface RoomBundle {
     tokens?: any[];
     backgrounds?: any[];
     drawings?: any[];
+    walls?: any[];
     drawingLayers?: any[];
     mapConfig?: any;
     fogOps?: any[];
@@ -24,6 +26,8 @@ export interface RoomBundle {
     dlcs?: any[];
     wiki?: Array<[string, unknown]>;
     sheets?: Array<[string, unknown]>;
+    tableScenes?: Array<[string, unknown]>;
+    tableSceneMeta?: Array<[string, unknown]>;
   };
 }
 
@@ -80,13 +84,14 @@ export function getRoomBundle(): RoomBundle {
   const roomName = urlParams.get('room') || 'dozero-mesa-principal-v2';
 
   return {
-    version: 1,
+    version: 2,
     roomName,
     exportedAt: new Date().toISOString(),
     data: {
       tokens: Array.from(state.tokens.entries()),
       backgrounds: Array.from(state.backgrounds.entries()),
       drawings: Array.from(state.drawings.entries()),
+      walls: Array.from(state.walls.entries()),
       drawingLayers: state.drawingLayers ? Array.from(state.drawingLayers.entries()) : [],
       mapConfig: (state.mapConfig as any).toJSON ? (state.mapConfig as any).toJSON() : {},
       fogOps: Array.from(state.fogOps.entries()),
@@ -99,7 +104,9 @@ export function getRoomBundle(): RoomBundle {
       customItems: state.customItems ? Array.from(state.customItems.entries()) : [],
       dlcs: state.dlcs ? Array.from(state.dlcs.entries()) : [],
       wiki: Array.from(state.wiki.entries()),
-      sheets: Array.from(state.sheets.entries())
+      sheets: Array.from(state.sheets.entries()),
+      tableScenes: Array.from(state.tableScenes.entries()),
+      tableSceneMeta: Array.from(state.tableSceneMeta.entries()),
     }
   };
 }
@@ -135,6 +142,13 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
     }
 
     // 4. Drawing Layers
+    // 4.1 Tactical walls
+    if (Array.isArray(data.walls)) {
+      state.walls.clear();
+      data.walls.forEach(([key, val]) => state.walls.set(key, val));
+    }
+
+    // 5. Drawing Layers
     if (state.drawingLayers && Array.isArray(data.drawingLayers)) {
       state.drawingLayers.clear();
       data.drawingLayers.forEach(([key, val]) => state.drawingLayers.set(key, val));
@@ -201,6 +215,14 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
       state.sheets.clear();
       data.sheets.forEach(([key, val]) => state.sheets.set(key, val));
     }
+    if (Array.isArray(data.tableScenes)) {
+      state.tableScenes.clear();
+      data.tableScenes.forEach(([key, val]) => state.tableScenes.set(key, val));
+    }
+    if (Array.isArray(data.tableSceneMeta)) {
+      state.tableSceneMeta.clear();
+      data.tableSceneMeta.forEach(([key, val]) => state.tableSceneMeta.set(key, val));
+    }
 
     if (state.roomSettings) {
       state.roomSettings.set('is_seeded', true);
@@ -210,6 +232,7 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
 
   window.dispatchEvent(new Event('config-changed'));
   window.dispatchEvent(new Event('tool-changed'));
+  synchronizeActiveTableScene();
   return true;
 }
 
@@ -350,7 +373,7 @@ export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceAp
   const roomCode = customRoomCode || urlParams.get('room') || 'dozero-mesa-principal-v2';
 
   // Se o documento local já tem conteúdo e não for forçado, não sobrepõe
-  const hasLocalContent = state.tokens.size > 0 || state.backgrounds.size > 0 || state.drawings.size > 0;
+  const hasLocalContent = state.tokens.size > 0 || state.backgrounds.size > 0 || state.drawings.size > 0 || state.walls.size > 0;
   if (hasLocalContent && !forceApply) {
     return false;
   }

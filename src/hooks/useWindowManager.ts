@@ -3,7 +3,7 @@ import { startTransition } from 'react';
 
 export type ViewMode = 'canvas' | 'wiki' | 'theater' | 'brain' | 'sheets';
 export type ModalMode = 'none' | 'players' | 'lobby' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'playerManager' | 'tokenConfig';
-export type InteractionTool = 'CURSOR' | 'FOG' | 'RULER' | 'MEASURE';
+export type InteractionTool = 'CURSOR' | 'FOG' | 'RULER' | 'MEASURE' | 'wall' | 'pen' | 'shape' | 'arrow' | 'text' | 'eraser' | 'pan';
 
 interface WindowManagerState {
   // Generic openWindows (e.g. combatLog, etc)

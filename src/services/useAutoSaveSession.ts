@@ -22,10 +22,13 @@ export function useAutoSaveSession(roomCode: string) {
           tokens: state.tokens.toJSON(),
           backgrounds: state.backgrounds.toJSON(),
           drawings: state.drawings.toJSON(),
+          walls: state.walls.toJSON(),
           clocks: state.clocks.toJSON(),
           mapConfig: state.mapConfig.toJSON(),
           wiki: state.wiki.toJSON(),
           sheets: state.sheets.toJSON(),
+          tableScenes: state.tableScenes.toJSON(),
+          tableSceneMeta: state.tableSceneMeta.toJSON(),
           savedAt: new Date().toISOString(),
           savedBy: user?.id || 'anon'
         };

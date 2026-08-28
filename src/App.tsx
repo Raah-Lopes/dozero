@@ -49,6 +49,7 @@ const LivingBrain = React.lazy(() => import('./components/Wiki/LivingBrain').the
 const ArcanumSheetsWorkspace = React.lazy(() => import('./components/Sheets/ArcanumSheetsWorkspace').then(m => ({ default: m.ArcanumSheetsWorkspace })));
 const TheaterView = React.lazy(() => import('./components/Theater/TheaterView').then(m => ({ default: m.TheaterView })));
 const SettingsModal = React.lazy(() => import('./components/Modals/SettingsModal').then(m => ({ default: m.SettingsModal })));
+const MapSettingsPanel = React.lazy(() => import('./components/HUD/MapSettingsPanel').then(m => ({ default: m.MapSettingsPanel })));
 const InviteModal = React.lazy(() => import('./components/Modals/InviteModal').then(m => ({ default: m.InviteModal })));
 const ClockConfigModal = React.lazy(() => import('./components/Modals/ClockConfigModal').then(m => ({ default: m.ClockConfigModal })));
 const WidgetHubModal = React.lazy(() => import('./components/Modals/WidgetHubModal').then(m => ({ default: m.WidgetHubModal })));
@@ -304,7 +305,27 @@ function App() {
             <div className="hud-modal-layer">
               <React.Suspense fallback={null}>
                 {activeModal === 'players' && <InviteModal onClose={() => setActiveModal('none')} />}
-                {activeModal.startsWith('settings') && (
+                {activeModal === 'settings-cenario' ? (
+                  <section
+                    aria-label="Configurações do mapa e cenário"
+                    style={{
+                      width: 'min(720px, calc(100vw - 2rem))',
+                      maxHeight: 'calc(100vh - 7rem)',
+                      overflowY: 'auto',
+                      padding: '1rem',
+                      border: '1px solid var(--glass-border)',
+                      borderRadius: '10px',
+                      background: 'var(--bg-primary)',
+                      boxShadow: '0 16px 42px rgba(0, 0, 0, 0.38)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
+                      <h2 style={{ margin: 0, fontSize: '1rem' }}>Mapa &amp; Cenário</h2>
+                      <button className="btn" type="button" onClick={() => setActiveModal('none')}>Fechar</button>
+                    </div>
+                    <MapSettingsPanel />
+                  </section>
+                ) : activeModal.startsWith('settings') && (
                   <SettingsModal 
                     onClose={() => setActiveModal('none')} 
                     initialTab={activeModal === 'settings-aparencia' ? 'aparencia' : activeModal === 'settings-modulos' ? 'modulos' : activeModal === 'settings-ia' ? 'ia' : 'geral'} 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Tokens, Config, FogOfWar } from '../store/modules';
-import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture, FillGradient } from 'pixi.js';
+import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture, FillGradient, BlurFilter } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps, updateLorePinPosition, removeLorePin, addLorePin, getLorePins, LorePinData, createLorePinFromWikiEntry } from '../store';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 import { toast } from '../components/UI/Toast';
@@ -10,6 +10,7 @@ import { hexRound, euclideanDistance, pixelToHex, hexToPixel, snapToGrid } from 
 import { renderGrid } from './renderers/gridRenderer';
 import { renderRuler, clearRuler } from './renderers/rulerRenderer';
 import { renderFogOfWar } from './renderers/fogRenderer';
+import { addMapWall, removeMapWall } from '../store/walls';
 
 const prevHpMap: Record<string, number> = {};
 let lastTokenClickTime = 0;
@@ -133,6 +134,7 @@ export const GameCanvas: React.FC = () => {
       let fogShapeDragStart: { x: number, y: number } | null = null;
       let isFogLassoing = false;
       let fogLassoPoints: { x: number, y: number }[] = [];
+      let wallDrawingStart: { x: number; y: number } | null = null;
       
       let longPressTimer: any = null;
       let longPressStart = { x: 0, y: 0 };
@@ -141,6 +143,31 @@ export const GameCanvas: React.FC = () => {
         x: (clientX - viewport.x) / viewport.scale.x,
         y: (clientY - viewport.y) / viewport.scale.y
       });
+
+      const removeNearestWallAt = (clientX: number, clientY: number) => {
+        const localPos = getWorldPos(clientX, clientY);
+        let nearestId: string | null = null;
+        let nearestDistance = 18 / Math.max(viewport.scale.x, 0.01);
+        const distanceToSegment = (p: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }) => {
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const lengthSq = dx * dx + dy * dy;
+          const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq));
+          return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+        };
+        state.walls.forEach((wall: any, id: string) => {
+          if (wall.hidden || wall.locked || !wall.a || !wall.b) return;
+          const distance = distanceToSegment(localPos, wall.a, wall.b);
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestId = id;
+          }
+        });
+        if (!nearestId) return false;
+        removeMapWall(nearestId);
+        toast.info('Parede removida.');
+        return true;
+      };
       
       const handleInsertCanvasImage = (e: Event) => {
         const { src, name } = (e as CustomEvent).detail;
@@ -392,6 +419,13 @@ export const GameCanvas: React.FC = () => {
 
       canvasEl.addEventListener('pointerdown', (e) => {
 
+        if (localState.activeTool === 'wall' && e.button === 2) {
+          removeNearestWallAt(e.clientX, e.clientY);
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
         if ((e.shiftKey || localState.activeTool === 'ruler') && e.button === 0) {
            isMeasuring = true;
            measureStart = getWorldPos(e.clientX, e.clientY);
@@ -624,6 +658,18 @@ export const GameCanvas: React.FC = () => {
       });
 
       const handleMainPointerMove = (e: PointerEvent) => {
+        if (wallDrawingStart && localState.activeTool === 'wall') {
+          const currentPos = getWorldPos(e.clientX, e.clientY);
+          const wallThickness = Math.max(4, (localState.drawWidth || 4) * 2);
+          wallPreview.clear();
+          wallPreview.moveTo(wallDrawingStart.x, wallDrawingStart.y);
+          wallPreview.lineTo(currentPos.x, currentPos.y);
+          wallPreview.stroke({ width: wallThickness + 2, color: '#f97316', alpha: 0.5, cap: 'round' });
+          wallPreview.moveTo(wallDrawingStart.x, wallDrawingStart.y);
+          wallPreview.lineTo(currentPos.x, currentPos.y);
+          wallPreview.stroke({ width: Math.max(1.5, wallThickness * 0.28), color: '#fff1c2', alpha: 0.85, cap: 'round' });
+        }
+
         if (isFogBrushing) {
           const pos = getWorldPos(e.clientX, e.clientY);
           if (fogBrushPoints.length > 0) {
@@ -653,6 +699,8 @@ export const GameCanvas: React.FC = () => {
            eraserCursor.circle(localPos.x, localPos.y, drawRadius);
            eraserCursor.stroke({ color: 0xef4444, width: 2 / viewport.scale.x, alpha: 0.9 });
            eraserCursor.fill({ color: 0xef4444, alpha: 0.2 });
+        } else if (localState.activeTool === 'wall') {
+          eraserCursor.visible = false;
         } else if (localState.activeTool === 'fog_brush') {
            eraserCursor.visible = true;
            const rect = canvasEl.getBoundingClientRect();
@@ -856,6 +904,23 @@ export const GameCanvas: React.FC = () => {
 
       window.addEventListener('pointermove', handleMainPointerMove);
       const handlePointerUp = (e: PointerEvent) => {
+        if (wallDrawingStart && localState.activeTool === 'wall') {
+          const end = getWorldPos(e.clientX, e.clientY);
+          const start = wallDrawingStart;
+          wallDrawingStart = null;
+          wallPreview.clear();
+          wallPreview.visible = false;
+          if (Math.hypot(end.x - start.x, end.y - start.y) > 12) {
+            addMapWall({
+              a: start,
+              b: end,
+              thickness: Math.max(4, (localState.drawWidth || 4) * 2),
+              color: '#f97316',
+            });
+            toast.success('Parede criada — ela bloqueia a luz.');
+          }
+        }
+
         if (isFogBrushing) {
           if (fogBrushPoints.length > 1) {
             FogOfWar.addOp({
@@ -1140,6 +1205,17 @@ export const GameCanvas: React.FC = () => {
       const grid = new Graphics();
       viewport.addChild(grid);
 
+      // Paredes táticas ficam acima do mapa e abaixo dos tokens. A mesma
+      // geometria é enviada ao raycasting para impedir que a luz atravesse.
+      const wallsContainer = new Container();
+      wallsContainer.eventMode = 'none';
+      wallsContainer.interactiveChildren = false;
+      viewport.addChild(wallsContainer);
+      const wallPreview = new Graphics();
+      wallPreview.visible = false;
+      wallPreview.eventMode = 'none';
+      wallsContainer.addChild(wallPreview);
+
       let tokensContainer = new Container();
       tokensContainer.zIndex = 100;
       viewport.addChild(tokensContainer);
@@ -1230,13 +1306,14 @@ export const GameCanvas: React.FC = () => {
           color: config.fog.color,
           viewport: { x: viewport.x, y: viewport.y, scale: viewport.scale.x },
           visionSources: visionSources.map(t => ({ id: t.id, x: t.x, y: t.y, visionRadius: t.visionRadius, visionStyle: t.visionStyle })),
+          walls: Array.from(state.walls.values()),
           opsCount: FogOfWar.getOps().length
         });
         
         if (currentHash === lastFowHash) return;
         lastFowHash = currentHash;
 
-        renderFogOfWar(fogContainer, fogOverlay, config, viewport, visionSources);
+        renderFogOfWar(fogContainer, fogOverlay, config, viewport, visionSources, Array.from(state.walls.values()));
         
         if (config.fog.enabled) {
 
@@ -1611,6 +1688,7 @@ export const GameCanvas: React.FC = () => {
       interface TokenSpriteRecord {
         container: Container;
         glow: Graphics;
+        lightAura: Graphics | null;
         hpFill: Graphics;
         targetRing: Graphics;
         selectionRing: Graphics;
@@ -1666,6 +1744,39 @@ export const GameCanvas: React.FC = () => {
         } else {
           g.stroke({ width: strokeWidth, color: colorVal, alpha: strokeAlpha });
         }
+      };
+
+      const wallSprites: Record<string, Graphics> = {};
+      const syncWalls = () => {
+        const walls = Array.from(state.walls.values()) as any[];
+        Object.keys(wallSprites).forEach(id => {
+          if (!walls.some(w => w.id === id)) {
+            wallsContainer.removeChild(wallSprites[id]);
+            wallSprites[id].destroy();
+            delete wallSprites[id];
+          }
+        });
+
+        walls.forEach(wall => {
+          if (!wall?.a || !wall?.b || wall.hidden) {
+            if (wallSprites[wall.id]) wallSprites[wall.id].visible = false;
+            return;
+          }
+          const graphic = wallSprites[wall.id] || new Graphics();
+          if (!wallSprites[wall.id]) {
+            wallsContainer.addChild(graphic);
+            wallSprites[wall.id] = graphic;
+          }
+          graphic.visible = true;
+          graphic.clear();
+          graphic.moveTo(wall.a.x, wall.a.y);
+          graphic.lineTo(wall.b.x, wall.b.y);
+          graphic.stroke({ width: Math.max(2, Number(wall.thickness) || 8), color: wall.color || '#f97316', alpha: 0.9, cap: 'round' });
+          // Highlight central keeps the wall legible over dark maps.
+          graphic.moveTo(wall.a.x, wall.a.y);
+          graphic.lineTo(wall.b.x, wall.b.y);
+          graphic.stroke({ width: Math.max(1, (Number(wall.thickness) || 8) * 0.28), color: '#fff1c2', alpha: 0.8, cap: 'round' });
+        });
       };
 
       const renderProps = () => {
@@ -1753,6 +1864,7 @@ export const GameCanvas: React.FC = () => {
 
       const syncTokens = () => {
         const tokensState = state.tokens;
+        const tokenVisualConfig = Config.getAll();
 
         // Remove deleted tokens
         Object.keys(tokenSprites).forEach(id => {
@@ -1778,8 +1890,9 @@ export const GameCanvas: React.FC = () => {
           const hpBarMode = t.hpBarMode || 'always';
           const showName = t.showName || false;
           const activeConditions = t.status_efeitos || [];
+          const visionRadius = Number(t.visionRadius || ((tokenVisualConfig.fog.radius || 6) * tokenVisualConfig.map.gridSize));
 
-          const visualHash = `${shape}_${t.borderColor || ''}_${t.imageUrl || ''}_${scale}_${showName}_${hpBarMode}_${t.name || ''}_${activeConditions.join(',')}`;
+          const visualHash = `${shape}_${t.borderColor || ''}_${t.imageUrl || ''}_${scale}_${showName}_${hpBarMode}_${t.name || ''}_${activeConditions.join(',')}_${t.hasVision !== false}_${visionRadius}`;
 
           // If visual state changed, destroy and recreate
           if (tokenSprites[id] && tokenSprites[id].visualHash !== visualHash) {
@@ -1790,6 +1903,19 @@ export const GameCanvas: React.FC = () => {
 
           if (!tokenSprites[id]) {
             const token = new Container();
+            let lightAura: Graphics | null = null;
+
+            // Halo de luz suave: a pulsação fica no token, enquanto a visão
+            // continua sendo calculada pelo renderer de névoa/raycasting.
+            if (shape !== 'figure' && t.hasVision !== false && visionRadius > 0) {
+              lightAura = new Graphics();
+              const auraRadius = 34 + Math.min(28, visionRadius / 12);
+              lightAura.circle(0, 0, auraRadius);
+              lightAura.fill({ color: glowCol, alpha: 0.2 });
+              lightAura.filters = [new BlurFilter({ strength: 10, quality: 3 })];
+              lightAura.alpha = 0.7;
+              token.addChild(lightAura);
+            }
             
             // Base background and border (Ignorado no modo "figure" / boneco recortado)
             if (shape !== 'figure') {
@@ -1862,6 +1988,7 @@ export const GameCanvas: React.FC = () => {
             if (shape !== 'figure') {
               glow = new Graphics();
               drawTokenShape(glow, shape, 30, false, glowCol, 6, 1);
+              glow.filters = [new BlurFilter({ strength: 4, quality: 2 })];
               if (shape === 'standee') {
                 glow.ellipse(0, 30 * 1.3, 30 * 0.9, 30 * 0.2);
                 glow.stroke({ width: 6, color: glowCol, alpha: 1 });
@@ -1996,6 +2123,7 @@ export const GameCanvas: React.FC = () => {
             tokenSprites[id] = { 
               container: token, 
               glow, 
+              lightAura,
               hpFill: hpBarFill, 
               targetRing, 
               selectionRing,
@@ -2054,6 +2182,8 @@ export const GameCanvas: React.FC = () => {
       };
 
       state.props.observe(propsObserver);
+      state.walls.observe(syncWalls);
+      syncWalls();
 
       const updateSelectionVisuals = () => {
         const selected = Tokens.getSelectedIds();
@@ -2563,6 +2693,26 @@ export const GameCanvas: React.FC = () => {
       viewport.addChildAt(bgCatcher, 0);
 
       bgCatcher.on('pointerdown', (e) => {
+        if (localState.activeTool === 'wall') {
+          if (e.button === 2) {
+            // Right-click removal is handled by the canvas listener above.
+            // Keeping this branch inert avoids deleting two intersecting walls
+            // from the same native/Pixi pointer event.
+            return;
+          }
+          if (e.button === 0) {
+            e.stopPropagation();
+            const localPos = viewport.toLocal(e.global);
+            wallDrawingStart = localPos;
+            wallPreview.visible = true;
+            const wallThickness = Math.max(4, (localState.drawWidth || 4) * 2);
+            wallPreview.clear();
+            wallPreview.moveTo(localPos.x, localPos.y);
+            wallPreview.lineTo(localPos.x, localPos.y);
+            wallPreview.stroke({ width: wallThickness + 2, color: '#f97316', alpha: 0.45, cap: 'round' });
+          }
+          return;
+        }
         if (e.button === 0) {
 
            // Pen, shape, arrow logic remains here since they track dragging in PIXI coordinate space
@@ -3482,6 +3632,7 @@ export const GameCanvas: React.FC = () => {
         state.drawings.unobserve(drawObserver);
         state.mapConfig.unobserve(mapConfigObserver);
         state.props.unobserve(propsObserver);
+        state.walls.unobserve(syncWalls);
         window.removeEventListener('map-menu-toggle', mapObserver);
         window.removeEventListener('bg-selection-updated', syncGizmo);
         window.removeEventListener('prop-selection-updated', syncGizmo);
@@ -3637,6 +3788,16 @@ export const GameCanvas: React.FC = () => {
                 tokenData.glow.tint = 0xffffff; // Reset tint
                 tokenData.glow.alpha = 0.3 + Math.abs(Math.sin(Date.now() / 400)) * 0.7;
               }
+            }
+          }
+
+          if (tokenData.lightAura) {
+            const lightEnabled = tState.hasVision !== false;
+            tokenData.lightAura.visible = lightEnabled;
+            if (lightEnabled) {
+              const pulse = 0.78 + Math.sin(Date.now() / 420) * 0.12;
+              tokenData.lightAura.alpha = pulse;
+              tokenData.lightAura.scale.set(0.96 + Math.sin(Date.now() / 420) * 0.05);
             }
           }
             

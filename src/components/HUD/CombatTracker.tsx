@@ -5,6 +5,7 @@ import { state, removeCombatParticipant, nextCombatTurn, clearCombat, pushChatMe
 import type { CombatParticipant, CombatCondition } from '../../store';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 import { saveCombatEncounter } from '../../services/encounterCloudService';
+import { tokensInsideDrawingShapes } from '../../engine/utils/drawingGeometry';
 
 import { toast } from '../UI/Toast';
 import { Tooltip } from '../UI/Tooltip';
@@ -156,6 +157,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
   const [isActive, setIsActive] = useState(false);
   const [addingConditionTo, setAddingConditionTo] = useState<string | null>(null);
   const [tokensMap, setTokensMap] = useState<Map<string, any>>(new Map());
+  const [drawings, setDrawings] = useState<any[]>([]);
 
   // PPR State
   const [showUrgency, setShowUrgency] = useState(false);
@@ -231,11 +233,15 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
 
     state.combat.observe(observer);
     state.tokens.observe(tokenObserver);
+    const drawingObserver = () => setDrawings(Array.from(state.drawings.values()));
+    state.drawings.observe(drawingObserver);
     observer();
     setTokensMap(new Map(state.tokens)); // Initial load
+    drawingObserver();
     return () => { 
        state.combat.unobserve(observer); 
        state.tokens.unobserve(tokenObserver); 
+       state.drawings.unobserve(drawingObserver);
        if (timeout) clearTimeout(timeout);
     };
   }, []);
@@ -263,17 +269,28 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
     if (timerDuration > 0) { state.combat.set('timerStart', Date.now()); state.combat.set('timerPaused', false); }
   };
 
-  const handleRollAll = () => {
+  const areaTokens = React.useMemo(() => tokensInsideDrawingShapes(
+    Array.from(tokensMap.values() as Iterable<any>),
+    drawings,
+  ), [drawings, tokensMap]);
+
+  const handleRollAll = (scope: 'scene' | 'areas' = 'scene') => {
     const tokens = Array.from(state.tokens.values() as Iterable<any>)
-      .filter(t => t.inCombat !== false && t.x > -1000);
-    if (tokens.length === 0) return;
-    const newP: CombatParticipant[] = tokens.map(t => ({
+      .filter(t => t.inCombat !== false && t.x > -1000 && t.y > -1000);
+    const selectedTokens = scope === 'areas' ? areaTokens : tokens;
+    if (scope === 'areas' && selectedTokens.length === 0) {
+      toast.info('Desenhe uma forma e posicione tokens dentro dela para rolar por área.');
+      return;
+    }
+    const initiativeTokens = scope === 'areas' ? selectedTokens : tokens;
+    if (initiativeTokens.length === 0) return;
+    const newP: CombatParticipant[] = initiativeTokens.map(t => ({
       tokenId: t.id, name: t.name || 'Desconhecido', initiative: Math.floor(Math.random() * 20) + 1, imageUrl: t.imageUrl,
     }));
     newP.sort((a, b) => b.initiative - a.initiative);
     state.combat.set('participants', newP);
     state.combat.set('turnIndex', 0);
-    pushChatMessage(`<b>Iniciativa Automática</b> rolada para ${tokens.length} combatentes!`, false, false);
+    pushChatMessage(`<b>Iniciativa Automática</b> rolada para ${initiativeTokens.length} combatentes${scope === 'areas' ? ' dentro das áreas desenhadas' : ''}!`, false, false);
   };
 
   const sendUrgency = (msg: string) => pushChatMessage(msg, true, false);
@@ -349,9 +366,14 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
             <Swords size={48} opacity={0.2} />
             <p>Ninguém na Iniciativa.</p>
             {isGM && (
-              <button onClick={handleRollAll} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(255,122,0, 0.3)' }}>
-                <Dices size={18} /> Auto-Rolar do Mapa
-              </button>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button onClick={() => handleRollAll('scene')} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(255,122,0, 0.3)' }}>
+                  <Dices size={18} /> Auto-Rolar do Mapa
+                </button>
+                {areaTokens.length > 0 && <button onClick={() => handleRollAll('areas')} style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', border: '1px solid rgba(168,85,247,0.5)', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
+                  <Target size={16} /> Áreas ({areaTokens.length})
+                </button>}
+              </div>
             )}
           </div>
         ) : (
@@ -447,6 +469,12 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
             <Tooltip label="Rolar ataque contra todos os alvos selecionados"><button onClick={executeMassAttack} style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.4), rgba(251,191,36,0.4))', border: '1px solid rgba(251,191,36,0.5)', color: 'var(--text-primary)', borderRadius: '8px', padding: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}>⚔️ ATACAR {massAttackSelected.length} ALVOS!</button></Tooltip>
           )}
 
+          {areaTokens.length > 0 && (
+            <button onClick={() => handleRollAll('areas')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '7px 10px', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.35)', color: '#d8b4fe', borderRadius: '8px', cursor: 'pointer', fontSize: '11px', fontWeight: 700 }}>
+              <Target size={13} /> Rolar tokens nas áreas desenhadas ({areaTokens.length})
+            </button>
+          )}
+
           {isActive && (
             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               <Clock size={12} color="var(--text-secondary)" />
@@ -472,7 +500,7 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
               </Tooltip>
             )}
             <div style={{ display: 'flex', gap: '4px', position: 'relative' }}>
-              <Tooltip label="Re-rolar Tudo"><button onClick={handleRollAll} className="btn-icon" style={{ background: 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px' }}><Dices size={18} color="var(--warning)" /></button></Tooltip>
+              <Tooltip label="Re-rolar Tudo"><button onClick={() => handleRollAll()} className="btn-icon" style={{ background: 'var(--bg-tertiary)', borderRadius: '8px', padding: '8px' }}><Dices size={18} color="var(--warning)" /></button></Tooltip>
               
               <Tooltip label="Encerrar com Desfecho">
                 <button 

@@ -2,17 +2,18 @@ import React, { useEffect, useState, useRef } from 'react';
 import { 
   state, localState, setActiveTool, setDrawColor, setDrawWidth, setFogMode,
   getMapConfig, updateMapConfig, addBackground, updateBackgroundProps, removeBackground,
-  removeDrawing, clearDrawingSelection, removeMapProp, clearPropSelection, clearBgSelection, clearFogOps
+  removeDrawing, clearDrawingSelection, removeMapProp, clearPropSelection, clearBgSelection, clearFogOps, clearMapWalls
 } from '../../store';
 import type { BackgroundData, MapConfig } from '../../store';
 import { 
   MousePointer2, Hand, Pen, Square, Type, ArrowRight, Ruler, 
   Undo2, Redo2, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2, Palette,
   Eye, EyeOff, Grid, Layers, Map as MapIcon, Settings, Plus, Trash2, Lock, Unlock, Search, Eraser, Circle, Triangle, ChevronUp, ChevronDown, CloudFog, Hexagon, Target, Scan, X,
-  Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload, Combine, MapPin
+  Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload, Combine, MapPin, BrickWall
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from './Tooltip';
+import { TableSceneManager } from './TableSceneManager';
 import { exportRoomToFile, importRoomFromFile, saveRoomSnapshotToCloud } from '../../services/roomPersistenceService';
 import { toast } from './Toast';
 
@@ -54,6 +55,7 @@ const TOOL_META: Record<string, { label: string; desc: string; shortcut?: string
   lore_pins:    { label: 'Pins de Lore',          desc: 'Gerenciar pontos de interesse e notas da wiki no mapa', shortcut: 'L' },
   ruler:        { label: 'Régua',                 desc: 'Meça distâncias entre dois pontos',  shortcut: '7' },
   eraser:       { label: 'Borracha',              desc: 'Apague desenhos clicando neles',     shortcut: '8' },
+  wall:         { label: 'Paredes',               desc: 'Desenhe paredes que bloqueiam a luz; clique direito para remover', shortcut: '9' },
   fog_brush:    { label: 'Névoa (Pincel)',        desc: 'Desenhe à mão livre para revelar ou esconder névoa' },
   fog_rect:     { label: 'Névoa (Retângulo)',     desc: 'Revele ou esconda salas retangulares' },
   fog_circle:   { label: 'Névoa (Círculo)',       desc: 'Revele ou esconda áreas circulares' },
@@ -137,12 +139,13 @@ export const GridToolbar: React.FC = () => {
   const [showConfigMenu, setShowConfigMenu] = useState(false);
   const [showLayersMenu, setShowLayersMenu] = useState(false);
   const [isLayersMinimized, setIsLayersMinimized] = useState(true);
-  const [activeConfigTab, setActiveConfigTab] = useState<'mapas' | 'grid' | 'objetos'>('mapas');
+  const [activeConfigTab, setActiveConfigTab] = useState<'cenas' | 'mapas' | 'grid' | 'objetos'>('mapas');
   
   const [mapConfig, setMapConfig] = useState<MapConfig>(getMapConfig());
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
   const [drawingLayers, setDrawingLayers] = useState<any[]>([]);
   const [drawings, setDrawings] = useState<any[]>([]);
+  const [walls, setWalls] = useState<any[]>([]);
   const [activeLayerId, setActiveLayerId] = useState(localState.activeDrawingLayerId || 'default');
   const [selectedBatch, setSelectedBatch] = useState<Set<string>>(new Set());
   const [isVisible, setIsVisible] = useState(true);
@@ -159,7 +162,7 @@ export const GridToolbar: React.FC = () => {
     const handleTool = () => {
       setActiveToolState(localState.activeTool);
       setFogModeState(localState.fogMode);
-      if (['pen', 'shape', 'arrow', 'text', 'eraser', 'fog_brush', 'fog_polygon', 'fog_rect', 'fog_circle', 'fog_triangle', 'fog_lasso', 'fog_erase'].includes(localState.activeTool)) {
+      if (['pen', 'shape', 'arrow', 'text', 'eraser', 'wall', 'fog_brush', 'fog_polygon', 'fog_rect', 'fog_circle', 'fog_triangle', 'fog_lasso', 'fog_erase'].includes(localState.activeTool)) {
         setShowStyleInspector(true);
         if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
           setShowLayersMenu(true);
@@ -195,6 +198,9 @@ export const GridToolbar: React.FC = () => {
     };
     const handleDrawings = () => {
       setDrawings(Array.from(state.drawings.values()));
+    };
+    const handleWalls = () => {
+      setWalls(Array.from(state.walls.values()));
     };
 
     const handleLocalState = () => {
@@ -241,6 +247,7 @@ export const GridToolbar: React.FC = () => {
       state.drawingLayers.observe(handleDrawingLayers);
     }
     state.drawings.observe(handleDrawings);
+    state.walls.observe(handleWalls);
     window.addEventListener('tool-changed', handleTool);
     window.addEventListener('draw-style-changed', handleStyle);
     window.addEventListener('keydown', handleKeyDown);
@@ -252,6 +259,7 @@ export const GridToolbar: React.FC = () => {
     handleMapConfig();
     handleBgs();
     handleDrawingLayers();
+    handleWalls();
     handleLocalState();
 
     return () => {
@@ -261,6 +269,7 @@ export const GridToolbar: React.FC = () => {
       if (state.drawingLayers) {
         state.drawingLayers.unobserve(handleDrawingLayers);
       }
+      state.walls.unobserve(handleWalls);
       window.removeEventListener('tool-changed', handleTool);
       window.removeEventListener('draw-style-changed', handleStyle);
       window.removeEventListener('keydown', handleKeyDown);
@@ -332,6 +341,7 @@ export const GridToolbar: React.FC = () => {
     { id: 'text',   icon: Type },
     { id: 'ruler',  icon: Ruler },
     { id: 'eraser', icon: Eraser },
+    { id: 'wall', icon: BrickWall },
   ] as { id: string; icon: any }[];
 
   if (mapConfig.fogOfWar) {
@@ -418,9 +428,10 @@ export const GridToolbar: React.FC = () => {
           <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px', alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
             {[
-              { id: 'mapas', label: 'Cenários & Mapas', icon: MapIcon },
-              { id: 'grid', label: 'Grid & FOW', icon: Grid },
-              { id: 'objetos', label: 'Objetos da Cena', icon: Layers }
+              { id: 'cenas', label: 'Cenas', icon: MapIcon },
+              { id: 'mapas', label: isMobile ? 'Mapas' : 'Cenários & Mapas', icon: MapIcon },
+              { id: 'grid', label: isMobile ? 'Grid' : 'Grid & FOW', icon: Grid },
+              { id: 'objetos', label: isMobile ? 'Objetos' : 'Objetos da Cena', icon: Layers }
             ].map(tab => {
               const Icon = tab.icon;
               const isActive = activeConfigTab === tab.id;
@@ -469,6 +480,8 @@ export const GridToolbar: React.FC = () => {
               </button>
             </Tooltip>
           </div>
+
+          {activeConfigTab === 'cenas' && <TableSceneManager />}
 
           {/* TAB: MAPAS */}
           {activeConfigTab === 'mapas' && (
@@ -748,6 +761,27 @@ export const GridToolbar: React.FC = () => {
           {/* TAB: OBJETOS */}
           {activeConfigTab === 'objetos' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '8px', borderRadius: '8px', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.35)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
+                  <BrickWall size={15} color="#fb923c" />
+                  <span style={{ fontSize: '12px', color: C.textSec, fontWeight: 600 }}>Paredes táticas ({walls.length})</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowConfigMenu(false); setActiveTool('wall'); }}
+                    style={{ background: 'rgba(249,115,22,0.18)', border: '1px solid rgba(249,115,22,0.4)', color: '#fdba74', borderRadius: '6px', padding: '4px 7px', fontSize: '10px', fontWeight: 700, cursor: 'pointer' }}
+                  >Desenhar</button>
+                  <button
+                    type="button"
+                    disabled={walls.length === 0}
+                    onClick={() => {
+                      if (walls.length > 0 && confirm('Deseja remover todas as paredes táticas desta cena?')) clearMapWalls();
+                    }}
+                    style={{ background: walls.length > 0 ? C.dangerBg : 'transparent', border: `1px solid ${walls.length > 0 ? C.dangerBrd : 'rgba(255,255,255,0.06)'}`, color: walls.length > 0 ? C.danger : C.textDim, borderRadius: '6px', padding: '4px 7px', fontSize: '10px', fontWeight: 700, cursor: walls.length > 0 ? 'pointer' : 'not-allowed' }}
+                  >Limpar</button>
+                </div>
+              </div>
               <Tooltip label="Pins de Lore no Mapa" description="Gerenciar pontos de interesse e notas vinculadas no mapa" position="bottom">
                 <button
                   onClick={() => {
@@ -1272,7 +1306,7 @@ export const GridToolbar: React.FC = () => {
 
           {/* Stroke Width / Raio do Pincel */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{activeTool === 'eraser' || activeTool.startsWith('fog_') ? 'TAMANHO:' : 'TRAÇO:'}</span>
+            <span style={{ fontSize: '12px', color: C.textMut, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{activeTool === 'wall' ? 'ESPESSURA:' : activeTool === 'eraser' || activeTool.startsWith('fog_') ? 'TAMANHO:' : 'TRAÇO:'}</span>
             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
               <input type="range" min="1" max="50" value={drawWidth} onChange={(e) => setDrawWidth(Number(e.target.value))} />
               <span style={{color: C.textMut, fontSize: '12px', minWidth: '30px'}}>{drawWidth}px</span>
@@ -1532,7 +1566,7 @@ export const GridToolbar: React.FC = () => {
                 <span style={{ fontSize: '11px', fontWeight: 700, color: C.textMut, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Ferramentas de Desenho
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '4px' }}>
                   {[
                     { id: 'pen', icon: Pen, label: 'Caneta', shortcut: 'P' },
                     { id: 'shape', icon: Square, label: 'Formas', shortcut: 'R' },
@@ -1541,6 +1575,7 @@ export const GridToolbar: React.FC = () => {
                     { id: 'lore_pins', icon: MapPin, label: 'Pins de Lore', shortcut: 'L', isAction: true },
                     { id: 'ruler', icon: Ruler, label: 'Régua', shortcut: '7' },
                     { id: 'eraser', icon: Eraser, label: 'Borracha', shortcut: '8' },
+                    { id: 'wall', icon: BrickWall, label: 'Paredes', shortcut: '9' },
                   ].map(tool => {
                     const Icon = tool.icon;
                     const meta = TOOL_META[tool.id] || { label: tool.label, desc: '' };

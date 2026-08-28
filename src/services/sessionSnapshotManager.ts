@@ -1,4 +1,5 @@
 import { state, doc } from './yjs';
+import { synchronizeActiveTableScene } from '../store/tableScenes';
 import { saveSessionSnapshot, loadSessionSnapshot } from './campaignCloudService';
 import { toast } from '../components/UI/Toast';
 
@@ -6,11 +7,14 @@ export interface TableSnapshot {
   tokens?: Record<string, any>;
   backgrounds?: Record<string, any>;
   drawings?: Record<string, any>;
+  walls?: Record<string, any>;
   fogOps?: Record<string, any>;
   clocks?: Record<string, any>;
   grid?: Record<string, any>;
   combat?: Record<string, any>;
   theater?: Record<string, any>;
+  tableScenes?: Record<string, any>;
+  tableSceneMeta?: Record<string, any>;
   savedAt: string;
   savedBy?: string;
   roomCode: string;
@@ -24,11 +28,14 @@ export function captureCurrentTableSnapshot(roomCode: string, userId?: string | 
     tokens: state.tokens.toJSON(),
     backgrounds: state.backgrounds.toJSON(),
     drawings: state.drawings.toJSON(),
+    walls: state.walls.toJSON(),
     fogOps: state.fogOps.toJSON(),
     clocks: state.clocks.toJSON(),
     grid: state.mapConfig.toJSON(),
     combat: state.combat.toJSON(),
     theater: state.theater.toJSON(),
+    tableScenes: state.tableScenes.toJSON(),
+    tableSceneMeta: state.tableSceneMeta.toJSON(),
     savedAt: new Date().toISOString(),
     savedBy: userId || 'anon',
     roomCode
@@ -73,6 +80,14 @@ export function applyTableSnapshot(snapshot: TableSnapshot): boolean {
     }
 
     // 4. FogOps
+    if (snapshot.walls && typeof snapshot.walls === 'object') {
+      Array.from(state.walls.keys()).forEach(k => {
+        if (!snapshot.walls![k]) state.walls.delete(k);
+      });
+      Object.entries(snapshot.walls).forEach(([k, v]) => state.walls.set(k, v));
+    }
+
+    // 5. FogOps
     if (snapshot.fogOps && typeof snapshot.fogOps === 'object') {
       Array.from(state.fogOps.keys()).forEach(k => {
         if (!snapshot.fogOps![k]) state.fogOps.delete(k);
@@ -106,6 +121,20 @@ export function applyTableSnapshot(snapshot: TableSnapshot): boolean {
       });
     }
 
+    if (snapshot.tableScenes && typeof snapshot.tableScenes === 'object') {
+      Array.from(state.tableScenes.keys()).forEach(k => {
+        if (!snapshot.tableScenes![k]) state.tableScenes.delete(k);
+      });
+      Object.entries(snapshot.tableScenes).forEach(([k, v]) => state.tableScenes.set(k, v));
+    }
+
+    if (snapshot.tableSceneMeta && typeof snapshot.tableSceneMeta === 'object') {
+      Array.from(state.tableSceneMeta.keys()).forEach(k => {
+        if (!snapshot.tableSceneMeta![k]) state.tableSceneMeta.delete(k);
+      });
+      Object.entries(snapshot.tableSceneMeta).forEach(([k, v]) => state.tableSceneMeta.set(k, v));
+    }
+
     // 7. Notificação no chat
     state.chat.push([{
       text: `🔄 <b>Restauração de Mesa:</b> O estado da mesa foi restaurado para o ponto salvo em ${new Date(snapshot.savedAt).toLocaleString()}.`,
@@ -114,6 +143,8 @@ export function applyTableSnapshot(snapshot: TableSnapshot): boolean {
       isFailure: false
     }]);
   });
+
+  synchronizeActiveTableScene();
 
   return true;
 }

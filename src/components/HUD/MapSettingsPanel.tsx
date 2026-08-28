@@ -12,9 +12,11 @@ import {
 import { Config, onConfigChanged, onMapConfigChanged, onFogConfigChanged } from '../../store/modules/configModule';
 import type { BackgroundData, MapConfig } from '../../store';
 import type { FogConfig } from '../../store/modules/configModule';
-import { ImagePlus, Trash2, Eye, EyeOff, Grid, RefreshCw, MousePointer2, Type, Search, Eraser, Cloud, Play, Plus, Save } from 'lucide-react';
+import { ImagePlus, Trash2, Eye, EyeOff, RefreshCw, MousePointer2, Type, Search, Eraser, Cloud, Play, Save } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { Tooltip } from '../UI/Tooltip';
+import { TableSceneManager } from '../UI/TableSceneManager';
+import { useIsGM } from '../../store/user';
 import {
   saveSceneToCloud,
   getScenesFromCloud,
@@ -26,6 +28,7 @@ import {
 import { toast } from '../UI/Toast';
 
 export const MapSettingsPanel: React.FC = () => {
+  const isGM = useIsGM();
   const [backgrounds, setBackgrounds] = useState<BackgroundData[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(bgLocalState.selectedBgs));
   
@@ -55,10 +58,10 @@ export const MapSettingsPanel: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'cenarios') {
+    if (isGM && activeTab === 'cenarios') {
       loadScenes();
     }
-  }, [activeTab, loadScenes]);
+  }, [activeTab, isGM, loadScenes]);
 
   useEffect(() => {
     // Background observer (unchanged)
@@ -207,6 +210,7 @@ export const MapSettingsPanel: React.FC = () => {
   };
 
   const handleSaveCurrentScene = async () => {
+    if (!isGM) return;
     const name = newSceneName.trim() || `Cena ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     const currentRoom = typeof window !== 'undefined'
       ? (new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2')
@@ -592,6 +596,9 @@ export const MapSettingsPanel: React.FC = () => {
 
       {activeTab === 'cenarios' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <TableSceneManager />
+
+          {isGM && <>
           {/* Card Salvar Cena Atual */}
           <div style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -702,6 +709,7 @@ export const MapSettingsPanel: React.FC = () => {
               </div>
             )}
           </div>
+          </>}
         </div>
       )}
 

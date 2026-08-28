@@ -62,7 +62,8 @@ export function renderFogOfWar(
   fogOverlay: Graphics,
   config: any,
   viewport: { x: number; y: number; scale: { x: number; y: number } },
-  visionSources: any[]
+  visionSources: any[],
+  explicitWalls: any[] = []
 ) {
   if (!config.fog.enabled) {
     fogContainer.visible = false;
@@ -120,7 +121,10 @@ export function renderFogOfWar(
 
   // 3. Token Vision via Raycasting (Dynamic Lighting)
   if (visionSources.length > 0) {
-    const segments = extractWallSegments(fogOps);
+    const explicitWallSegments = explicitWalls
+      .filter(wall => wall && !wall.hidden && wall.a && wall.b)
+      .map(wall => ({ a: wall.a, b: wall.b }));
+    const segments = [...extractWallSegments(fogOps), ...explicitWallSegments];
 
     visionSources.forEach(t => {
       const radius = t.visionRadius || ((config.fog.radius || 6) * config.map.gridSize);

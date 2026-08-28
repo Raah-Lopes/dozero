@@ -76,10 +76,13 @@ export const state = {
   gmNotes: doc.getMap('gmNotes'),
   customItems: doc.getMap('customItems'),
   drawings: doc.getMap('drawings'),
+  walls: doc.getMap('walls'),
   drawingLayers: doc.getMap('drawingLayers'),
   fogOps: doc.getMap('fogOps'),
   lorePins: doc.getMap('lorePins'),
-  roomSettings: doc.getMap('roomSettings')
+  roomSettings: doc.getMap('roomSettings'),
+  tableScenes: doc.getMap('tableScenes'),
+  tableSceneMeta: doc.getMap('tableSceneMeta')
 };
 
 // =========================================================================
@@ -92,7 +95,8 @@ export const undoManager = new Y.UndoManager([
   state.backgrounds,
   state.mapTexts,
   state.lorePins,
-  state.fogOps
+  state.fogOps,
+  state.walls
 ]);
 
 if (typeof window !== 'undefined') {
