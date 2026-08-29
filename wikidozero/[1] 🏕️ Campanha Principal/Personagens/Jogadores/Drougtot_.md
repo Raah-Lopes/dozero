@@ -151,7 +151,12 @@ mana: 20
 titulo: Drougtot_
 nome: Drougtot_
 title: Drougtot_
+borderColor: '#f0ffa3'
+sizeScale: 1.4
 ---
+
+
+
 
 
 
