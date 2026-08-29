@@ -3,7 +3,10 @@
 const VERCEL_BASE = 'https://dozero-vert.vercel.app';
 
 export const getRoomUrl = (roomCode: string, passCode?: string): string => {
-  const base = `${window.location.origin}/vtt.html?room=${encodeURIComponent(roomCode)}`;
+  const pathname = window.location.pathname.endsWith('.html')
+    ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))
+    : window.location.pathname.replace(/\/$/, '');
+  const base = `${window.location.origin}${pathname}/vtt.html?room=${encodeURIComponent(roomCode)}`;
   return passCode ? `${base}&pass=${encodeURIComponent(passCode)}` : base;
 };
 
