@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameCanvas } from '../../engine/GameCanvas';
 import { DiceOverlay } from '../UI/DiceOverlay';
-import { CutsceneOverlay } from '../Theater/CutsceneOverlay';
+import { CutsceneOverlay, CutsceneConfig } from '../Theater/CutsceneOverlay';
 import { ClimaxOverlay } from '../UI/ClimaxOverlay';
 import { PPROverlay } from '../UI/PPROverlay';
 import { GlobalAudioSync } from '../Audio/GlobalAudioSync';
@@ -16,18 +16,30 @@ interface StreamOverlayProps {
 export const StreamOverlay: React.FC<StreamOverlayProps> = ({ roomCode }) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [showChat, setShowChat] = useState(true);
+  const [activeCutscene, setActiveCutscene] = useState<CutsceneConfig | null>(null);
 
   useEffect(() => {
     const handleChatUpdate = () => {
-      const chatArr = Array.from(state.chat.values() as Iterable<any>);
+      const chatArr = state.chat && typeof state.chat.toArray === 'function' ? state.chat.toArray() : [];
       setMessages(chatArr.slice(-6)); // Últimas 6 mensagens
     };
 
-    state.chat.observe(handleChatUpdate);
+    if (state.chat && typeof state.chat.observe === 'function') {
+      state.chat.observe(handleChatUpdate);
+    }
     handleChatUpdate();
 
+    const handleCutscene = (e: Event) => {
+      const config = (e as CustomEvent<CutsceneConfig>).detail;
+      if (config) setActiveCutscene(config);
+    };
+    window.addEventListener('trigger-cutscene', handleCutscene);
+
     return () => {
-      state.chat.unobserve(handleChatUpdate);
+      if (state.chat && typeof state.chat.unobserve === 'function') {
+        state.chat.unobserve(handleChatUpdate);
+      }
+      window.removeEventListener('trigger-cutscene', handleCutscene);
     };
   }, []);
 
@@ -43,6 +55,9 @@ export const StreamOverlay: React.FC<StreamOverlayProps> = ({ roomCode }) => {
       <ClimaxOverlay />
       <PPROverlay />
       <GlobalAudioSync />
+      {activeCutscene && (
+        <CutsceneOverlay config={activeCutscene} onEnd={() => setActiveCutscene(null)} />
+      )}
 
       {/* 3. Badge Discreto de Stream no Canto Superior Esquerdo */}
       <div style={{
