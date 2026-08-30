@@ -44,4 +44,7 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Wiki Stubs (Evita erros de build no GitHub Pages)
+wikidozero/[99]*
 ```
