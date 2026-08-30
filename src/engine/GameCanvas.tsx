@@ -1943,43 +1943,59 @@ export const GameCanvas: React.FC = () => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => {
-              if (isDestroyed || !tokenSprites[id]) return;
-              const texture = Texture.from(img);
-              const sprite = new Sprite(texture);
-              sprite.anchor.set(0.5);
-              
-              if (shape === 'standee') {
-                sprite.width = 44;
-                sprite.height = 66;
-                sprite.y = -2;
-              } else if (shape === 'figure') {
-                // Modo Boneco: Mantém proporção e escala sem recortar com máscara
-                const maxDim = Math.max(img.width || 1, img.height || 1);
-                const targetSize = 56;
-                const aspect = (img.width || 1) / (img.height || 1);
-                if (aspect >= 1) {
-                  sprite.width = targetSize;
-                  sprite.height = targetSize / aspect;
+              if (isDestroyed) return;
+              // Verifica se o token ainda existe no estado antes de criar textura
+              if (!state.tokens.has(id)) {
+                console.log(`[GameCanvas] Token ${id} removido durante carregamento de imagem, descartando.`);
+                return;
+              }
+              if (!tokenSprites[id]) {
+                console.log(`[GameCanvas] Token ${id} não está mais em tokenSprites, descartando imagem.`);
+                return;
+              }
+              try {
+                const texture = Texture.from(img);
+                const sprite = new Sprite(texture);
+                sprite.anchor.set(0.5);
+                
+                if (shape === 'standee') {
+                  sprite.width = 44;
+                  sprite.height = 66;
+                  sprite.y = -2;
+                } else if (shape === 'figure') {
+                  // Modo Boneco: Mantém proporção e escala sem recortar com máscara
+                  const maxDim = Math.max(img.width || 1, img.height || 1);
+                  const targetSize = 56;
+                  const aspect = (img.width || 1) / (img.height || 1);
+                  if (aspect >= 1) {
+                    sprite.width = targetSize;
+                    sprite.height = targetSize / aspect;
+                  } else {
+                    sprite.height = targetSize;
+                    sprite.width = targetSize * aspect;
+                  }
+                  sprite.y = 0;
                 } else {
-                  sprite.height = targetSize;
-                  sprite.width = targetSize * aspect;
+                  sprite.width = 50;
+                  sprite.height = 50;
+                  sprite.y = 0;
                 }
-                sprite.y = 0;
-              } else {
-                sprite.width = 50;
-                sprite.height = 50;
-                sprite.y = 0;
-              }
-              
-              // No modo figure não aplica máscara de recorte
-              if (shape !== 'figure') {
-                const mask = new Graphics();
-                drawTokenShape(mask, shape, 24, true, 0xffffff);
-                sprite.mask = mask;
-                token.addChild(mask);
-              }
+                
+                // No modo figure não aplica máscara de recorte
+                if (shape !== 'figure') {
+                  const mask = new Graphics();
+                  drawTokenShape(mask, shape, 24, true, 0xffffff);
+                  sprite.mask = mask;
+                  token.addChild(mask);
+                }
 
-              token.addChild(sprite);
+                token.addChild(sprite);
+              } catch (texErr) {
+                console.warn('[GameCanvas] Erro ao criar textura para token:', id, texErr);
+              }
+            };
+            img.onerror = () => {
+              console.warn('[GameCanvas] Falha ao carregar imagem do token:', imgPath);
             };
             img.src = imgPath;
 

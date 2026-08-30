@@ -126,8 +126,19 @@ export class SupabaseRealtimeProvider {
     });
 
     // 6. Transmite alterações locais do documento para os outros jogadores
+    // IMPORTANTE: Filtra updates que já vieram da rede para evitar loop infinito
     this.doc.on('update', (update, origin) => {
-      if (this.isDestroyed || origin === 'supabase-realtime' || !isSubscribed) return;
+      if (this.isDestroyed || !isSubscribed) return;
+      
+      // Ignora updates que já foram recebidos do Supabase Realtime
+      if (origin === 'supabase-realtime') return;
+      
+      // Ignora updates que vieram do IndexedDB (persistência local)
+      if (origin === 'indexeddb') return;
+      
+      // Ignora updates provenientes de restore de persistence (evita re-broadcast)
+      if (origin === 'persistence') return;
+      
       try {
         this.channel?.send({
           type: 'broadcast',

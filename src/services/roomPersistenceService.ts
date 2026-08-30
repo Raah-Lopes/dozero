@@ -113,6 +113,7 @@ export function getRoomBundle(): RoomBundle {
 
 /**
  * Aplica um bundle de sala ao documento Yjs compartilhado
+ * IMPORTANTE: Usa transação com origem 'persistence' para não disparar sync em loop
  */
 export function applyRoomBundle(bundle: RoomBundle): boolean {
   if (!bundle || !bundle.data) {
@@ -122,6 +123,7 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
 
   const { data } = bundle;
 
+  // Usa transação nomeada para que o provider possa identificar e ignorar
   doc.transact(() => {
     // 1. Tokens
     if (Array.isArray(data.tokens)) {
@@ -228,7 +230,7 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
       state.roomSettings.set('is_seeded', true);
       state.roomSettings.set('last_restored_at', new Date().toISOString());
     }
-  });
+  }, 'persistence'); // <- Nome da transação para identificação no provider
 
   window.dispatchEvent(new Event('config-changed'));
   window.dispatchEvent(new Event('tool-changed'));
