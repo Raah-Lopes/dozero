@@ -58,9 +58,9 @@ export const StageProjectorDropzone: React.FC<Props> = ({ children, disabled = f
           toast.info('Processando imagem...');
           const { base64 } = await convertImageToWebP(file, 0.9, 1920);
           const cloudUrl = await saveImageToCloud(base64, `projector_${Date.now()}.webp`);
-          const finalUrl = cloudUrl || base64;
+          if (!cloudUrl) throw new Error('Upload da imagem falhou');
           const fileName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-          setPendingDrop({ title: fileName, url: finalUrl, type: 'npc' });
+          setPendingDrop({ title: fileName, url: cloudUrl, type: 'npc' });
           setEditableTitle(fileName);
         } catch (err: any) {
           toast.error('Erro ao carregar imagem solta.');

@@ -213,6 +213,10 @@ export const ChatWindow: React.FC = () => {
     toast.info("Enviando imagem para a nuvem...");
     try {
       const url = await saveImageToCloud(pendingImageBase64, `chat_${Date.now()}.webp`);
+      if (!url) {
+        toast.error('Não foi possível enviar a imagem para o Storage.');
+        return;
+      }
       const imgMarkup = `<img src="${url}" alt="Imagem" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 4px; display: block; object-fit: contain;" />`;
       const finalMsg = caption.trim() ? `${caption.trim()}<br/>${imgMarkup}` : imgMarkup;
       pushAdvancedChatMessage(finalMsg, { tipo: subTab, autor: playerName });

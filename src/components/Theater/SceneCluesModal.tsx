@@ -44,7 +44,8 @@ export const SceneCluesModal: React.FC<Props> = ({ isOpen, onClose }) => {
       toast.info('Processando e otimizando imagem...');
       const { base64, filename } = await convertImageToWebP(file, 0.85, 1200);
       const cloudUrl = await saveImageToCloud(base64, filename || `clue_${Date.now()}.webp`);
-      setUrl(cloudUrl || base64);
+      if (!cloudUrl) throw new Error('Upload da imagem falhou');
+      setUrl(cloudUrl);
       if (!title) setTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
       toast.success('Imagem carregada com sucesso!');
     } catch (err: any) {

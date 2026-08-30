@@ -64,21 +64,30 @@ type ModalState =
 export interface ArcanumGraphProps {
   initialNodes?: WNode[];
   initialEdges?: WEdge[];
+  initialPayload?: VaultPayload;
+  onPersist?: (payload: VaultPayload) => void;
   onClose?: () => void;
   onNodeDoubleClick?: (node: WNode) => void;
   onSaveToWiki?: (nodeId: string, updatedSummary: string) => Promise<void>;
   onCreateWikiRelation?: (sourcePath: string, targetName: string, label: string) => Promise<void>;
 }
 
-function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelation }: ArcanumGraphProps) {
+function ArcanumInner({ initialNodes, initialEdges, initialPayload, onPersist, onClose, onCreateWikiRelation }: ArcanumGraphProps) {
   const rf = useReactFlow<WNode, WEdge>();
 
-  const [nodes, setNodes] = useState<WNode[]>(() => initialNodes && initialNodes.length > 0 ? initialNodes : BOOT.nodes);
-  const [edges, setEdges] = useState<WEdge[]>(() => initialEdges && initialEdges.length > 0 ? initialEdges : BOOT.edges);
-  const [customTypes, setCustomTypes] = useState<TypeReg[]>(BOOT.customTypes);
-  const [savedViews, setSavedViews] = useState<SavedView[]>(BOOT.savedViews);
+  const [nodes, setNodes] = useState<WNode[]>(() => initialPayload?.nodes || (initialNodes && initialNodes.length > 0 ? initialNodes : BOOT.nodes));
+  const [edges, setEdges] = useState<WEdge[]>(() => initialPayload?.edges || (initialEdges && initialEdges.length > 0 ? initialEdges : BOOT.edges));
+  const [customTypes, setCustomTypes] = useState<TypeReg[]>(() => initialPayload?.customTypes || BOOT.customTypes);
+  const [savedViews, setSavedViews] = useState<SavedView[]>(() => initialPayload?.savedViews || BOOT.savedViews);
 
   useEffect(() => {
+    if (initialPayload) {
+      setNodes(initialPayload.nodes);
+      setEdges(initialPayload.edges);
+      setCustomTypes(initialPayload.customTypes);
+      setSavedViews(initialPayload.savedViews);
+      return;
+    }
     if (initialNodes && initialNodes.length > 0) {
       setNodes((prev) => {
         if (prev.length === initialNodes.length) {
@@ -91,7 +100,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
       });
       if (initialEdges) setEdges(initialEdges);
     }
-  }, [initialNodes, initialEdges]);
+  }, [initialPayload, initialNodes, initialEdges]);
 
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [isolate, setIsolate] = useState<string | null>(null);
@@ -157,11 +166,16 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
     return () => window.clearTimeout(t);
   }, [rf]);
 
-  /* Persistência automática no Vault local */
+  const persistPayload = useCallback((payload: VaultPayload) => {
+    if (onPersist) onPersist(payload);
+    else Vault.save(payload);
+  }, [onPersist]);
+
+  /* Persistência automática compartilhada, com Vault apenas como fallback isolado. */
   useEffect(() => {
-    const t = window.setTimeout(() => Vault.save({ v: 1, nodes, edges, customTypes, savedViews }), 350);
+    const t = window.setTimeout(() => persistPayload({ v: 1, nodes, edges, customTypes, savedViews }), 350);
     return () => window.clearTimeout(t);
-  }, [nodes, edges, customTypes, savedViews]);
+  }, [nodes, edges, customTypes, savedViews, persistPayload]);
 
   /* Derivações visuais */
   const counts = useMemo(() => {
@@ -756,7 +770,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
           onDeleteView={(id) => {
             setSavedViews((vs) => {
               const updated = vs.filter((v) => v.id !== id);
-              Vault.save({ v: 1, nodes, edges, customTypes, savedViews: updated });
+              persistPayload({ v: 1, nodes, edges, customTypes, savedViews: updated });
               return updated;
             });
             pushToast("Vista removida");
@@ -1058,7 +1072,7 @@ function ArcanumInner({ initialNodes, initialEdges, onClose, onCreateWikiRelatio
             };
             setSavedViews((vs) => {
               const updated = [v, ...vs];
-              Vault.save({ v: 1, nodes, edges, customTypes, savedViews: updated });
+              persistPayload({ v: 1, nodes, edges, customTypes, savedViews: updated });
               return updated;
             });
             setModal(null);

@@ -1,6 +1,6 @@
 import { state, doc } from './yjs';
 import { synchronizeActiveTableScene } from '../store/tableScenes';
-import { saveSessionSnapshot, loadSessionSnapshot } from './campaignCloudService';
+import { loadRoomSnapshotFromCloud, saveRoomSnapshotToCloud } from './roomPersistenceService';
 import { toast } from '../components/UI/Toast';
 
 export interface TableSnapshot {
@@ -152,12 +152,9 @@ export function applyTableSnapshot(snapshot: TableSnapshot): boolean {
 /**
  * Salva o snapshot da mesa no Supabase
  */
-export async function createManualSnapshot(roomCode: string, userId?: string | null): Promise<boolean> {
-  const snapshot = captureCurrentTableSnapshot(roomCode, userId);
-  const ok = await saveSessionSnapshot(roomCode, snapshot);
+export async function createManualSnapshot(roomCode: string, _userId?: string | null): Promise<boolean> {
+  const ok = await saveRoomSnapshotToCloud(roomCode);
   if (ok) {
-    // Também salva cópia em cache local
-    localStorage.setItem(`dozero_snapshot_${roomCode}`, JSON.stringify(snapshot));
     toast.success('Ponto de restauração da mesa salvo na nuvem!');
   } else {
     toast.error('Erro ao salvar snapshot na nuvem.');
@@ -169,19 +166,11 @@ export async function createManualSnapshot(roomCode: string, userId?: string | n
  * Restaura o snapshot mais recente da mesa a partir da nuvem ou cache local
  */
 export async function restoreCloudSnapshot(roomCode: string): Promise<boolean> {
-  const cloudSnapshot = await loadSessionSnapshot(roomCode);
-  const target = cloudSnapshot || JSON.parse(localStorage.getItem(`dozero_snapshot_${roomCode}`) || 'null');
-
-  if (!target) {
-    toast.warn('Nenhum ponto de restauração encontrado para esta mesa.');
-    return false;
-  }
-
-  const ok = applyTableSnapshot(target);
+  const ok = await loadRoomSnapshotFromCloud(roomCode, true);
   if (ok) {
-    toast.success(`Mesa restaurada com sucesso para ${new Date(target.savedAt).toLocaleTimeString()}!`);
+    toast.success('Mesa restaurada com sucesso para o último ponto salvo.');
   } else {
-    toast.error('Falha ao restaurar dados do snapshot.');
+    toast.warn('Nenhum ponto de restauração válido encontrado para esta mesa.');
   }
   return ok;
 }
