@@ -12,6 +12,7 @@ import {
   Wrench, RefreshCcw, Lasso, Paintbrush, CloudUpload, Download, Upload, Combine, MapPin, BrickWall
 } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { saveImageToCloud } from '../../utils/githubApi';
 import { Tooltip } from './Tooltip';
 import { TableSceneManager } from './TableSceneManager';
 import { exportRoomToFile, importRoomFromFile, saveRoomSnapshotToCloud } from '../../services/roomPersistenceService';
@@ -286,6 +287,11 @@ export const GridToolbar: React.FC = () => {
     if (!file) return;
     try {
       const { base64 } = await convertImageToWebP(file, 0.8, 1024);
+      const imageUrl = await saveImageToCloud(base64, `drawing_${Date.now()}.webp`);
+      if (!imageUrl) {
+        toast.error('Não foi possível enviar a imagem para o Storage.');
+        return;
+      }
       const img = new Image();
       img.onload = () => {
         import('../../store/drawings').then(s => {
@@ -293,7 +299,7 @@ export const GridToolbar: React.FC = () => {
             id: 'drawing_' + Date.now() + Math.random().toString(36).substr(2, 5),
             name: file.name.split('.')[0],
             type: 'image',
-            imageUrl: base64,
+            imageUrl,
             points: [{ x: window.innerWidth / 2, y: window.innerHeight / 2 }],
             imageWidth: img.naturalWidth || 400,
             imageHeight: img.naturalHeight || 300,
@@ -306,7 +312,10 @@ export const GridToolbar: React.FC = () => {
           });
         });
       };
-      img.src = base64;
+      img.onerror = () => {
+        toast.error('A imagem foi enviada, mas o Storage não a disponibilizou para a mesa. Tente novamente.');
+      };
+      img.src = imageUrl;
     } catch (err) {
       console.error("Erro ao carregar imagem para o canvas:", err);
     }

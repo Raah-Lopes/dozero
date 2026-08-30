@@ -1587,8 +1587,11 @@ function NoteEditorDrawer({
     try {
       const converted = await convertImageToWebP(arquivo, 0.86, 1400);
       const cloudUrl = await uploadToSupabaseStorage(converted.base64, `${roomCode}/wiki_${converted.filename}`);
-      const imageUrl = cloudUrl || converted.base64;
-      salvar({ imageUrl });
+      if (!cloudUrl) {
+        onNotify('Não foi possível enviar a imagem para o Storage.', 'ember');
+        return;
+      }
+      salvar({ imageUrl: cloudUrl });
       onNotify('Imagem de capa convertida para WebP e adicionada.', 'green');
     } catch {
       onNotify('Não foi possível processar a imagem de capa.', 'ember');
@@ -1606,7 +1609,11 @@ function NoteEditorDrawer({
         if (!arquivo.type.startsWith('image/')) continue;
         const converted = await convertImageToWebP(arquivo, 0.85, 1200);
         const cloudUrl = await uploadToSupabaseStorage(converted.base64, `${roomCode}/wiki_${converted.filename}`);
-        novasUrls.push(cloudUrl || converted.base64);
+        if (cloudUrl) novasUrls.push(cloudUrl);
+      }
+      if (novasUrls.length === 0) {
+        onNotify('Nenhuma imagem pôde ser enviada para o Storage.', 'ember');
+        return;
       }
       salvar({ gallery: [...(note.gallery || []), ...novasUrls] });
       onNotify(`${novasUrls.length} imagem(ns) adicionada(s) à galeria.`, 'green');

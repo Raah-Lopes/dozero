@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ArcanumGraph from './Graph/ArcanumGraph';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { DEFAULT_TYPES, type NodeShape, type WEdge, type WNode } from './Graph/core';
-import { Layouts } from './Graph/world';
+import { Layouts, type VaultPayload } from './Graph/world';
 import { TYPE_ORDER } from './Graph/seed';
 import { formatWikiConnection, type WikiConnectionDraft } from '../../utils/wikiConnections';
 import { useWindowManager } from '../../hooks/useWindowManager';
@@ -13,6 +13,22 @@ import { saveMarkdownContent } from '../../utils/githubApi';
 import { state } from '../../services/yjs';
 import { CodexDocument, normalizeCodex } from './Codex/codexModel';
 import { Icone } from './Codex/CodexIcons';
+
+const SHARED_GRAPH_KEY = '__arcanum_graph_v1__';
+
+function readSharedGraph(): VaultPayload | null {
+  const raw = state.wiki.get(SHARED_GRAPH_KEY);
+  if (!raw || typeof raw !== 'object') return null;
+  const graph = raw as Partial<VaultPayload>;
+  if (!Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) return null;
+  return {
+    v: typeof graph.v === 'number' ? graph.v : 1,
+    nodes: graph.nodes,
+    edges: graph.edges,
+    customTypes: Array.isArray(graph.customTypes) ? graph.customTypes : [],
+    savedViews: Array.isArray(graph.savedViews) ? graph.savedViews : [],
+  };
+}
 
 const getBundledWikiFiles = async (): Promise<Record<string, string>> => {
   const modules = import.meta.glob('../../../wikidozero/**/*.md', {
@@ -107,10 +123,12 @@ function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: W
  */
 export const LivingBrain: React.FC = () => {
   const { setViewMode } = useWindowManager();
+  const initialSharedGraph = useMemo(() => readSharedGraph(), []);
 
   // Carregamento síncrono instantâneo a partir do Códice em memória
   const initialData = useMemo(() => {
     try {
+      if (initialSharedGraph) return { nodes: initialSharedGraph.nodes, edges: initialSharedGraph.edges };
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
@@ -118,16 +136,32 @@ export const LivingBrain: React.FC = () => {
     } catch {
       return { nodes: [], edges: [] };
     }
-  }, []);
+  }, [initialSharedGraph]);
 
   const [wikiNodes, setWikiNodes] = useState<WNode[]>(initialData.nodes);
   const [wikiEdges, setWikiEdges] = useState<WEdge[]>(initialData.edges);
+  const [sharedGraph, setSharedGraph] = useState<VaultPayload | null>(initialSharedGraph);
   const [isLoading, setIsLoading] = useState(initialData.nodes.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [graphVersion, setGraphVersion] = useState(0);
+  const graphSerialized = useRef(initialSharedGraph ? JSON.stringify(initialSharedGraph) : '');
 
   const fetchGraphData = useCallback(async (isBackgroundRefresh = false) => {
     try {
+      const shared = readSharedGraph();
+      if (shared) {
+        const serialized = JSON.stringify(shared);
+        if (serialized !== graphSerialized.current) {
+          graphSerialized.current = serialized;
+          setSharedGraph(shared);
+          setWikiNodes(shared.nodes);
+          setWikiEdges(shared.edges);
+          if (!isBackgroundRefresh) setGraphVersion((v) => v + 1);
+        }
+        setIsLoading(false);
+        return;
+      }
+
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
@@ -272,7 +306,21 @@ export const LivingBrain: React.FC = () => {
 
     const refresh = () => void fetchGraphData(true);
     let debounceTimer: number;
-    const refreshFromSharedState = () => {
+    const refreshFromSharedState = (event: { keysChanged?: Set<string> }) => {
+      if (event.keysChanged?.has(SHARED_GRAPH_KEY)) {
+        const shared = readSharedGraph();
+        if (!shared) return;
+        const serialized = JSON.stringify(shared);
+        if (serialized === graphSerialized.current) return;
+        graphSerialized.current = serialized;
+        setSharedGraph(shared);
+        setWikiNodes(shared.nodes);
+        setWikiEdges(shared.edges);
+        setIsLoading(false);
+        setGraphVersion((v) => v + 1);
+        return;
+      }
+      if (event.keysChanged && !event.keysChanged.has('__codex_v1__')) return;
       window.clearTimeout(debounceTimer);
       debounceTimer = window.setTimeout(() => fetchGraphData(true), 1200);
     };
@@ -288,6 +336,21 @@ export const LivingBrain: React.FC = () => {
       state.wiki.unobserve(refreshFromSharedState);
     };
   }, [fetchGraphData]);
+
+  const persistGraph = useCallback((payload: VaultPayload) => {
+    const serialized = JSON.stringify(payload);
+    if (serialized === graphSerialized.current) return;
+    graphSerialized.current = serialized;
+    state.wiki.set(SHARED_GRAPH_KEY, payload);
+  }, []);
+
+  const graphPayload = useMemo<VaultPayload>(() => sharedGraph || {
+    v: 1,
+    nodes: wikiNodes,
+    edges: wikiEdges,
+    customTypes: [],
+    savedViews: [],
+  }, [sharedGraph, wikiNodes, wikiEdges]);
 
   // Criação de conexão direta no markdown da Wiki ou Códice
   const handleCreateWikiRelation = async (sourcePath: string, targetName: string, label: string) => {
@@ -374,8 +437,8 @@ export const LivingBrain: React.FC = () => {
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ArcanumGraph
         key={graphVersion}
-        initialNodes={wikiNodes}
-        initialEdges={wikiEdges}
+        initialPayload={graphPayload}
+        onPersist={persistGraph}
         onClose={() => setViewMode('canvas')}
         onCreateWikiRelation={handleCreateWikiRelation}
       />

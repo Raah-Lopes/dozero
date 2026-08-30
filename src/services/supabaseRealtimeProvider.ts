@@ -26,11 +26,20 @@ export class SupabaseRealtimeProvider {
   private roomName: string;
   private doc: Y.Doc;
   private isDestroyed = false;
+  private handleDocUpdate: ((update: Uint8Array, origin: unknown) => void) | null = null;
 
   constructor(roomName: string, doc: Y.Doc) {
     this.roomName = roomName;
     this.doc = doc;
     this.init();
+  }
+
+  private async broadcast(event: string, payload: Record<string, unknown>): Promise<void> {
+    if (!this.channel || this.isDestroyed) return;
+    const result = await this.channel.send({ type: 'broadcast', event, payload });
+    if (result !== 'ok') {
+      throw new Error(`Realtime não confirmou '${event}': ${result}`);
+    }
   }
 
   private init() {
@@ -41,7 +50,7 @@ export class SupabaseRealtimeProvider {
     const channelName = `yjs:${this.roomName}`;
     this.channel = supabase.channel(channelName, {
       config: {
-        broadcast: { self: false, ack: false }
+        broadcast: { self: false, ack: true }
       }
     });
 
@@ -60,16 +69,16 @@ export class SupabaseRealtimeProvider {
     this.channel.on('broadcast', { event: 'yjs-sync-req' }, () => {
       if (this.isDestroyed) return;
       // Se este cliente tiver dados na sala, envia o estado completo para quem acabou de entrar
-      const hasContent = (this.doc.getMap('tokens').size > 0) || (this.doc.getMap('backgrounds').size > 0);
+      const hasContent = ['tokens', 'backgrounds', 'drawings', 'walls', 'fogOps', 'mapTexts', 'props', 'lorePins']
+        .some(mapName => this.doc.getMap(mapName).size > 0);
       if (hasContent) {
         try {
           const stateUpdate = Y.encodeStateAsUpdate(this.doc);
-          this.channel?.send({
-            type: 'broadcast',
-            event: 'yjs-sync-res',
-            payload: { update: uint8ToBase64(stateUpdate) }
-          });
-        } catch (e) {}
+          void this.broadcast('yjs-sync-res', { update: uint8ToBase64(stateUpdate) })
+            .catch(error => console.warn('[SupabaseRealtime] Falha ao responder sync:', error));
+        } catch (error) {
+          console.warn('[SupabaseRealtime] Falha ao preparar sync:', error);
+        }
       }
     });
 
@@ -86,44 +95,43 @@ export class SupabaseRealtimeProvider {
     });
 
     // 4. Rastreamento de Presença Real de Jogadores
-    this.channel.on('presence', { event: 'sync' }, () => {
-      if (this.isDestroyed || !this.channel) return;
-      const state = this.channel.presenceState();
-      const onlineCount = Object.keys(state).length;
-      window.dispatchEvent(new CustomEvent('room-presence-sync', { 
-        detail: { room: this.roomName, count: onlineCount, presenceState: state } 
-      }));
-    });
+    // O cliente pode reutilizar um canal já inscrito durante HMR. Nesse caso
+    // a inscrição de presença anterior continua válida, mas o Supabase não
+    // permite registrar outro callback de presence depois do subscribe.
+    if (!this.channel.joinedOnce) {
+      this.channel.on('presence', { event: 'sync' }, () => {
+        if (this.isDestroyed || !this.channel) return;
+        const state = this.channel.presenceState();
+        const onlineCount = Object.keys(state).length;
+        window.dispatchEvent(new CustomEvent('room-presence-sync', {
+          detail: { room: this.roomName, count: onlineCount, presenceState: state }
+        }));
+      });
+    }
 
     let isSubscribed = false;
 
     // 5. Inscreve no canal e registra presença
     this.channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
-        isSubscribed = true;
-        console.log(`[SupabaseRealtime] Conectado à sala '${this.roomName}' em tempo real!`);
+      if (status !== 'SUBSCRIBED') {
+        isSubscribed = false;
+        return;
+      }
+      isSubscribed = true;
+      console.log(`[SupabaseRealtime] Conectado à sala '${this.roomName}' em tempo real!`);
         
         // Registra presença do usuário atual na sala (usando sessão local para evitar requisição de rede)
-        try {
-          const authUser = (await supabase.auth.getSession()).data.session?.user;
-          await this.channel?.track({
-            user_id: authUser?.id || `anon_${Date.now()}`,
-            user_name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Aventureiro',
-            room_code: this.roomName,
-            joined_at: new Date().toISOString()
-          });
-        } catch (e) {
-          console.warn('[SupabaseRealtime] Erro ao registrar presença:', e);
-        }
-
-        // Pede o estado atual para qualquer jogador que já esteja online na sala
-        this.channel?.send({
-          type: 'broadcast',
-          event: 'yjs-sync-req',
-          payload: {}
+      try {
+        const authUser = (await supabase.auth.getSession()).data.session?.user;
+        await this.channel?.track({
+          user_id: authUser?.id || `anon_${Date.now()}`,
+          user_name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Aventureiro',
+          room_code: this.roomName,
+          joined_at: new Date().toISOString()
         });
+      } catch (e) {
+        console.warn('[SupabaseRealtime] Erro ao registrar presença:', e);
       }
-    });
 
     // 6. Transmite alterações locais do documento para os outros jogadores
     // IMPORTANTE: Filtra updates que já vieram da rede para evitar loop infinito
@@ -140,19 +148,27 @@ export class SupabaseRealtimeProvider {
       if (origin === 'persistence') return;
       
       try {
-        this.channel?.send({
-          type: 'broadcast',
-          event: 'yjs-update',
-          payload: { update: uint8ToBase64(update) }
-        });
-      } catch (err) {
-        console.warn('[SupabaseRealtime] Falha ao transmitir update:', err);
+        await this.broadcast('yjs-sync-req', {});
+      } catch (error) {
+        console.warn('[SupabaseRealtime] Falha ao solicitar sync inicial:', error);
       }
     });
+
+    // 6. Transmite alterações locais do documento para os outros jogadores
+    this.handleDocUpdate = (update, origin) => {
+      if (this.isDestroyed || origin === 'supabase-realtime' || origin === 'room-auto-hydration' || !isSubscribed) return;
+      void this.broadcast('yjs-update', { update: uint8ToBase64(update) })
+        .catch(error => console.warn('[SupabaseRealtime] Falha ao transmitir update:', error));
+    };
+    this.doc.on('update', this.handleDocUpdate);
   }
 
   public destroy() {
     this.isDestroyed = true;
+    if (this.handleDocUpdate) {
+      this.doc.off('update', this.handleDocUpdate);
+      this.handleDocUpdate = null;
+    }
     if (this.channel) {
       this.channel.unsubscribe();
       supabase.removeChannel(this.channel);

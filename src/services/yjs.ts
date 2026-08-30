@@ -25,28 +25,31 @@ export const indexeddbProvider = typeof indexedDB !== 'undefined'
 import { SupabaseRealtimeProvider } from './supabaseRealtimeProvider';
 
 const customWsServer = urlParams.get('ws');
-let websocketProvider: WebsocketProvider | any = null;
+export let wsProvider: WebsocketProvider | null = null;
 
-// WebSocket: só conecta se tiver servidor customizado ou estiver em localhost
-if (customWsServer) {
+function initializeWebsocketProvider() {
+  if (wsProvider) return;
   try {
-    websocketProvider = new WebsocketProvider(customWsServer, roomName, doc);
+    if (customWsServer) {
+      wsProvider = new WebsocketProvider(customWsServer, roomName, doc);
+    } else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsProvider = new WebsocketProvider(`${wsProto}//${window.location.host}/yjs`, roomName, doc);
+    }
   } catch (error) {
-    console.warn("WebSocket Provider falhou:", error);
-  }
-} else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-  try {
-    const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    websocketProvider = new WebsocketProvider(`${wsProto}//${window.location.host}/yjs`, roomName, doc);
-  } catch (error) {
-    console.warn("Local WebSocket Provider falhou:", error);
+    console.warn('WebSocket Provider falhou:', error);
   }
 }
-export const wsProvider = websocketProvider;
 
 // Supabase Realtime: funciona em qualquer lugar (Vercel, localhost, mobile)
 // ponytail: Supabase Realtime Broadcast é o sync universal; WebSocket local é bonus pra dev
-export const supabaseRealtime = new SupabaseRealtimeProvider(roomName, doc);
+export let supabaseRealtime: SupabaseRealtimeProvider | null = null;
+
+function initializeSupabaseRealtime() {
+  if (!supabaseRealtime) {
+    supabaseRealtime = new SupabaseRealtimeProvider(roomName, doc);
+  }
+}
 
 export const state = {
   tokens: doc.getMap('tokens'),
@@ -108,7 +111,21 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Initialize mock state ONLY on first-ever room initialization
+function hasRoomMapContent() {
+  return [
+    state.tokens,
+    state.backgrounds,
+    state.drawings,
+    state.walls,
+    state.fogOps,
+    state.mapTexts,
+    state.props,
+    state.lorePins,
+  ].some(map => map.size > 0);
+}
+
+// Aguarda o IndexedDB local antes de abrir o Realtime, para que dados antigos
+// deste navegador nunca sejam emitidos como uma edição nova para os pares.
 indexeddbProvider?.on('synced', () => {
   // Inicializa mapa de combate se vazio
   if (!state.combat.has('isActive')) {
@@ -121,11 +138,32 @@ indexeddbProvider?.on('synced', () => {
   if (state.tokens.has('goblin_boss')) state.tokens.delete('goblin_boss');
   if (state.tokens.has('omega_sentinel')) state.tokens.delete('omega_sentinel');
 
-  // Tenta restaurar da nuvem primeiro se o estado local estiver vazio.
-  // Salas novas permanecem limpas: exemplos não fazem parte do ecossistema inicial.
-  if (state.tokens.size === 0 && state.backgrounds.size === 0) {
+  initializeWebsocketProvider();
+  initializeSupabaseRealtime();
+
+  // Dá tempo para o peer já conectado responder ao sync inicial. Só então a
+  // máquina sozinha usa o snapshot como fallback, sem retransmiti-lo aos pares.
+  window.setTimeout(() => {
+    if (hasRoomMapContent()) return;
     import('./roomPersistenceService').then(({ loadRoomSnapshotFromCloud }) => {
       loadRoomSnapshotFromCloud(roomName);
     });
-  }
+  }, 1200);
 });
+
+if (!indexeddbProvider) {
+  initializeWebsocketProvider();
+  initializeSupabaseRealtime();
+}
+
+// Durante o HMR, os módulos são substituídos sem descarregar a página. Sem
+// fechar o canal anterior, o cliente do Supabase tenta acrescentar callbacks
+// a uma inscrição que já está ativa e interrompe o Realtime em desenvolvimento.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    wsProvider?.destroy();
+    wsProvider = null;
+    supabaseRealtime?.destroy();
+    supabaseRealtime = null;
+  });
+}

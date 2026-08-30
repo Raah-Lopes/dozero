@@ -1,5 +1,22 @@
 import { supabase } from './supabase';
 
+const CAMPAIGN_ASSETS_BUCKET = 'campaign-assets';
+
+function currentRoomAssetPrefix(): string {
+  const roomCode = typeof window === 'undefined'
+    ? 'dozero-mesa-principal-v2'
+    : new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+  return roomCode.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function assetObjectPath(filename?: string): string {
+  const fallback = `image_${Date.now()}.webp`;
+  const baseName = (filename || fallback).split(/[\\/]/).pop() || fallback;
+  const safeName = baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const uniqueName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+  return `${currentRoomAssetPrefix()}/${uniqueName}`;
+}
+
 /**
  * Converte base64 data URL para Blob
  */
@@ -21,13 +38,12 @@ export function base64ToBlob(base64Data: string): { blob: Blob, mimeType: string
 export async function uploadToSupabaseStorage(
   fileOrBase64: File | Blob | string,
   filename?: string,
-  bucket: string = 'campaign-assets'
+  bucket: string = CAMPAIGN_ASSETS_BUCKET
 ): Promise<string | null> {
   if (!supabase) return null;
 
   try {
     let fileBody: File | Blob;
-    let finalName = filename || `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
     let contentType = 'image/webp';
 
     if (typeof fileOrBase64 === 'string') {
@@ -39,15 +55,14 @@ export async function uploadToSupabaseStorage(
       contentType = (fileOrBase64 as File).type || 'image/webp';
     }
 
-    // Sanitiza nome do arquivo
-    const cleanFilename = `${Date.now()}_${finalName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const objectPath = assetObjectPath(filename);
 
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(cleanFilename, fileBody, {
+      .upload(objectPath, fileBody, {
         contentType,
-        cacheControl: '360000',
-        upsert: true
+        cacheControl: '31536000',
+        upsert: false
       });
 
     if (error) throw error;
