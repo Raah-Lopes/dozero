@@ -1,6 +1,5 @@
 import { getWikiConfig } from '../store';
 import { WikiIndexer } from '../services/wiki/WikiIndexer';
-import { uploadImageToCloud } from '../services/cloudUpload';
 import { uploadToSupabaseStorage } from '../services/storageService';
 
 export interface GithubTreeItem {
@@ -112,47 +111,12 @@ export async function openLocalFolder(path: string = ''): Promise<void> {
 }
 
 /**
- * Salva imagem: Supabase Storage (prioritário) → Local ANEXOS (dev local) → ImgBB/Catbox (fallback) → Base64.
- * Retorna a URL permanente da imagem na nuvem.
+ * O estado compartilhado só recebe uma URL durável do Storage.
  */
-export async function saveImageToCloud(base64: string, filename: string): Promise<string> {
-  // 1. Tenta Supabase Storage (rápido, permanente e com CDN)
-  try {
-    const supabaseUrl = await uploadToSupabaseStorage(base64, filename);
-    if (supabaseUrl) return supabaseUrl;
-  } catch (e) {
-    console.warn('[saveImageToCloud] Falha no upload para Supabase Storage, tentando fallback...', e);
-  }
-
-  // 2. Em desenvolvimento local, tenta salvar na pasta local ANEXOS
-  if (!import.meta.env.PROD) {
-    try {
-      const config = getWikiConfig();
-      const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
-      const res = await fetchWithTimeout('/api/wiki/save-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath, filename, base64 })
-      }, 4000);
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.url) return data.url as string;
-      }
-    } catch (e) {
-      console.warn('[saveImageToCloud] Falha ao salvar localmente no ANEXOS...', e);
-    }
-  }
-
-  // 3. Fallback nuvem secundária (Catbox / ImgBB)
-  try {
-    const cloudUrl = await uploadImageToCloud(base64, filename);
-    if (cloudUrl) return cloudUrl;
-  } catch (e) {
-    console.warn('[saveImageToCloud] Falha no upload secundário.', e);
-  }
-
-  // 4. Fallback final (base64 seguro)
-  return base64;
+export async function saveImageToCloud(file: File | Blob | string, filename?: string): Promise<string | null> {
+  const url = await uploadToSupabaseStorage(file, filename);
+  if (!url) console.warn('[saveImageToCloud] Upload falhou; imagem não será gravada no estado compartilhado.');
+  return url;
 }
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {

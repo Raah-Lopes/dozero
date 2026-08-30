@@ -46,7 +46,8 @@ export const TheaterAssetVault: React.FC<Props> = ({ onClose }) => {
       toast.info('Processando e otimizando imagem...');
       const { base64, filename } = await convertImageToWebP(file, 0.85, 1600);
       const cloudUrl = await saveImageToCloud(base64, filename || `vault_${Date.now()}.webp`);
-      setNewUrl(cloudUrl || base64);
+      if (!cloudUrl) throw new Error('Upload da imagem falhou');
+      setNewUrl(cloudUrl);
       if (!newTitle) {
         setNewTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
       }

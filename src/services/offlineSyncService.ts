@@ -224,9 +224,8 @@ export async function processSyncQueue(
       } else {
         // Envio padrão: se for snapshot_save, delega para persistência se disponível
         if (typeof window !== 'undefined') {
-          const { saveRoomSnapshot } = await import('./roomPersistenceService');
-          await saveRoomSnapshot(op.payload);
-          ok = true;
+          const { saveRoomBundleToCloud } = await import('./roomPersistenceService');
+          ok = await saveRoomBundleToCloud(op.roomCode, op.payload);
         } else {
           ok = true;
         }

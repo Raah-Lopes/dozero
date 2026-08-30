@@ -172,6 +172,10 @@ export const GameCanvas: React.FC = () => {
       const handleInsertCanvasImage = (e: Event) => {
         const { src, name } = (e as CustomEvent).detail;
         if (!src) return;
+        if (typeof src !== 'string' || src.startsWith('data:') || src.startsWith('blob:')) {
+          toast.error('Envie a imagem para o Storage antes de adicioná-la ao mapa.');
+          return;
+        }
         const img = new Image();
         img.onload = () => {
           import('../store').then(s => {

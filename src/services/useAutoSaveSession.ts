@@ -1,40 +1,22 @@
-import { useEffect, useRef } from 'react';
-import { state } from './yjs';
-import { saveSessionSnapshot } from './campaignCloudService';
+import { useEffect } from 'react';
+import { saveRoomSnapshotToCloud } from './roomPersistenceService';
 import { useAuthStore } from '../store/authStore';
+import { useIsGM } from '../store/user';
 
 /**
  * Hook de Auto-Save para sessões de mesa ativa.
- * Salva periodicamente (a cada 5 minutos) o estado consolidado da mesa em campaigns.snapshot
- * e salva automaticamente quando a janela for fechada/descarregada.
+ * O mesmo RoomBundle usado por backup manual é a única forma gravada em campaigns.snapshot.
  */
 export function useAutoSaveSession(roomCode: string) {
   const { user } = useAuthStore();
-  const lastSaveRef = useRef<number>(Date.now());
+  const isGM = useIsGM();
 
   useEffect(() => {
-    if (!roomCode || roomCode === 'default-room') return;
+    if (!roomCode || roomCode === 'default-room' || !user?.id || !isGM) return;
 
     const performSave = async () => {
-      if (!user?.id) return;
       try {
-        const snapshot = {
-          tokens: state.tokens.toJSON(),
-          backgrounds: state.backgrounds.toJSON(),
-          drawings: state.drawings.toJSON(),
-          walls: state.walls.toJSON(),
-          clocks: state.clocks.toJSON(),
-          mapConfig: state.mapConfig.toJSON(),
-          wiki: state.wiki.toJSON(),
-          sheets: state.sheets.toJSON(),
-          tableScenes: state.tableScenes.toJSON(),
-          tableSceneMeta: state.tableSceneMeta.toJSON(),
-          savedAt: new Date().toISOString(),
-          savedBy: user?.id || 'anon'
-        };
-
-        await saveSessionSnapshot(roomCode, snapshot);
-        lastSaveRef.current = Date.now();
+        await saveRoomSnapshotToCloud(roomCode);
       } catch (err) {
         console.warn('[AutoSaveSession] Falha ao salvar snapshot:', err);
       }
@@ -54,5 +36,5 @@ export function useAutoSaveSession(roomCode: string) {
       clearInterval(interval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [roomCode, user?.id]);
+  }, [roomCode, user?.id, isGM]);
 }

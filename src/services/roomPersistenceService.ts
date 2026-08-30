@@ -28,6 +28,10 @@ export interface RoomBundle {
     sheets?: Array<[string, unknown]>;
     tableScenes?: Array<[string, unknown]>;
     tableSceneMeta?: Array<[string, unknown]>;
+    theater?: any;
+    chronos?: any;
+    lineage?: any;
+    world?: any;
   };
 }
 
@@ -76,6 +80,79 @@ async function loadLocalSnapshotIDB(roomCode: string): Promise<RoomBundle | null
   }
 }
 
+type RecordLike = Record<string, unknown>;
+const ROOM_DATA_KEYS = [
+  'tokens', 'backgrounds', 'drawings', 'walls', 'fogOps', 'props', 'mapTexts',
+  'lorePins', 'tableScenes', 'tableSceneMeta',
+];
+
+function asEntries(value: unknown): Array<[string, unknown]> | undefined {
+  if (Array.isArray(value)) return value as Array<[string, unknown]>;
+  if (value && typeof value === 'object') return Object.entries(value as RecordLike);
+  return undefined;
+}
+
+/** Converts the legacy autosave shape before it can touch the shared document. */
+export function normalizeRoomBundle(value: unknown, roomName: string): RoomBundle | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const raw = value as RecordLike;
+  if (raw.data && typeof raw.data === 'object') {
+    const data = raw.data as RecordLike;
+    if (!ROOM_DATA_KEYS.some(key => data[key] !== undefined)) return null;
+    return {
+      version: typeof raw.version === 'number' ? raw.version : 3,
+      roomName: typeof raw.roomName === 'string' ? raw.roomName : roomName,
+      exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : new Date().toISOString(),
+      data: data as RoomBundle['data'],
+    };
+  }
+
+  const hasLegacyTableState = ROOM_DATA_KEYS.some(key => raw[key] !== undefined);
+  if (!hasLegacyTableState) return null;
+
+  return {
+    version: 3,
+    roomName,
+    exportedAt: typeof raw.savedAt === 'string' ? raw.savedAt : new Date().toISOString(),
+    data: {
+      tokens: asEntries(raw.tokens),
+      backgrounds: asEntries(raw.backgrounds),
+      drawings: asEntries(raw.drawings),
+      walls: asEntries(raw.walls),
+      drawingLayers: asEntries(raw.drawingLayers),
+      mapConfig: raw.mapConfig || raw.grid,
+      fogOps: asEntries(raw.fogOps),
+      mapTexts: asEntries(raw.mapTexts),
+      props: asEntries(raw.props),
+      lorePins: asEntries(raw.lorePins),
+      combat: raw.combat,
+      clocks: asEntries(raw.clocks),
+      roomSettings: raw.roomSettings,
+      customItems: asEntries(raw.customItems),
+      dlcs: asEntries(raw.dlcs),
+      wiki: asEntries(raw.wiki),
+      sheets: asEntries(raw.sheets),
+      tableScenes: asEntries(raw.tableScenes),
+      tableSceneMeta: asEntries(raw.tableSceneMeta),
+      theater: raw.theater,
+    },
+  };
+}
+
+export function hasLiveRoomContent(): boolean {
+  return [
+    state.tokens,
+    state.backgrounds,
+    state.drawings,
+    state.walls,
+    state.fogOps,
+    state.mapTexts,
+    state.props,
+    state.lorePins,
+  ].some(map => map.size > 0);
+}
+
 /**
  * Coleta todo o estado atual da sala em um objeto estruturado
  */
@@ -84,7 +161,7 @@ export function getRoomBundle(): RoomBundle {
   const roomName = urlParams.get('room') || 'dozero-mesa-principal-v2';
 
   return {
-    version: 2,
+    version: 3,
     roomName,
     exportedAt: new Date().toISOString(),
     data: {
@@ -107,6 +184,10 @@ export function getRoomBundle(): RoomBundle {
       sheets: Array.from(state.sheets.entries()),
       tableScenes: Array.from(state.tableScenes.entries()),
       tableSceneMeta: Array.from(state.tableSceneMeta.entries()),
+      theater: state.theater.toJSON(),
+      chronos: state.chronos.toJSON(),
+      lineage: state.lineage.toJSON(),
+      world: state.world.toJSON(),
     }
   };
 }
@@ -114,43 +195,46 @@ export function getRoomBundle(): RoomBundle {
 /**
  * Aplica um bundle de sala ao documento Yjs compartilhado
  */
-export function applyRoomBundle(bundle: RoomBundle): boolean {
+export function applyRoomBundle(bundle: RoomBundle, origin: unknown = 'room-bundle-restore'): boolean {
   if (!bundle || !bundle.data) {
     console.error('[RoomPersistence] Bundle inválido');
     return false;
   }
 
   const { data } = bundle;
+  // A hidratação em segundo plano só completa dados ausentes. Nunca deve
+  // remover uma alteração que chegou ao Yjs enquanto o backup era carregado.
+  const replaceExistingData = origin !== 'room-auto-hydration';
 
   doc.transact(() => {
     // 1. Tokens
     if (Array.isArray(data.tokens)) {
-      state.tokens.clear();
+      if (replaceExistingData) state.tokens.clear();
       data.tokens.forEach(([key, val]) => state.tokens.set(key, val));
     }
 
     // 2. Backgrounds
     if (Array.isArray(data.backgrounds)) {
-      state.backgrounds.clear();
+      if (replaceExistingData) state.backgrounds.clear();
       data.backgrounds.forEach(([key, val]) => state.backgrounds.set(key, val));
     }
 
     // 3. Drawings
     if (Array.isArray(data.drawings)) {
-      state.drawings.clear();
+      if (replaceExistingData) state.drawings.clear();
       data.drawings.forEach(([key, val]) => state.drawings.set(key, val));
     }
 
     // 4. Drawing Layers
     // 4.1 Tactical walls
     if (Array.isArray(data.walls)) {
-      state.walls.clear();
+      if (replaceExistingData) state.walls.clear();
       data.walls.forEach(([key, val]) => state.walls.set(key, val));
     }
 
     // 5. Drawing Layers
     if (state.drawingLayers && Array.isArray(data.drawingLayers)) {
-      state.drawingLayers.clear();
+      if (replaceExistingData) state.drawingLayers.clear();
       data.drawingLayers.forEach(([key, val]) => state.drawingLayers.set(key, val));
     }
 
@@ -163,25 +247,25 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
 
     // 6. Fog of War
     if (Array.isArray(data.fogOps)) {
-      state.fogOps.clear();
+      if (replaceExistingData) state.fogOps.clear();
       data.fogOps.forEach(([key, val]) => state.fogOps.set(key, val));
     }
 
     // 7. Map Texts
     if (Array.isArray(data.mapTexts)) {
-      state.mapTexts.clear();
+      if (replaceExistingData) state.mapTexts.clear();
       data.mapTexts.forEach(([key, val]) => state.mapTexts.set(key, val));
     }
 
     // 8. Props
     if (Array.isArray(data.props)) {
-      state.props.clear();
+      if (replaceExistingData) state.props.clear();
       data.props.forEach(([key, val]) => state.props.set(key, val));
     }
 
     // 8.1 Lore Pins
     if (state.lorePins && Array.isArray(data.lorePins)) {
-      state.lorePins.clear();
+      if (replaceExistingData) state.lorePins.clear();
       data.lorePins.forEach(([key, val]) => state.lorePins.set(key, val));
     }
 
@@ -194,41 +278,57 @@ export function applyRoomBundle(bundle: RoomBundle): boolean {
 
     // 10. Clocks
     if (Array.isArray(data.clocks)) {
-      state.clocks.clear();
+      if (replaceExistingData) state.clocks.clear();
       data.clocks.forEach(([key, val]) => state.clocks.set(key, val));
     }
 
     // 11. Custom items & DLCs
     if (state.customItems && Array.isArray(data.customItems)) {
-      state.customItems.clear();
+      if (replaceExistingData) state.customItems.clear();
       data.customItems.forEach(([key, val]) => state.customItems.set(key, val));
     }
     if (state.dlcs && Array.isArray(data.dlcs)) {
-      state.dlcs.clear();
+      if (replaceExistingData) state.dlcs.clear();
       data.dlcs.forEach(([key, val]) => state.dlcs.set(key, val));
     }
     if (Array.isArray(data.wiki)) {
-      state.wiki.clear();
+      if (replaceExistingData) state.wiki.clear();
       data.wiki.forEach(([key, val]) => state.wiki.set(key, val));
     }
     if (Array.isArray(data.sheets)) {
-      state.sheets.clear();
+      if (replaceExistingData) state.sheets.clear();
       data.sheets.forEach(([key, val]) => state.sheets.set(key, val));
     }
     if (Array.isArray(data.tableScenes)) {
-      state.tableScenes.clear();
+      if (replaceExistingData) state.tableScenes.clear();
       data.tableScenes.forEach(([key, val]) => state.tableScenes.set(key, val));
     }
     if (Array.isArray(data.tableSceneMeta)) {
-      state.tableSceneMeta.clear();
+      if (replaceExistingData) state.tableSceneMeta.clear();
       data.tableSceneMeta.forEach(([key, val]) => state.tableSceneMeta.set(key, val));
+    }
+    if (data.theater && typeof data.theater === 'object') {
+      if (replaceExistingData) state.theater.clear();
+      Object.entries(data.theater).forEach(([key, val]) => state.theater.set(key, val));
+    }
+    if (data.chronos && typeof data.chronos === 'object') {
+      if (replaceExistingData) state.chronos.clear();
+      Object.entries(data.chronos).forEach(([key, val]) => state.chronos.set(key, val));
+    }
+    if (data.lineage && typeof data.lineage === 'object') {
+      if (replaceExistingData) state.lineage.clear();
+      Object.entries(data.lineage).forEach(([key, val]) => state.lineage.set(key, val));
+    }
+    if (data.world && typeof data.world === 'object') {
+      if (replaceExistingData) state.world.clear();
+      Object.entries(data.world).forEach(([key, val]) => state.world.set(key, val));
     }
 
     if (state.roomSettings) {
       state.roomSettings.set('is_seeded', true);
       state.roomSettings.set('last_restored_at', new Date().toISOString());
     }
-  });
+  }, origin);
 
   window.dispatchEvent(new Event('config-changed'));
   window.dispatchEvent(new Event('tool-changed'));
@@ -290,79 +390,55 @@ export async function importRoomFromFile(file: File): Promise<boolean> {
 /**
  * Salva o snapshot da sala em nuvem (Supabase Storage / Tabela) e IndexedDB local
  */
+export async function saveRoomBundleToCloud(roomCode: string, bundle: RoomBundle): Promise<boolean> {
+  if (!isSupabaseConfigured || (typeof navigator !== 'undefined' && !navigator.onLine)) return false;
+
+  try {
+    const fileName = `snapshots/${roomCode}.json`;
+    const jsonBlob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
+    const { error: storageErr } = await supabase.storage
+      .from('room-backups')
+      .upload(fileName, jsonBlob, { contentType: 'application/json', upsert: true });
+    if (storageErr) console.warn('[RoomPersistence] Backup em Storage falhou:', storageErr.message);
+
+    const { data, error } = await supabase
+      .from('campaigns')
+      .update({ snapshot: bundle, last_played_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('room_code', roomCode)
+      .select('id')
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[RoomPersistence] Snapshot não salvo na campanha:', error.message);
+      return false;
+    }
+    if (!data) {
+      console.warn(`[RoomPersistence] Sala '${roomCode}' não encontrada ou sem permissão de gravação.`);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.warn('[RoomPersistence] Falha ao salvar snapshot na nuvem:', error);
+    return false;
+  }
+}
+
 export async function saveRoomSnapshotToCloud(customRoomCode?: string): Promise<boolean> {
   const urlParams = new URLSearchParams(window.location.search);
   const roomCode = customRoomCode || urlParams.get('room') || 'dozero-mesa-principal-v2';
   const bundle = getRoomBundle();
   bundle.roomName = roomCode;
-
-  // 1. Salva sempre no IndexedDB local (capacidade gigabytes, sem limite de 5MB)
   await saveLocalSnapshotIDB(roomCode, bundle);
 
-  if (!isSupabaseConfigured || (typeof navigator !== 'undefined' && !navigator.onLine)) {
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      await enqueueSyncOperation('snapshot_save', roomCode, bundle);
-    }
-    return true;
-  }
-
-  try {
-    let storageSaved = false;
-    let tableSaved = false;
-
-    // 2.1 Tenta salvar no Supabase Storage bucket 'room-backups'
-    try {
-      const fileName = `snapshots/${roomCode}.json`;
-      const jsonBlob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
-      const { error: storageErr } = await supabase.storage
-        .from('room-backups')
-        .upload(fileName, jsonBlob, {
-          contentType: 'application/json',
-          upsert: true
-        });
-
-      if (!storageErr) {
-        storageSaved = true;
-        console.log('[RoomPersistence] Snapshot salvo no Supabase Storage!');
-      } else {
-        console.warn('[RoomPersistence] Storage bucket aviso:', storageErr.message);
-      }
-    } catch (sErr: any) {
-      console.warn('[RoomPersistence] Storage exceção:', sErr.message);
-    }
-
-    // 2.2 Salva ou atualiza na tabela 'campaigns' do Supabase
-    try {
-      const { error: tblErr } = await supabase.from('campaigns').upsert({
-        id: roomCode,
-        name: roomCode,
-        system: 'Custom VTT',
-        room_code: roomCode,
-        updated_at: new Date().toISOString(),
-        snapshot: bundle
-      }, { onConflict: 'room_code' });
-
-      if (!tblErr) {
-        tableSaved = true;
-        console.log('[RoomPersistence] Snapshot salvo na tabela campaigns do Supabase!');
-      } else {
-        console.warn('[RoomPersistence] Campaigns table aviso:', tblErr.message);
-      }
-    } catch (tblErr: any) {
-      console.warn('[RoomPersistence] Campaigns exceção:', tblErr.message);
-    }
-
-    if (!storageSaved && !tableSaved) {
-      console.warn('[RoomPersistence] Nuvem indisponível no momento. Salvando na fila offline.');
-      await enqueueSyncOperation('snapshot_save', roomCode, bundle);
-    }
-
-    return true;
-  } catch (err) {
-    console.warn('[RoomPersistence] Erro geral ao sincronizar nuvem, enfileirando offline:', err);
+  if (!isSupabaseConfigured) return true;
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
     await enqueueSyncOperation('snapshot_save', roomCode, bundle);
     return true;
   }
+
+  const saved = await saveRoomBundleToCloud(roomCode, bundle);
+  if (!saved) await enqueueSyncOperation('snapshot_save', roomCode, bundle);
+  return saved;
 }
 
 /**
@@ -372,19 +448,26 @@ export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceAp
   const urlParams = new URLSearchParams(window.location.search);
   const roomCode = customRoomCode || urlParams.get('room') || 'dozero-mesa-principal-v2';
 
-  // Se o documento local já tem conteúdo e não for forçado, não sobrepõe
-  const hasLocalContent = state.tokens.size > 0 || state.backgrounds.size > 0 || state.drawings.size > 0 || state.walls.size > 0;
-  if (hasLocalContent && !forceApply) {
-    return false;
-  }
+  const applyIfSafe = async (snapshot: unknown, source: string): Promise<boolean> => {
+    if (!forceApply && hasLiveRoomContent()) return false;
+    const bundle = normalizeRoomBundle(snapshot, roomCode);
+    if (!bundle) {
+      console.warn(`[RoomPersistence] Snapshot ${source} inválido; estado local preservado.`);
+      return false;
+    }
+    if (!forceApply && hasLiveRoomContent()) return false;
+    if (!applyRoomBundle(bundle, forceApply ? 'room-manual-restore' : 'room-auto-hydration')) return false;
+    await saveLocalSnapshotIDB(roomCode, bundle);
+    console.log(`[RoomPersistence] Sala '${roomCode}' restaurada de ${source}.`);
+    return true;
+  };
+
+  if (hasLiveRoomContent() && !forceApply) return false;
 
   // 1. Tenta carregar do IndexedDB local
   const localBundle = await loadLocalSnapshotIDB(roomCode);
-  if (localBundle && localBundle.data) {
-    applyRoomBundle(localBundle);
-    console.log(`[RoomPersistence] Sala '${roomCode}' restaurada do IndexedDB local!`);
-    return true;
-  }
+  if (localBundle && await applyIfSafe(localBundle, 'IndexedDB local')) return true;
+  if (!forceApply && hasLiveRoomContent()) return false;
 
   // 2. Busca da nuvem (Supabase)
   if (!isSupabaseConfigured) {
@@ -400,10 +483,7 @@ export async function loadRoomSnapshotFromCloud(customRoomCode?: string, forceAp
       .maybeSingle();
 
     if (!error && data?.snapshot) {
-      applyRoomBundle(data.snapshot);
-      await saveLocalSnapshotIDB(roomCode, data.snapshot);
-      console.log(`[RoomPersistence] Sala '${roomCode}' restaurada da tabela campaigns!`);
-      return true;
+      return applyIfSafe(data.snapshot, 'nuvem');
     }
 
     return false;

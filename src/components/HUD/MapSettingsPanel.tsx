@@ -14,6 +14,7 @@ import type { BackgroundData, MapConfig } from '../../store';
 import type { FogConfig } from '../../store/modules/configModule';
 import { ImagePlus, Trash2, Eye, EyeOff, RefreshCw, MousePointer2, Type, Search, Eraser, Cloud, Play, Save } from 'lucide-react';
 import { convertImageToWebP } from '../../utils/imageUtils';
+import { saveImageToCloud } from '../../utils/githubApi';
 import { Tooltip } from '../UI/Tooltip';
 import { TableSceneManager } from '../UI/TableSceneManager';
 import { useIsGM } from '../../store/user';
@@ -142,19 +143,27 @@ export const MapSettingsPanel: React.FC = () => {
   }, []);
 
   // ponytail: helper wraps central utility and returns {url, width, height} needed by background store
-  const toWebPWithSize = async (file: File): Promise<{ url: string; width: number; height: number }> => {
+  const toWebPWithSize = async (file: File): Promise<{ url: string; width: number; height: number } | null> => {
     const { base64 } = await convertImageToWebP(file, 0.7, 1024);
-    return new Promise((resolve) => {
+    const dimensions = await new Promise<{ width: number; height: number }>((resolve) => {
       const img = new Image();
-      img.onload = () => resolve({ url: base64, width: img.naturalWidth, height: img.naturalHeight });
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
       img.src = base64;
     });
+    const url = await saveImageToCloud(base64, `background_${Date.now()}.webp`);
+    if (!url) {
+      toast.error('Não foi possível enviar a imagem para o Storage.');
+      return null;
+    }
+    return { url, ...dimensions };
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     for (const file of files) {
-      const { url, width, height } = await toWebPWithSize(file);
+      const image = await toWebPWithSize(file);
+      if (!image) continue;
+      const { url, width, height } = image;
       addBackground({
         id: 'bg_' + Date.now() + Math.random().toString(36).substr(2, 5),
         name: file.name.split('.')[0],
@@ -171,8 +180,8 @@ export const MapSettingsPanel: React.FC = () => {
     input.onchange = async (e: any) => {
       const file = e.target.files?.[0];
       if (file) {
-        const { url } = await toWebPWithSize(file);
-        updateBackgroundProps(bgId, { imageUrl: url });
+        const image = await toWebPWithSize(file);
+        if (image) updateBackgroundProps(bgId, { imageUrl: image.url });
       }
     };
     input.click();

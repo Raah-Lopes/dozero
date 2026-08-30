@@ -81,26 +81,7 @@ export const useAppEventListeners = ({
     localStorage.setItem('dozero_viewMode', viewMode);
   }, [viewMode]);
 
-  // 4. Token Image Sanitizer (Vercel/PROD fix)
-  useEffect(() => {
-    if (!import.meta.env.PROD) return;
-    
-    const sanitizeTokens = () => {
-      Array.from(state.tokens.entries()).forEach(([id, t]: [string, any]) => {
-        if (t.imageUrl && t.imageUrl.includes('/api/wiki/media')) {
-          console.log('[Sanitize] Limpando imageUrl quebrado do token:', t.name);
-          t.imageUrl = '';
-          state.tokens.set(id, t);
-        }
-      });
-    };
-    
-    sanitizeTokens();
-    const interval = setInterval(sanitizeTokens, 2000);
-    setTimeout(() => clearInterval(interval), 10000);
-  }, []);
-
-  // 5. Ghost Coordinate Cleanup
+  // 4. Ghost Coordinate Cleanup
   useEffect(() => {
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
