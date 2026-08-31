@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Tokens, Config, FogOfWar } from '../store/modules';
 import { Application, Graphics, Rectangle, Assets, Sprite, Container, Text, AlphaFilter, Texture, FillGradient, BlurFilter } from 'pixi.js';
 import { state, updateTokenPosition, toggleTarget, localState, getMapConfig, getSelectedTokens, clearTokenSelection, selectTokensBulk, toggleTokenSelection, getSelectedProps, clearPropSelection, selectPropsBulk, togglePropSelection, clearTargets, updateDrawing, updateDrawingProps, addDrawing, removeDrawing, getFogOps, updateLorePinPosition, removeLorePin, addLorePin, getLorePins, LorePinData, createLorePinFromWikiEntry } from '../store';
+import { localClientId } from '../services/yjs';
 import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 import { toast } from '../components/UI/Toast';
 import { useAuthStore } from '../store/authStore';
@@ -1415,6 +1416,9 @@ export const GameCanvas: React.FC = () => {
       let tokenDragOffsets: Record<string, {x: number, y: number}> = {};
       let tokenStartPositions: Record<string, {x: number, y: number}> = {};
       
+      // Autoridade de arrasto: ignora updates da rede para tokens que estou arrastando localmente
+      let localDraggingTokens = new Set<string>();
+      
       let propDragOffsets: Record<string, {x: number, y: number}> = {};
       let propStartPositions: Record<string, {x: number, y: number}> = {};
 
@@ -2133,6 +2137,17 @@ export const GameCanvas: React.FC = () => {
               
               if (localState.activeTool !== 'select') {
                  // Prevent drag on pen mode etc if needed
+                 return;
+              }
+
+              // Marca este token como sendo arrastado por ESTE cliente
+              localDraggingTokens.add(id);
+              draggingTokenId = id;
+              
+              // Adiciona flag de autoridade ao token no Yjs
+              const currentData = state.tokens.get(id);
+              if (currentData) {
+                Tokens.update(id, { __draggingBy: localClientId });
               }
             });
 
@@ -2156,6 +2171,17 @@ export const GameCanvas: React.FC = () => {
           } else {
             // If not dragging, animate to new position (or just set it)
             let isBeingDragged = false;
+            
+            // Verifica se ESTE cliente está arrastando este token
+            if (localDraggingTokens.has(id)) {
+              isBeingDragged = true;
+            }
+            
+            // Verifica se outro cliente está arrastando (respeita autoridade remota)
+            if (!isBeingDragged && t.__draggingBy && t.__draggingBy !== localClientId) {
+              isBeingDragged = true;
+            }
+            
             if (draggingTokenId) {
                const selected = Tokens.getSelectedIds();
                if (selected.includes(id)) {

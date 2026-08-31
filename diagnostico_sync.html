@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagnóstico de Consistência VTT</title>
+    <style>
+        body { font-family: monospace; background: #1a1a1a; color: #0f0; padding: 20px; }
+        .log-entry { border-bottom: 1px solid #333; padding: 5px; font-size: 12px; }
+        .error { color: #ff4444; }
+        .warn { color: #ffbb00; }
+        .info { color: #00ccff; }
+        .success { color: #00ff66; }
+        #stats { position: fixed; top: 10px; right: 10px; background: #000; padding: 10px; border: 1px solid #333; }
+        h2 { border-bottom: 2px solid #0f0; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h2>🔍 Monitor de Fluxo de Dados em Tempo Real</h2>
+    <div id="stats">
+        Eventos Recebidos: <span id="recv-count">0</span><br>
+        Eventos Enviados: <span id="sent-count">0</span><br>
+        Erros de Sync: <span id="error-count">0</span><br>
+        Tokens Fantasma: <span id="ghost-count">0</span>
+    </div>
+    <div id="console"></div>
+
+    <script>
+        // Configuração para interceptar logs do console se injetado na página
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        let stats = { recv: 0, sent: 0, errors: 0, ghosts: 0 };
+
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            div.innerText = `[${time}] ${msg}`;
+            document.getElementById('console').prepend(div);
+            
+            // Manter apenas os últimos 50 logs
+            const consoleDiv = document.getElementById('console');
+            if (consoleDiv.children.length > 50) {
+                consoleDiv.removeChild(consoleDiv.lastChild);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('recv-count').innerText = stats.recv;
+            document.getElementById('sent-count').innerText = stats.sent;
+            document.getElementById('error-count').innerText = stats.errors;
+            document.getElementById('ghost-count').innerText = stats.ghosts;
+        }
+
+        // Hook para interceptar chamadas de rede (se possível via proxy ou análise de código injetado)
+        // Nota: Este script serve como painel visual. Para funcionar plenamente, 
+        // ele deve ser usado junto com as modificações no código fonte abaixo.
+
+        log('Sistema de Diagnóstico Iniciado. Aguardando eventos da aplicação...', 'success');
+
+        // Funções globais para serem chamadas pelo seu código VTT
+        window.diagEvent = (type, detail) => {
+            stats[type === 'recv' ? 'recv' : 'sent']++;
+            log(`${type.toUpperCase()}: ${JSON.stringify(detail)}`, type === 'error' ? 'error' : 'info');
+            updateStats();
+        };
+
+        window.diagGhostToken = (tokenId) => {
+            stats.ghosts++;
+            log(`FANTASMA DETECTADO: Token ${tokenId} renderizado sem dados válidos`, 'error');
+            updateStats();
+        };
+
+        window.diagSyncError = (msg) => {
+            stats.errors++;
+            log(`ERRO DE SYNC: ${msg}`, 'error');
+            updateStats();
+        };
+    </script>
+</body>
+</html>

@@ -135,7 +135,7 @@ export class SupabaseRealtimeProvider {
 
     // 6. Transmite alterações locais do documento para os outros jogadores
     // IMPORTANTE: Filtra updates que já vieram da rede para evitar loop infinito
-    this.doc.on('update', (update, origin) => {
+    this.handleDocUpdate = (update, origin) => {
       if (this.isDestroyed || !isSubscribed) return;
       
       // Ignora updates que já foram recebidos do Supabase Realtime
@@ -147,16 +147,9 @@ export class SupabaseRealtimeProvider {
       // Ignora updates provenientes de restore de persistence (evita re-broadcast)
       if (origin === 'persistence') return;
       
-      try {
-        await this.broadcast('yjs-sync-req', {});
-      } catch (error) {
-        console.warn('[SupabaseRealtime] Falha ao solicitar sync inicial:', error);
-      }
-    });
-
-    // 6. Transmite alterações locais do documento para os outros jogadores
-    this.handleDocUpdate = (update, origin) => {
-      if (this.isDestroyed || origin === 'supabase-realtime' || origin === 'room-auto-hydration' || !isSubscribed) return;
+      // Ignora updates de hidratação automática (evita re-broadcast ao carregar dados)
+      if (origin === 'room-auto-hydration') return;
+      
       void this.broadcast('yjs-update', { update: uint8ToBase64(update) })
         .catch(error => console.warn('[SupabaseRealtime] Falha ao transmitir update:', error));
     };

@@ -6,6 +6,13 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 export const doc = new Y.Doc();
 
 // =========================================================================
+// CLIENT ID ÚNICO PARA AUTORIDADE DE ARRASTO
+// =========================================================================
+// Gera um ID único por sessão do navegador para identificar quem está arrastando
+export const localClientId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+console.log(`[Yjs] Cliente ID: ${localClientId}`);
+
+// =========================================================================
 // ROOM & SECURITY (URL Config)
 // =========================================================================
 const urlParams = new URLSearchParams(window.location.search);
