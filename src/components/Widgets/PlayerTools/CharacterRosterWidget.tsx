@@ -8,6 +8,7 @@ import { WikiIndexer } from '../../../services/wiki/WikiIndexer';
 import { saveImageToCloud } from '../../../utils/githubApi';
 import { resolveImageUrl, convertImageToWebP } from '../../../utils/imageUtils';
 import { User, Skull, Cpu, Shield, Zap, Sword, Star, Eye, EyeOff } from 'lucide-react';
+import { toast } from '../../UI/Toast';
 
 interface CharacterRosterWidgetProps {
   onClose: () => void;
@@ -67,18 +68,33 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
     return 'var(--danger)';
   };
 
+  const syncBoardTokensActive = (caminhoArquivo: string, ativo: boolean) => {
+    Array.from(state.tokens.entries()).forEach(([tokenId, token]) => {
+      const current = token as { wikiPath?: string; caminhoArquivo?: string };
+      if (current.wikiPath === caminhoArquivo || current.caminhoArquivo === caminhoArquivo) {
+        updateTokenProps(tokenId, { ativo });
+      }
+    });
+  };
+
   const handleToggleActive = async (e: React.MouseEvent, caminhoArquivo: string, currentAtivo: boolean) => {
     e.stopPropagation(); // Evita abrir a ficha
     const nextVal = !currentAtivo;
     
     // Atualização otimista imediata na UI
     setLocalActiveOverrides(prev => ({ ...prev, [caminhoArquivo]: nextVal }));
+    syncBoardTokensActive(caminhoArquivo, nextVal);
     
-    // Inverte o estado atual e salva na wiki
-    const success = await syncTokenFieldToWiki(caminhoArquivo, 'ativo', nextVal);
-    if (success) {
+    try {
+      const success = await syncTokenFieldToWiki(caminhoArquivo, 'ativo', nextVal);
+      if (!success) throw new Error('A ficha não pôde ser gravada.');
       WikiIndexer.clearCache(); // Força a re-indexação
       window.dispatchEvent(new Event('wiki-updated')); // Atualiza as UIs dependentes
+      toast.success(nextVal ? 'Ficha ativada na mesa.' : 'Ficha desativada na mesa.');
+    } catch {
+      setLocalActiveOverrides(prev => ({ ...prev, [caminhoArquivo]: currentAtivo }));
+      syncBoardTokensActive(caminhoArquivo, currentAtivo);
+      toast.error('Não foi possível alterar a ativação da ficha.');
     }
   };
 
@@ -353,7 +369,8 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                       </div>
                       
                       {/* Active Toggle */}
-                      <div 
+                      <button
+                        type="button"
                         style={{
                           padding: '4px',
                           background: p.ativo ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -366,6 +383,8 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                           alignItems: 'center',
                           justifyContent: 'center'
                         }}
+                        aria-pressed={p.ativo}
+                        aria-label={p.ativo ? `Desativar ${p.nome}` : `Ativar ${p.nome}`}
                         title={p.ativo ? "Desativar (Esconder da mesa)" : "Ativar (Mostrar na mesa)"}
                         onClick={(e) => handleToggleActive(e, p.caminhoArquivo, p.ativo)}
                         onMouseEnter={(e) => {
@@ -378,7 +397,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
                         }}
                       >
                         {p.ativo ? <Eye size={16} /> : <EyeOff size={16} />}
-                      </div>
+                      </button>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem' }}>

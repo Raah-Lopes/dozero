@@ -1875,7 +1875,8 @@ export const GameCanvas: React.FC = () => {
 
         // Remove deleted tokens
         Object.keys(tokenSprites).forEach(id => {
-          if (!tokensState.has(id)) {
+          const token = tokensState.get(id) as any;
+          if (!token || token.ativo === false || token.ativo === 'false') {
             tokensContainer.removeChild(tokenSprites[id].container);
             tokenSprites[id].container.destroy({ children: true });
             delete tokenSprites[id];
@@ -1886,7 +1887,7 @@ export const GameCanvas: React.FC = () => {
         Array.from(tokensState.entries()).forEach(([id, tokenData]) => {
           const t = tokenData as any;
           // Only render tokens that have been placed on the map (x,y > -1000)
-          if (t.x < -1000 || t.y < -1000) return;
+          if (t.x < -1000 || t.y < -1000 || t.ativo === false || t.ativo === 'false') return;
 
           const shape = t.tokenShape || 'circle';
           const scale = t.sizeScale ?? 1;

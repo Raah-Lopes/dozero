@@ -25,4 +25,9 @@ describe('createWikiTokenData', () => {
       type: 'npc', imageUrl: '[3] 📎 Anexos/Mira_Vendas_ao_Vento.png', hp: 100, maxHp: 100,
     });
   });
+
+  it('transporta a ativação da ficha para o token', () => {
+    expect(createWikiTokenData({ nome: 'Norta', tipo: 'NPC', ativo: false }, 'NPCs/Norta.md').ativo).toBe(false);
+    expect(createWikiTokenData({ nome: 'Norta', tipo: 'NPC', ativo: 'false' }, 'NPCs/Norta.md').ativo).toBe(false);
+  });
 });

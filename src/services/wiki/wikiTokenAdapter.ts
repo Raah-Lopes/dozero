@@ -41,6 +41,10 @@ function validHpBarMode(value: unknown): 'always' | 'hover' | 'never' {
     : 'always';
 }
 
+function isActive(value: unknown): boolean {
+  return value !== false && value !== 'false';
+}
+
 /**
  * Resolve uma imagem sem permitir data URLs no estado Yjs. Imagens base64
  * tornam o documento compartilhado grande demais e podem impedir o token de
@@ -93,6 +97,7 @@ export function createWikiTokenData(data: WikiData, wikiPath: string, position: 
     hpBarMode: validHpBarMode(data.hpBarMode),
     visionRadius: Math.max(0, firstNumber(0, data.visionRadius)),
     hasVision: explicitVision === false || explicitVision === 'false' ? false : true,
+    ativo: isActive(data.ativo),
     status_efeitos: firstArray(data.status_efeitos).map(String),
     sanity: firstNumber(100, data.sanidade, data.Sanidade),
     sanidade: firstNumber(100, data.sanidade, data.Sanidade),
