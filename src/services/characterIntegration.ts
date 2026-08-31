@@ -98,6 +98,7 @@ export function createCharacterFromWiki(
     type,
     avatar_url: firstText(token.imageUrl),
     data: {
+      ...metadata,
       sheetKind: 'wiki',
       source: 'wiki',
       wikiPath,

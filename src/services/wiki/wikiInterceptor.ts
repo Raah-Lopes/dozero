@@ -55,6 +55,15 @@ export function setupWikiInterceptor() {
         return Promise.resolve(new Response(JSON.stringify({ results: paths })));
       }
 
+      if (requestUrl.includes('/api/wiki/documents')) {
+        return Promise.all(Object.entries(mdFiles).map(async ([modulePath, loader]) => ({
+          path: modulePath.replace('../../../wikidozero/', '').replace(/^\.\//, ''),
+          content: String(await loader()),
+        }))).then(documents => new Response(JSON.stringify({ documents }), {
+          headers: { 'Content-Type': 'application/json' },
+        }));
+      }
+
       if (requestUrl.includes('/api/wiki/ignored')) {
         return Promise.resolve(new Response(JSON.stringify({ ignored: [] }), {
           headers: { 'Content-Type': 'application/json' }

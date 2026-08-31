@@ -7,6 +7,7 @@ const LOCAL_WIKI_STORAGE_KEY = 'dozero_wiki_custom_files_v1';
 
 export class WikiIndexer {
   private static index: WikiEntry[] | null = null;
+  private static inflightIndex: Promise<WikiEntry[]> | null = null;
   private static rawFiles = new Map<string, string>();
 
   static clearCache() {
@@ -56,6 +57,16 @@ export class WikiIndexer {
     if (this.index) {
       return this.index;
     }
+    if (this.inflightIndex) return this.inflightIndex;
+    this.inflightIndex = this.buildIndexUncached(bundledFiles);
+    try {
+      return await this.inflightIndex;
+    } finally {
+      this.inflightIndex = null;
+    }
+  }
+
+  private static async buildIndexUncached(bundledFiles?: Record<string, string>): Promise<WikiEntry[]> {
 
     const entriesMap = new Map<string, WikiEntry>();
     const config = getWikiConfig();

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BookOpen, Copy, Plus, Shield, Trash2, UserRound, Users, X, LayoutGrid, ScrollText } from 'lucide-react';
 import ArcanumSheet from './Arcanum/ArcanumSheetApp';
 import { DEFAULT_CHARACTER, type Character, type RollResult } from './Arcanum/lib';
@@ -6,6 +6,7 @@ import { usePersonagens } from '../../hooks/usePersonagens';
 import {
   deleteCharacter,
   getCampaignCharacters,
+  getLocalCharacters,
   getVaultCharacters,
   saveCharacter,
   type CharacterRecord,
@@ -16,7 +17,7 @@ import { toast } from '../UI/Toast';
 import { WorkspaceChrome } from '../Navigation/WorkspaceChrome';
 import { LoreWorkspaceSwitcher } from '../Navigation/LoreWorkspaceSwitcher';
 import { ARCANUM_SHEET_KIND, characterFromRecord, recordData } from './arcanumSheetAdapter';
-import { integrateCharacter, removeCharacterIntegration } from '../../services/characterIntegration';
+import { createCharacterFromWiki, findCharacterByWikiPath, integrateCharacter, removeCharacterIntegration } from '../../services/characterIntegration';
 import './arcanumWorkspace.css';
 
 interface Props {
@@ -28,11 +29,12 @@ interface Props {
 
 export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initialScope = 'campaign', onClose }: Props) {
   const { user } = useAuthStore();
-  const { personagens } = usePersonagens();
-  const [records, setRecords] = useState<CharacterRecord[]>([]);
+  const { personagens } = usePersonagens(false);
+  const [records, setRecords] = useState<CharacterRecord[]>(getLocalCharacters);
   const [active, setActive] = useState<CharacterRecord | null>(null);
   const [scope, setScope] = useState<'campaign' | 'vault'>(initialScope);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => getLocalCharacters().length === 0);
+  const importingWikiPaths = useRef(new Set<string>());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,6 +74,38 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
   }, [campaignId]);
 
   useEffect(() => setScope(initialScope), [initialScope]);
+
+  useEffect(() => {
+    if (loading || personagens.length === 0) return;
+    const missing = personagens.filter(personagem =>
+      !findCharacterByWikiPath(records.filter(record => record.campaign_id === null), personagem.caminhoArquivo)
+      && !importingWikiPaths.current.has(personagem.caminhoArquivo)
+    );
+    if (missing.length === 0) return;
+
+    missing.forEach(personagem => importingWikiPaths.current.add(personagem.caminhoArquivo));
+    void Promise.all(missing.map(async personagem => {
+      const metadata = {
+        ...personagem,
+        nome: personagem.nome,
+        tipo: personagem.status === 'jogador' ? 'pc' : personagem.status === 'inimigo' ? 'monstro' : 'npc',
+        imagem: personagem.avatar,
+      };
+      const saved = await saveCharacter(
+        createCharacterFromWiki(metadata, personagem.caminhoArquivo, null, user?.id),
+        user?.id,
+      );
+      integrateCharacter(saved);
+      return saved;
+    })).then(imported => {
+      setRecords(current => [...imported, ...current].filter((record, index, list) =>
+        list.findIndex(item => item.id === record.id) === index
+      ));
+      toast.success(`${imported.length} ficha(s) da Wiki integrada(s) ao seu Vault.`);
+    }).finally(() => {
+      missing.forEach(personagem => importingWikiPaths.current.delete(personagem.caminhoArquivo));
+    });
+  }, [campaignId, loading, personagens, records, user?.id]);
 
   const createSheet = async () => {
     const character = { ...structuredClone(DEFAULT_CHARACTER), name: 'Nova personagem', gallery: [], affiliations: [] };

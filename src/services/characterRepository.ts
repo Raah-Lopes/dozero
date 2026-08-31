@@ -33,6 +33,11 @@ function writeLocal(list: CharacterRecord[]) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(list));
 }
 
+/** Snapshot síncrono para a UI pintar o Vault antes da resposta da nuvem. */
+export function getLocalCharacters(): CharacterRecord[] {
+  return readLocal();
+}
+
 function upsertLocal(record: CharacterRecord) {
   const list = readLocal();
   const idx = list.findIndex(c => c.id === record.id);
@@ -418,4 +423,3 @@ export async function deleteCharacter(id: string, userId?: string | null): Promi
     } catch (e) { console.warn('[CharRepo] deleteCharacter rede:', e); }
   }
 }
-
