@@ -1,4 +1,7 @@
-const mediaFiles = import.meta.glob('../../../wikidozero/ANEXOS/*.{png,jpg,jpeg,gif,webp}', { eager: true, import: 'default' });
+const mediaFiles = import.meta.glob([
+  '../../../wikidozero/ANEXOS/*.{png,jpg,jpeg,gif,webp}',
+  '../../../wikidozero/[3] 📎 Anexos/*.{png,jpg,jpeg,gif,webp}',
+], { eager: true, import: 'default' });
 
 export function resolveMediaUrl(mediaPath: string, repoPath: string): string {
   if (!mediaPath) return '';

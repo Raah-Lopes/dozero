@@ -12,7 +12,7 @@ Acrobacia: 0
 Furtividade: 0
 Atletismo: 0
 Percepcao: 0
-pv: 52
+pv: 51
 pv_max: 52
 xp: 310
 nivel: 5
@@ -27,7 +27,7 @@ imagem: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Lyra_Sha
 usos_cura: 3
 status_efeitos: []
 saqueado: false
-ativo: false
+ativo: true
 inventario:
   - id: pocao_1
     nome: Poção de Vida P
@@ -45,17 +45,17 @@ HP_max: 52
 PM: 80
 PM_max: 80
 usos_cura_atual: 3
-energia: .nan
-energia_max: .nan
-sanidade: .nan
-sanidade_max: .nan
-fome: .nan
-fome_max: .nan
-sede: .nan
-sede_max: .nan
-cansaco: .nan
-cansaco_max: .nan
-riquezas: .nan
+energia: 100
+energia_max: 100
+sanidade: 100
+sanidade_max: 100
+fome: 0
+fome_max: 100
+sede: 0
+sede_max: 100
+cansaco: 0
+cansaco_max: 100
+riquezas: 0
 armas: []
 poderes: []
 pocoes: []

@@ -10,8 +10,8 @@ inventario:
     quantidade: 1
     descricao: Uma clássica espada de aço temperado.
     equipado: false
-tipo: Personagem
-status: jogador
+tipo: Monstro
+status: inimigo
 nome: Sentinela Ômega 01
 nivel: 3
 XP: 0
@@ -21,7 +21,7 @@ tags:
   - automato
   - mercenario
   - brega
-ativo: false
+ativo: true
 origem: Forjado nas fornalhas da Corporação Ômega, Setor 7
 Localizacao: ''
 HP: 42
@@ -62,7 +62,7 @@ macros:
     tipo: ataque
     descricao: 'Um disparo de sua pistola de plasma, calibrado para atordoar em vez de matar. Dano: 1d6+3 (energia, não-letal), com chance de causar condição ''Atordoado'' em falha de salvaguarda de CON (CD 13).'
 avatar: https://i.ibb.co/JwdbyX00/2c5b79044d70.webp
-imageUrl: /api/wiki/media?repoPath=D%3A%2FDOZERO%2Fwikidozero&path=ANEXOS/Sentinela__mega_01_1784589545705.webp
+imageUrl: https://i.ibb.co/JwdbyX00/2c5b79044d70.webp
 titulo: Sentinela Ômega 01
 title: Sentinela Ômega 01
 energia: 100

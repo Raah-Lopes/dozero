@@ -25,7 +25,7 @@ ataque: 22
 status: jogador
 usos_cura: 3
 saqueado: false
-ativo: false
+ativo: true
 status_efeitos: []
 imagem: https://i.ibb.co/7qfpgfW/9e9c9c0846b2.jpg
 inventario:

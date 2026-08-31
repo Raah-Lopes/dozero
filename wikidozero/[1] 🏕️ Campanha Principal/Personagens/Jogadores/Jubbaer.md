@@ -23,14 +23,14 @@ armas:
     descricao: Uma espada larga e pesada, ideal para cortar inimigos com força bruta.
     dano: 1d8+2
     equipado: true
-tipo: Monstro
-status: inimigo
+tipo: PC
+status: jogador
 nome: Jubbaer
 nivel: 5
 XP: 0
 tags:
   - personagem
-ativo: false
+ativo: true
 origem: Cidade Subterrânea
 Localizacao: Barrio de Hidromel
 HP: 10

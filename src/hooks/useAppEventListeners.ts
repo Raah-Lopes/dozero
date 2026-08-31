@@ -5,6 +5,7 @@ import { loadMarkdownFile } from '../utils/githubApi';
 import type { CutsceneConfig } from '../components/Theater/CutsceneOverlay';
 import { useYjsCleanup } from './useYjsCleanup';
 import { obsidianWatcherService } from '../services/wiki/obsidianWatcherService';
+import { createWikiTokenData } from '../services/wiki/wikiTokenAdapter';
 
 interface UseAppEventListenersProps {
   viewMode: string;
@@ -172,31 +173,10 @@ export const useAppEventListeners = ({
         if (parts.length < 3) return;
         const data = yaml.load(parts[1]) as any;
 
-        const tipo = String(data.tipo || '').toLowerCase();
-        const status = String(data.status || '').toLowerCase();
-        const isPlayer = ['pc', 'personagem', 'jogador'].includes(tipo) || status === 'jogador' || wikiPath.toLowerCase().includes('/jogadores/');
-
-        const tokenData = {
-          name: data.nome || data.titulo || wikiPath.split('/').pop()?.replace('.md', '') || 'Desconhecido',
-          hp: data.HP || data.pv || 100,
-          maxHp: data.HP_max || data.pv_max || data.HP || data.pv || 100,
-          mana: data.PM || data.mana || 50,
-          maxMana: data.PM_max || data.mana_max || data.PM || data.mana || 50,
-          hunger: Number(data.fome || data.Fome || 0),
-          thirst: Number(data.sede || data.Sede || 0),
-          sanity: Number(data.sanidade || data.Sanidade || 100),
-          imageUrl: data.imageUrl || data.avatar || data.imagem || '/vite.svg',
-          tokenShape: data.tokenShape || 'circle',
-          sizeScale: Number(data.sizeScale) || 1,
-          borderColor: data.borderColor || '#06b6d4',
-          showName: data.showName === true,
-          hpBarMode: data.hpBarMode || 'always',
-          isPlayer,
-          wikiSlug: wikiPath.split('/').pop()?.replace('.md', '')
-        };
+        const tokenData = createWikiTokenData(data, wikiPath, { x, y });
 
         const id = `token_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        state.tokens.set(id, { id, x, y, ...tokenData });
+        state.tokens.set(id, { id, ...tokenData });
 
         const chatMsg = `⚡ <b>${tokenData.name}</b> foi conjurado(a) no mapa!`;
         state.chat.push([{ text: chatMsg, timestamp: Date.now(), isCritical: true, isFailure: false }]);

@@ -13,7 +13,7 @@ inventario:
     descricao: Canaliza poderes arcanos (+1 em feitiços).
     equipado: true
 tipo: PC
-status: vivo
+status: jogador
 nome: Jacir Malemog
 nivel: 3
 XP: 1000
@@ -23,7 +23,7 @@ tags:
   - slime
   - lutador
   - capoeirista
-ativo: false
+ativo: true
 origem: Pântano dos Ecos Perdidos
 Localizacao: Algum vilarejo costeiro, treinando.
 HP: 24

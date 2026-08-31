@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DraggableWindow } from '../../HUD/DraggableWindow';
 import { useWiki } from '../../../hooks/useWiki';
 import { loadMarkdownFile } from '../../../utils/githubApi';
-import { addTokenFromMarkdown, state, pushChatMessage } from '../../../store';
+import { state, pushChatMessage } from '../../../store';
+import { Tokens } from '../../../store/modules';
 import { Anvil, Search, FileText, Cloud, Plus, Play, Trash2, Skull, Shield, Swords, Sparkles, RefreshCw } from 'lucide-react';
 import * as yaml from 'js-yaml';
 import { toast } from '../../UI/Toast';
@@ -14,6 +15,7 @@ import {
   deleteCharacter,
   CharacterRecord
 } from '../../../services/characterRepository';
+import { createWikiTokenData } from '../../../services/wiki/wikiTokenAdapter';
 
 export const EntityForgeWidget: React.FC<{ onClose?: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
   const { user } = useAuthStore();
@@ -168,27 +170,11 @@ export const EntityForgeWidget: React.FC<{ onClose?: () => void; embedded?: bool
       const data = yaml.load(frontmatterStr) as any;
       if (!data) return;
 
-      const tipo = String(data.tipo || '').toLowerCase();
-      const status = String(data.status || '').toLowerCase();
-      const isPlayer = ['pc', 'personagem', 'jogador'].includes(tipo) || status === 'jogador' || path.toLowerCase().includes('/jogadores/');
-      const entry = index.find(e => e.path === path);
-
-      const tokenData = {
-        name: data.nome || data.titulo || data.name || 'Nova Entidade',
-        img: data.avatar || data.imagem || (isPlayer ? '/mascot/zye-head-smile.png' : '/enemy_bandit.png'),
-        hp: Number(data.hp || data.vida || (isPlayer ? 20 : 10)),
-        maxHp: Number(data.maxHp || data.hp_max || data.vida_max || (isPlayer ? 20 : 10)),
-        mana: Number(data.mana || data.mp || 0),
-        maxMana: Number(data.maxMana || data.mp_max || 0),
-        type: isPlayer ? 'player' as const : 'npc' as const,
-        category: (data.categoria || tipo || 'Geral') as string,
-        stats: data.atributos || {},
-        sourceMarkdownPath: path,
-        wikiSlug: entry?.slug
-      };
-
-      addTokenFromMarkdown(tokenData);
-      toast.success(`Token "${tokenData.name}" evocado para o mapa!`);
+      const token = Tokens.create(createWikiTokenData(data, path, {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      }));
+      toast.success(`Token "${token.name}" evocado para o mapa!`);
     } catch (e: any) {
       toast.error(`Erro ao invocar token: ${e?.message || e}`);
     }

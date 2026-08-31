@@ -4,8 +4,8 @@ inventario:
   - Injetor Neuro-Estabilizador de Sanidade (3 doses)
   - Datapad Criptografado da Aethel-Corp (Registro de Experimento Espécime-09)
 tipo: PC
-status: vivo
-ativo: false
+status: jogador
+ativo: true
 ancestralidade: Slime Biotecnológico
 heranca: Núcleo Aberrante Espacial
 biografia: Nascido em uma câmara de contenção da mega-corporação Aethel-Corp, Drougtot é a fusão grotesca entre nanobots de infestação biológica e o lodo primordial colhido de um meteoro abissal. Desenvolveu consciência própria após absorver um bio-deck corporativo e escapou para os esgotos enevoados da megalópole, onde ouve os sussurros de ecossistemas mutantes e entidades de além-estrelas.

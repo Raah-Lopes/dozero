@@ -18,6 +18,7 @@ import { resolveImageUrl, convertImageToWebP } from '../../utils/imageUtils';
 import { toast } from '../UI/Toast';
 import { confirmDialog } from '../UI/Toast';
 import { Tooltip } from '../UI/Tooltip';
+import { createWikiTokenData } from '../../services/wiki/wikiTokenAdapter';
 
 const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
 
@@ -168,38 +169,21 @@ export const NPCPanel: React.FC = () => {
       const data = yaml.load(parts[1]) as any;
       if (!data) return;
 
-      const tipo = String(data.tipo || '').toLowerCase();
-      const status = String(data.status || '').toLowerCase();
-      const isPlayer = ['pc', 'personagem', 'jogador'].includes(tipo) || status === 'jogador' || path.toLowerCase().includes('/jogadores/');
-
-      const entry = wikiIndex.find(e => e.path === path);
-      const wikiSlug = entry?.slug;
-
+      const visibleCount = Array.from(state.tokens.values())
+        .filter((token: any) => token.x > -1000 && token.y > -1000).length;
+      const columns = 4;
+      const spacing = 84;
+      const column = visibleCount % columns;
+      const row = Math.floor(visibleCount / columns);
       const id = `token_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      state.tokens.set(id, {
-        id,
-        name: data.nome || data.titulo || (entry?.slug) || path.split('/').pop()?.replace('.md', '') || 'Desconhecido',
-        hp: data.HP || data.pv || 100,
-        maxHp: data.HP_max || data.pv_max || data.HP || data.pv || 100,
-        mana: data.PM || data.mana || 50,
-        maxMana: data.PM_max || data.mana_max || data.PM || data.mana || 50,
-        hunger: Number(data.fome || data.Fome || 0),
-        thirst: Number(data.sede || data.Sede || 0),
-        sanity: Number(data.sanidade || data.Sanidade || 100),
-        imageUrl: data.imageUrl || data.avatar || data.imagem || '/vite.svg',
-        tokenShape: data.tokenShape || 'circle',
-        sizeScale: Number(data.sizeScale) || 1,
-        borderColor: data.borderColor || '#06b6d4',
-        showName: data.showName === true,
-        hpBarMode: data.hpBarMode || 'always',
-        isPlayer,
-        wikiSlug,
-        x: window.innerWidth / 2,
-        y: window.innerHeight / 2
+      const tokenData = createWikiTokenData(data, path, {
+        x: window.innerWidth / 2 + (column - (columns - 1) / 2) * spacing,
+        y: window.innerHeight / 2 + row * spacing,
       });
+      state.tokens.set(id, { id, ...tokenData });
 
       state.chat.push([{
-        text: `⚡ <b>${data.nome || entry?.slug || 'Entidade'}</b> foi conjurado(a) no centro do mapa!`,
+        text: `⚡ <b>${tokenData.name}</b> foi conjurado(a) no centro do mapa!`,
         timestamp: Date.now(),
         isCritical: true,
         isFailure: false
@@ -653,7 +637,7 @@ export const NPCPanel: React.FC = () => {
                         {/* Tiny Avatar */}
                         {t.imageUrl ? (
                           <img loading="lazy" decoding="async" 
-                            src={t.imageUrl} 
+                            src={resolveImageUrl(t.imageUrl)}
                             alt={t.name} 
                             style={{ width: '28px', height: '28px', borderRadius: '4px', objectFit: 'cover', border: '1px solid var(--glass-border)', flexShrink: 0 }}
                           />
@@ -1071,7 +1055,7 @@ export const NPCPanel: React.FC = () => {
                       <div style={{ position: 'relative', width: '48px', height: '48px', borderRadius: '4px', overflow: 'hidden' }}>
                         {t.imageUrl ? (
                           <img loading="lazy" decoding="async" 
-                            src={t.imageUrl} 
+                            src={resolveImageUrl(t.imageUrl)}
                             alt={t.name} 
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />

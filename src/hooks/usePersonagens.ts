@@ -3,6 +3,7 @@
 // Substitui a lógica duplicada que existia em AutomatedDiceWidget e CharacterRosterWidget.
 import { useState, useCallback, useEffect } from 'react';
 import { useWiki } from './useWiki';
+import { getWikiTokenImage } from '../services/wiki/wikiTokenAdapter';
 
 export interface FichaPersonagem {
   nome: string;
@@ -147,7 +148,7 @@ function mapearEntidade(e: any): FichaPersonagem {
     velocidade: safeNum(fp.velocidade_metros ?? e.metadata?.velocidade ?? e.metadata?.Velocidade ?? e.metadata?.Deslocamento, 0),
     ataque: safeNum(e.metadata?.ataque ?? e.metadata?.Ataque, 0),
     status,
-    avatar: e.metadata?.imageUrl || e.metadata?.avatar || e.metadata?.imagem,
+    avatar: getWikiTokenImage(e.metadata || {}, status === 'jogador' ? '/mascot/zye-head-smile.png' : status === 'inimigo' ? '/enemy_monster.png' : '/enemy_bandit.png'),
     caminhoArquivo: e.path,
     ativo: e.metadata?.ativo !== false,
     ouro: safeNum(e.metadata?.ouro ?? e.metadata?.Ouro ?? e.metadata?.Ouro_recompensa, 0),

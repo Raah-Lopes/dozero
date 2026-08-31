@@ -25,12 +25,14 @@ export class SupabaseRealtimeProvider {
   private channel: RealtimeChannel | null = null;
   private roomName: string;
   private doc: Y.Doc;
+  private clientId: string;
   private isDestroyed = false;
   private handleDocUpdate: ((update: Uint8Array, origin: unknown) => void) | null = null;
 
   constructor(roomName: string, doc: Y.Doc) {
     this.roomName = roomName;
     this.doc = doc;
+    this.clientId = `yjs-${doc.clientID.toString(36)}`;
     this.init();
   }
 
@@ -66,25 +68,25 @@ export class SupabaseRealtimeProvider {
     });
 
     // 2. Escuta requisição de sincronização inicial de novos jogadores
-    this.channel.on('broadcast', { event: 'yjs-sync-req' }, () => {
+    this.channel.on('broadcast', { event: 'yjs-sync-req' }, ({ payload }) => {
       if (this.isDestroyed) return;
-      // Se este cliente tiver dados na sala, envia o estado completo para quem acabou de entrar
-      const hasContent = ['tokens', 'backgrounds', 'drawings', 'walls', 'fogOps', 'mapTexts', 'props', 'lorePins']
-        .some(mapName => this.doc.getMap(mapName).size > 0);
-      if (hasContent) {
-        try {
-          const stateUpdate = Y.encodeStateAsUpdate(this.doc);
-          void this.broadcast('yjs-sync-res', { update: uint8ToBase64(stateUpdate) })
-            .catch(error => console.warn('[SupabaseRealtime] Falha ao responder sync:', error));
-        } catch (error) {
-          console.warn('[SupabaseRealtime] Falha ao preparar sync:', error);
-        }
+      try {
+        const requesterId = typeof payload?.requesterId === 'string' ? payload.requesterId : undefined;
+        const stateVector = typeof payload?.stateVector === 'string' ? base64ToUint8(payload.stateVector) : undefined;
+        const stateUpdate = Y.encodeStateAsUpdate(this.doc, stateVector);
+        if (stateUpdate.byteLength <= 2) return;
+        void this.broadcast('yjs-sync-res', {
+          update: uint8ToBase64(stateUpdate),
+          ...(requesterId ? { recipientId: requesterId } : {})
+        }).catch(error => console.warn('[SupabaseRealtime] Falha ao responder sync:', error));
+      } catch (error) {
+        console.warn('[SupabaseRealtime] Falha ao preparar sync:', error);
       }
     });
 
     // 3. Recebe o estado completo de sincronização inicial
     this.channel.on('broadcast', { event: 'yjs-sync-res' }, ({ payload }) => {
-      if (this.isDestroyed || !payload?.update) return;
+      if (this.isDestroyed || !payload?.update || (payload.recipientId && payload.recipientId !== this.clientId)) return;
       try {
         const update = base64ToUint8(payload.update);
         Y.applyUpdate(this.doc, update, 'supabase-realtime');
@@ -135,7 +137,10 @@ export class SupabaseRealtimeProvider {
 
         // Pede o estado atual para qualquer jogador que já esteja online na sala
       try {
-        await this.broadcast('yjs-sync-req', {});
+        await this.broadcast('yjs-sync-req', {
+          requesterId: this.clientId,
+          stateVector: uint8ToBase64(Y.encodeStateVector(this.doc))
+        });
       } catch (error) {
         console.warn('[SupabaseRealtime] Falha ao solicitar sync inicial:', error);
       }

@@ -51,6 +51,11 @@ function initializeSupabaseRealtime() {
   }
 }
 
+function initializeRealtimeProvider() {
+  initializeWebsocketProvider();
+  if (!wsProvider) initializeSupabaseRealtime();
+}
+
 export const state = {
   tokens: doc.getMap('tokens'),
   chat: doc.getArray('chat'),
@@ -138,8 +143,7 @@ indexeddbProvider?.on('synced', () => {
   if (state.tokens.has('goblin_boss')) state.tokens.delete('goblin_boss');
   if (state.tokens.has('omega_sentinel')) state.tokens.delete('omega_sentinel');
 
-  initializeWebsocketProvider();
-  initializeSupabaseRealtime();
+  initializeRealtimeProvider();
 
   // Dá tempo para o peer já conectado responder ao sync inicial. Só então a
   // máquina sozinha usa o snapshot como fallback, sem retransmiti-lo aos pares.
@@ -152,8 +156,7 @@ indexeddbProvider?.on('synced', () => {
 });
 
 if (!indexeddbProvider) {
-  initializeWebsocketProvider();
-  initializeSupabaseRealtime();
+  initializeRealtimeProvider();
 }
 
 // Durante o HMR, os módulos são substituídos sem descarregar a página. Sem

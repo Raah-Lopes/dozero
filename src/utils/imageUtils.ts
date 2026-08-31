@@ -3,7 +3,7 @@ import { resolveMediaUrl } from '../services/wiki/mediaResolver';
 
 export const resolveImageUrl = (url: string | undefined | null): string => {
   if (!url) return '/vite.svg';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('/')) {
     return url;
   }
   const config = getWikiConfig();

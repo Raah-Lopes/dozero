@@ -1414,6 +1414,9 @@ export const GameCanvas: React.FC = () => {
       let draggingTokenId: string | null = null;
       let tokenDragOffsets: Record<string, {x: number, y: number}> = {};
       let tokenStartPositions: Record<string, {x: number, y: number}> = {};
+      const localDraggingTokenIds = new Set<string>();
+      const isTokenLocallyDragging = (id: string) =>
+        localDraggingTokenIds.has(id) || Boolean((window as any).__IS_GIZMO_DRAGGING && localState.selectedTokens?.has(id));
       
       let propDragOffsets: Record<string, {x: number, y: number}> = {};
       let propStartPositions: Record<string, {x: number, y: number}> = {};
@@ -1947,7 +1950,7 @@ export const GameCanvas: React.FC = () => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => {
-              if (isDestroyed || !tokenSprites[id]) return;
+              if (isDestroyed || !state.tokens.has(id) || tokenSprites[id]?.container !== token) return;
               const texture = Texture.from(img);
               const sprite = new Sprite(texture);
               sprite.anchor.set(0.5);
@@ -2139,18 +2142,7 @@ export const GameCanvas: React.FC = () => {
             token.y = t.y;
           } else {
             // If not dragging, animate to new position (or just set it)
-            let isBeingDragged = false;
-            if (draggingTokenId) {
-               const selected = Tokens.getSelectedIds();
-               if (selected.includes(id)) {
-                  isBeingDragged = true;
-               }
-            }
-            if ((window as any).__IS_GIZMO_DRAGGING && localState.selectedTokens?.has(id)) {
-               isBeingDragged = true;
-            }
-
-            if (!isBeingDragged) {
+            if (!isTokenLocallyDragging(id)) {
               const dx = t.x - tokenSprites[id].container.x;
               const dy = t.y - tokenSprites[id].container.y;
               if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
@@ -2227,7 +2219,11 @@ export const GameCanvas: React.FC = () => {
           }
         }
         
-        if (!foundLeader) return;
+        if (!foundLeader) {
+          draggingTokenId = null;
+          localDraggingTokenIds.clear();
+          return;
+        }
 
         Object.keys(tokenDragOffsets).forEach(selId => {
           const tokenData = tokenSprites[selId];
@@ -2258,6 +2254,7 @@ export const GameCanvas: React.FC = () => {
         });
         
         draggingTokenId = null;
+        localDraggingTokenIds.clear();
         if (draggingTextId && draggingTextId.startsWith('prop_')) draggingTextId = null;
       };
 
@@ -2474,10 +2471,12 @@ export const GameCanvas: React.FC = () => {
                      if (tokenSprites[tId]?.container) {
                         tokenDragOffsets[tId] = { x: tokenSprites[tId].container.x - localPos.x, y: tokenSprites[tId].container.y - localPos.y };
                         tokenStartPositions[tId] = { x: tokenSprites[tId].container.x, y: tokenSprites[tId].container.y };
-                     }
-                  });
-               }
-            }
+                      }
+                   });
+                }
+                localDraggingTokenIds.clear();
+                Object.keys(tokenDragOffsets).forEach(id => localDraggingTokenIds.add(id));
+             }
 
             import('../store').then(s => {
                if (!shift && !Tokens.getSelectedIds().includes(hitTokenId!)) {
@@ -3862,18 +3861,7 @@ export const GameCanvas: React.FC = () => {
           }
           
           // LERP position if someone else moved it
-          let isBeingDragged = false;
-          if (draggingTokenId) {
-             const selected = Tokens.getSelectedIds();
-             if (selected.includes(id)) {
-                isBeingDragged = true;
-             }
-          }
-          if ((window as any).__IS_GIZMO_DRAGGING && localState.selectedTokens?.has(id)) {
-             isBeingDragged = true;
-          }
-
-           if (!isBeingDragged) {
+           if (!isTokenLocallyDragging(id)) {
              const dx = tState.x - tokenData.container.x;
              const dy = tState.y - tokenData.container.y;
              if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {

@@ -1,6 +1,6 @@
 ---
 titulo: Mr. Goma
-tipo: Monstro
+tipo: PC
 classe: Monge de Geleia
 raça: Slime Humanóide
 força: 14
@@ -99,7 +99,7 @@ borderColor: '#ff00ae'
 showName: true
 sizeScale: 0.7
 hpBarMode: always
-ativo: false
+ativo: true
 mana_max: 99
 vigor_max: 100
 forca: 19
@@ -134,7 +134,7 @@ des: 11
 visionRadius: 100
 hasVision: false
 inCombat: true
-status: inimigo
+status: jogador
 Ouro: 292
 Riquezas: 3200
 ouro: 297
