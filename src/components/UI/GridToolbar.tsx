@@ -173,8 +173,8 @@ export const GridToolbar: React.FC = () => {
         setShowLayersMenu(false);
       }
     };
-    const handleToggleConfig = () => { setShowConfigMenu(v => !v); setShowStyleInspector(false); setShowLayersMenu(false); };
-    const handleToggleLayers = () => { setShowLayersMenu(v => { if (!v) setIsLayersMinimized(false); return !v; }); setShowConfigMenu(false); setShowStyleInspector(false); };
+    const handleToggleConfig = () => { setShowConfigMenu(v => !v); setShowStyleInspector(false); setShowLayersMenu(false); setShowMapToolsMenu(false); };
+    const handleToggleLayers = () => { setShowLayersMenu(v => { if (!v) setIsLayersMinimized(false); return !v; }); setShowConfigMenu(false); setShowStyleInspector(false); setShowMapToolsMenu(false); };
     const handleImageUploadTrigger = () => fileInputRef.current?.click();
 
     const handleStyle = () => {
@@ -192,9 +192,13 @@ export const GridToolbar: React.FC = () => {
     
     const handleDrawingLayers = () => {
       if (state.drawingLayers) {
-        setDrawingLayers(Array.from(state.drawingLayers.values()));
+        const layers = Array.from(state.drawingLayers.values());
+        if (!layers.some((layer: any) => layer.id === 'default')) {
+          layers.unshift({ id: 'default', name: 'Camada Padrão', zIndex: 100 });
+        }
+        setDrawingLayers(layers);
       } else {
-        setDrawingLayers([]);
+        setDrawingLayers([{ id: 'default', name: 'Camada Padrão', zIndex: 100 }]);
       }
     };
     const handleDrawings = () => {
@@ -260,6 +264,7 @@ export const GridToolbar: React.FC = () => {
     handleMapConfig();
     handleBgs();
     handleDrawingLayers();
+    handleDrawings();
     handleWalls();
     handleLocalState();
 
@@ -1578,6 +1583,8 @@ export const GridToolbar: React.FC = () => {
                           <Tooltip key={tool.id} label={meta.label} description={meta.desc} position="bottom">
                             <button
                               type="button"
+                              aria-label={meta.label}
+                              aria-pressed={isActive}
                               className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
                               style={{ width: '100%', height: '28px', borderRadius: '6px' }}
                               onClick={() => setActiveTool(tool.id as any)}
@@ -1614,6 +1621,9 @@ export const GridToolbar: React.FC = () => {
                     return (
                       <Tooltip key={tool.id} label={meta.label} description={meta.desc} shortcut={meta.shortcut || tool.shortcut} position="top">
                         <button
+                          type="button"
+                          aria-label={meta.label}
+                          aria-pressed={isActive}
                           className={`tldraw-tool-btn${isActive ? ' active' : ''}`}
                           style={{ width: '100%', height: '34px' }}
                           onClick={() => {
@@ -1721,6 +1731,9 @@ export const GridToolbar: React.FC = () => {
                         if (!v) setIsLayersMinimized(false);
                         return !v;
                       });
+                      setShowMapToolsMenu(false);
+                      setShowStyleInspector(false);
+                      setShowConfigMenu(false);
                     }}
                     style={{
                       flex: 1,

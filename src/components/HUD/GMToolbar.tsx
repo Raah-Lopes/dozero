@@ -48,7 +48,7 @@ export function GMToolbar() {
   const [fogMode, setLocalFogMode] = React.useState<'reveal' | 'hide'>('reveal');
   const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso' | 'eraser'>('brush');
   const [activeSubmenu, setActiveSubmenu] = React.useState<string | null>(null);
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(() => window.innerWidth > 768);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
   const handleSyncCloud = async () => {
@@ -186,6 +186,9 @@ export function GMToolbar() {
           </div>
           <button 
             onClick={() => setIsOpen(!isOpen)}
+            type="button"
+            aria-label={isOpen ? 'Recolher menu principal' : 'Expandir menu principal'}
+            aria-expanded={isOpen}
             style={{ 
               position: 'absolute', 
               right: isOpen ? '6px' : '50%', 
