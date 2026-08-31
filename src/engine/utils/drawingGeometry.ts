@@ -11,6 +11,7 @@ export interface EncounterShape {
   points?: GeometryPoint[];
   subShapes?: Array<{ shapeType?: EncounterShapeType; points?: GeometryPoint[] }>;
   hidden?: boolean;
+  initiativeArea?: boolean;
 }
 
 const firstAndLast = (points: GeometryPoint[] | undefined) => {
@@ -46,7 +47,7 @@ function pointInTriangle(point: GeometryPoint, points: GeometryPoint[]): boolean
 
 /** Returns true when a world-space point is inside a drawn tactical shape. */
 export function pointInDrawingShape(point: GeometryPoint, shape: EncounterShape): boolean {
-  if (shape.hidden || shape.type !== 'shape') return false;
+  if (shape.hidden || shape.initiativeArea === false || shape.type !== 'shape') return false;
 
   const subShapes = shape.subShapes?.filter(s => s.points && s.points.length >= 2) || [];
   if (subShapes.length > 0) {
@@ -101,4 +102,3 @@ export function tokensInsideDrawingShapes<T extends EncounterToken>(tokens: T[],
     shapes.some(shape => pointInDrawingShape({ x: token.x, y: token.y }, shape)),
   );
 }
-

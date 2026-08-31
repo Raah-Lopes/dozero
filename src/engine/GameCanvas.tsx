@@ -430,6 +430,66 @@ export const GameCanvas: React.FC = () => {
           return;
         }
 
+        // Start drawing from the native canvas event so map/background sprites
+        // cannot swallow the first pointer press.
+        if (e.button === 0 && ['pen', 'shape', 'arrow'].includes(localState.activeTool)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          isDrawing = true;
+          const localPos = getWorldPos(e.clientX, e.clientY);
+          currentDrawingPoints = [localPos];
+          currentDrawingGraphics.clear();
+          currentDrawingGraphics.visible = true;
+          const maxZ = Math.max(
+            ...Array.from(state.backgrounds.values()).map((b: any) => b.zIndex || 0),
+            ...Array.from(state.drawings.values()).map((d: any) => d.zIndex || 0),
+            0,
+          );
+          currentDrawingGraphics.zIndex = maxZ + 1;
+          return;
+        }
+
+        if (localState.activeTool === 'wall' && e.button === 0) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          const localPos = getWorldPos(e.clientX, e.clientY);
+          wallDrawingStart = localPos;
+          wallPreview.visible = true;
+          const wallThickness = Math.max(4, (localState.drawWidth || 4) * 2);
+          wallPreview.clear();
+          wallPreview.moveTo(localPos.x, localPos.y);
+          wallPreview.lineTo(localPos.x, localPos.y);
+          wallPreview.stroke({ width: wallThickness + 2, color: '#f97316', alpha: 0.45, cap: 'round' });
+          return;
+        }
+
+        if (localState.activeTool === 'text' && e.button === 0) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          const now = Date.now();
+          if ((window as any).__lastTextTime && now - (window as any).__lastTextTime < 300) return;
+          (window as any).__lastTextTime = now;
+          if (localState.editingTextId) {
+            import('../store').then(s => s.setEditingTextId(null));
+            return;
+          }
+          const localPos = getWorldPos(e.clientX, e.clientY);
+          import('../store').then(s => {
+            const newId = 'txt_' + Date.now();
+            s.addMapText({
+              id: newId,
+              text: 'Novo Texto',
+              x: localPos.x,
+              y: localPos.y,
+              color: localState.drawColor || '#ffffff',
+              backgroundColor: 'transparent',
+              fontSize: 24,
+            });
+            s.setEditingTextId(newId);
+          });
+          return;
+        }
+
         if ((e.shiftKey || localState.activeTool === 'ruler') && e.button === 0) {
            isMeasuring = true;
            measureStart = getWorldPos(e.clientX, e.clientY);
@@ -1043,7 +1103,8 @@ export const GameCanvas: React.FC = () => {
                       color: localState.drawColor || '#ef4444',
                       width: localState.drawWidth || 4,
                       zIndex: maxZ + 1,
-                      layerId: layerId
+                      layerId,
+                      initiativeArea: localState.activeTool === 'shape' ? true : undefined,
                    });
                 });
             }

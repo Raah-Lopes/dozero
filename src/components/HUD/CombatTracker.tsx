@@ -365,13 +365,18 @@ export const CombatTracker: React.FC<{ isGM?: boolean }> = ({ isGM = true }) => 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', textAlign: 'center', gap: '1rem', padding: '2rem' }}>
             <Swords size={48} opacity={0.2} />
             <p>Ninguém na Iniciativa.</p>
+            {areaTokens.length > 0 && (
+              <p style={{ margin: 0, maxWidth: '32rem', fontSize: '0.8rem', color: '#d8b4fe' }}>
+                Na área de iniciativa: {areaTokens.map(token => token.name || 'Sem nome').join(', ')}
+              </p>
+            )}
             {isGM && (
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button onClick={() => handleRollAll('scene')} style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary)', color: 'var(--text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(255,122,0, 0.3)' }}>
                   <Dices size={18} /> Auto-Rolar do Mapa
                 </button>
                 {areaTokens.length > 0 && <button onClick={() => handleRollAll('areas')} style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(168,85,247,0.2)', color: '#d8b4fe', border: '1px solid rgba(168,85,247,0.5)', borderRadius: '8px', cursor: 'pointer', fontWeight: 700 }}>
-                  <Target size={16} /> Áreas ({areaTokens.length})
+                  <Target size={16} /> Rolar Área ({areaTokens.length})
                 </button>}
               </div>
             )}

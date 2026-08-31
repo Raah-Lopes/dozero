@@ -41,4 +41,8 @@ describe('drawing geometry', () => {
     ];
     expect(tokensInsideDrawingShapes(tokens, [rect()]).map(t => t.id)).toEqual(['inside']);
   });
+
+  it('ignores a shape disabled as an initiative area', () => {
+    expect(pointInDrawingShape({ x: 20, y: 20 }, { ...rect(), initiativeArea: false })).toBe(false);
+  });
 });

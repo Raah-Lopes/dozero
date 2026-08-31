@@ -165,9 +165,9 @@ export const GridToolbar: React.FC = () => {
       setFogModeState(localState.fogMode);
       if (['pen', 'shape', 'arrow', 'text', 'eraser', 'wall', 'fog_brush', 'fog_polygon', 'fog_rect', 'fog_circle', 'fog_triangle', 'fog_lasso', 'fog_erase'].includes(localState.activeTool)) {
         setShowStyleInspector(true);
-        if (['pen', 'shape', 'arrow', 'text'].includes(localState.activeTool)) {
-          setShowLayersMenu(true);
-        }
+        setShowMapToolsMenu(false);
+        setShowConfigMenu(false);
+        setShowLayersMenu(false);
       } else {
         setShowStyleInspector(false);
         setShowLayersMenu(false);
@@ -267,6 +267,7 @@ export const GridToolbar: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       state.mapConfig.unobserve(handleMapConfig);
       state.backgrounds.unobserve(handleBgs);
+      state.drawings.unobserve(handleDrawings);
       if (state.drawingLayers) {
         state.drawingLayers.unobserve(handleDrawingLayers);
       }
@@ -1053,6 +1054,18 @@ export const GridToolbar: React.FC = () => {
                                 />
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              {d.type === 'shape' && (
+                                <button
+                                  type="button"
+                                  onClick={() => import('../../store/drawings').then(s => s.updateDrawingProps(d.id, { initiativeArea: d.initiativeArea === false }))}
+                                  aria-label={d.initiativeArea === false ? 'Incluir na iniciativa por área' : 'Excluir da iniciativa por área'}
+                                  aria-pressed={d.initiativeArea !== false}
+                                  title={d.initiativeArea === false ? 'Usar como área de iniciativa' : 'Área de iniciativa ativa'}
+                                  style={{ background: d.initiativeArea !== false ? C.accentBg : 'transparent', border: 'none', borderRadius: '4px', color: d.initiativeArea !== false ? C.accent : C.textDim, cursor: 'pointer', padding: '4px' }}
+                                >
+                                  <Target size={12} />
+                                </button>
+                              )}
                               <button
                                 onClick={() => import('../../store/drawings').then(s => s.updateDrawingProps(d.id, { hidden: !d.hidden }))}
                                 style={{ background: 'transparent', border: 'none', color: d.hidden ? C.danger : C.textMut, cursor: 'pointer', padding: '4px' }}
@@ -1331,7 +1344,7 @@ export const GridToolbar: React.FC = () => {
         className="zoom-controls-container"
         style={{
         position: 'fixed',
-        bottom: isMobile ? '140px' : '20rem',
+        bottom: isMobile ? '140px' : '76px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 110,
@@ -1355,7 +1368,16 @@ export const GridToolbar: React.FC = () => {
           >
             <button
               className={`tldraw-tool-btn${showMapToolsMenu || !['select','pan'].includes(activeTool) ? ' active' : ''}`}
-              onClick={() => setShowMapToolsMenu(v => !v)}
+              onClick={() => setShowMapToolsMenu(v => {
+                const next = !v;
+                if (next) {
+                  setShowStyleInspector(false);
+                  setShowLayersMenu(false);
+                  setShowConfigMenu(false);
+                }
+                return next;
+              })}
+              aria-label={showMapToolsMenu ? 'Fechar ferramentas do mapa' : 'Abrir ferramentas do mapa'}
             >
               <Wrench size={18} color={showMapToolsMenu || !['select','pan'].includes(activeTool) ? C.accent : C.textSec} />
             </button>

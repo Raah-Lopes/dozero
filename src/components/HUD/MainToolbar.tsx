@@ -14,29 +14,35 @@ export function MainToolbar() {
   } = useWindowManager();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(window.innerWidth > 768);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => {
+      const nextIsMobile = window.innerWidth <= 768;
+      setIsMobile(previous => {
+        if (previous !== nextIsMobile) setIsMenuOpen(!nextIsMobile);
+        return nextIsMobile;
+      });
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const toggleModal = (mode: any) => {
     setActiveModal(activeModal === mode ? 'none' : mode);
-    setIsMenuOpen(false); // fechar menu ao abrir algo
+    if (isMobile) setIsMenuOpen(false);
   };
 
   const handleToggleWindow = (win: string) => {
     toggleWindow(win);
-    setIsMenuOpen(false);
+    if (isMobile) setIsMenuOpen(false);
   };
 
   const handleSetViewMode = (mode: any) => {
     setViewMode(mode);
-    setIsMenuOpen(false);
+    if (isMobile) setIsMenuOpen(false);
   };
 
   const handleSyncCloud = async () => {
@@ -51,7 +57,7 @@ export function MainToolbar() {
       toast.error("Erro ao sincronizar: " + e.message);
     } finally {
       setIsSyncing(false);
-      setIsMenuOpen(false);
+      if (isMobile) setIsMenuOpen(false);
     }
   };
 
@@ -65,7 +71,7 @@ export function MainToolbar() {
     { id: 'sheets', label: 'Forja de Fichas (Arcanum)', icon: <ScrollText size={20} />, action: () => handleSetViewMode(viewMode === 'sheets' ? 'canvas' : 'sheets'), isActive: viewMode === 'sheets', colorClass: 'theme-amber' },
     { id: 'brain', label: 'Cérebro Grafo (Arcanum)', icon: <GitMerge size={20} />, action: () => handleSetViewMode(viewMode === 'brain' ? 'canvas' : 'brain'), isActive: viewMode === 'brain', colorClass: 'theme-amber' },
     { id: 'theater', label: 'Teatro da Mente', icon: <Film size={20} />, action: () => handleSetViewMode(viewMode === 'theater' ? 'canvas' : 'theater'), isActive: viewMode === 'theater', colorClass: 'theme-violet' },
-    { id: 'layouts', label: 'Layouts & Multi-Monitor', icon: <LayoutGrid size={20} />, action: () => { window.dispatchEvent(new CustomEvent('open-layout-presets')); setIsMenuOpen(false); }, isActive: false, colorClass: 'theme-violet' },
+    { id: 'layouts', label: 'Layouts & Multi-Monitor', icon: <LayoutGrid size={20} />, action: () => { window.dispatchEvent(new CustomEvent('open-layout-presets')); if (isMobile) setIsMenuOpen(false); }, isActive: false, colorClass: 'theme-violet' },
     { id: 'players', label: 'Central da Mesa & Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },
     { id: 'chat', label: 'Chat P2P (Mensagens)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('chatWindow'), isActive: openWindows.chatWindow, colorClass: 'theme-blue' },
     { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <Dices size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },
@@ -140,49 +146,34 @@ export function MainToolbar() {
     );
   }
 
-  // Desktop Render
+  // Desktop: the complete main menu is visible by default and can be collapsed.
   return (
-    <div className="hud-top-area" style={{ justifyContent: 'flex-end' }}>
-      {/* Right side: Social & System */}
-      <div className="hud-tools-bar">
-        <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
-          <Tooltip label="Central da Mesa & Jogadores" description="Convites, Participantes e Sala" position="bottom">
-            <button onClick={() => toggleModal('players')} className={`btn-icon theme-green ${activeModal === 'players' ? 'active' : ''}`} aria-label="Central da Mesa e Jogadores">
-              <Users size={20} />
+    <div className="hud-top-area" style={{ justifyContent: 'center', pointerEvents: 'none' }}>
+      <div className="glass-panel pointer-events-auto" style={{ display: 'flex', alignItems: 'center', padding: '0.25rem', gap: '0.25rem', maxWidth: 'calc(100vw - 32px)', overflowX: 'auto' }}>
+        <Tooltip label={isMenuOpen ? 'Recolher menu principal' : 'Expandir menu principal'} position="bottom">
+          <button
+            type="button"
+            className={`btn-icon theme-purple ${isMenuOpen ? 'active' : ''}`}
+            onClick={() => setIsMenuOpen(open => !open)}
+            aria-label={isMenuOpen ? 'Recolher menu principal' : 'Expandir menu principal'}
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </Tooltip>
+        {isMenuOpen && tools.map(tool => (
+          <Tooltip key={tool.id} label={tool.label} position="bottom">
+            <button
+              type="button"
+              onClick={tool.action}
+              className={`btn-icon ${tool.colorClass} ${tool.isActive ? 'active' : ''}`}
+              aria-label={tool.label}
+              aria-pressed={tool.isActive}
+            >
+              {tool.icon}
             </button>
           </Tooltip>
-          <Tooltip label="Chat P2P" description="Mensagens" position="bottom">
-            <button className={`btn-icon theme-blue ${openWindows.chatWindow ? 'active' : ''}`} onClick={() => toggleWindow('chatWindow')} aria-label="Abrir Chat de Mensagens">
-              <MessageSquare size={20} />
-            </button>
-          </Tooltip>
-          <Tooltip label="Registro de Rolagens" description="Log" position="bottom">
-            <button className={`btn-icon theme-red ${openWindows.combatLog ? 'active' : ''}`} onClick={() => toggleWindow('combatLog')} aria-label="Abrir Registro de Rolagens">
-              <Dices size={20} />
-            </button>
-          </Tooltip>
-        </div>
-        
-        <div className="glass-panel pointer-events-auto" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem' }}>
-          {isLocalhost && (
-            <Tooltip label={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem (Vercel)"} position="bottom">
-              <button className="btn-icon theme-green" onClick={handleSyncCloud} aria-label="Sincronizar com a Nuvem">
-                <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />
-              </button>
-            </Tooltip>
-          )}
-          <Tooltip label="Configurações do Sistema" position="bottom">
-            <button className={`btn-icon theme-slate ${activeModal === 'settings' ? 'active' : ''}`} onClick={() => toggleModal('settings')} aria-label="Abrir Configurações do Sistema">
-              <Settings size={20} />
-            </button>
-          </Tooltip>
-          <div style={{ width: '1px', background: 'var(--glass-border)', margin: '0 4px' }}></div>
-          <Tooltip label="Sair" description="Voltar ao Início" position="bottom">
-            <button className="btn-icon theme-red" onClick={() => window.location.href = '/'} aria-label="Sair da Mesa">
-              <LogOut size={20} />
-            </button>
-          </Tooltip>
-        </div>
+        ))}
       </div>
     </div>
   );

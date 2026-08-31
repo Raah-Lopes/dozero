@@ -32,6 +32,8 @@ export interface DrawingData {
   layerId?: string;
   hidden?: boolean;
   locked?: boolean;
+  /** When false, this shape is ignored by contextual initiative rolls. */
+  initiativeArea?: boolean;
   // Transformations for images
   flipX?: boolean;
   flipY?: boolean;
