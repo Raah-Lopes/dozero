@@ -137,6 +137,7 @@ export const useVoiceStore = create<VoiceStoreState>((set, get) => ({
         toast.success('Compartilhando sua tela com a mesa!');
         return true;
       }
+      toast.error('Não foi possível compartilhar a tela. Verifique a permissão do navegador.');
       return false;
     }
   },

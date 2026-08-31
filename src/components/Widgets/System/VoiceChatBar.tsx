@@ -64,6 +64,8 @@ export const VoiceChatBar: React.FC<Props> = ({ roomCode }) => {
       if (screenStream) {
         setIsSharingScreen(true);
         toast.success('Compartilhando sua tela com a mesa!');
+      } else {
+        toast.error('Não foi possível compartilhar a tela. Verifique a permissão do navegador.');
       }
     }
   };
@@ -73,7 +75,7 @@ export const VoiceChatBar: React.FC<Props> = ({ roomCode }) => {
 
   useEffect(() => {
     if (screenPeer && screenVideoRef.current) {
-      screenVideoRef.current.srcObject = screenPeer.stream;
+      screenVideoRef.current.srcObject = screenPeer.screenStream || null;
     }
   }, [screenPeer]);
 

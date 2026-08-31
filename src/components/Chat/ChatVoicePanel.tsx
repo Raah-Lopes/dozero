@@ -80,7 +80,7 @@ export const ChatVoicePanel: React.FC<Props> = ({ roomCode }) => {
   };
 
   const screenPeer = peers.find(p => p.isScreenShare);
-  const activeScreenStream = isSharingScreen ? localScreenStream : (screenPeer ? screenPeer.stream : null);
+  const activeScreenStream = isSharingScreen ? localScreenStream : (screenPeer?.screenStream || null);
   const activeStreamerName = isSharingScreen ? 'Você (Sua Tela)' : (screenPeer ? screenPeer.userName : null);
 
   useEffect(() => {
@@ -862,22 +862,23 @@ export const ChatVoicePanel: React.FC<Props> = ({ roomCode }) => {
               </div>
 
               {/* VU METER DO JOGADOR REMOTO */}
-              {peer.isSpeaking && (
-                <div style={{
+              <div
+                aria-hidden="true"
+                style={{
                   height: '3px',
                   width: '100%',
                   backgroundColor: 'rgba(255,255,255,0.06)',
                   borderRadius: '2px',
                   overflow: 'hidden'
-                }}>
+                }}
+              >
                   <div style={{
                     height: '100%',
-                    width: `${peer.audioLevel}%`,
+                    width: `${peer.isSpeaking ? peer.audioLevel : 0}%`,
                     backgroundColor: '#22c55e',
                     transition: 'width 0.05s ease'
                   }} />
-                </div>
-              )}
+              </div>
 
               {/* SLIDER DE VOLUME INDIVIDUAL COM ATALHOS */}
               <div style={{

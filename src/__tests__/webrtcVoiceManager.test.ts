@@ -154,5 +154,36 @@ describe('WebRTCVoiceManager & VAD Engine', () => {
       }
       expect(manager.getLocalScreenStream()).toBeNull();
     });
+
+    it('renegotiates existing peer connections when screen tracks are added', async () => {
+      const videoTrack = { kind: 'video', stop: vi.fn(), onended: null };
+      const screenStream = {
+        getTracks: () => [videoTrack],
+        getVideoTracks: () => [videoTrack]
+      } as unknown as MediaStream;
+      Object.defineProperty(navigator, 'mediaDevices', {
+        value: { getDisplayMedia: vi.fn().mockResolvedValue(screenStream) },
+        configurable: true
+      });
+
+      const sender = {} as RTCRtpSender;
+      const pc = {
+        signalingState: 'stable',
+        addTrack: vi.fn().mockReturnValue(sender),
+        createOffer: vi.fn().mockResolvedValue({ type: 'offer', sdp: 'screen-offer' }),
+        setLocalDescription: vi.fn().mockResolvedValue(undefined)
+      } as unknown as RTCPeerConnection;
+      const channel = { send: vi.fn().mockResolvedValue('ok') };
+      const manager = new WebRTCVoiceManager('room-123', 'Legolas');
+      (manager as any).peers.set('peer-1', { pc, name: 'Aragorn' });
+      (manager as any).channel = channel;
+
+      await manager.startScreenShare();
+      await vi.waitFor(() => expect(channel.send).toHaveBeenCalled());
+
+      expect(pc.addTrack).toHaveBeenCalledWith(videoTrack, screenStream);
+      expect(pc.createOffer).toHaveBeenCalled();
+      expect(pc.setLocalDescription).toHaveBeenCalledWith({ type: 'offer', sdp: 'screen-offer' });
+    });
   });
 });

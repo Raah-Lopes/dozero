@@ -5,6 +5,7 @@ export interface PeerStreamState {
   peerId: string;
   userName: string;
   stream: MediaStream;
+  screenStream?: MediaStream;
   isMuted: boolean;
   isScreenShare: boolean;
   isSpeaking: boolean;
@@ -376,20 +377,19 @@ export class WebRTCVoiceManager {
         audio: true
       });
       
-      const tracks = this.localScreenStream.getTracks();
-      tracks.forEach(track => {
-        this.peers.forEach(({ pc }, peerId) => {
-          if (this.localScreenStream) {
-            try {
-              const sender = pc.addTrack(track, this.localScreenStream);
-              const list = this.screenSenders.get(peerId) || [];
-              list.push(sender);
-              this.screenSenders.set(peerId, list);
-            } catch (e) {
-              console.warn('[WebRTC] Falha ao adicionar track de tela ao peer:', peerId, e);
-            }
+      this.peers.forEach(({ pc }, peerId) => {
+        const senders: RTCRtpSender[] = [];
+        this.localScreenStream?.getTracks().forEach(track => {
+          try {
+            senders.push(pc.addTrack(track, this.localScreenStream!));
+          } catch (e) {
+            console.warn('[WebRTC] Falha ao adicionar track de tela ao peer:', peerId, e);
           }
         });
+        if (senders.length > 0) {
+          this.screenSenders.set(peerId, senders);
+          void this.renegotiatePeer(peerId, pc);
+        }
       });
 
       const videoTrack = this.localScreenStream.getVideoTracks()[0];
@@ -416,6 +416,7 @@ export class WebRTCVoiceManager {
             peer.pc.removeTrack(sender);
           } catch {}
         });
+        void this.renegotiatePeer(peerId, peer.pc);
       }
     });
     this.screenSenders.clear();
@@ -545,6 +546,11 @@ export class WebRTCVoiceManager {
       });
     }
 
+    if (this.localScreenStream) {
+      const senders = this.localScreenStream.getTracks().map(track => pc.addTrack(track, this.localScreenStream!));
+      this.screenSenders.set(remotePeerId, senders);
+    }
+
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         this.channel?.send({
@@ -560,8 +566,9 @@ export class WebRTCVoiceManager {
     };
 
     pc.ontrack = (event) => {
-      const stream = event.streams[0];
+      const stream = event.streams[0] || new MediaStream([event.track]);
       const isScreen = stream.getVideoTracks().length > 0;
+      const current = this.remoteStreams.get(remotePeerId);
 
       if (!isScreen && this.audioCtx && this.audioCtx.state !== 'closed') {
         try {
@@ -582,17 +589,30 @@ export class WebRTCVoiceManager {
         }
       }
 
-      this.remoteStreams.set(remotePeerId, {
+      const next: PeerStreamState = {
         peerId: remotePeerId,
         userName: remoteUserName,
-        stream,
+        stream: isScreen && current ? current.stream : stream,
+        screenStream: isScreen ? stream : current?.screenStream,
         isMuted: false,
-        isScreenShare: isScreen,
-        isSpeaking: false,
-        audioLevel: 0,
+        isScreenShare: isScreen || Boolean(current?.screenStream),
+        isSpeaking: current?.isSpeaking || false,
+        audioLevel: current?.audioLevel || 0,
         volume: this.peerVolumes.get(remotePeerId) ?? 1.0,
         isLocallyMuted: this.peerMutes.has(remotePeerId)
-      });
+      };
+      this.remoteStreams.set(remotePeerId, next);
+
+      if (isScreen) {
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) videoTrack.onended = () => {
+          const peer = this.remoteStreams.get(remotePeerId);
+          if (!peer || peer.screenStream !== stream) return;
+          peer.screenStream = undefined;
+          peer.isScreenShare = false;
+          this.notify();
+        };
+      }
       this.notify();
     };
 
@@ -622,6 +642,26 @@ export class WebRTCVoiceManager {
     }
 
     return pc;
+  }
+
+  private async renegotiatePeer(remotePeerId: string, pc: RTCPeerConnection) {
+    if (!this.channel || pc.signalingState !== 'stable') return;
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      await this.channel.send({
+        type: 'broadcast',
+        event: 'webrtc-signal',
+        payload: {
+          fromPeerId: this.myPeerId,
+          fromUserName: this.myUserName,
+          targetPeerId: remotePeerId,
+          signal: { type: 'offer', sdp: offer }
+        }
+      });
+    } catch (error) {
+      console.warn('[WebRTC] Falha ao renegociar compartilhamento de tela:', error);
+    }
   }
 
   private cleanupRemoteNode(peerId: string) {

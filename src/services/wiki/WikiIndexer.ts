@@ -72,41 +72,29 @@ export class WikiIndexer {
       entriesMap.set(filePath, { path: filePath, slug, metadata: parsed.metadata });
     });
 
-    // 1. Carrega arquivos da API local (se disponível no Node/Vite)
+    // 1. Carrega a Wiki local em uma única resposta. O caminho anterior fazia
+    // uma busca seguida de uma requisição para cada Markdown, o que saturava o
+    // navegador em wikis grandes e atrasava inclusive a listagem das fichas.
     if (!bundledFiles) try {
-      const res = await fetch(`/api/wiki/search?q=.md&repoPath=${encodeURIComponent(repoPath)}`);
+      const res = await fetch(`/api/wiki/documents?repoPath=${encodeURIComponent(repoPath)}`);
       if (res.ok) {
         const data = await res.json();
-        const files: string[] = data.results || [];
+        const documents: Array<{ path?: unknown; content?: unknown }> = Array.isArray(data.documents) ? data.documents : [];
 
-        const loadedFiles = await Promise.all(files
-          .filter((filePath) => filePath.endsWith('.md') && !filePath.toLowerCase().includes('readme.md'))
-          .map(async (filePath) => {
-            try {
-            const fileRes = await fetch(`/api/wiki/file?repoPath=${encodeURIComponent(repoPath)}&path=${encodeURIComponent(filePath)}`);
-              if (!fileRes.ok) return null;
-            
-            const fileData = await fileRes.json();
-              return { filePath, rawContent: String(fileData.content || '') };
-            } catch (err) {
-              console.error(`[WikiIndexer] Erro ao ler arquivo ${filePath}:`, err);
-              return null;
-            }
-          }));
-
-        for (const loaded of loadedFiles) {
-          if (!loaded) continue;
-          const { filePath, rawContent } = loaded;
+        for (const document of documents) {
+          const filePath = String(document.path || '');
+          if (!filePath.endsWith('.md') || filePath.toLowerCase().includes('readme.md')) continue;
+          const rawContent = String(document.content || '');
           const parsed = parseWikiDocument(rawContent);
           const filename = filePath.split('/').pop() || filePath.split('\\').pop() || '';
-            const slug = filename.replace(/\.md$/i, '');
+          const slug = filename.replace(/\.md$/i, '');
 
           this.rawFiles.set(filePath, rawContent);
-            entriesMap.set(filePath, {
-              path: filePath,
-              slug,
+          entriesMap.set(filePath, {
+            path: filePath,
+            slug,
             metadata: parsed.metadata,
-            });
+          });
         }
       }
     } catch {

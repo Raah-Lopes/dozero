@@ -21,8 +21,31 @@ function buildFsTree(dir: string, baseDir: string, tree: any[] = []) {
     } else {
       tree.push({ path: relativePath, type: 'blob', mode: '100644', size: stat.size });
     }
-}
+  }
   return tree;
+}
+
+/**
+ * Entrega os Markdown em uma única resposta para a indexação do cliente.
+ * Ler localmente no servidor evita centenas de requisições HTTP concorrentes
+ * quando a Wiki é aberta ou o cache é renovado.
+ */
+function readWikiDocuments(dir: string, baseDir: string, documents: Array<{ path: string; content: string }> = []) {
+  for (const file of fs.readdirSync(dir)) {
+    if (file === '.git' || file === 'node_modules' || file === 'ANEXOS') continue;
+
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      readWikiDocuments(fullPath, baseDir, documents);
+    } else if (file.endsWith('.md')) {
+      documents.push({
+        path: path.relative(baseDir, fullPath).replace(/\\/g, '/'),
+        content: fs.readFileSync(fullPath, 'utf-8'),
+      });
+    }
+  }
+  return documents;
 }
 
 // Helper to build graph data
@@ -212,6 +235,10 @@ export function wikiLocalApi(): Plugin {
           if (req.method === 'GET' && pathname === '/api/wiki/tree') {
             const tree = buildFsTree(repoPath, repoPath);
             return sendResponse(200, { tree });
+          }
+
+          if (req.method === 'GET' && pathname === '/api/wiki/documents') {
+            return sendResponse(200, { documents: readWikiDocuments(repoPath, repoPath) });
           }
 
           if (req.method === 'POST' && pathname === '/api/wiki/open') {
