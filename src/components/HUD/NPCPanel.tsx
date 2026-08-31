@@ -19,6 +19,13 @@ import { toast } from '../UI/Toast';
 import { confirmDialog } from '../UI/Toast';
 import { Tooltip } from '../UI/Tooltip';
 import { createWikiTokenData } from '../../services/wiki/wikiTokenAdapter';
+import { useAuthStore } from '../../store/authStore';
+import { getCampaignCharacters, getVaultCharacters, saveCharacter } from '../../services/characterRepository';
+import {
+  createCharacterFromWiki,
+  findCharacterByWikiPath,
+  integrateCharacter,
+} from '../../services/characterIntegration';
 
 const RACAS_DISPONIVEIS = ['Humano', 'Elfo', 'Anão', 'Fada', 'Sintético', 'Dragão', 'Monstro/Orc', 'Demônio', 'Anjo', 'Vampiro'];
 
@@ -36,6 +43,7 @@ const CONDITIONS = [
 ];
 
 export const NPCPanel: React.FC = () => {
+  const { user } = useAuthStore();
   const [tokens, setTokens] = useState<any[]>([]);
   const [activePanelTab, setActivePanelTab] = useState<'board' | 'library'>('board');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -43,6 +51,7 @@ export const NPCPanel: React.FC = () => {
   const [filterType, setFilterType] = useState<'all' | 'players' | 'enemies'>('all');
   const [showOnlyLinked, setShowOnlyLinked] = useState(true);
   const [generatorCategories, setGeneratorCategories] = useState<any[]>([]);
+  const [convertingPaths, setConvertingPaths] = useState<Set<string>>(() => new Set());
 
   const { index: wikiIndex, isLoading: isWikiLoading } = useWiki();
 
@@ -192,6 +201,54 @@ export const NPCPanel: React.FC = () => {
       console.error("Erro ao evocar da biblioteca:", err);
       toast.error("Falha ao conjurar entidade.");
     }
+  };
+
+  const handleConvertWikiSheet = async (
+    path: string,
+    fallbackMetadata: Record<string, unknown>,
+    target: 'campaign' | 'vault' = 'campaign',
+    silent = false,
+  ) => {
+    if (convertingPaths.has(path)) return false;
+    setConvertingPaths((current) => new Set(current).add(path));
+    try {
+      const rawMd = await loadMarkdownFile(path);
+      const parts = rawMd?.split('---') || [];
+      const metadata = parts.length >= 3 ? yaml.load(parts[1]) as Record<string, unknown> : fallbackMetadata;
+      if (!metadata || typeof metadata !== 'object') throw new Error('Frontmatter inválido');
+
+      const campaignId = target === 'campaign'
+        ? new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2'
+        : null;
+      const existingRecords = target === 'campaign'
+        ? await getCampaignCharacters(campaignId, user?.id)
+        : await getVaultCharacters(user?.id);
+      const existing = findCharacterByWikiPath(existingRecords, path);
+      const draft = createCharacterFromWiki(metadata, path, campaignId, user?.id);
+      const saved = await saveCharacter({ ...draft, id: existing?.id }, user?.id);
+      if (saved.campaign_id) state.sheets.set(saved.id, saved);
+      integrateCharacter(saved);
+      if (!silent) toast.success(`"${saved.name}" está ${target === 'vault' ? 'no Vault' : 'na mesa'} e no Códice.`);
+      return true;
+    } catch (error) {
+      console.error('[NPCPanel] Falha ao converter ficha da Wiki:', error);
+      if (!silent) toast.error('Não foi possível converter esta ficha.');
+      return false;
+    } finally {
+      setConvertingPaths((current) => {
+        const next = new Set(current);
+        next.delete(path);
+        return next;
+      });
+    }
+  };
+
+  const handleConvertVisibleWikiSheets = async () => {
+    let converted = 0;
+    for (const entity of wikiEntities) {
+      if (await handleConvertWikiSheet(entity.path, entity.metadata || {}, 'vault', true)) converted += 1;
+    }
+    if (converted) toast.success(`${converted} ficha(s) convertida(s), vinculada(s) ao Códice e disponível(is) no Vault.`);
   };
 
   // Fábrica automática de Fichas .md para tokens sem ficha linked
@@ -512,6 +569,21 @@ export const NPCPanel: React.FC = () => {
               <UserPlus size={12} />
             </button>
           </Tooltip>
+        )}
+        {activePanelTab === 'library' && wikiEntities.length > 0 && (
+          <button
+            type="button"
+            onClick={() => void handleConvertVisibleWikiSheets()}
+            disabled={convertingPaths.size > 0}
+            style={{
+              padding: '4px 7px', borderRadius: '4px', border: '1px solid var(--accent-primary)',
+              background: 'var(--accent-glow)', color: 'var(--accent-primary)', cursor: 'pointer',
+              fontSize: '0.65rem', fontWeight: 'bold', opacity: convertingPaths.size > 0 ? 0.65 : 1,
+            }}
+            title="Converte as fichas filtradas em fichas portáveis do Vault e as cria no Códice"
+          >
+            {convertingPaths.size > 0 ? 'CONVERTENDO…' : `CONVERTER ${wikiEntities.length} FICHA(S)`}
+          </button>
         )}
       </div>
 
@@ -1533,6 +1605,22 @@ export const NPCPanel: React.FC = () => {
                         title="Instanciar no centro do Tabuleiro"
                       >
                         EVOCAR
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleConvertWikiSheet(entity.path, entity.metadata || {}, 'vault');
+                        }}
+                        disabled={convertingPaths.has(entity.path)}
+                        style={{
+                          padding: '3px 6px', background: 'var(--bg-tertiary)', border: '1px solid var(--accent-primary)',
+                          borderRadius: '4px', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 'bold',
+                          opacity: convertingPaths.has(entity.path) ? 0.65 : 1,
+                        }}
+                        title="Converter para ficha portável do Vault, vinculada ao Códice"
+                      >
+                        {convertingPaths.has(entity.path) ? '…' : 'VINCULAR'}
                       </button>
                       <button
                         onClick={(e) => handleOpenWikiSheet(entity.path, e)}

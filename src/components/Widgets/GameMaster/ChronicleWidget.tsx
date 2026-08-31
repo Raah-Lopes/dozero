@@ -9,6 +9,7 @@ import { createChronicleArchive, downloadChronicle, parseChronicleArchive, type 
 import { VisualCalendarView } from './VisualCalendarView';
 import { LoreWorkspaceSwitcher } from '../../Navigation/LoreWorkspaceSwitcher';
 import { WorkspaceChrome } from '../../Navigation/WorkspaceChrome';
+import { useWindowManager } from '../../../hooks/useWindowManager';
 import './ChronicleWidget.css';
 
 const KINDS: Record<ChronicleEventKind, { label: string; icon: LucideIcon }> = {
@@ -20,7 +21,7 @@ const KIND_ORDER = Object.keys(KINDS) as ChronicleEventKind[];
 const COLORS = ['#8b5cf6', '#d99a2b', '#d1495b', '#2f9e77', '#4a7dc9', '#2a9d8f', '#5fb3c9', '#c25e8a', '#a3702f', '#8a93a6'];
 
 type EraDraft = { id?: string; name: string; startYear: string; endYear: string; color: string; description: string; backgroundUrl: string; collapsed?: boolean };
-type EventDraft = { id?: string; eraId: string; title: string; day?: string; month?: string; year: string; datePrecision?: 'day' | 'year'; kind: ChronicleEventKind; layer: ChronosEventLayer; description: string; imageUrl: string; tags: string; wikiPath: string };
+type EventDraft = { id?: string; eraId: string; title: string; day?: string; month?: string; year: string; datePrecision?: 'day' | 'year'; kind: ChronicleEventKind; layer: ChronosEventLayer; description: string; imageUrl: string; tags: string; wikiPath: string; characterId?: string; characterScope?: 'campaign' | 'vault' };
 type TimelineLayout = 'vertical' | 'horizontal';
 type WorkspaceMode = 'timeline' | 'calendar';
 
@@ -30,7 +31,7 @@ const duration = (era: ChronicleEra) => Math.max(1, era.endYear - era.startYear 
 const roman = (index: number) => ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][index] || String(index + 1);
 const toEraDraft = (era?: ChronicleEra): EraDraft => ({ id: era?.id, name: era?.name || '', startYear: String(era?.startYear ?? 0), endYear: String(era?.endYear ?? 111), color: era?.color || COLORS[0], description: era?.description || '', backgroundUrl: era?.backgroundUrl || '', collapsed: era?.collapsed });
 const nextEraDraft = (eras: ChronicleEra[]): EraDraft => { const start = (eras.at(-1)?.endYear ?? -1) + 1; return { name: '', startYear: String(start), endYear: String(start + 111), color: COLORS[eras.length % COLORS.length], description: '', backgroundUrl: '' }; };
-const toEventDraft = (eraId: string, event?: ChronosEvent, defaultDate?: { day: number; month: number; year: number }): EventDraft => ({ id: event?.id, eraId: event?.eraId || eraId, title: event?.title || '', day: event?.day !== undefined ? String(event.day) : defaultDate?.day !== undefined ? String(defaultDate.day) : '', month: event?.month !== undefined ? String(event.month) : defaultDate?.month !== undefined ? String(defaultDate.month) : '', year: String(event?.year ?? defaultDate?.year ?? 0), datePrecision: event?.datePrecision ?? (defaultDate ? 'day' : 'year'), kind: event?.kind || 'fundacao', layer: event?.layer || 'world', description: event?.description || '', imageUrl: event?.imageUrl || '', tags: (event?.tags || []).join(', '), wikiPath: event?.wikiPath || '' });
+const toEventDraft = (eraId: string, event?: ChronosEvent, defaultDate?: { day: number; month: number; year: number }): EventDraft => ({ id: event?.id, eraId: event?.eraId || eraId, title: event?.title || '', day: event?.day !== undefined ? String(event.day) : defaultDate?.day !== undefined ? String(defaultDate.day) : '', month: event?.month !== undefined ? String(event.month) : defaultDate?.month !== undefined ? String(defaultDate.month) : '', year: String(event?.year ?? defaultDate?.year ?? 0), datePrecision: event?.datePrecision ?? (defaultDate ? 'day' : 'year'), kind: event?.kind || 'fundacao', layer: event?.layer || 'world', description: event?.description || '', imageUrl: event?.imageUrl || '', tags: (event?.tags || []).join(', '), wikiPath: event?.wikiPath || '', characterId: event?.characterId, characterScope: event?.characterScope });
 
 export const ChronicleWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [, rerender] = useState(0);
@@ -128,7 +129,9 @@ export const ChronicleWidget: React.FC<{ onClose: () => void }> = ({ onClose }) 
       description: draft.description,
       imageUrl: draft.imageUrl,
       tags: draft.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      wikiPath: draft.wikiPath || undefined
+      wikiPath: draft.wikiPath || undefined,
+      characterId: draft.characterId,
+      characterScope: draft.characterScope
     });
     if (!saved) return false;
     setEventEditor(null); toast.success(draft.id ? 'Registro atualizado.' : `“${saved.title}” registrado.`); return true;
@@ -466,6 +469,7 @@ const EventDetail = ({ event, era, calendar, onClose, onEdit, onDelete }: { even
         <h2>{event.title}</h2>
         <p>{event.description || 'Sem descrição registrada.'}</p>
         {event.tags?.length ? <div className="chronica-tags">{event.tags.map(tag => <small key={tag}>#{tag}</small>)}</div> : null}
+        {event.characterId ? <button className="chronica-button ghost" onClick={() => { const manager = useWindowManager.getState(); manager.setActiveCharacterId(event.characterId || null); manager.setSheetScope(event.characterScope || 'campaign'); manager.setViewMode('sheets'); }}><ScrollText size={15} /> Abrir ficha na Forja</button> : null}
         {event.wikiPath ? <button className="chronica-button ghost" onClick={() => window.dispatchEvent(new CustomEvent('open-wiki-file', { detail: { path: event.wikiPath } }))}><BookOpen size={15} /> Abrir entidade na Wiki</button> : null}
       </article>
     </Modal>

@@ -38,6 +38,9 @@ export interface PersonInit {
   relations?: PersonRelation[];
   birthOrder?: number;
   createdAt?: number;
+  /** Ficha portável do Vault/Mesa vinculada a este membro, se existir. */
+  characterId?: string;
+  characterScope?: 'campaign' | 'vault';
 }
 
 export class Person {
@@ -55,6 +58,8 @@ export class Person {
   readonly relations: readonly PersonRelation[];
   readonly birthOrder: number;
   readonly createdAt: number;
+  readonly characterId?: string;
+  readonly characterScope?: 'campaign' | 'vault';
 
   constructor(init: PersonInit) {
     this.id = init.id;
@@ -71,6 +76,8 @@ export class Person {
     this.relations = [...(init.relations ?? [])];
     this.birthOrder = init.birthOrder ?? 0;
     this.createdAt = init.createdAt ?? Date.now();
+    this.characterId = init.characterId;
+    this.characterScope = init.characterScope;
   }
 
   /** Cria uma cópia com campos substituídos (imutabilidade). */

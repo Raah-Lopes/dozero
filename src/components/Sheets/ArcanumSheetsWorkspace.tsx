@@ -16,6 +16,7 @@ import { toast } from '../UI/Toast';
 import { WorkspaceChrome } from '../Navigation/WorkspaceChrome';
 import { LoreWorkspaceSwitcher } from '../Navigation/LoreWorkspaceSwitcher';
 import { ARCANUM_SHEET_KIND, characterFromRecord, recordData } from './arcanumSheetAdapter';
+import { integrateCharacter, removeCharacterIntegration } from '../../services/characterIntegration';
 import './arcanumWorkspace.css';
 
 interface Props {
@@ -83,6 +84,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
       data: { sheetKind: ARCANUM_SHEET_KIND, sheetVersion: 1, wikiPath: '', character },
     }, user?.id);
     if (saved.campaign_id) state.sheets.set(saved.id, saved);
+    integrateCharacter(saved);
     setRecords((current) => [saved, ...current]);
     setActive(saved);
     toast.success('Nova ficha Arcanum criada.');
@@ -98,6 +100,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
       data: recordData(active, character),
     }, user?.id);
     if (saved.campaign_id) state.sheets.set(saved.id, saved);
+    integrateCharacter(saved);
     Array.from(state.tokens.entries()).forEach(([tokenId, rawToken]) => {
       const token = rawToken as Record<string, unknown>;
       if (token.characterId !== saved.id) return;
@@ -121,6 +124,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
     const character = characterFromRecord(active);
     const saved = await saveCharacter({ ...active, data: recordData(active, character, wikiPath) }, user?.id);
     if (saved.campaign_id) state.sheets.set(saved.id, saved);
+    integrateCharacter(saved);
     Array.from(state.tokens.entries()).forEach(([tokenId, rawToken]) => {
       const token = rawToken as Record<string, unknown>;
       if (token.characterId === saved.id) state.tokens.set(tokenId, { ...token, wikiPath });
@@ -133,17 +137,25 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
   const duplicateToVault = async () => {
     if (!active) return;
     const copy = await saveCharacter({ ...active, id: undefined, campaign_id: null, name: `${active.name} (Vault)` }, user?.id);
+    integrateCharacter(copy);
     setRecords((current) => [copy, ...current]);
     toast.success('Cópia salva no Vault.');
   };
 
   const removeActive = async () => {
     if (!active || !window.confirm(`Excluir a ficha "${active.name}"?`)) return;
+    removeCharacterIntegration(active);
     await deleteCharacter(active.id, user?.id);
     state.sheets.delete(active.id);
     setRecords((current) => current.filter((record) => record.id !== active.id));
     setActive(null);
     toast.info('Ficha removida.');
+  };
+
+  const integrateActiveEverywhere = () => {
+    if (!active) return;
+    integrateCharacter(active, { lineage: true, timeline: true });
+    toast.success(`"${active.name}" integrado ao Códice, Linhagem e Chronos.`);
   };
 
   const spawnToken = () => {
@@ -197,6 +209,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
             onUpdateWikiLink={updateWikiLink}
             onSpawnToken={spawnToken}
             onDuplicateToVault={active.campaign_id ? duplicateToVault : undefined}
+            onIntegrateEverywhere={integrateActiveEverywhere}
             onDelete={removeActive}
             onSave={persistCharacter}
             onClose={() => setActive(null)}

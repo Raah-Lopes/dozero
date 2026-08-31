@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   X, Plus, Trash2, Download, User, BookOpen, Sword,
   Shield, Search, Edit2, Check, ChevronRight, Play, Sparkles,
-  Copy, History, Camera, FileJson, Upload, RotateCcw
+  Copy, History, Camera, FileJson, Upload, RotateCcw, Network, Crown,
+  CalendarDays, ImageDown, Printer
 } from 'lucide-react';
 import { state } from '../../services/yjs';
 import { useAuthStore } from '../../store/authStore';
@@ -22,6 +23,15 @@ import {
   importCharacterFromJson
 } from '../../services/characterRepository';
 import { getCampaigns, CampaignCloudRecord } from '../../services/campaignCloudService';
+import {
+  exportCharactersJson,
+  exportCharactersWebp,
+  exportCharacterWebp,
+  integrateCharacter,
+  printCharacters,
+  removeCharacterIntegration,
+} from '../../services/characterIntegration';
+import { useWindowManager } from '../../hooks/useWindowManager';
 import { toast } from '../UI/Toast';
 
 interface Props {
@@ -116,6 +126,45 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
     toast.success(`Exportando "${c.name}.json"...`);
   };
 
+  const openCodex = (character: CharacterRecord) => {
+    const note = integrateCharacter(character);
+    const manager = useWindowManager.getState();
+    manager.setWikiInitialFile(note.id);
+    manager.setViewMode('wiki');
+    onClose();
+  };
+
+  const handleIntegrateEverywhere = (character: CharacterRecord) => {
+    integrateCharacter(character, { lineage: true, timeline: true });
+    toast.success(`"${character.name}" está no Códice, na Linhagem e no Chronos.`);
+  };
+
+  const handleOpenLineage = (character: CharacterRecord) => {
+    integrateCharacter(character, { lineage: true });
+    const manager = useWindowManager.getState();
+    manager.setViewMode('canvas');
+    manager.openWindow('lineage');
+    onClose();
+  };
+
+  const handleOpenTimeline = (character: CharacterRecord) => {
+    integrateCharacter(character, { timeline: true });
+    const manager = useWindowManager.getState();
+    manager.setViewMode('canvas');
+    manager.openWindow('chronicle');
+    onClose();
+  };
+
+  const handleExportWebp = async (character: CharacterRecord) => {
+    await exportCharacterWebp(character);
+    toast.success(`Exportando "${character.name}" como WebP...`);
+  };
+
+  const handlePrint = (characters: CharacterRecord[]) => {
+    if (printCharacters(characters)) toast.info('A impressão foi aberta. Escolha "Salvar como PDF" no diálogo.');
+    else toast.error('O navegador bloqueou a janela de impressão.');
+  };
+
   const handleImportJsonFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -198,9 +247,10 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
   };
 
   const handleDelete = async (c: CharacterRecord) => {
-    if (!confirm(`Excluir "${c.name}" do Vault? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Excluir "${c.name}" do Vault, Códice, Chronos e Linhagem? O Markdown original na Wiki será preservado.`)) return;
+    removeCharacterIntegration(c);
     await deleteCharacter(c.id, user?.id);
-    toast.info(`"${c.name}" removido do Vault.`);
+    toast.info(`"${c.name}" removido do ecossistema.`);
     load();
   };
 
@@ -320,6 +370,29 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
           </button>
           <button onClick={onClose} style={{ padding: '6px', background: 'transparent', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}>
             <X size={18} />
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', padding: '10px 24px', borderBottom: '1px solid #3b281d', background: 'rgba(0,0,0,0.16)' }}>
+          <button
+            type="button"
+            onClick={() => {
+              chars.forEach((character) => integrateCharacter(character));
+              toast.success(`${chars.length} ficha(s) vinculada(s) ao Códice e ao Cérebro.`);
+            }}
+            disabled={chars.length === 0}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 8px', background: 'rgba(192,132,252,0.1)', border: '1px solid #a855f7', borderRadius: '7px', color: '#d8b4fe', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+          >
+            <Network size={12} /> Vincular todas
+          </button>
+          <button type="button" onClick={() => exportCharactersJson(chars)} disabled={chars.length === 0} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 8px', background: 'rgba(56,189,248,0.1)', border: '1px solid #38bdf8', borderRadius: '7px', color: '#7dd3fc', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>
+            <FileJson size={12} /> JSON em lote
+          </button>
+          <button type="button" onClick={() => void exportCharactersWebp(chars)} disabled={chars.length === 0} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 8px', background: 'rgba(245,158,11,0.1)', border: '1px solid #f59e0b', borderRadius: '7px', color: '#fcd34d', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>
+            <ImageDown size={12} /> WebP em lote
+          </button>
+          <button type="button" onClick={() => handlePrint(chars)} disabled={chars.length === 0} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid #78716c', borderRadius: '7px', color: '#e7e5e4', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>
+            <Printer size={12} /> PDF em lote
           </button>
         </div>
 
@@ -623,6 +696,34 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
                       <Play size={11} /> Invocar
                     </button>
                     <button
+                      onClick={() => openCodex(c)}
+                      title="Abrir a entidade no Códice; ela também aparecerá no Cérebro"
+                      style={{ padding: '5px 7px', background: 'rgba(168,85,247,0.1)', border: '1px solid #a855f7', borderRadius: '7px', color: '#d8b4fe', cursor: 'pointer' }}
+                    >
+                      <BookOpen size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleOpenLineage(c)}
+                      title="Adicionar à Linhagem e abrir a árvore genealógica"
+                      style={{ padding: '5px 7px', background: 'rgba(234,179,8,0.1)', border: '1px solid #ca8a04', borderRadius: '7px', color: '#fde047', cursor: 'pointer' }}
+                    >
+                      <Crown size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleOpenTimeline(c)}
+                      title="Adicionar à linha do tempo Chronos"
+                      style={{ padding: '5px 7px', background: 'rgba(34,197,94,0.1)', border: '1px solid #22c55e', borderRadius: '7px', color: '#86efac', cursor: 'pointer' }}
+                    >
+                      <CalendarDays size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleIntegrateEverywhere(c)}
+                      title="Vincular de uma vez ao Códice, Cérebro, Linhagem e Chronos"
+                      style={{ padding: '5px 7px', background: 'rgba(251,191,36,0.1)', border: '1px solid #fbbf24', borderRadius: '7px', color: '#fbbf24', cursor: 'pointer' }}
+                    >
+                      <Network size={12} />
+                    </button>
+                    <button
                       onClick={() => handleDuplicateChar(c)}
                       title="Duplicar / Clonar Personagem"
                       style={{ padding: '5px 7px', background: 'rgba(255,255,255,0.04)', border: '1px solid #5a4234', borderRadius: '7px', color: '#fbbf24', cursor: 'pointer' }}
@@ -642,6 +743,12 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
                       style={{ padding: '5px 7px', background: 'rgba(56,189,248,0.1)', border: '1px solid #38bdf8', borderRadius: '7px', color: '#38bdf8', cursor: 'pointer' }}
                     >
                       <FileJson size={12} />
+                    </button>
+                    <button onClick={() => void handleExportWebp(c)} title="Exportar como carta WebP" style={{ padding: '5px 7px', background: 'rgba(245,158,11,0.1)', border: '1px solid #f59e0b', borderRadius: '7px', color: '#fcd34d', cursor: 'pointer' }}>
+                      <ImageDown size={12} />
+                    </button>
+                    <button onClick={() => handlePrint([c])} title="Imprimir ou salvar como PDF" style={{ padding: '5px 7px', background: 'rgba(255,255,255,0.04)', border: '1px solid #78716c', borderRadius: '7px', color: '#e7e5e4', cursor: 'pointer' }}>
+                      <Printer size={12} />
                     </button>
                     <button
                       onClick={() => handleOpenImport(c)}

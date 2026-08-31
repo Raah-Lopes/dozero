@@ -21,6 +21,9 @@ export interface ChronosEvent {
   year: number;
   layer?: ChronosEventLayer;
   wikiPath?: string;
+  /** Referência opcional à ficha portável que originou o acontecimento. */
+  characterId?: string;
+  characterScope?: 'campaign' | 'vault';
   eraId?: string;
   datePrecision?: 'day' | 'year';
   kind?: ChronicleEventKind;
@@ -181,14 +184,16 @@ export function saveChronicleEvent(input: Partial<ChronosEvent> & Pick<ChronosEv
     imageUrl: input.imageUrl?.trim() || undefined,
     tags: [...new Set((input.tags || []).map(tag => tag.trim()).filter(Boolean))],
     eraId: input.eraId,
-    wikiPath: input.wikiPath
+    wikiPath: input.wikiPath,
+    characterId: input.characterId,
+    characterScope: input.characterScope
   };
   const events = getChronosEvents();
   state.chronos.set('events', events.some(item => item.id === event.id) ? events.map(item => item.id === event.id ? event : item) : [...events, event]);
   return event;
 }
 
-export function addChronosEvent(title: string, date = getChronosState(), details: { layer?: ChronosEventLayer; wikiPath?: string } = {}) {
+export function addChronosEvent(title: string, date = getChronosState(), details: { layer?: ChronosEventLayer; wikiPath?: string; characterId?: string; characterScope?: 'campaign' | 'vault' } = {}) {
   const cleanTitle = title.trim();
   if (!cleanTitle) return null;
   const config = getChronosConfig();
@@ -200,7 +205,9 @@ export function addChronosEvent(title: string, date = getChronosState(), details
     month,
     year: Math.max(1, date.year),
     layer: details.layer || 'world',
-    wikiPath: details.wikiPath || undefined
+    wikiPath: details.wikiPath || undefined,
+    characterId: details.characterId,
+    characterScope: details.characterScope
   };
   state.chronos.set('events', [...getChronosEvents(), event]);
   return event;

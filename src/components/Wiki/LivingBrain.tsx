@@ -117,6 +117,18 @@ function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: W
   return { nodes: clusteredNodes, edges: mappedEdges };
 }
 
+/** Mantém o layout manual do grafo, mas nunca esconde entidades novas do Códice. */
+function mergeCodexIntoGraph(saved: VaultPayload, codex: CodexDocument, repoPath: string): VaultPayload {
+  const fromCodex = buildGraphFromCodex(codex, repoPath);
+  const nodeIds = new Set(saved.nodes.map((node) => node.id));
+  const edgeIds = new Set(saved.edges.map((edge) => edge.id));
+  return {
+    ...saved,
+    nodes: [...saved.nodes, ...fromCodex.nodes.filter((node) => !nodeIds.has(node.id))],
+    edges: [...saved.edges, ...fromCodex.edges.filter((edge) => !edgeIds.has(edge.id))],
+  };
+}
+
 /**
  * LivingBrain — O Cérebro do Mundo (Arcanum)
  * Integração imediata (0ms) do Grafo Semântico com o Códice e Wiki.
@@ -128,10 +140,13 @@ export const LivingBrain: React.FC = () => {
   // Carregamento síncrono instantâneo a partir do Códice em memória
   const initialData = useMemo(() => {
     try {
-      if (initialSharedGraph) return { nodes: initialSharedGraph.nodes, edges: initialSharedGraph.edges };
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
+      if (initialSharedGraph) {
+        const merged = mergeCodexIntoGraph(initialSharedGraph, codex, repoPath);
+        return { nodes: merged.nodes, edges: merged.edges };
+      }
       return buildGraphFromCodex(codex, repoPath);
     } catch {
       return { nodes: [], edges: [] };
@@ -150,12 +165,14 @@ export const LivingBrain: React.FC = () => {
     try {
       const shared = readSharedGraph();
       if (shared) {
-        const serialized = JSON.stringify(shared);
+        const config = getWikiConfig();
+        const merged = mergeCodexIntoGraph(shared, normalizeCodex(state.wiki.get('__codex_v1__')), config.repoUrl || 'D:/DOZERO/wikidozero');
+        const serialized = JSON.stringify(merged);
         if (serialized !== graphSerialized.current) {
           graphSerialized.current = serialized;
-          setSharedGraph(shared);
-          setWikiNodes(shared.nodes);
-          setWikiEdges(shared.edges);
+          setSharedGraph(merged);
+          setWikiNodes(merged.nodes);
+          setWikiEdges(merged.edges);
           if (!isBackgroundRefresh) setGraphVersion((v) => v + 1);
         }
         setIsLoading(false);
@@ -310,12 +327,14 @@ export const LivingBrain: React.FC = () => {
       if (event.keysChanged?.has(SHARED_GRAPH_KEY)) {
         const shared = readSharedGraph();
         if (!shared) return;
-        const serialized = JSON.stringify(shared);
+        const config = getWikiConfig();
+        const merged = mergeCodexIntoGraph(shared, normalizeCodex(state.wiki.get('__codex_v1__')), config.repoUrl || 'D:/DOZERO/wikidozero');
+        const serialized = JSON.stringify(merged);
         if (serialized === graphSerialized.current) return;
         graphSerialized.current = serialized;
-        setSharedGraph(shared);
-        setWikiNodes(shared.nodes);
-        setWikiEdges(shared.edges);
+        setSharedGraph(merged);
+        setWikiNodes(merged.nodes);
+        setWikiEdges(merged.edges);
         setIsLoading(false);
         setGraphVersion((v) => v + 1);
         return;
@@ -344,13 +363,13 @@ export const LivingBrain: React.FC = () => {
     state.wiki.set(SHARED_GRAPH_KEY, payload);
   }, []);
 
-  const graphPayload = useMemo<VaultPayload>(() => sharedGraph || {
-    v: 1,
+  const graphPayload = useMemo<VaultPayload>(() => ({
+    v: sharedGraph?.v || 1,
     nodes: wikiNodes,
     edges: wikiEdges,
-    customTypes: [],
-    savedViews: [],
-  }, [sharedGraph, wikiNodes, wikiEdges]);
+    customTypes: sharedGraph?.customTypes || [],
+    savedViews: sharedGraph?.savedViews || [],
+  }), [sharedGraph, wikiNodes, wikiEdges]);
 
   // Criação de conexão direta no markdown da Wiki ou Códice
   const handleCreateWikiRelation = async (sourcePath: string, targetName: string, label: string) => {

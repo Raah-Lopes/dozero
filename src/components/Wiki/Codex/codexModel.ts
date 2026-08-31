@@ -36,6 +36,11 @@ export interface CodexNote {
   icon?: string;
   chronosEventIds?: string[];
   lineagePersonId?: string;
+  /** Referência à ficha portável do Vault/Mesa, quando esta nota nasceu de uma ficha. */
+  characterId?: string;
+  characterScope?: 'campaign' | 'vault';
+  /** Caminho da ficha Markdown de origem, preservado durante a migração. */
+  wikiPath?: string;
   links: CodexLink[];
   createdAt: string;
   updatedAt: string;
@@ -392,6 +397,9 @@ export function normalizeCodex(value: unknown): CodexDocument {
             gallery: Array.isArray(note.gallery) ? note.gallery.filter((g: unknown) => typeof g === 'string') : [],
             chronosEventIds: Array.isArray(note.chronosEventIds) ? note.chronosEventIds.filter((e: unknown) => typeof e === 'string') : [],
             lineagePersonId: note.lineagePersonId ? String(note.lineagePersonId) : undefined,
+            characterId: note.characterId || note.character_id ? String(note.characterId || note.character_id) : undefined,
+            characterScope: note.characterScope === 'vault' ? 'vault' : note.characterScope === 'campaign' ? 'campaign' : undefined,
+            wikiPath: note.wikiPath || note.caminhoArquivo ? String(note.wikiPath || note.caminhoArquivo) : undefined,
             links: Array.isArray(note.links)
               ? note.links.map((l: any) => ({ label: String(l?.label || l?.rotulo || ''), url: String(l?.url || '') })).filter((l: CodexLink) => l.url)
               : note.externalUrl
@@ -542,4 +550,3 @@ export function filterCodexNotes(notes: CodexNote[], filters: CodexFilters): Cod
     );
   });
 }
-

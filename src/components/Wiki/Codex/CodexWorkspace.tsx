@@ -1881,6 +1881,21 @@ function NoteEditorDrawer({
             <span className="animar-pulso h-1.5 w-1.5 rounded-full bg-emerald-400" /> salvo automático
           </span>
           <div className="ml-auto flex items-center gap-2">
+            {note.characterId && (
+              <button
+                type="button"
+                title="Abrir ficha na Forja"
+                onClick={() => {
+                  const manager = useWindowManager.getState();
+                  manager.setActiveCharacterId(note.characterId || null);
+                  manager.setSheetScope(note.characterScope || 'campaign');
+                  manager.setViewMode('sheets');
+                }}
+                className={`${CLS_BOTAO_FANTASMA} px-2.5 text-[11px] font-bold`}
+              >
+                Ficha
+              </button>
+            )}
             <button
               title={note.favorite ? 'Remover das favoritas' : 'Marcar favorita'}
               onClick={() => salvar({ favorite: !note.favorite })}

@@ -10,6 +10,7 @@ import {
   Shield,
   Sparkles,
   Trash2,
+  Network,
 } from "lucide-react";
 import type { Character, RollResult } from "./lib";
 import {
@@ -54,6 +55,7 @@ interface ArcanumSheetProps {
   onUpdateWikiLink?: (wikiPath: string) => void;
   onSpawnToken?: () => void;
   onDuplicateToVault?: () => void;
+  onIntegrateEverywhere?: () => void;
   onDelete?: () => void;
   onSave?: (character: Character) => void | Promise<void>;
   onClose?: () => void;
@@ -69,6 +71,7 @@ export default function App({
   onUpdateWikiLink,
   onSpawnToken,
   onDuplicateToVault,
+  onIntegrateEverywhere,
   onDelete,
   onSave,
   onClose,
@@ -298,7 +301,7 @@ export default function App({
 
           {/* Lado direito: Ações da Ficha, Sistema, Salvamento e Utilitários */}
           <div className="relative z-50 ml-auto flex items-center gap-2 shrink-0">
-            {(onSpawnToken || onDuplicateToVault || onDelete || (personagens.length > 0 && onUpdateWikiLink)) && (
+            {(onSpawnToken || onDuplicateToVault || onIntegrateEverywhere || onDelete || (personagens.length > 0 && onUpdateWikiLink)) && (
               <div className="relative">
                 <button
                   type="button"
@@ -315,6 +318,18 @@ export default function App({
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowActions(false)} />
                     <div className="absolute right-0 top-full mt-2 z-50 w-64 rounded-lg border border-gold-600/40 bg-ink-900/95 p-2 shadow-2xl backdrop-blur-md space-y-1">
+                      {onIntegrateEverywhere && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowActions(false);
+                            onIntegrateEverywhere();
+                          }}
+                          className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs font-bold text-fog transition-colors hover:bg-ink-800 hover:text-gold-200"
+                        >
+                          <Network size={14} className="text-gold-400" /> Integrar no Códice, Linhagem e Chronos
+                        </button>
+                      )}
                       {onSpawnToken && (
                         <button
                           type="button"

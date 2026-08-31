@@ -2,6 +2,8 @@ import type { Person } from "../model/tree";
 import { houseColors, roman } from "../lib/utils";
 import { Sigil } from "./Sigil";
 import { IconChild, IconQuill, IconRings, IconDagger, IconPlus } from "./icons";
+import { ScrollText } from 'lucide-react';
+import { useWindowManager } from '../../../../../hooks/useWindowManager';
 
 export interface CardActions {
   onSelect: (id: string) => void;
@@ -147,6 +149,19 @@ export function PersonCard({
             <QuickBtn title="Adicionar parceiro(a)" onClick={() => actions.onAddPartner(person.id)}>
               <IconRings size={14} />
             </QuickBtn>
+            {person.characterId ? (
+              <QuickBtn
+                title="Abrir ficha na Forja"
+                onClick={() => {
+                  const manager = useWindowManager.getState();
+                  manager.setActiveCharacterId(person.characterId || null);
+                  manager.setSheetScope(person.characterScope || 'campaign');
+                  manager.setViewMode('sheets');
+                }}
+              >
+                <ScrollText size={14} />
+              </QuickBtn>
+            ) : null}
             <QuickBtn title="Editar membro" accent onClick={() => actions.onEdit(person.id)}>
               <IconQuill size={14} />
             </QuickBtn>
