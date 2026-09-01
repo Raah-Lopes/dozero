@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, CloudUpload, LogOut, Dices, GitMerge, ScrollText
+  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, LogOut, Dices, GitMerge, ScrollText
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
-import { toast } from '../UI/Toast';
 import { Tooltip } from '../UI/Tooltip';
 export function MainToolbar() {
   const {
@@ -16,7 +15,6 @@ export function MainToolbar() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isMenuOpen, setIsMenuOpen] = useState(window.innerWidth > 768);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -45,24 +43,6 @@ export function MainToolbar() {
     if (isMobile) setIsMenuOpen(false);
   };
 
-  const handleSyncCloud = async () => {
-    if (isSyncing) return;
-    setIsSyncing(true);
-    try {
-      const res = await fetch('/api/wiki/sync-cloud', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      toast.success(data.message || 'Sincronizado com sucesso!');
-    } catch (e: any) {
-      toast.error("Erro ao sincronizar: " + e.message);
-    } finally {
-      setIsSyncing(false);
-      if (isMobile) setIsMenuOpen(false);
-    }
-  };
-
-  const hostname = window.location.hostname;
-  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.');
 
   // The list of tools to be filtered
   const tools = [
@@ -75,7 +55,6 @@ export function MainToolbar() {
     { id: 'players', label: 'Central da Mesa & Jogadores', icon: <Users size={20} />, action: () => toggleModal('players'), isActive: activeModal === 'players', colorClass: 'theme-green' },
     { id: 'chat', label: 'Chat P2P (Mensagens)', icon: <MessageSquare size={20} />, action: () => handleToggleWindow('chatWindow'), isActive: openWindows.chatWindow, colorClass: 'theme-blue' },
     { id: 'combatLog', label: 'Registro de Rolagens (Log)', icon: <Dices size={20} />, action: () => handleToggleWindow('combatLog'), isActive: openWindows.combatLog, colorClass: 'theme-red' },
-    ...(isLocalhost ? [{ id: 'sync', label: isSyncing ? 'Sincronizando...' : 'Sincronizar Nuvem (Vercel)', icon: <CloudUpload size={20} className={isSyncing ? 'spin-anim' : ''} />, action: handleSyncCloud, isActive: false, colorClass: 'theme-green' }] : []),
     { id: 'settings', label: 'Configurações do Sistema', icon: <Settings size={20} />, action: () => toggleModal('settings'), isActive: activeModal === 'settings', colorClass: 'theme-slate' },
     { id: 'exit', label: 'Sair (Voltar ao Início)', icon: <LogOut size={20} />, action: () => window.location.href = '/', isActive: false, colorClass: 'theme-red' }
   ];

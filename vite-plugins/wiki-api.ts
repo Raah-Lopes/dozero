@@ -208,11 +208,11 @@ export function wikiLocalApi(): Plugin {
         }
 
 
-        // Require repoPath for all /api/wiki routes except sync-cloud
+        // Require repoPath for all /api/wiki routes
         let repoPath = url.searchParams.get('repoPath') || body.repoPath;
         if (!repoPath) repoPath = path.join(process.cwd(), 'wikidozero');
         
-        if (pathname.startsWith('/api/wiki') && pathname !== '/api/wiki/sync-cloud' && !fs.existsSync(repoPath)) {
+        if (pathname.startsWith('/api/wiki') && !fs.existsSync(repoPath)) {
           return sendResponse(404, { error: `Pasta não encontrada: ${repoPath}` });
         }
 
@@ -741,26 +741,6 @@ export function wikiLocalApi(): Plugin {
               try { watcher.close(); } catch {}
             });
             return;
-          }
-
-          if (req.method === 'POST' && pathname === '/api/wiki/sync-cloud') {
-            const { exec } = await import('child_process');
-            const projectRoot = path.resolve(process.cwd());
-            
-            return new Promise((resolve) => {
-              exec('git add . && git commit -m "Auto-sync from VTT" && git push', { cwd: projectRoot }, (error, stdout, stderr) => {
-                if (error) {
-                  if (stdout.includes('nothing to commit') || stderr.includes('nothing to commit')) {
-                    resolve(sendResponse(200, { success: true, message: 'Nenhuma alteração nova para sincronizar.' }));
-                  } else {
-                    console.error("Sync Error:", error);
-                    resolve(sendResponse(500, { error: error.message, stdout, stderr }));
-                  }
-                } else {
-                  resolve(sendResponse(200, { success: true, message: 'Sincronizado com a nuvem com sucesso!' }));
-                }
-              });
-            });
           }
 
           sendResponse(404, { error: 'Route not found' });

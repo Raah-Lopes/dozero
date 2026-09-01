@@ -340,7 +340,7 @@ export const GridToolbar: React.FC = () => {
     const ok = await saveRoomSnapshotToCloud();
     setIsSavingCloud(false);
     if (ok) {
-      toast.success('Mesa salva na nuvem com sucesso! Sincronizada para o Vercel.');
+      toast.success('Snapshot da mesa salvo no Supabase com sucesso!');
     } else {
       toast.error('Falha ao salvar na nuvem.');
     }
@@ -588,7 +588,7 @@ export const GridToolbar: React.FC = () => {
                   ☁️ Persistência & Backup da Mesa
                 </span>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <Tooltip label="Salvar Mesa na Nuvem" description="Sincroniza tokens, mapas e desenhos com o Supabase/Vercel">
+                  <Tooltip label="Salvar Mesa na Nuvem" description="Sincroniza tokens, mapas e desenhos com o Supabase">
                     <button
                       type="button"
                       disabled={isSavingCloud}
@@ -1778,7 +1778,7 @@ export const GridToolbar: React.FC = () => {
                   </button>
                 </Tooltip>
 
-                <Tooltip label="Salvar Mesa na Nuvem" description="Sincroniza para o Vercel e outros navegadores" position="top">
+                <Tooltip label="Salvar Mesa na Nuvem" description="Sincroniza para o Supabase e outros navegadores" position="top">
                   <button
                     disabled={isSavingCloud}
                     onClick={handleCloudSave}

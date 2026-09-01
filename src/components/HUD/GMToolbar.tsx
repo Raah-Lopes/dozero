@@ -4,7 +4,7 @@ import {
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
   Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, ScrollText,
-  LogOut, Menu, Search, CloudUpload, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge, BrickWall
+  LogOut, Menu, Search, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge, BrickWall
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -49,25 +49,6 @@ export function GMToolbar() {
   const [fogShape, setFogShape] = React.useState<'brush' | 'polygon' | 'rect' | 'circle' | 'triangle' | 'lasso' | 'eraser'>('brush');
   const [activeSubmenu, setActiveSubmenu] = React.useState<string | null>(null);
   const [isOpen, setIsOpen] = React.useState(() => window.innerWidth > 768);
-  const [isSyncing, setIsSyncing] = React.useState(false);
-
-  const handleSyncCloud = async () => {
-    if (isSyncing) return;
-    setIsSyncing(true);
-    try {
-      const res = await fetch('/api/wiki/sync-cloud', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      toast.success(data.message || 'Sincronizado com sucesso!');
-    } catch (e: any) {
-      toast.error("Erro ao sincronizar: " + e.message);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const hostname = window.location.hostname;
-  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.');
 
   React.useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -360,15 +341,6 @@ export function GMToolbar() {
             }}>
               {renderSectionHeader('Sistema')}
 
-              {isLocalhost && (
-                <ToolButton 
-                  icon={<CloudUpload size={19} className={isSyncing ? 'spin-anim' : ''} />} 
-                  active={false} 
-                  onClick={handleSyncCloud} 
-                  tooltip={isSyncing ? "Sincronizando..." : "Sincronizar Nuvem"}
-                  description="Salva o progresso e notas no repositório em nuvem"
-                />
-              )}
               <ToolButton 
                 icon={<Settings size={19} />} 
                 active={activeModal === 'settings'} 
