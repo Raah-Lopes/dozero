@@ -18,6 +18,7 @@ import { WorkspaceChrome } from '../Navigation/WorkspaceChrome';
 import { LoreWorkspaceSwitcher } from '../Navigation/LoreWorkspaceSwitcher';
 import { ARCANUM_SHEET_KIND, characterFromRecord, recordData } from './arcanumSheetAdapter';
 import { createCharacterFromWiki, findCharacterByWikiPath, integrateCharacter, removeCharacterIntegration } from '../../services/characterIntegration';
+import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import './arcanumWorkspace.css';
 
 interface Props {
@@ -91,8 +92,9 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
         tipo: personagem.status === 'jogador' ? 'pc' : personagem.status === 'inimigo' ? 'monstro' : 'npc',
         imagem: personagem.avatar,
       };
+      const rawContent = WikiIndexer.getRawContent(personagem.caminhoArquivo);
       const saved = await saveCharacter(
-        createCharacterFromWiki(metadata, personagem.caminhoArquivo, null, user?.id),
+        createCharacterFromWiki(metadata, personagem.caminhoArquivo, null, user?.id, rawContent),
         user?.id,
       );
       integrateCharacter(saved);

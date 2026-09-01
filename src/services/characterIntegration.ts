@@ -79,17 +79,56 @@ export function findCharacterByWikiPath(records: CharacterRecord[], wikiPath: st
   return records.find((character) => getCharacterWikiPath(character) === wikiPath);
 }
 
-/** Converte o frontmatter legado em uma ficha portável, mantendo o link à Wiki. */
+/** Extrai a história, biografia e lore original da ficha em Markdown/Frontmatter. */
+export function extractCharacterStory(metadata: UnknownRecord, content?: string | null): string {
+  const bio = firstText(metadata.biografia, metadata.biography, metadata.bio);
+  const desc = firstText(metadata.descricao, metadata.descrição, metadata.resumo);
+  const hist = firstText(metadata.historia, metadata.história, metadata.history, metadata.backstory);
+  const anotacoes = firstText(metadata.anotacoes, metadata.anotações, metadata.registro_aventura);
+
+  const frontStory = [bio, hist, desc, anotacoes].filter(Boolean).join('\n\n');
+
+  if (!content || !content.trim()) {
+    return frontStory;
+  }
+
+  // Remove possible frontmatter block if raw file content was passed
+  let body = content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n)?/, '').trim();
+
+  // Strip dataview / dataviewjs code blocks
+  body = body
+    .replace(/^```+dataview(?:js)?[\s\S]*?^```+\r?\n?/gm, '')
+    .replace(/```+dataview(?:js)?[\s\S]*?```+/g, '')
+    .trim();
+
+  // If the body is only an HTML layout form wrapper, prefer frontmatter story if present
+  if (body.startsWith('<div') && frontStory) {
+    return frontStory;
+  }
+
+  if (body) {
+    if (frontStory && !body.includes(frontStory)) {
+      return `${frontStory}\n\n${body}`;
+    }
+    return body;
+  }
+
+  return frontStory;
+}
+
+/** Converte o frontmatter legado e o conteúdo Markdown em uma ficha portável, mantendo a história original. */
 export function createCharacterFromWiki(
   metadata: UnknownRecord,
   wikiPath: string,
   campaignId: string | null,
   ownerId?: string,
+  rawContent?: string | null,
 ): WikiCharacterDraft {
   const token = createWikiTokenData(metadata, wikiPath) as UnknownRecord;
   const ficha = asRecord(metadata.ficha_personagem);
   const cabecalho = asRecord(ficha.cabecalho);
   const type = token.type === 'player' ? 'pc' : token.type === 'enemy' ? 'monster' : 'npc';
+  const story = extractCharacterStory(metadata, rawContent);
 
   return {
     campaign_id: campaignId,
@@ -111,8 +150,11 @@ export function createCharacterFromWiki(
       attributes: token.atributos || {},
       ficha_personagem: ficha,
       status: token.status,
+      story,
+      backstory: story,
+      biografia: typeof metadata.biografia === 'string' ? metadata.biografia : story,
     },
-    notes_markdown: firstText(metadata.descricao, metadata.descrição, metadata.resumo, metadata.historia, metadata.história),
+    notes_markdown: story,
     is_public_to_party: true,
   };
 }

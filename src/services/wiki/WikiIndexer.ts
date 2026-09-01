@@ -158,6 +158,11 @@ export class WikiIndexer {
     return buildWikiGraphFromFiles(this.rawFiles);
   }
 
+  static getRawContent(path: string): string | null {
+    if (state.wiki.has(path)) return String(state.wiki.get(path) || '');
+    return this.rawFiles.get(path) ?? null;
+  }
+
   static async loadRawFileContent(path: string): Promise<string | null> {
     if (state.wiki.has(path)) return String(state.wiki.get(path) || '');
 

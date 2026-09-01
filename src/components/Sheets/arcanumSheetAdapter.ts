@@ -5,8 +5,17 @@ export const ARCANUM_SHEET_KIND = 'arcanum';
 
 export function characterFromRecord(record: CharacterRecord): Character {
   const stored = record.data?.character as Partial<Character> | undefined;
+  const rawStory = (record.data?.story as string) || (record.data?.backstory as string) || (typeof record.data?.biografia === 'string' ? record.data.biografia : '') || record.notes_markdown || '';
+  const rawNotes = (record.data?.notes as string) || record.notes_markdown || '';
+
   if (record.data?.sheetKind === ARCANUM_SHEET_KIND && stored) {
-    return { ...structuredClone(DEFAULT_CHARACTER), ...stored, name: record.name };
+    return {
+      ...structuredClone(DEFAULT_CHARACTER),
+      ...stored,
+      name: record.name,
+      story: stored.story || rawStory,
+      notes: stored.notes || rawNotes,
+    };
   }
 
   const vitals = (record.data?.vitals || {}) as Record<string, unknown>;
@@ -19,7 +28,8 @@ export function characterFromRecord(record: CharacterRecord): Character {
     ...structuredClone(DEFAULT_CHARACTER),
     name: record.name,
     avatar: record.avatar_url || DEFAULT_CHARACTER.avatar,
-    notes: record.notes_markdown || '',
+    notes: rawNotes,
+    story: rawStory,
     vitals: [
       { id: 'pv', label: 'Pontos de Vida', value: hp, max: maxHp, color: '#c14e39' },
       { id: 'pm', label: 'Pontos de Magia', value: mana, max: maxMana, color: '#6b87b3' },

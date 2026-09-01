@@ -113,9 +113,10 @@ describe('11 Wiki Characters parser and draft validation', () => {
       const fullPath = path.join(wikiDir, relPath);
       let metadata: Record<string, unknown>;
 
+      let rawContent: string | null = null;
       if (fs.existsSync(fullPath)) {
-        const raw = fs.readFileSync(fullPath, 'utf8');
-        metadata = parseWikiDocument(raw).metadata;
+        rawContent = fs.readFileSync(fullPath, 'utf8');
+        metadata = parseWikiDocument(rawContent).metadata;
       } else {
         metadata = sampleCharacterData[relPath];
       }
@@ -127,9 +128,10 @@ describe('11 Wiki Characters parser and draft validation', () => {
         metadata,
         relPath,
         null,
-        '5c0be1c0-3583-4ef8-a795-be69bdb56f49'
+        '5c0be1c0-3583-4ef8-a795-be69bdb56f49',
+        rawContent
       );
-      return { relPath, draft, metadata };
+      return { relPath, draft, metadata, hasRealFile: fs.existsSync(fullPath) };
     });
 
     expect(drafts).toHaveLength(11);
@@ -149,12 +151,16 @@ describe('11 Wiki Characters parser and draft validation', () => {
     expect((drougtot.draft.data as any).macros).toHaveLength(2);
     expect((drougtot.draft.data as any).inventario).toHaveLength(3);
 
-    drafts.forEach(({ relPath, draft }) => {
+    drafts.forEach(({ relPath, draft, hasRealFile }) => {
       expect(draft.owner_id).toBe('5c0be1c0-3583-4ef8-a795-be69bdb56f49');
       expect(draft.campaign_id).toBeNull();
       expect(draft.name).toBeTruthy();
       expect(['pc', 'npc', 'monster']).toContain(draft.type);
       expect((draft.data as any).wikiPath).toBe(relPath);
+      if (hasRealFile) {
+        expect(draft.notes_markdown).toBeTruthy();
+        expect((draft.data as any).story).toBeTruthy();
+      }
     });
   });
 });
