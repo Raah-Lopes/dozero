@@ -124,7 +124,7 @@ export const CommandPalette: React.FC = () => {
   const actions: ActionDef[] = [
     // GameMaster
     { id: 'gm_arsenal', title: 'Arsenal do Mestre', icon: <Shield size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_arsenal', () => openWindow('arsenalMestre')) },
-    { id: 'gm_campaign', title: 'Gestor de Campanhas', icon: <BookOpen size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_campaign', () => openWindow('campaignManager')) },
+    { id: 'gm_campaign', title: 'Central de Campanha', icon: <BookOpen size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_campaign', () => openWindow('campaignManager')) },
     { id: 'gm_encounter', title: 'Forja de Encontros', icon: <Skull size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_encounter', () => openWindow('encounterGenerator')) },
     { id: 'gm_tracker', title: 'Iniciativa (Combate)', icon: <Swords size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_tracker', () => openWindow('tracker')) },
     { id: 'gm_clock', title: 'Relógio de Tensão', icon: <Timer size={16} />, category: 'GameMaster', onSelect: () => runCommand('gm_clock', () => setActiveModal('clockConfig')) },

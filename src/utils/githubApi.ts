@@ -15,6 +15,9 @@ export interface GithubTreeResponse {
   tree: GithubTreeItem[];
 }
 
+const markdownReadCache = new Map<string, { content: string | null; expiresAt: number }>();
+const markdownReadInflight = new Map<string, Promise<string | null>>();
+
 export async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 10000): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -120,15 +123,20 @@ export async function saveImageToCloud(file: File | Blob | string, filename?: st
 }
 
 export async function saveMarkdownContent(path: string, content: string): Promise<void> {
+  const normalizedPath = path.replace(/\\/g, '/');
+  if (!normalizedPath || normalizedPath.startsWith('/') || normalizedPath.split('/').some(part => !part || part === '.' || part === '..')) {
+    throw new Error('Caminho de wiki inválido. Escolha uma pasta dentro da wiki.');
+  }
   const config = getWikiConfig();
   const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
+  markdownReadCache.delete(normalizedPath);
 
   if (!import.meta.env.PROD) {
     try {
       const response = await fetchWithTimeout('/api/wiki/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoPath, path, content }),
+        body: JSON.stringify({ repoPath, path: normalizedPath, content }),
       });
       if (response.ok) {
         WikiIndexer.clearCache();
@@ -140,7 +148,7 @@ export async function saveMarkdownContent(path: string, content: string): Promis
     }
   }
 
-  WikiIndexer.saveLocalWikiFile(path, content);
+  WikiIndexer.saveLocalWikiFile(normalizedPath, content);
 }
 
 export async function createFolder(path: string): Promise<void> {
@@ -207,12 +215,32 @@ export async function ensureWikiFolder(folderPath: string): Promise<void> {
  * @param filePath relative path inside the wiki root, e.g. "Campanhas/Minha Camp/_campanha.md"
  */
 export async function loadMarkdownFile(filePath: string): Promise<string | null> {
-  try {
-    return await fetchMarkdownContent(filePath);
-  } catch (err: any) {
-    if (err.message?.includes('404') || err.message?.includes('not found')) return null;
-    throw err;
-  }
+  const now = Date.now();
+  const cached = markdownReadCache.get(filePath);
+  if (cached && cached.expiresAt > now) return cached.content;
+
+  const inflight = markdownReadInflight.get(filePath);
+  if (inflight) return inflight;
+
+  const request = (async () => {
+    try {
+      const content = await fetchMarkdownContent(filePath);
+      markdownReadCache.set(filePath, { content, expiresAt: Date.now() + 5_000 });
+      return content;
+    } catch (err: any) {
+      if (err.message?.includes('404') || err.message?.includes('not found')) {
+        // Evita repetir 404s causados por efeitos duplicados do modo de desenvolvimento.
+        markdownReadCache.set(filePath, { content: null, expiresAt: Date.now() + 5_000 });
+        return null;
+      }
+      throw err;
+    } finally {
+      markdownReadInflight.delete(filePath);
+    }
+  })();
+
+  markdownReadInflight.set(filePath, request);
+  return request;
 }
 
 export async function pushToGithub(): Promise<void> {

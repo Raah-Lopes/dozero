@@ -95,6 +95,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || defaultKey;
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  // O DOZERO é local-first: uma leitura GET que falha não deve disparar os
+  // três retries internos do PostgREST. Os repositórios preservam o cache local
+  // e usam seu próprio cooldown antes de uma nova tentativa útil.
+  db: {
+    retry: false,
+  },
   auth: {
     storage: safeStorage,
     persistSession: true,

@@ -9,6 +9,9 @@ import { searchContext, hasIndexedContent } from '../../../services/ai/ragSearch
 import { saveMarkdownContent } from '../../../utils/githubApi';
 import { useWiki } from '../../../hooks/useWiki';
 import { state } from '../../../store';
+import { getCampaignIdForRoom } from '../../../services/sceneCloudService';
+import { applyCampaignLorePlan, campaignLoreSystemPrompt, parseCampaignLorePlan, type CampaignLorePlan } from '../../../services/ai/campaignLorePlan';
+import { useAuthStore } from '../../../store/authStore';
 import {
   Bot, Wand2, User, Skull, Map, Sword, BookOpen, Dices, Search,
   MessageSquare, Settings, Copy, Download, Save, Loader2, ChevronDown,
@@ -32,6 +35,7 @@ const CONTENT_TABS: { id: RPGContentType; label: string; icon: React.ReactNode; 
   { id: 'resumo_sessao', label: 'Sessão',     icon: <BookOpen size={14} />,     color: '#fb923c' },
   { id: 'quest',         label: 'Quest',      icon: <Dices size={14} />,        color: '#34d399' },
   { id: 'encontro',      label: 'Encontro',   icon: <Zap size={14} />,          color: '#f87171' },
+  { id: 'campanha',      label: 'Campanha',   icon: <BookOpen size={14} />,     color: '#e0b054' },
   { id: 'dlc_expand',    label: 'Auditar',    icon: <Search size={14} />,       color: '#a78bfa' },
   { id: 'dlc_factory',   label: 'Fábrica',    icon: <ToyBrick size={14} />,     color: '#f43f5e' },
   { id: 'chat',          label: 'Chat',       icon: <MessageSquare size={14} />, color: 'var(--mana)' },
@@ -55,6 +59,7 @@ const WIKI_SAVE_PATHS: Record<RPGContentType, string> = {
   sessao_zero:   '[1] 🏕️ Campanha Principal',
   quest:         '[1] 🏕️ Campanha Principal/Quests',
   encontro:      '[1] 🏕️ Campanha Principal/Encontros',
+  campanha:      '',
   dlc_expand:    'DLCs',
   dlc_factory:   'DLCs',
   chat:          '',
@@ -76,6 +81,7 @@ const TIPO_OPTIONS: Record<RPGContentType, string[]> = {
   sessao_zero: ['Fantasia Medieval', 'Horror Gótico', 'Steampunk', 'Pós-Apocalíptico', 'Ficção Científica'],
   quest: ['Exploração', 'Resgate', 'Assassinato/Caça', 'Investigação', 'Proteção/Escolta', 'Roubo/Infiltração', 'Diplomacia'],
   encontro: ['Bandidos na Estrada', 'Monstros na Masmorra', 'Emboscada Urbana', 'Defesa de Ponto', 'Caçada'],
+  campanha: ['Fantasia Medieval', 'Horror Gótico', 'Steampunk', 'Pós-Apocalíptico', 'Ficção Científica', 'Sistema Próprio'],
   dlc_expand: ['Expandir', 'Auditar Balanceamento', 'Corrigir Inconsistências'],
   dlc_factory: ['Fantasia Medieval', 'Horror Gótico', 'Steampunk', 'Pós-Apocalíptico', 'Ficção Científica', 'Cangaço Místico'],
   chat: ['Pergunta sobre Regras', 'Ideia de Campanha', 'Improvisar NPC', 'Sugestão de Plot'],
@@ -93,6 +99,7 @@ function saveConfig(data: Record<string, string>) {
 // ── Componente principal ─────────────────────────────────────────────────────
 export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedded }) => {
   const { index, repoPath } = useWiki() as any;
+  const { user } = useAuthStore();
   const savedConfig = loadConfig();
 
   // Config de IA
@@ -130,6 +137,9 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError]            = useState('');
   const [copyDone, setCopyDone]      = useState(false);
+  const [campaignPlan, setCampaignPlan] = useState<CampaignLorePlan | null>(null);
+  const [isApplyingPlan, setIsApplyingPlan] = useState(false);
+  const [planStatus, setPlanStatus] = useState('');
 
   // Salvar na wiki
   const [savePath, setSavePath]      = useState('');
@@ -142,7 +152,8 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
   const chatEndRef                    = useRef<HTMLDivElement>(null);
 
   // RAG — indexação semântica
-  const campaignId = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+  const roomCode = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+  const [campaignId, setCampaignId] = useState<string | null>(null);
   const geminiKey  = provider === 'gemini' ? apiKey : (savedConfig.geminiKey || '');
   const [ragStats, setRagStats]       = useState<IndexStats>({ total: 0, lastIndexed: null });
   const [isIndexing, setIsIndexing]   = useState(false);
@@ -153,8 +164,18 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
   // Modelos filtrados pelo provedor selecionado
   const filteredModels = AI_MODELS.filter(m => m.provider === provider);
 
-  // Carrega stats RAG ao montar e persiste geminiKeyForRag
-  useEffect(() => { getIndexStats(campaignId).then(setRagStats); }, [campaignId]);
+  // RAG precisa do UUID persistido, nunca do código público da sala.
+  useEffect(() => {
+    let active = true;
+    void getCampaignIdForRoom(roomCode).then((id) => { if (active) setCampaignId(id); });
+    return () => { active = false; };
+  }, [roomCode]);
+
+  // Carrega stats RAG ao resolver a campanha e persiste geminiKeyForRag
+  useEffect(() => {
+    if (!campaignId) { setRagStats({ total: 0, lastIndexed: null }); return; }
+    void getIndexStats(campaignId).then(setRagStats).catch(() => setRagStats({ total: 0, lastIndexed: null }));
+  }, [campaignId]);
   useEffect(() => { saveConfig({ geminiKey: geminiKeyForRag }); }, [geminiKeyForRag]);
 
   // Quando troca de tab, ajusta tipo específico padrão
@@ -216,6 +237,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
 
   // ── Indexação RAG ────────────────────────────────────────────────────────────
   const handleIndexCampaign = useCallback(async () => {
+    if (!campaignId) { setIndexStatus('⚠️ Entre em uma campanha salva na nuvem antes de indexar a base de conhecimento.'); return; }
     if (!geminiKeyForRag) { setIndexStatus('⚠️ Configure a chave Gemini para RAG acima.'); return; }
     if (!index?.length)   { setIndexStatus('⚠️ Nenhum documento na wiki para indexar.'); return; }
     setIsIndexing(true); setIndexProgress(0); setIndexStatus('Indexando...');
@@ -239,7 +261,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
   // ── Geração principal ───────────────────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
     if (isGenerating) return;
-    setIsGenerating(true); setError(''); setOutput(''); setSaveStatus('');
+    setIsGenerating(true); setError(''); setOutput(''); setSaveStatus(''); setCampaignPlan(null); setPlanStatus('');
     try {
       const selectedModel = filteredModels.find(m => m.id === modelId);
       if (selectedModel?.requiresKey && !apiKey && provider !== 'pollinations' && provider !== 'ollama') {
@@ -247,12 +269,12 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
       }
       // RAG: busca contexto semântico se houver embeddings indexados
       const ragKey = geminiKeyForRag || (provider === 'gemini' ? apiKey : '');
-      const ragCtx = useWikiCtx ? await searchContext(
+      const ragCtx = useWikiCtx && campaignId ? await searchContext(
         `${tipoEsp} ${nome} ${conceito}`.trim(), campaignId, ragKey
       ) : '';
       const wikiCtx = ragCtx || buildWikiContext() || undefined;
 
-      const system = buildSystemPrompt(activeTab, activeDLCs);
+      const system = activeTab === 'campanha' ? campaignLoreSystemPrompt() : buildSystemPrompt(activeTab, activeDLCs);
       const user = buildUserPrompt({
         type: activeTab, nome: nome || undefined, nivel, tipoEspecifico: tipoEsp,
         conceito: activeTab === 'chat' ? undefined : (conceito || undefined),
@@ -261,12 +283,30 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
         dlcMode: activeTab === 'dlc_factory' ? dlcMode : undefined,
       });
       const result = await generateAI({ provider, model: modelId, apiKey: apiKey || undefined, systemPrompt: system, userPrompt: user, temperature, maxTokens: 6000, ollamaUrl: provider === 'ollama' ? ollamaUrl : undefined });
-      setOutput(result.text);
-      setShowSavePanel(activeTab !== 'chat');
+      if (activeTab === 'campanha') {
+        const parsed = parseCampaignLorePlan(result.text);
+        setCampaignPlan(parsed);
+        setOutput(JSON.stringify(parsed, null, 2));
+        setShowSavePanel(false);
+      } else {
+        setOutput(result.text);
+        setShowSavePanel(activeTab !== 'chat');
+      }
     } catch (err: any) {
       setError(err.message || 'Erro desconhecido ao chamar a IA.');
     } finally { setIsGenerating(false); }
   }, [isGenerating, provider, modelId, apiKey, ollamaUrl, activeTab, nome, nivel, tipoEsp, conceito, textoExtra, temperature, buildWikiContext, filteredModels, campaignId, geminiKeyForRag, useWikiCtx, activeDLCs, categoriasDlc, dlcMode]);
+
+  const handleApplyCampaignPlan = useCallback(async () => {
+    if (!campaignPlan || !campaignId || isApplyingPlan) return;
+    setIsApplyingPlan(true); setPlanStatus('Aplicando o plano aprovado...');
+    try {
+      const result = await applyCampaignLorePlan(campaignPlan, campaignId, user?.id);
+      setPlanStatus(`✅ Criados: ${result.notes} notas, ${result.relations} relações, ${result.characters} fichas, ${result.events} eventos e ${result.lineage} membros da linhagem.`);
+    } catch (err: any) {
+      setPlanStatus(`❌ Não foi possível aplicar: ${err.message || 'erro desconhecido'}`);
+    } finally { setIsApplyingPlan(false); }
+  }, [campaignPlan, campaignId, isApplyingPlan, user?.id]);
 
   // ── Chat ────────────────────────────────────────────────────────────────────
   const handleChat = useCallback(async () => {
@@ -276,7 +316,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
     setIsGenerating(true);
     try {
       const ragKey = geminiKeyForRag || (provider === 'gemini' ? apiKey : '');
-      const ragCtx = await searchContext(userMsg, campaignId, ragKey);
+      const ragCtx = campaignId ? await searchContext(userMsg, campaignId, ragKey) : '';
       const ctx = ragCtx || buildWikiContext() || 'Sem contexto disponível.';
       const result = await generateAI({
         provider, model: modelId, apiKey: apiKey || undefined,
@@ -577,7 +617,7 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
               </div>
 
               {/* Nível */}
-              {!['resumo_sessao', 'dlc_expand', 'dlc_factory', 'chat'].includes(activeTab) && (
+              {!['resumo_sessao', 'dlc_expand', 'dlc_factory', 'campanha', 'chat'].includes(activeTab) && (
                 <div>
                   <label className="ai-field-label">
                     {activeTab === 'encontro' ? 'Nível Médio do Grupo' : activeTab === 'monstro' ? 'Nível de Ameaça (1-5)' : 'Nível / Desafio'}
@@ -802,10 +842,15 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
                 {/* Toolbar output */}
                 <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                   <span style={{ fontSize: '0.6rem', color: '#475569', textTransform: 'uppercase', fontWeight: 700, flex: 1 }}>
-                    📄 Markdown Gerado
+                    {activeTab === 'campanha' ? '🧭 Prévia do plano de campanha' : '📄 Markdown Gerado'}
                   </span>
                   {output && (
                     <>
+                      {activeTab === 'campanha' && (
+                        <button className="ai-btn" onClick={handleApplyCampaignPlan} disabled={!campaignPlan || !campaignId || isApplyingPlan} style={{ background: `${currentColor}22`, border: `1px solid ${currentColor}66`, color: currentColor }} title={campaignId ? 'Aplicar somente após revisar a prévia' : 'Salve/abra uma campanha na nuvem primeiro'}>
+                          <Save size={12} /> {isApplyingPlan ? 'Aplicando...' : 'Aplicar plano'}
+                        </button>
+                      )}
                       <button className="ai-btn" onClick={handleCopy} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: copyDone ? '#34d399' : '#94a3b8' }}>
                         <Copy size={12} /> {copyDone ? 'Copiado!' : 'Copiar'}
                       </button>
@@ -818,6 +863,10 @@ export const AIStudioWidget: React.FC<AIStudioWidgetProps> = ({ onClose, embedde
                     </>
                   )}
                 </div>
+
+                {activeTab === 'campanha' && planStatus && (
+                  <div style={{ margin: '0 14px 10px', padding: '8px 10px', borderRadius: '6px', fontSize: '0.68rem', lineHeight: 1.5, color: planStatus.startsWith('✅') ? '#34d399' : planStatus.startsWith('❌') ? '#f87171' : '#94a3b8', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>{planStatus}</div>
+                )}
 
                 {/* Output text */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '14px', position: 'relative' }}>

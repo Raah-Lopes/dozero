@@ -20,7 +20,7 @@ export interface WidgetMeta {
 export const WIDGET_REGISTRY: WidgetMeta[] = [
   // 📖 Narrativa
   { id: 'theater', cat: 'Narrativa', title: 'Teatro da Mente', description: 'Modo cinematográfico imersivo para interpretação sem grid, com trilha, clima e NPCs na tela', icon: Film, theme: 'theme-violet', shadow: '0 0 12px rgba(168,85,247,0.4)', actionType: 'custom', actionPayload: 'theater' },
-  { id: 'campaign', cat: 'Narrativa', title: 'Gestor de Campanhas', description: 'Controle de missões (quests), andamento dos arcos, calendário e resumo das sessões', icon: BookOpen, theme: 'theme-indigo', actionType: 'toggleWindow', actionPayload: 'campaignManager', gmOnly: true },
+  { id: 'campaign', cat: 'Narrativa', title: 'Central de Campanha', description: 'Centro da mesa: cenas do grid, Códice, IA, fichas, linhagens, Chronica e diário de sessões', icon: BookOpen, theme: 'theme-indigo', actionType: 'toggleWindow', actionPayload: 'campaignManager', gmOnly: true },
   { id: 'cutscene', cat: 'Narrativa', title: 'Diretor de Cenas (Títulos)', description: 'Projete textos cinematográficos, títulos e falas gigantescentes na tela para todos', icon: Video, theme: 'theme-pink', actionType: 'toggleWindow', actionPayload: 'cutsceneDirector', gmOnly: true },
   { id: 'gmnotes', cat: 'Narrativa', title: 'Bloco de Notas Secreto', description: 'Anotações ocultas e rascunhos exclusivos apenas para os olhos do Mestre', icon: FileText, theme: 'theme-green', shadow: '0 0 10px rgba(34,197,94,0.4)', actionType: 'toggleWindow', actionPayload: 'gmNotes', gmOnly: true },
   { id: 'mindmap', cat: 'Narrativa', title: 'Painel de Conspiração', description: 'Mural de notas interligadas para detetives e investigadores ligarem os pontos', icon: Network, theme: 'theme-pink', actionType: 'toggleWindow', actionPayload: 'mindMap' },
@@ -70,7 +70,6 @@ export const WIDGET_REGISTRY: WidgetMeta[] = [
   { id: 'themes', cat: 'Configurações', title: 'Temas Visuais (Aparência)', description: 'Escolha paletas de cores, opacidades e modo noturno do sistema inteiro', icon: Palette, theme: 'theme-pink', shadow: '0 0 10px rgba(236,72,153,0.4)', actionType: 'setActiveModal', actionPayload: 'settings-aparencia' },
   { id: 'audiodir', cat: 'Configurações', title: 'Soundboard Principal', description: 'Biblioteca, cenas, uploads, triggers VTT e mixer para toda a mesa', icon: Headphones, theme: 'theme-amber', actionType: 'toggleWindow', actionPayload: 'audioDirector' },
   { id: 'dlc', cat: 'Configurações', title: 'Gerenciador de Módulos (DLCs)', description: 'Ative/desative DLCs, livros externos e compêndios caseiros (Homebrews)', icon: ToyBrick, theme: 'theme-orange', actionType: 'setActiveModal', actionPayload: 'settings-modulos', gmOnly: true },
-  { id: 'auditor', cat: 'Configurações', title: 'Auditor de Sistema (Linter)', description: 'Diagnostica problemas de desempenho, sincronia ou variáveis na mesa', icon: Shield, theme: 'theme-red', actionType: 'toggleWindow', actionPayload: 'systemAuditor', gmOnly: true },
   { id: 'aibot', cat: 'Configurações', title: 'Provedor de IA (Chaves API)', description: 'Configura as chaves e modelos de inteligência artificial', icon: Bot, theme: 'theme-pink', actionType: 'setActiveModal', actionPayload: 'settings-ia', gmOnly: true }
 ];
 

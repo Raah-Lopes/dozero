@@ -12,6 +12,7 @@ export type RPGContentType =
   | 'sessao_zero'
   | 'quest'
   | 'encontro'
+  | 'campanha'
   | 'dlc_expand'
   | 'dlc_factory'
   | 'chat';
@@ -392,6 +393,7 @@ export function buildSystemPrompt(type: RPGContentType, activeDLCs?: string[]): 
   else if (type === 'npc' || type === 'monstro') template = YAML_NPC_TEMPLATE;
   else if (type === 'local') template = YAML_LOCAL_TEMPLATE;
   else if (type === 'quest') template = YAML_QUEST_TEMPLATE;
+  else if (type === 'campanha') template = 'Plano estruturado de campanha: entidades, relações, fichas, linhagem, cronologia, arcos, sessões e diário.';
 
   else if (type === 'dlc_factory') template = `
 === FORMATO DE RESPOSTA DA FÁBRICA DE DLCS ===
@@ -616,6 +618,16 @@ ${ctx}
 6. Elementos ambientais interativos (5 features do mapa)
 7. Condição de vitória alternativa (além de matar tudo)
 8. Consequências: o que muda no mundo após o encontro`;
+
+    case 'campanha':
+      return `Estruture uma CAMPANHA COMPLETA para ser revisada e aplicada pelo Mestre no DOZERO.
+
+**Nome:** ${params.nome || 'Campanha sem nome'}
+**Gênero / sistema:** ${params.tipoEspecifico || 'Fantasia'}
+**Contexto dado pelo Mestre:** ${params.conceito || 'Crie uma base original, consistente e jogável.'}
+${ctx}
+
+Planeje a lore, fichas de personagens/NPCs/monstros, locais, facções, famílias, linhas do tempo, arcos, sessões, diário e rotas prováveis dos jogadores. Respeite rigorosamente o contrato JSON definido no prompt de sistema.`;
 
     // ─── Expandir DLC ───────────────────────────────────────────────────────
     case 'dlc_expand':

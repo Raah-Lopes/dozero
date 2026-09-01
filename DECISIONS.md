@@ -2,6 +2,22 @@
 
 Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o changelog.
 
+## 2026-09-01 — Central de Campanha como orquestradora da mesa
+
+**Status:** Ativa
+
+**Decisão:** a Central de Campanha não cria uma segunda cópia de cenas, lore, fichas ou cronologia. Ela lê os documentos existentes da sala e oferece um ponto de operação comum, com atalhos explícitos para Grid, Códice, IA, Arcanum, Chronica e Linhagem.
+
+**Motivo:** o Mestre precisa planejar e conduzir a campanha como um fluxo único, sem perder consistência entre as ferramentas nem introduzir um novo domínio persistente para os mesmos dados.
+
+## 2026-09-01 — Arcanum é a fonte das ferramentas de personagem
+
+**Status:** Ativa
+
+**Decisão:** conversão, auditoria e normalização de fichas vivem na Forja Arcanum e trabalham sobre o mesmo modelo que alimenta os tokens e as macros. O antigo linter de Markdown não é mais uma ferramenta independente.
+
+**Motivo:** impede que uma auditoria corrija um formato legado sem efeito na ficha que a mesa realmente usa, e garante que tokens, Códice, Linhagem e Chronos apontem para o mesmo personagem.
+
 ## 2026-08-27 — Arcanum como padrão visual da mesa
 
 **Status:** Ativa
@@ -123,3 +139,13 @@ Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o
 **Status:** Ativa  
 **Decisão:** usar MCP com `project_ref`, grupos mínimos e modo somente leitura no trabalho cotidiano; escrita apenas em tarefa explicitamente autorizada.  
 **Motivo:** reduz superfície de ataque e evita alterações acidentais em dados hospedados.
+
+## 2026-09-01 — Planos de campanha por IA exigem prévia estruturada
+
+**Status:** Ativa
+
+**Decisão:** a criação ampla de lore por IA usa um contrato JSON validado e uma etapa de aplicação explícita. A prévia pode criar notas e relações do Códice, fichas, Linhagem, Chronica, arcos e sessões, mas nenhuma gravação acontece antes da confirmação do Mestre.
+
+**Motivo:** mantém a liberdade de gerar uma campanha completa sem trocar a revisão humana por uma escrita opaca e potencialmente inconsistente.
+
+**Limite:** provedores e chaves continuam configurados pelo próprio usuário no navegador; a operação depende de uma campanha salva na nuvem para resolver o UUID canônico e usar RAG.

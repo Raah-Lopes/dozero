@@ -14,7 +14,6 @@ import {
   loadMarkdownFile,
   ensureWikiFolder,
 } from '../../../utils/githubApi';
-import { getWikiConfig } from '../../../store';
 import {
   BookOpen, Plus, Target, Calendar, Trash2,
   Play, CheckCircle, PauseCircle, ChevronRight,
@@ -27,6 +26,7 @@ import { toast, confirmDialog } from '../../UI/Toast';
 import { useWiki } from '../../../hooks/useWiki';
 import * as yaml from 'js-yaml';
 import { OverviewTab } from './CampaignManager/OverviewTab';
+import { CampaignCockpitTab } from './CampaignManager/CampaignCockpitTab';
 import { ArcsTab } from './CampaignManager/ArcsTab';
 import { SessionsTab } from './CampaignManager/SessionsTab';
 import { QuestsTab } from './CampaignManager/QuestsTab';
@@ -36,7 +36,7 @@ interface CampaignManagerWidgetProps {
   onClose: () => void;
 }
 
-type TabId = 'overview' | 'arcs' | 'sessions' | 'quests';
+type TabId = 'cockpit' | 'overview' | 'arcs' | 'sessions' | 'quests';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -172,7 +172,7 @@ const EmptyState: React.FC<{ icon: React.ReactNode; message: string; sub?: strin
 export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ onClose }) => {
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useState<TabId>('cockpit');
   const [editingArcId, setEditingArcId] = useState<string | null>(null);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [linkingId, setLinkingId] = useState<string | null>(null); // tracks which item is being linked
@@ -216,13 +216,10 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
 
     // Then create files on disk in the background
     try {
-      const config = getWikiConfig();
-      if (config.repoUrl) {
-        await ensureWikiFolder(folderPath);
-        await ensureWikiFolder(`${folderPath}/Arcos`);
-        await ensureWikiFolder(`${folderPath}/Sessoes`);
-        await saveMarkdownContent(overviewPath, overviewTemplate(name));
-      }
+      await ensureWikiFolder(folderPath);
+      await ensureWikiFolder(`${folderPath}/Arcos`);
+      await ensureWikiFolder(`${folderPath}/Sessoes`);
+      await saveMarkdownContent(overviewPath, overviewTemplate(name));
     } catch (e) {
       console.warn('[Campaign] Não foi possível criar arquivos wiki:', e);
     }
@@ -240,16 +237,13 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
     try {
       const folderPath = getCampaignFolderPath(campaign.name);
       const overviewPath = getOverviewFilePath(campaign.name);
-      const config = getWikiConfig();
-      if (config.repoUrl) {
-        await ensureWikiFolder(folderPath);
-        await ensureWikiFolder(`${folderPath}/Arcos`);
-        await ensureWikiFolder(`${folderPath}/Sessoes`);
-        // Only create overview if it doesn't exist
-        const existing = await loadMarkdownFile(overviewPath);
-        if (!existing) {
-          await saveMarkdownContent(overviewPath, overviewTemplate(campaign.name));
-        }
+      await ensureWikiFolder(folderPath);
+      await ensureWikiFolder(`${folderPath}/Arcos`);
+      await ensureWikiFolder(`${folderPath}/Sessoes`);
+      // Only create overview if it doesn't exist
+      const existing = await loadMarkdownFile(overviewPath);
+      if (!existing) {
+        await saveMarkdownContent(overviewPath, overviewTemplate(campaign.name));
       }
       updateCampaign(campaign.id, { folderPath, overviewPath });
     } finally {
@@ -337,6 +331,11 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
         console.warn('[Session] Não foi possível criar arquivo wiki:', e);
       }
     }
+  };
+
+  const createDiaryEntry = () => {
+    void addSession();
+    setActiveTab('sessions');
   };
 
   const updateSession = (sessId: string, changes: Partial<CampaignSession>) => {
@@ -524,7 +523,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <DraggableWindow
-      title="Gestor de Campanhas"
+      title="Central de Campanha"
       id="campaign-manager-widget"
       onClose={onClose}
       width={980}
@@ -701,6 +700,7 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
                 {/* Tabs */}
                 <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '-1px' }}>
                   {([
+                    { id: 'cockpit' as TabId, label: 'Mesa',         icon: <Sparkles size={12} /> },
                     { id: 'overview' as TabId, label: 'Visão Geral', icon: <BookOpen size={12} /> },
                     { id: 'arcs'     as TabId, label: 'Arcos',        icon: <Layers size={12} /> },
                     { id: 'sessions' as TabId, label: 'Sessões',      icon: <Calendar size={12} /> },
@@ -719,6 +719,10 @@ export const CampaignManagerWidget: React.FC<CampaignManagerWidgetProps> = ({ on
 
               {/* ── Tab Content ── */}
               <div ref={contentRef} style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+
+                {activeTab === 'cockpit' && (
+                  <CampaignCockpitTab campaign={selectedCampaign} onCreateDiaryEntry={createDiaryEntry} />
+                )}
 
                 {/* ── OVERVIEW TAB ── */}
                 {activeTab === 'overview' && (

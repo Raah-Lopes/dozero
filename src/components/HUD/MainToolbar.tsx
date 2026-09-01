@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutGrid, BookOpen, Film, Users, MessageSquare, Settings, Menu, X, Search, LogOut, Dices, GitMerge, ScrollText
+  LayoutGrid, BookOpen, BookMarked, Film, Users, MessageSquare, Settings, Menu, X, Search, LogOut, Dices, GitMerge, ScrollText
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 
@@ -47,6 +47,7 @@ export function MainToolbar() {
   // The list of tools to be filtered
   const tools = [
     { id: 'hub', label: 'Menu Geral (Hub de Ferramentas)', icon: <LayoutGrid size={20} />, action: () => toggleModal('widgets'), isActive: activeModal === 'widgets', colorClass: 'theme-purple' },
+    { id: 'campaign', label: 'Central de Campanha', icon: <BookMarked size={20} />, action: () => handleToggleWindow('campaignManager'), isActive: openWindows.campaignManager, colorClass: 'theme-indigo' },
     { id: 'wiki', label: 'Wiki da Campanha', icon: <BookOpen size={20} />, action: () => handleSetViewMode(viewMode === 'wiki' ? 'canvas' : 'wiki'), isActive: viewMode === 'wiki', colorClass: 'theme-cyan' },
     { id: 'sheets', label: 'Forja de Fichas (Arcanum)', icon: <ScrollText size={20} />, action: () => handleSetViewMode(viewMode === 'sheets' ? 'canvas' : 'sheets'), isActive: viewMode === 'sheets', colorClass: 'theme-amber' },
     { id: 'brain', label: 'Cérebro Grafo (Arcanum)', icon: <GitMerge size={20} />, action: () => handleSetViewMode(viewMode === 'brain' ? 'canvas' : 'brain'), isActive: viewMode === 'brain', colorClass: 'theme-amber' },

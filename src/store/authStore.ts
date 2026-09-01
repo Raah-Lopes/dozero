@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 import { convertImageToWebPBlob } from '../utils/imageUtils';
+import { isCloudCoolingDown, noteCloudFailure, noteCloudSuccess } from '../services/cloudHealth';
 
 interface AuthState {
   user: User | null;
@@ -30,6 +31,7 @@ let isAuthInitialized = false;
 let inflightLoadPreferences: Promise<void> | null = null;
 let lastLoadedUserId: string | null = null;
 let lastLoadPreferencesTimestamp = 0;
+const PREFERENCES_BACKGROUND_REFRESH_MS = 5 * 60 * 1000;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -73,16 +75,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loadPreferences: async () => {
     const currentUser = get().user;
     if (!currentUser?.id) return;
+    const cacheKey = `dozero_user_prefs_${currentUser.id}`;
+    const cacheRefreshKey = `${cacheKey}_refresh_after`;
+    let hasCachedPreferences = false;
 
     // 1. Carregamento instantâneo do cache local (0ms de latência)
     try {
-      const cached = localStorage.getItem(`dozero_user_prefs_${currentUser.id}`);
+      const cached = localStorage.getItem(cacheKey);
       if (cached) {
         set({ preferences: JSON.parse(cached) });
+        hasCachedPreferences = true;
       }
     } catch {}
 
-    if (!isSupabaseConfigured) return;
+    // Uma abertura de mesa nunca precisa aguardar uma preferência que já está
+    // disponível localmente. A atualização remota ocorre em segundo plano, no
+    // máximo uma vez a cada cinco minutos.
+    if (hasCachedPreferences) {
+      try {
+        const refreshAfter = Number(localStorage.getItem(cacheRefreshKey));
+        if (!Number.isFinite(refreshAfter) || Date.now() < refreshAfter) {
+          if (!Number.isFinite(refreshAfter)) {
+            localStorage.setItem(cacheRefreshKey, String(Date.now() + PREFERENCES_BACKGROUND_REFRESH_MS));
+          }
+          return;
+        }
+      } catch {
+        return;
+      }
+    }
+
+    if (!isSupabaseConfigured || isCloudCoolingDown()) return;
     if (typeof navigator !== 'undefined' && !navigator.onLine) return;
     const now = Date.now();
     if (now - lastLoadPreferencesTimestamp < 30000 && currentUser.id === lastLoadedUserId) return;
@@ -105,16 +128,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const res = await Promise.race([queryPromise, timeoutPromise]) as any;
         const { data, error } = res || {};
 
+        if (!error) {
+          noteCloudSuccess();
+        }
         if (!error && data?.preferences) {
           set({ preferences: data.preferences });
           try {
-            localStorage.setItem(`dozero_user_prefs_${currentUser.id}`, JSON.stringify(data.preferences));
+            localStorage.setItem(cacheKey, JSON.stringify(data.preferences));
+            localStorage.setItem(cacheRefreshKey, String(Date.now() + PREFERENCES_BACKGROUND_REFRESH_MS));
           } catch {}
         } else if (error) {
+          noteCloudFailure(error);
           // Se houver erro de rede / RLS, aguarda 60s antes de tentar novamente
           lastLoadPreferencesTimestamp = Date.now() + 60000;
         }
       } catch (e) {
+        noteCloudFailure(e);
         // Cooldown de 60s em caso de conexão fechada/timeout/ERR_CONNECTION_RESET
         lastLoadPreferencesTimestamp = Date.now() + 60000;
       } finally {
@@ -131,7 +160,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     if (currentUser?.id) {
       try {
-        localStorage.setItem(`dozero_user_prefs_${currentUser.id}`, JSON.stringify(merged));
+        const cacheKey = `dozero_user_prefs_${currentUser.id}`;
+        localStorage.setItem(cacheKey, JSON.stringify(merged));
+        localStorage.setItem(`${cacheKey}_refresh_after`, String(Date.now() + PREFERENCES_BACKGROUND_REFRESH_MS));
       } catch {}
     }
 

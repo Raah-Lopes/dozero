@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BookOpen, Copy, Plus, Shield, Trash2, UserRound, Users, X, LayoutGrid, ScrollText } from 'lucide-react';
+import { AlertTriangle, BookOpen, CheckCircle2, Copy, FileUp, Plus, Shield, Trash2, UserRound, Users, X, LayoutGrid, ScrollText, Wand2 } from 'lucide-react';
 import ArcanumSheet from './Arcanum/ArcanumSheetApp';
 import { DEFAULT_CHARACTER, type Character, type RollResult } from './Arcanum/lib';
 import { usePersonagens } from '../../hooks/usePersonagens';
@@ -18,6 +18,7 @@ import { WorkspaceChrome } from '../Navigation/WorkspaceChrome';
 import { LoreWorkspaceSwitcher } from '../Navigation/LoreWorkspaceSwitcher';
 import { ARCANUM_SHEET_KIND, characterFromRecord, recordData } from './arcanumSheetAdapter';
 import { createCharacterFromWiki, findCharacterByWikiPath, integrateCharacter, removeCharacterIntegration } from '../../services/characterIntegration';
+import { auditCharacter, characterFromMarkdown, normalizeCharacter } from '../../services/characterAudit';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import './arcanumWorkspace.css';
 
@@ -35,6 +36,8 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
   const [active, setActive] = useState<CharacterRecord | null>(null);
   const [scope, setScope] = useState<'campaign' | 'vault'>(initialScope);
   const [loading, setLoading] = useState(() => getLocalCharacters().length === 0);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
   const importingWikiPaths = useRef(new Set<string>());
 
   const load = useCallback(async () => {
@@ -155,6 +158,24 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
     setRecords((current) => current.map((record) => record.id === saved.id ? saved : record));
   }, [active, user?.id]);
 
+  const normalizeActive = async () => {
+    if (!active) return;
+    await persistCharacter(normalizeCharacter(characterFromRecord(active)));
+    toast.success('Ficha normalizada; status e macros agora seguem o padrão Arcanum.');
+  };
+
+  const importMarkdown = async (file?: File) => {
+    if (!file) return;
+    try {
+      const character = characterFromMarkdown(await file.text());
+      const saved = await saveCharacter({ name: character.name, type: 'npc', campaign_id: scope === 'campaign' ? campaignId : null, avatar_url: character.avatar, notes_markdown: character.notes, data: { sheetKind: ARCANUM_SHEET_KIND, sheetVersion: 1, wikiPath: '', character } }, user?.id);
+      if (saved.campaign_id) state.sheets.set(saved.id, saved);
+      integrateCharacter(saved);
+      setRecords(current => [saved, ...current]); setActive(saved);
+      toast.success('Ficha Markdown convertida para o Arcanum.');
+    } catch { toast.error('Não foi possível converter este arquivo Markdown.'); }
+  };
+
   const updateWikiLink = async (wikiPath: string) => {
     if (!active) return;
     const character = characterFromRecord(active);
@@ -246,6 +267,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
             onSpawnToken={spawnToken}
             onDuplicateToVault={active.campaign_id ? duplicateToVault : undefined}
             onIntegrateEverywhere={integrateActiveEverywhere}
+            onAudit={() => setToolsOpen(true)}
             onDelete={removeActive}
             onSave={persistCharacter}
             onClose={() => setActive(null)}
@@ -253,6 +275,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
             onNew={() => void createSheet()}
             onRoll={sendRollToChat}
           />
+          {toolsOpen && <CharacterAuditPanel character={characterFromRecord(active)} onClose={() => setToolsOpen(false)} onNormalize={() => { void normalizeActive(); setToolsOpen(false); }} />}
         </div>
       </div>
     );
@@ -281,6 +304,8 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
           <button className={scope === 'vault' ? 'active' : ''} onClick={() => setScope('vault')}><UserRound size={15} /> Meu Vault</button>
         </div>
         <button className="arcanum-create" onClick={() => void createSheet()}><Plus size={16} /> Criar ficha Arcanum</button>
+        <button className="arcanum-create" onClick={() => importRef.current?.click()}><FileUp size={16} /> Converter Markdown</button>
+        <input ref={importRef} type="file" accept=".md,.markdown,text/markdown" hidden onChange={event => { void importMarkdown(event.target.files?.[0]); event.target.value = ''; }} />
       </div>
       <main className="arcanum-card-grid">
         {loading && <p className="arcanum-empty">Carregando fichas...</p>}
@@ -299,4 +324,15 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
       </main>
     </div>
   );
+}
+
+function CharacterAuditPanel({ character, onClose, onNormalize }: { character: Character; onClose: () => void; onNormalize: () => void }) {
+  const report = auditCharacter(character);
+  return <div role="dialog" aria-modal="true" aria-label="Auditoria da ficha" style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(2,6,23,.72)', display: 'grid', placeItems: 'center', padding: 16 }}>
+    <section style={{ width: 'min(560px, 100%)', maxHeight: '80vh', overflow: 'auto', borderRadius: 12, padding: 18, background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', boxShadow: '0 24px 60px rgba(0,0,0,.5)' }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 9 }}><Shield size={20} color="var(--accent-primary)" /><div style={{ flex: 1 }}><strong>Auditoria da ficha</strong><p style={{ margin: '3px 0 0', fontSize: '.75rem', color: 'var(--text-secondary)' }}>Verifica dados que a mesa realmente usa: recursos, atributos e macros.</p></div><button type="button" onClick={onClose} aria-label="Fechar auditoria" style={{ border: 0, background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}><X size={18} /></button></header>
+      <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>{report.issues.length ? report.issues.map((issue, index) => <div key={`${issue.field}-${index}`} style={{ display: 'flex', gap: 8, padding: 9, borderRadius: 7, background: issue.severity === 'error' ? 'rgba(239,68,68,.1)' : 'rgba(245,158,11,.1)', color: 'var(--text-primary)' }}><AlertTriangle size={16} color={issue.severity === 'error' ? '#f87171' : '#fbbf24'} /><span style={{ fontSize: '.78rem' }}><strong>{issue.field}:</strong> {issue.message}</span></div>) : <div style={{ display: 'flex', gap: 8, padding: 10, borderRadius: 7, background: 'rgba(34,197,94,.1)', color: 'var(--text-primary)' }}><CheckCircle2 size={17} color="#4ade80" />A ficha está pronta para a mesa.</div>}</div>
+      <footer style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}><button type="button" onClick={onClose} className="workspace-chrome-button">Cancelar</button><button type="button" onClick={onNormalize} className="workspace-chrome-button"><Wand2 size={14} /> Normalizar ficha</button></footer>
+    </section>
+  </div>;
 }

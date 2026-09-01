@@ -150,6 +150,23 @@ export async function enqueueSyncOperation(
   roomCode: string,
   payload: any
 ): Promise<OfflineOperation> {
+  // Um snapshot mais novo substitui o anterior da mesma mesa. Manter todos os
+  // snapshots durante uma queda só repete uploads obsoletos quando a rede volta.
+  if (type === 'snapshot_save') {
+    const existing = inMemoryQueue.find(op => op.type === 'snapshot_save' && op.roomCode === roomCode);
+    if (existing) {
+      existing.payload = payload;
+      existing.timestamp = new Date().toISOString();
+      existing.retries = 0;
+      existing.error = undefined;
+      await persistQueueIDB(inMemoryQueue);
+      syncState.pendingCount = inMemoryQueue.length;
+      if (syncState.isOnline && syncState.status !== 'syncing') processSyncQueue();
+      else notifyListeners();
+      return existing;
+    }
+  }
+
   const op: OfflineOperation = {
     id: `op_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     type,

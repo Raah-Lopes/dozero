@@ -29,6 +29,7 @@ import { NotesSection, StorySection, GallerySection } from "./components/StoryGa
 import DiceTray from "./components/DiceTray";
 import { Embers, Toasts, type ToastMsg } from "./components/ui";
 import { useWindowManager } from "../../../hooks/useWindowManager";
+import { auditCharacter, normalizeCharacter } from "../../../services/characterAudit";
 import {
   Sigil,
   Download,
@@ -62,6 +63,7 @@ interface ArcanumSheetProps {
   onExitToCanvas?: () => void;
   onNew?: () => void;
   onRoll?: (roll: RollResult) => void;
+  onAudit?: () => void;
 }
 
 export default function App({
@@ -78,6 +80,7 @@ export default function App({
   onExitToCanvas,
   onNew,
   onRoll: onExternalRoll,
+  onAudit,
 }: ArcanumSheetProps) {
   const [c, setC] = useState<Character>(() => structuredClone(initialCharacter || DEFAULT_CHARACTER));
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
@@ -85,6 +88,7 @@ export default function App({
   const [saved, setSaved] = useState(true);
   const [showEcosystem, setShowEcosystem] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
   const saveTimer = useRef<number | null>(null);
   const onSaveRef = useRef(onSave);
@@ -301,7 +305,12 @@ export default function App({
 
           {/* Lado direito: Ações da Ficha, Sistema, Salvamento e Utilitários */}
           <div className="relative z-50 ml-auto flex items-center gap-2 shrink-0">
-            {(onSpawnToken || onDuplicateToVault || onIntegrateEverywhere || onDelete || (personagens.length > 0 && onUpdateWikiLink)) && (
+            {onAudit && (
+              <button type="button" onClick={() => setShowAudit(true)} title="Auditar ficha e macros" className="workspace-chrome-button">
+                <Shield size={13} className="text-gold-400" /><span className="hidden md:inline">Auditar</span>
+              </button>
+            )}
+            {(onSpawnToken || onDuplicateToVault || onIntegrateEverywhere || onDelete || onAudit || (personagens.length > 0 && onUpdateWikiLink)) && (
               <div className="relative">
                 <button
                   type="button"
@@ -328,6 +337,11 @@ export default function App({
                           className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs font-bold text-fog transition-colors hover:bg-ink-800 hover:text-gold-200"
                         >
                           <Network size={14} className="text-gold-400" /> Integrar no Códice, Linhagem e Chronos
+                        </button>
+                      )}
+                      {onAudit && (
+                        <button type="button" onClick={() => { setShowActions(false); setShowAudit(true); }} className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs font-bold text-fog transition-colors hover:bg-ink-800 hover:text-gold-200">
+                          <Shield size={14} className="text-gold-400" /> Auditar e normalizar ficha
                         </button>
                       )}
                       {onSpawnToken && (
@@ -525,6 +539,18 @@ export default function App({
 
       <DiceTray rolls={rolls} onRoll={onRoll} onClear={() => setRolls([])} />
       <Toasts toasts={toasts} />
+      {showAudit && <SheetAuditDialog character={c} onClose={() => setShowAudit(false)} onNormalize={() => { setC(normalizeCharacter(c)); setSaved(false); setShowAudit(false); notify("Ficha normalizada para a mesa", "jade"); }} />}
     </div>
   );
+}
+
+function SheetAuditDialog({ character, onClose, onNormalize }: { character: Character; onClose: () => void; onNormalize: () => void }) {
+  const report = auditCharacter(character);
+  return <div role="dialog" aria-modal="true" aria-label="Auditoria da ficha" className="fixed inset-0 z-[100] grid place-items-center bg-black/70 p-4">
+    <section className="w-full max-w-lg rounded-xl border border-gold-600/40 bg-ink-900 p-5 shadow-2xl">
+      <header className="flex items-start gap-3"><Shield size={20} className="mt-0.5 text-gold-400" /><div className="flex-1"><h2 className="font-display text-lg font-black text-parch-100">Auditoria da ficha</h2><p className="text-xs text-fog">Confere recursos, classe, atributos e as mesmas macros usadas na mesa.</p></div><button type="button" onClick={onClose} aria-label="Fechar auditoria" className="text-fog hover:text-parch-100"><Close size={17} /></button></header>
+      <div className="mt-4 space-y-2">{report.issues.length ? report.issues.map((issue, index) => <div key={`${issue.field}-${index}`} className={`rounded-md border p-3 text-xs ${issue.severity === "error" ? "border-ember-500/40 bg-ember-950/30 text-ember-200" : "border-gold-600/40 bg-gold-900/20 text-gold-200"}`}><b>{issue.field}:</b> {issue.message}</div>) : <div className="rounded-md border border-jade-500/40 bg-jade-950/30 p-3 text-xs text-jade-200">Ficha pronta: dados e macros estão coerentes com a mesa.</div>}</div>
+      <footer className="mt-5 flex justify-end gap-2"><button type="button" onClick={onClose} className="workspace-chrome-button">Cancelar</button><button type="button" onClick={onNormalize} className="workspace-chrome-button"><RenewIcon size={14} /> Normalizar ficha</button></footer>
+    </section>
+  </div>;
 }

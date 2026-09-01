@@ -487,7 +487,7 @@ function App() {
                   onOpenGMNotes={() => { toggleWindow('gmNotes'); setActiveModal('none'); }}
                   onOpenMindMap={() => { toggleWindow('mindMap'); setActiveModal('none'); }}
                   onOpenTradeShop={() => { toggleWindow('tradeShop'); setActiveModal('none'); }}
-                  onOpenSystemAuditor={() => { toggleWindow('systemAuditor'); setActiveModal('none'); }}
+                  onOpenSystemAuditor={() => { setViewMode('sheets'); setActiveModal('none'); }}
                   onOpenAutomatedDice={() => { toggleWindow('automatedDice'); setActiveModal('none'); }}
                   onOpenCharacterRoster={() => { toggleWindow('characterRoster'); setActiveModal('none'); }}
                   onOpenChronos={() => { toggleWindow('chronos'); setActiveModal('none'); }}

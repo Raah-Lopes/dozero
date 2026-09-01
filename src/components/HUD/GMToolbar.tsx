@@ -4,7 +4,7 @@ import {
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
   Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, ScrollText,
-  LogOut, Menu, Search, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge, BrickWall
+  LogOut, Menu, Search, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge, BrickWall, BookMarked
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -224,6 +224,13 @@ export function GMToolbar() {
                 onClick={() => setActiveModal(activeModal === 'widgets' ? 'none' : 'widgets')} 
                 tooltip="Menu Geral (Hub)"
                 description="Painel principal com todos os módulos e ferramentas"
+              />
+              <ToolButton
+                icon={<BookMarked size={19} />}
+                active={Boolean(openWindows.campaignManager)}
+                onClick={() => toggleWindow('campaignManager')}
+                tooltip="Central de Campanha"
+                description="Painel operacional com cenas, Códice, IA, fichas, cronologia e diário"
               />
               <ToolButton 
                 icon={<BookOpen size={19} />} 

@@ -4,6 +4,20 @@ import { toast } from '../components/UI/Toast';
 import { enqueueSyncOperation } from './offlineSyncService';
 import { synchronizeActiveTableScene } from '../store/tableScenes';
 
+// Falhas transitórias do provedor não devem transformar cada autosave local em
+// uma nova rajada de requests. O snapshot continua seguro no IndexedDB e a
+// fila retenta quando houver uma nova oportunidade de sincronização.
+const CLOUD_SNAPSHOT_COOLDOWN_MS = 30_000;
+const cloudSnapshotBlockedUntil = new Map<string, number>();
+
+function canAttemptCloudSnapshot(roomCode: string): boolean {
+  return Date.now() >= (cloudSnapshotBlockedUntil.get(roomCode) || 0);
+}
+
+function pauseCloudSnapshots(roomCode: string): void {
+  cloudSnapshotBlockedUntil.set(roomCode, Date.now() + CLOUD_SNAPSHOT_COOLDOWN_MS);
+}
+
 export interface RoomBundle {
   version: number;
   roomName: string;
@@ -392,15 +406,11 @@ export async function importRoomFromFile(file: File): Promise<boolean> {
  */
 export async function saveRoomBundleToCloud(roomCode: string, bundle: RoomBundle): Promise<boolean> {
   if (!isSupabaseConfigured || (typeof navigator !== 'undefined' && !navigator.onLine)) return false;
+  if (!canAttemptCloudSnapshot(roomCode)) return false;
 
   try {
-    const fileName = `snapshots/${roomCode}.json`;
-    const jsonBlob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
-    const { error: storageErr } = await supabase.storage
-      .from('room-backups')
-      .upload(fileName, jsonBlob, { contentType: 'application/json', upsert: true });
-    if (storageErr) console.warn('[RoomPersistence] Backup em Storage falhou:', storageErr.message);
-
+    // O carregamento usa campaigns.snapshot. Não duplicamos a mesma mesa no
+    // Storage, que antes criava uma segunda requisição vulnerável à mesma queda.
     const { data, error } = await supabase
       .from('campaigns')
       .update({ snapshot: bundle, last_played_at: new Date().toISOString(), updated_at: new Date().toISOString() })
@@ -409,16 +419,20 @@ export async function saveRoomBundleToCloud(roomCode: string, bundle: RoomBundle
       .maybeSingle();
 
     if (error) {
-      console.warn('[RoomPersistence] Snapshot não salvo na campanha:', error.message);
+      pauseCloudSnapshots(roomCode);
+      console.warn('[RoomPersistence] Nuvem indisponível; snapshot preservado localmente e aguardando nova tentativa.');
       return false;
     }
     if (!data) {
+      pauseCloudSnapshots(roomCode);
       console.warn(`[RoomPersistence] Sala '${roomCode}' não encontrada ou sem permissão de gravação.`);
       return false;
     }
+    cloudSnapshotBlockedUntil.delete(roomCode);
     return true;
   } catch (error) {
-    console.warn('[RoomPersistence] Falha ao salvar snapshot na nuvem:', error);
+    pauseCloudSnapshots(roomCode);
+    console.warn('[RoomPersistence] Nuvem indisponível; snapshot preservado localmente e aguardando nova tentativa.');
     return false;
   }
 }

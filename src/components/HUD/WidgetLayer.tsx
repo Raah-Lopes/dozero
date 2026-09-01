@@ -30,7 +30,6 @@ const DiceRollerWidget = React.lazy(() => import('../Widgets/PlayerTools/DiceRol
 const AIStudioWidget = React.lazy(() => import('../Widgets/GameMaster/AIStudioWidget').then(m => ({ default: m.AIStudioWidget })));
 const TradeShopWidget = React.lazy(() => import('../Widgets/PlayerTools/TradeShopWidget').then(m => ({ default: m.TradeShopWidget })));
 const PlayerManagerWidget = React.lazy(() => import('../Widgets/GameMaster/PlayerManagerWidget').then(m => ({ default: m.PlayerManagerWidget })));
-const AuditorWidget = React.lazy(() => import('../Widgets/System/AuditorWidget').then(m => ({ default: m.AuditorWidget })));
 const ConspiracyBoardWidget = React.lazy(() => import('../Widgets/ConspiracyBoard/ConspiracyBoardWidget').then(m => ({ default: m.ConspiracyBoardWidget })));
 const GMNotesWidget = React.lazy(() => import('../Widgets/GameMaster/GMNotesWidget').then(m => ({ default: m.GMNotesWidget })));
 const StoryDiceWidget = React.lazy(() => import('../Widgets/Generators/StoryDiceWidget').then(m => ({ default: m.StoryDiceWidget })));
@@ -86,7 +85,7 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
     });
     registerCommand({
       id: 'toggle-campaign',
-      title: 'Abrir Gestor de Campanhas',
+      title: 'Abrir Central de Campanha',
       category: 'Mestre',
       onSelect: () => openWindow('campaignManager')
     });
@@ -149,7 +148,6 @@ export const WidgetLayer: React.FC<{ standaloneWidget?: string }> = React.memo((
         {openWindows.aiStudio && <AIStudioWidget onClose={() => closeWindow('aiStudio')} />}
         {openWindows.tradeShop && <TradeShopWidget onClose={() => closeWindow('tradeShop')} />}
         {openWindows.playerManager && <PlayerManagerWidget onClose={() => closeWindow('playerManager')} />}
-        {openWindows.systemAuditor && <AuditorWidget onClose={() => closeWindow('systemAuditor')} />}
         {openWindows.storyBilderDeck && <StoryBilderDeckWidget onClose={() => closeWindow('storyBilderDeck')} />}
         {openWindows.mindMap && <ConspiracyBoardWidget onClose={() => closeWindow('mindMap')} />}
         {openWindows.gmNotes && <GMNotesWidget onClose={() => closeWindow('gmNotes')} />}

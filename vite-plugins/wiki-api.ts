@@ -5,6 +5,15 @@ import https from 'https';
 import http from 'http';
 import type { Plugin } from 'vite';
 
+/** Resolve paths supplied by the browser without allowing escape from the wiki root. */
+function resolveWikiPath(repoPath: string, relativePath: string): string {
+  if (!relativePath || path.isAbsolute(relativePath)) throw new Error('invalid wiki path');
+  const root = path.resolve(repoPath);
+  const target = path.resolve(root, relativePath);
+  if (target !== root && !target.startsWith(root + path.sep)) throw new Error('wiki path escapes repository');
+  return target;
+}
+
 // Helper to build tree like GitHub's API
 function buildFsTree(dir: string, baseDir: string, tree: any[] = []) {
   const files = fs.readdirSync(dir);
@@ -243,7 +252,7 @@ export function wikiLocalApi(): Plugin {
 
           if (req.method === 'POST' && pathname === '/api/wiki/open') {
             const filepath = body.path || '';
-            const full = path.join(repoPath, filepath);
+            const full = filepath ? resolveWikiPath(repoPath, filepath) : path.resolve(repoPath);
             
             if (!fs.existsSync(full)) return sendResponse(404, { error: 'folder not found' });
 
@@ -299,7 +308,7 @@ export function wikiLocalApi(): Plugin {
           if (req.method === 'GET' && pathname === '/api/wiki/file') {
             const filepath = url.searchParams.get('path');
             if (!filepath) return sendResponse(400, { error: 'path required' });
-            const full = path.join(repoPath, filepath);
+            const full = resolveWikiPath(repoPath, filepath);
             if (!fs.existsSync(full)) return sendResponse(404, { error: 'file not found' });
             
             const content = fs.readFileSync(full, 'utf-8');
@@ -310,7 +319,7 @@ export function wikiLocalApi(): Plugin {
             const filepath = url.searchParams.get('path');
             if (!filepath) return sendResponse(400, { error: 'path required' });
             
-            let full = path.join(repoPath, filepath);
+            let full = resolveWikiPath(repoPath, filepath);
             
             // Se o arquivo não existir no caminho direto (ex: foi linkado apenas pelo nome), busca recursivamente
             if (!fs.existsSync(full)) {
@@ -446,7 +455,7 @@ export function wikiLocalApi(): Plugin {
             const content = body.content;
             if (!filepath || content === undefined) return sendResponse(400, { error: 'path and content required' });
             
-            const full = path.join(repoPath, filepath);
+            const full = resolveWikiPath(repoPath, filepath);
             const dir = path.dirname(full);
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
             
@@ -458,7 +467,7 @@ export function wikiLocalApi(): Plugin {
             const folderpath = body.path;
             if (!folderpath) return sendResponse(400, { error: 'path required' });
             
-            const full = path.join(repoPath, folderpath);
+            const full = resolveWikiPath(repoPath, folderpath);
             if (!fs.existsSync(full)) {
               fs.mkdirSync(full, { recursive: true });
             }
@@ -470,8 +479,8 @@ export function wikiLocalApi(): Plugin {
             const newPath = body.newPath;
             if (!oldPath || !newPath) return sendResponse(400, { error: 'oldPath and newPath required' });
             
-            const fullOld = path.join(repoPath, oldPath);
-            const fullNew = path.join(repoPath, newPath);
+            const fullOld = resolveWikiPath(repoPath, oldPath);
+            const fullNew = resolveWikiPath(repoPath, newPath);
             
             if (!fs.existsSync(fullOld)) {
               return sendResponse(404, { error: 'Source not found' });
@@ -489,11 +498,11 @@ export function wikiLocalApi(): Plugin {
             const repo = body.repoPath || url.searchParams.get('repoPath');
             if (!oldPath || !newName || !repo) return sendResponse(400, { error: 'Missing parameters' });
             
-            const oldFull = path.join(repo, oldPath);
+            const oldFull = resolveWikiPath(repo, oldPath);
             if (!fs.existsSync(oldFull)) return sendResponse(404, { error: 'File not found' });
             
             const dir = path.dirname(oldFull);
-            const newFull = path.join(dir, newName.endsWith('.md') ? newName : newName + '.md');
+            const newFull = resolveWikiPath(repo, path.relative(repo, dir).replace(/\\/g, '/') + '/' + (newName.endsWith('.md') ? newName : newName + '.md'));
             
             fs.renameSync(oldFull, newFull);
             
@@ -544,7 +553,7 @@ export function wikiLocalApi(): Plugin {
             const filepath = body.path;
             if (!filepath) return sendResponse(400, { error: 'path required' });
             
-            const full = path.join(repoPath, filepath);
+            const full = resolveWikiPath(repoPath, filepath);
             if (fs.existsSync(full)) {
                const stat = fs.statSync(full);
                if (stat.isDirectory()) fs.rmSync(full, { recursive: true, force: true });
@@ -615,7 +624,7 @@ export function wikiLocalApi(): Plugin {
             const filepath = url.searchParams.get('path');
             if (!filepath) return sendResponse(400, { error: 'path required' });
             
-            let full = path.join(repoPath, filepath);
+            let full = resolveWikiPath(repoPath, filepath);
             
             // Busca recursiva caso não exista o caminho exato
             if (!fs.existsSync(full)) {

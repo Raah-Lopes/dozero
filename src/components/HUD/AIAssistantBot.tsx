@@ -3,6 +3,7 @@ import { Bot, Send, Loader2, X, Sparkles } from 'lucide-react';
 import { generateAI } from '../../services/ai/AIProvider';
 import { state } from '../../store';
 import { useIsGM } from '../../store/user';
+import { getCampaignIdForRoom } from '../../services/sceneCloudService';
 
 export const AIAssistantBot: React.FC = () => {
   const isGM = useIsGM();
@@ -136,14 +137,15 @@ export const AIAssistantBot: React.FC = () => {
       const apiKey = config.apiKey || '';
       const ollamaUrl = config.ollamaUrl;
       const geminiKeyForRag = config.geminiKey || (provider === 'gemini' ? apiKey : '');
-      const campaignId = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+      const roomCode = new URLSearchParams(window.location.search).get('room') || 'dozero-mesa-principal-v2';
+      const campaignId = await getCampaignIdForRoom(roomCode);
 
       const contextTokens = Array.from(tokensMap.values()).map(t => `- ${t.name} (HP: ${t.hp}/${t.maxHp})`).join('\n');
       const tableCtx = `\n\n--- CONTEXTO ATUAL ---\nCena: ${backgroundStr}\nTokens:\n${contextTokens || 'Nenhum.'}`;
 
       // RAG: busca contexto semântico da wiki (degrada graciosamente se não houver)
       let ragCtx = '';
-      if (geminiKeyForRag) {
+      if (geminiKeyForRag && campaignId) {
         try {
           const { searchContext } = await import('../../services/ai/ragSearchService');
           ragCtx = await searchContext(prompt, campaignId, geminiKeyForRag);

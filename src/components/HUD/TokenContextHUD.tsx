@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { state, toggleTarget, localState, pushChatMessage } from '../../store';
 import { Tokens } from '../../store/modules/tokenModule';
-import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus, Crosshair, Coins, BookOpen, FileText, ScrollText } from 'lucide-react';
+import { Shield, Zap, Skull, Settings, Unlock, Lock, Heart, Plus, Minus, Crosshair, Coins, BookOpen, FileText, ScrollText, GitFork } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useWiki } from '../../hooks/useWiki';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
 import { toast } from '../UI/Toast';
 import { Tooltip } from '../UI/Tooltip';
+import { saveCharacter } from '../../services/characterRepository';
+import { integrateCharacter } from '../../services/characterIntegration';
+import { DEFAULT_CHARACTER } from '../Sheets/Arcanum/lib';
+import { ARCANUM_SHEET_KIND } from '../Sheets/arcanumSheetAdapter';
 
 export function TokenContextHUD() {
-  const { setShowActors, setActiveModal, setEditingTokenId } = useWindowManager();
+  const { setShowActors, setActiveModal, setEditingTokenId, setActiveCharacterId, setSheetScope, setViewMode, openWindow } = useWindowManager();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [tokenData, setTokenData] = useState<any | null>(null);
   const [isTargeted, setIsTargeted] = useState(false);
@@ -144,6 +148,21 @@ export function TokenContextHUD() {
     Tokens.update(tokenData.id, { locked: !tokenData.locked });
   };
 
+  const openCharacterTools = async () => {
+    if (tokenData.characterId) {
+      setActiveCharacterId(tokenData.characterId); setSheetScope('campaign'); setViewMode('sheets'); return;
+    }
+    const character = structuredClone(DEFAULT_CHARACTER);
+    character.name = tokenData.name || 'Personagem sem nome'; character.avatar = tokenData.imageUrl || '';
+    character.vitals[0] = { ...character.vitals[0], value: Number(tokenData.hp) || 0, max: Number(tokenData.maxHp) || Number(tokenData.hp) || 0 };
+    character.vitals[1] = { ...character.vitals[1], value: Number(tokenData.mana) || 0, max: Number(tokenData.maxMana) || Number(tokenData.mana) || 0 };
+    try {
+      const saved = await saveCharacter({ name: character.name, type: tokenType === 'enemy' || tokenType === 'monster' ? 'monster' : tokenType === 'player' ? 'pc' : 'npc', campaign_id: null, avatar_url: character.avatar, notes_markdown: '', data: { sheetKind: ARCANUM_SHEET_KIND, sheetVersion: 1, wikiPath: tokenData.wikiPath || '', character } });
+      integrateCharacter(saved); state.sheets.set(saved.id, saved); Tokens.update(tokenData.id, { characterId: saved.id, wikiPath: String(saved.data.wikiPath || tokenData.wikiPath || '') });
+      setActiveCharacterId(saved.id); setSheetScope('campaign'); setViewMode('sheets'); toast.success('Token convertido em ficha Arcanum e vinculado ao Códice.');
+    } catch { toast.error('Não foi possível converter este token em ficha.'); }
+  };
+
   return (
     <div 
       className="token-context-hud"
@@ -240,18 +259,14 @@ export function TokenContextHUD() {
         </button>
       </Tooltip>
 
-      {tokenData.characterId && (
-        <Tooltip label="Abrir Ficha Arcanum Completa" position="top">
+      <Tooltip label={tokenData.characterId ? "Abrir ficha, macros e auditoria" : "Converter token em ficha Arcanum"} position="top">
           <button 
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('open-arcanum-sheet', { detail: { id: tokenData.characterId } }));
-            }} 
+            onClick={() => { void openCharacterTools(); }}
             style={{ ...actionButtonStyle, background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.5)' }}
           >
             <ScrollText size={18} color="#f59e0b" />
           </button>
         </Tooltip>
-      )}
 
       {(tokenData.wikiPath || entry?.path) && (
         <Tooltip label="Abrir Artigo na Wiki / Códice" position="top">
@@ -268,6 +283,10 @@ export function TokenContextHUD() {
           </button>
         </Tooltip>
       )}
+
+      <Tooltip label="Abrir família e relações do personagem" position="top">
+        <button onClick={() => openWindow('lineage')} style={{ ...actionButtonStyle, background: 'rgba(251,146,60,.16)', border: '1px solid rgba(251,146,60,.45)' }}><GitFork size={18} color="#fb923c" /></button>
+      </Tooltip>
 
       <Tooltip label="Configurações do Token" position="top">
         <button 

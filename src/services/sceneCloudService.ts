@@ -4,6 +4,7 @@ import { Config } from '../store/modules/configModule';
 import type { BackgroundData, MapConfig } from '../store';
 import type { FogConfig } from '../store/modules/configModule';
 import { toast } from '../components/UI/Toast';
+import { isCloudCoolingDown, noteCloudFailure, noteCloudSuccess } from './cloudHealth';
 
 export interface SceneRecord {
   id?: string;
@@ -28,9 +29,15 @@ export interface SceneRecord {
 // Cache em memória para evitar queries repetitivas para a mesma sala
 const campaignIdCache = new Map<string, { id: string | null; timestamp: number }>();
 const CACHE_TTL_MS = 60 * 1000; // 1 minuto
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+/**
+ * Resolve o identificador usado na URL da mesa para o UUID canônico do banco.
+ * Aceita também o UUID para que consumidores de bundles e serviços de nuvem não
+ * precisem saber se receberam um código de sala ou um id persistido.
+ */
 export async function getCampaignIdForRoom(roomCode: string): Promise<string | null> {
-  if (!isSupabaseConfigured || !roomCode) return null;
+  if (!isSupabaseConfigured || !roomCode || isCloudCoolingDown()) return null;
 
   const cached = campaignIdCache.get(roomCode);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
@@ -38,22 +45,31 @@ export async function getCampaignIdForRoom(roomCode: string): Promise<string | n
   }
 
   try {
-    const { data, error } = await supabase
+    const byId = UUID_RE.test(roomCode)
+      ? await supabase.from('campaigns').select('id').eq('id', roomCode).maybeSingle()
+      : { data: null, error: null };
+
+    if (byId.error) throw byId.error;
+
+    const byRoom = byId.data ? { data: null, error: null } : await supabase
       .from('campaigns')
       .select('id')
       .eq('room_code', roomCode)
       .maybeSingle();
 
-    if (error) {
-      console.warn('[SceneCloud] Não foi possível resolver a campanha:', error);
+    if (byRoom.error) {
+      noteCloudFailure(byRoom.error);
+      console.warn('[SceneCloud] Não foi possível resolver a campanha:', byRoom.error);
       campaignIdCache.set(roomCode, { id: null, timestamp: Date.now() });
       return null;
     }
 
-    const resolvedId = data?.id ?? null;
+    const resolvedId = byId.data?.id ?? byRoom.data?.id ?? null;
+    noteCloudSuccess();
     campaignIdCache.set(roomCode, { id: resolvedId, timestamp: Date.now() });
     return resolvedId;
   } catch (err) {
+    noteCloudFailure(err);
     campaignIdCache.set(roomCode, { id: null, timestamp: Date.now() });
     return null;
   }

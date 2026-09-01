@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
+import { getCampaignIdForRoom } from './sceneCloudService';
 
 // -------------------------------------------------------------------
 // Tipos
@@ -59,6 +60,16 @@ const cachedCampaignList = new Map<string, CharacterRecord[]>();
 
 // Fila de debounce para upserts remotos
 const pendingCloudSaves = new Map<string, NodeJS.Timeout>();
+const CLOUD_FAILURE_COOLDOWN_MS = 30_000;
+let cloudUnavailableUntil = 0;
+
+function isCloudCoolingDown(): boolean {
+  return Date.now() < cloudUnavailableUntil;
+}
+
+function markCloudUnavailable(): void {
+  cloudUnavailableUntil = Date.now() + CLOUD_FAILURE_COOLDOWN_MS;
+}
 
 // -------------------------------------------------------------------
 // API pública
@@ -71,7 +82,7 @@ const pendingCloudSaves = new Map<string, NodeJS.Timeout>();
 export async function getVaultCharacters(userId?: string | null): Promise<CharacterRecord[]> {
   const local = readLocal().filter(c => c.campaign_id === null);
 
-  if (!isSupabaseConfigured || !userId) return local;
+  if (!isSupabaseConfigured || !userId || isCloudCoolingDown()) return local;
 
   const now = Date.now();
   if (cachedVaultList && now - lastVaultFetchTime < 4000) {
@@ -90,7 +101,9 @@ export async function getVaultCharacters(userId?: string | null): Promise<Charac
         .order('updated_at', { ascending: false });
 
       if (error) {
-        console.warn('[CharRepo] getVaultCharacters aviso:', error.message);
+        markCloudUnavailable();
+        cachedVaultList = local;
+        lastVaultFetchTime = Date.now();
         return local;
       }
 
@@ -117,18 +130,21 @@ export async function getVaultCharacters(userId?: string | null): Promise<Charac
  * Carrega personagens vinculados a uma campanha específica.
  */
 export async function getCampaignCharacters(campaignId: string, _userId?: string | null): Promise<CharacterRecord[]> {
-  const local = readLocal().filter(c => c.campaign_id === campaignId);
+  const canonicalCampaignId = isSupabaseConfigured ? await getCampaignIdForRoom(campaignId) || campaignId : campaignId;
+  // Mantém fichas legadas locais visíveis enquanto a migração do código de sala
+  // para o UUID canônico acontece naturalmente nos próximos autosaves.
+  const local = readLocal().filter(c => c.campaign_id === canonicalCampaignId || c.campaign_id === campaignId);
 
-  if (!isSupabaseConfigured || !campaignId) return local;
+  if (!isSupabaseConfigured || !canonicalCampaignId || isCloudCoolingDown()) return local;
 
   const now = Date.now();
-  const lastTime = lastCampaignFetchTime.get(campaignId) || 0;
-  const cached = cachedCampaignList.get(campaignId);
+  const lastTime = lastCampaignFetchTime.get(canonicalCampaignId) || 0;
+  const cached = cachedCampaignList.get(canonicalCampaignId);
   if (cached && now - lastTime < 4000) {
     return cached;
   }
 
-  const existingInflight = inflightCampaigns.get(campaignId);
+  const existingInflight = inflightCampaigns.get(canonicalCampaignId);
   if (existingInflight) return existingInflight;
 
   const promise = (async () => {
@@ -136,28 +152,30 @@ export async function getCampaignCharacters(campaignId: string, _userId?: string
       const { data, error } = await supabase
         .from('characters')
         .select('id, campaign_id, owner_id, name, type, avatar_url, data, notes_markdown, is_public_to_party, created_at, updated_at')
-        .eq('campaign_id', campaignId)
+        .eq('campaign_id', canonicalCampaignId)
         .order('updated_at', { ascending: false });
 
       if (error) {
-        console.warn('[CharRepo] getCampaignCharacters aviso:', error.message);
+        markCloudUnavailable();
+        cachedCampaignList.set(canonicalCampaignId, local);
+        lastCampaignFetchTime.set(canonicalCampaignId, Date.now());
         return local;
       }
 
       const records = (data || []) as CharacterRecord[];
-      const others = readLocal().filter(c => c.campaign_id !== campaignId);
+      const others = readLocal().filter(c => c.campaign_id !== canonicalCampaignId && c.campaign_id !== campaignId);
       writeLocal([...records, ...others]);
-      cachedCampaignList.set(campaignId, records);
-      lastCampaignFetchTime.set(campaignId, Date.now());
+      cachedCampaignList.set(canonicalCampaignId, records);
+      lastCampaignFetchTime.set(canonicalCampaignId, Date.now());
       return records;
     } catch {
       return local;
     } finally {
-      inflightCampaigns.delete(campaignId);
+      inflightCampaigns.delete(canonicalCampaignId);
     }
   })();
 
-  inflightCampaigns.set(campaignId, promise);
+  inflightCampaigns.set(canonicalCampaignId, promise);
   return promise;
 }
 
@@ -170,9 +188,13 @@ export async function saveCharacter(
   userId?: string | null
 ): Promise<CharacterRecord> {
   const now = new Date().toISOString();
+  const requestedCampaignId = char.campaign_id ?? null;
+  const canonicalCampaignId = requestedCampaignId && isSupabaseConfigured
+    ? await getCampaignIdForRoom(requestedCampaignId) || requestedCampaignId
+    : requestedCampaignId;
   const record: CharacterRecord = {
     id:               char.id || crypto.randomUUID(),
-    campaign_id:      char.campaign_id ?? null,
+    campaign_id:      canonicalCampaignId,
     owner_id:         userId || char.owner_id,
     name:             char.name,
     type:             char.type || 'pc',
@@ -200,6 +222,7 @@ export async function saveCharacter(
 
     const timer = setTimeout(async () => {
       pendingCloudSaves.delete(record.id);
+      if (isCloudCoolingDown()) return;
       try {
         const { error } = await supabase.from('characters').upsert({
           id:                 record.id,
@@ -213,9 +236,15 @@ export async function saveCharacter(
           is_public_to_party: record.is_public_to_party,
           updated_at:         record.updated_at,
         });
-        if (error) console.warn('[CharRepo] saveCharacter upsert aviso:', error.message);
-      } catch (e) {
-        console.warn('[CharRepo] saveCharacter rede offline:', e);
+        if (error) {
+          markCloudUnavailable();
+          console.warn('[CharRepo] Nuvem indisponível; ficha preservada no Vault local.');
+        } else {
+          cloudUnavailableUntil = 0;
+        }
+      } catch {
+        markCloudUnavailable();
+        console.warn('[CharRepo] Nuvem indisponível; ficha preservada no Vault local.');
       }
     }, 400);
 
