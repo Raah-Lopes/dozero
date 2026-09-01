@@ -52,6 +52,7 @@ export class SupabaseRealtimeProvider {
     const channelName = `yjs:${this.roomName}`;
     this.channel = supabase.channel(channelName, {
       config: {
+        private: true,
         broadcast: { self: false, ack: true }
       }
     });
@@ -126,7 +127,7 @@ export class SupabaseRealtimeProvider {
       try {
         const authUser = (await supabase.auth.getSession()).data.session?.user;
         await this.channel?.track({
-          user_id: authUser?.id || `anon_${Date.now()}`,
+          user_id: authUser?.id,
           user_name: authUser?.user_metadata?.full_name || authUser?.email?.split('@')[0] || 'Aventureiro',
           room_code: this.roomName,
           joined_at: new Date().toISOString()

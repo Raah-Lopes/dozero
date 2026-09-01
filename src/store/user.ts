@@ -6,9 +6,9 @@ interface UserState {
 }
 
 export const useUserStore = create<UserState>((set) => ({
-  isGM: localStorage.getItem('isGM') === 'true',
+  // Papel vem da autorização da campanha; nunca de localStorage.
+  isGM: false,
   setIsGM: (value: boolean) => {
-    localStorage.setItem('isGM', String(value));
     set({ isGM: value });
   },
 }));

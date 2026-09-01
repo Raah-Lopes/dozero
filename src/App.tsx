@@ -41,6 +41,9 @@ import { StreamOverlay } from './components/Stream/StreamOverlay';
 import { useAutoSaveSession } from './services/useAutoSaveSession';
 import { useRoomPresence } from './services/useRoomPresence';
 import { useAuthStore } from './store/authStore';
+import { RoomAccessGate } from './components/System/RoomAccessGate';
+import { AdminCommandCenter } from './components/ControlCenter/AdminCommandCenter';
+import { PlayerCommandCenter } from './components/ControlCenter/PlayerCommandCenter';
 
 // Workspaces e Modais pesados carregados sob demanda (0ms de impacto inicial no Canvas)
 const WikiViewer = React.lazy(() => import('./components/Wiki/WikiViewer').then(m => ({ default: m.WikiViewer })));
@@ -64,8 +67,9 @@ const ProfileModal = React.lazy(() => import('./components/Modals/ProfileModal')
 const ResetPasswordModal = React.lazy(() => import('./components/Modals/ResetPasswordModal').then(m => ({ default: m.ResetPasswordModal })));
 const ObsidianSyncModal = React.lazy(() => import('./components/Modals/ObsidianSyncModal').then(m => ({ default: m.ObsidianSyncModal })));
 const CampaignBookPublisherModal = React.lazy(() => import('./components/Modals/CampaignBookPublisherModal').then(m => ({ default: m.CampaignBookPublisherModal })));
+const ControlCenterModal = React.lazy(() => import('./components/Modals/ControlCenterModal').then(m => ({ default: m.ControlCenterModal })));
 
-type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby' | 'vault' | 'tokenConfig';
+type ModalMode = 'none' | 'players' | 'settings' | 'settings-aparencia' | 'settings-modulos' | 'settings-ia' | 'settings-cenario' | 'chat' | 'clockConfig' | 'widgets' | 'lobby' | 'vault' | 'tokenConfig' | 'controlCenter';
 
 function App() {
   const [isReady] = useState(true);
@@ -135,6 +139,16 @@ function App() {
     setActiveModal(activeModal === mode ? 'none' : mode);
   }, [activeModal, setActiveModal]);
 
+  if (urlParams.get('panel') === 'admin') {
+    return <RoomAccessGate roomCode={currentRoom}><AdminCommandCenter roomCode={currentRoom} /></RoomAccessGate>;
+  }
+  if (urlParams.get('panel') === 'portal') {
+    return <RoomAccessGate roomCode={currentRoom}><PlayerCommandCenter roomCode={currentRoom} /></RoomAccessGate>;
+  }
+  if (urlParams.get('panel') === 'manage') {
+    return <RoomAccessGate roomCode={currentRoom}><AdminCommandCenter roomCode={currentRoom} scope="campaign" /></RoomAccessGate>;
+  }
+
   if (!isReady) {
     return (
       <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -160,6 +174,7 @@ function App() {
   }, [viewMode]);
 
   return (
+    <RoomAccessGate roomCode={currentRoom}>
     <div className="app-container">
       <OfflineStatus />
       
@@ -503,7 +518,7 @@ function App() {
                   onOpenMapSettings={() => { setActiveModal('settings-cenario'); }}
                   onOpenActorLibrary={() => { setShowActors(true); setActiveModal('none'); }}
                   onOpenPlayerManager={() => { toggleWindow('playerManager'); setActiveModal('none'); }}
-                  onOpenRoomManager={() => { setActiveModal('players'); }}
+                  onOpenRoomManager={() => { setActiveModal('controlCenter'); }}
                   onOpenStoryDice={() => { toggleWindow('storyDice'); setActiveModal('none'); }}
                   onOpenSSStoryDice={() => { toggleWindow('ssStoryDice'); setActiveModal('none'); }}
                   onOpenStoryBilderDeck={() => { toggleWindow('storyBilderDeck'); setActiveModal('none'); }}
@@ -530,6 +545,7 @@ function App() {
           onClose={() => setActiveModal('none')}
           onOpenVault={() => setActiveModal('vault')}
         />
+        {activeModal === 'controlCenter' && <ControlCenterModal roomCode={currentRoom} onClose={() => setActiveModal('none')} />}
         <PlayerVaultModal 
           isOpen={activeModal === 'vault'} 
           onClose={() => setActiveModal('none')} 
@@ -551,6 +567,7 @@ function App() {
         <CampaignBookPublisherModal isOpen={isBookPublisherOpen} onClose={() => setIsBookPublisherOpen(false)} />
       </React.Suspense>
     </div>
+    </RoomAccessGate>
   );
 }
 

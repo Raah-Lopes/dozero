@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+import { isSupabaseConfigured, supabase } from './supabase';
+import { isCloudCoolingDown, noteCloudFailure, noteCloudSuccess } from './cloudHealth';
 
 export interface CloudChatMessage {
   id?: string;
@@ -15,10 +16,15 @@ export interface CloudChatMessage {
  * Salva mensagem de chat no Supabase em segundo plano (não bloqueia UI)
  */
 export async function saveChatMessageToCloud(roomCode: string, msg: any, userId?: string | null) {
-  if (!supabase || !roomCode || !msg?.text) return;
+  if (!isSupabaseConfigured || !roomCode || !msg?.text || isCloudCoolingDown()) return;
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+
   try {
-    const { data: auth } = await supabase.auth.getUser();
-    const activeUserId = userId || auth.user?.id;
+    // O chat é uma melhoria de persistência, não uma dependência da mesa. A
+    // sessão já está no storage local; getUser() força uma chamada a /auth/v1/user
+    // e, durante uma queda de rede, polui o console a cada evento da mesa.
+    const { data: auth } = await supabase.auth.getSession();
+    const activeUserId = userId || auth.session?.user?.id;
     if (!activeUserId) {
       // Usuário não autenticado: opera local-first / P2P via Yjs sem disparar 401 no Supabase REST
       return;
@@ -49,8 +55,14 @@ export async function saveChatMessageToCloud(roomCode: string, msg: any, userId?
       },
     };
 
-    await supabase.from('chat_messages').insert(payload);
+    const { error } = await supabase.from('chat_messages').insert(payload);
+    if (error) {
+      noteCloudFailure(error);
+      return;
+    }
+    noteCloudSuccess();
   } catch (err) {
+    noteCloudFailure(err);
     // Fail silently in background to avoid disrupting live gameplay
     console.debug('[ChatCloud] Erro ao sincronizar mensagem:', err);
   }
@@ -60,10 +72,12 @@ export async function saveChatMessageToCloud(roomCode: string, msg: any, userId?
  * Carrega o histórico recente de mensagens de uma campanha/sala da nuvem
  */
 export async function loadCampaignChatHistory(roomCode: string, limit = 50): Promise<CloudChatMessage[]> {
-  if (!supabase || !roomCode) return [];
+  if (!isSupabaseConfigured || !roomCode || isCloudCoolingDown()) return [];
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return [];
+
   try {
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) return [];
+    const { data: auth } = await supabase.auth.getSession();
+    if (!auth.session?.user) return [];
 
     const { data, error } = await supabase
       .from('chat_messages')
@@ -72,9 +86,14 @@ export async function loadCampaignChatHistory(roomCode: string, limit = 50): Pro
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (error) return [];
+    if (error) {
+      noteCloudFailure(error);
+      return [];
+    }
+    noteCloudSuccess();
     return (data || []).reverse();
   } catch (err) {
+    noteCloudFailure(err);
     return [];
   }
 }

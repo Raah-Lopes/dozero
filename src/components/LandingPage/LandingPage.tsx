@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Dices, Play, Sparkles, Map as MapIcon, 
-  Crown, Swords, Plus, Search, Lock,
+  Crown, Swords, Plus, Search,
   Copy, Check, Edit3, Trash2, LogOut,
   RotateCcw
 } from 'lucide-react';
@@ -12,8 +12,6 @@ import { ProfileModal } from '../Modals/ProfileModal';
 import { ResetPasswordModal } from '../Modals/ResetPasswordModal';
 import { 
   getCampaigns, 
-  getLocalCampaignsCache,
-  resetCampaignsCache,
   createOrUpdateCampaign, 
   deleteCampaignCloud, 
   getLobbyStats,
@@ -21,6 +19,7 @@ import {
 } from '../../services/campaignCloudService';
 import { toast } from '../UI/Toast';
 import { navigateToRoom, getRoomUrl } from '../../utils/roomUrl';
+import { acceptCampaignInvite, listMyPendingInvites } from '../../services/roomAccessService';
 
 // ─── inline style helpers ───────────────────────────────────────────────────
 const S = {
@@ -41,13 +40,16 @@ const S = {
   blue:      '#2d7c8a',
 };
 
+const ADMIN_LANDING_EMAILS = new Set(['raphaell.lops@gmail.com', 'rmirraine@gmail.com']);
+const ADMIN_REDIRECT_KEY = 'dozero_open_admin_panel_after_login';
+
 export function LandingPage() {
   const { user, initialize, setAuthModalOpen, setProfileModalOpen, signOut } = useAuthStore();
   
-  const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>(() => getLocalCampaignsCache());
+  const [campaigns, setCampaigns] = useState<CampaignCloudRecord[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterMode, setFilterMode] = useState<'all' | 'mine' | 'public'>('all');
+  const [filterMode, setFilterMode] = useState<'all' | 'mine'>('all');
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCampId, setEditingCampId] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function LandingPage() {
     description: '',
     cover_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
     pass_code: '',
-    is_public: true,
+    is_public: false,
     is_closed: false
   });
 
@@ -66,9 +68,13 @@ export function LandingPage() {
   const [isRolling, setIsRolling] = useState(false);
   const [rollOutcome, setRollOutcome] = useState('🔥 Sucesso Decisivo Crítico!');
   
-  const [promptRoom, setPromptRoom] = useState<CampaignCloudRecord | null>(null);
-  const [enteredPass, setEnteredPass] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pendingInvites, setPendingInvites] = useState<any[]>([]);
+
+  const openLogin = () => {
+    sessionStorage.setItem(ADMIN_REDIRECT_KEY, 'true');
+    setAuthModalOpen(true);
+  };
 
   // O index.css do VTT app tem body { overflow: hidden }. A landing precisa de scroll.
   useEffect(() => {
@@ -82,14 +88,38 @@ export function LandingPage() {
 
   // Trava o scroll do body quando qualquer modal estiver aberto
   useEffect(() => {
-    const anyOpen = isEditModalOpen || !!promptRoom || isDiceModalOpen;
+    const anyOpen = isEditModalOpen || isDiceModalOpen;
     document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
-  }, [isEditModalOpen, promptRoom, isDiceModalOpen]);
+  }, [isEditModalOpen, isDiceModalOpen]);
 
   useEffect(() => {
     initialize();
-    loadCampaignsList();
+    if (user?.id) loadCampaignsList(); else setCampaigns([]);
   }, [initialize, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) { setPendingInvites([]); return; }
+    void listMyPendingInvites().then(setPendingInvites).catch(() => setPendingInvites([]));
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.email || sessionStorage.getItem(ADMIN_REDIRECT_KEY) !== 'true') return;
+    sessionStorage.removeItem(ADMIN_REDIRECT_KEY);
+    if (ADMIN_LANDING_EMAILS.has(user.email.toLowerCase())) {
+      window.location.assign('/vtt.html?room=dozero-mesa-principal-v2&panel=admin');
+    }
+  }, [user?.email]);
+
+  const acceptInvite = async (inviteId: string) => {
+    try { await acceptCampaignInvite(inviteId); await loadCampaignsList(); setPendingInvites(list => list.filter(invite => invite.id !== inviteId)); toast.success('Convite aceito. A mesa já está disponível para você.'); }
+    catch { toast.error('Não foi possível aceitar este convite.'); }
+  };
+
+  const openPlayerPortal = () => {
+    const campaign = campaigns[0];
+    if (!campaign) { toast.error('Aceite um convite ou entre em uma mesa para abrir seu portal.'); return; }
+    window.location.assign(`/vtt.html?room=${encodeURIComponent(campaign.room_code)}&panel=portal`);
+  };
 
   const loadCampaignsList = async () => {
     try {
@@ -125,12 +155,12 @@ export function LandingPage() {
   };
 
   const handleOpenCreate = () => {
-    if (!user) toast.info('Crie uma conta ou faça login para gerenciar suas mesas na nuvem!');
+    if (!user) { openLogin(); return; }
     setEditingCampId(null);
     setFormData({
       name: '', system: 'D&D 5e / Fantasia Medieval', description: '',
       cover_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
-      pass_code: '', is_public: true, is_closed: false
+      pass_code: '', is_public: false, is_closed: false
     });
     setIsEditModalOpen(true);
   };
@@ -173,25 +203,9 @@ export function LandingPage() {
   };
 
   const handleJoinTable = (camp: CampaignCloudRecord) => {
+    if (!user) { openLogin(); return; }
     if (camp.is_closed) { toast.error('Esta mesa está fechada pelo Mestre.'); return; }
-    if (camp.pass_code?.trim()) {
-      if (!(user?.id && camp.owner_id === user.id)) {
-        setPromptRoom(camp); setEnteredPass(''); return;
-      }
-    }
     navigateToRoom(camp.room_code);
-  };
-
-  const handleConfirmPasswordJoin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!promptRoom) return;
-    if (enteredPass.trim() === promptRoom.pass_code?.trim()) {
-      const target = promptRoom.room_code;
-      setPromptRoom(null);
-      navigateToRoom(target);
-    } else {
-      toast.error('Senha incorreta!');
-    }
   };
 
   const handleCopyLink = (camp: CampaignCloudRecord, e: React.MouseEvent) => {
@@ -208,7 +222,6 @@ export function LandingPage() {
                   (c.description && c.description.toLowerCase().includes(q));
     if (!match) return false;
     if (filterMode === 'mine') return !!(user?.id && c.owner_id === user.id);
-    if (filterMode === 'public') return c.is_public !== false;
     return true;
   });
 
@@ -217,25 +230,26 @@ export function LandingPage() {
     <div className="landing-page-body" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── 1. NAV ── */}
-      <nav style={{
+      <nav className="landing-nav" style={{
         position: 'sticky', top: 0, zIndex: 50,
         background: 'rgba(44,30,22,0.96)', borderBottom: '4px solid #4a3320',
         boxShadow: '0 4px 12px rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)'
       }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 80 }}>
+        <div className="landing-shell" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem' }}>
+          <div className="landing-nav-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 80 }}>
 
             {/* Logo */}
-            <div style={{ cursor: 'pointer' }} onClick={() => scrollToSection('hero')}>
+            <button type="button" className="landing-logo-button" onClick={() => scrollToSection('hero')} aria-label="Voltar ao início">
               <img src="/assets/logo_mascot.png" alt="Dozero VTT"
+                width={190} height={56}
                 style={{ height: 56, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))', transition: 'transform 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
                 onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
               />
-            </div>
+            </button>
 
             {/* Desktop Nav */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', fontFamily: 'Bangers, cursive', fontSize: '1.2rem', letterSpacing: '0.05em', color: '#e8dcc4' }}>
+            <div className="landing-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: '2rem', fontFamily: 'Bangers, cursive', fontSize: '1.2rem', letterSpacing: '0.05em', color: '#e8dcc4' }}>
               <NavBtn onClick={() => scrollToSection('features')}>Recursos</NavBtn>
               <NavBtn onClick={() => scrollToSection('lobby')} icon={<Swords style={{ width: 18, height: 18, color: '#d6a32b' }} />}>
                 Mesas &amp; Taverna
@@ -252,6 +266,10 @@ export function LandingPage() {
                       <Crown style={{ width: 16, height: 16, color: '#854b17' }} />
                       {user.user_metadata?.username || user.email?.split('@')[0] || 'Meu Herói'}
                     </button>
+                    <button onClick={openPlayerPortal} className="btn-rpg btn-red"
+                      style={{ fontSize: '0.75rem', padding: '0.3rem 0.7rem' }}>
+                      Meu Portal
+                    </button>
                     <button onClick={() => signOut()} title="Sair"
                       style={{ background: 'none', border: 'none', color: '#e8dcc4', cursor: 'pointer', padding: 6, lineHeight: 0 }}>
                       <LogOut style={{ width: 20, height: 20 }} />
@@ -259,19 +277,20 @@ export function LandingPage() {
                   </>
                 ) : (
                   <>
-                    <button onClick={() => setAuthModalOpen(true)} className="btn-rpg btn-yellow" style={{ fontSize: '0.85rem', padding: '0.3rem 1rem' }}>Entrar</button>
-                    <button onClick={() => setAuthModalOpen(true)} className="btn-rpg btn-red"    style={{ fontSize: '0.85rem', padding: '0.3rem 1rem' }}>Criar Conta</button>
+                    <button onClick={openLogin} className="btn-rpg btn-yellow" style={{ fontSize: '0.85rem', padding: '0.3rem 1rem' }}>Entrar</button>
+                    <button onClick={openLogin} className="btn-rpg btn-red"    style={{ fontSize: '0.85rem', padding: '0.3rem 1rem' }}>Criar Conta</button>
                   </>
                 )}
               </div>
             </div>
 
             {/* Mobile auth only */}
-            <div style={{ display: 'flex' }} className="md:hidden">
-              <button onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}
+            <div className="landing-nav-mobile" style={{ display: 'none' }}>
+              <button onClick={() => user ? setProfileModalOpen(true) : openLogin()}
                 className="btn-rpg btn-yellow" style={{ fontSize: '0.75rem', padding: '0.2rem 0.75rem' }}>
                 {user ? 'Conta' : 'Entrar'}
               </button>
+              {user && <button onClick={openPlayerPortal} className="btn-rpg btn-red" style={{ fontSize: '0.7rem', padding: '0.2rem 0.65rem' }}>Portal</button>}
             </div>
           </div>
         </div>
@@ -281,11 +300,11 @@ export function LandingPage() {
 
         {/* ── 2. HERO ── */}
         <section id="hero" style={{ padding: '3rem 0 4rem', minHeight: '75vh', display: 'flex', alignItems: 'center', overflow: 'hidden', position: 'relative' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', width: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem', alignItems: 'center' }}>
+          <div className="landing-shell" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem', width: '100%' }}>
+            <div className="landing-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem', alignItems: 'center' }}>
 
               {/* Painel de texto */}
-              <div className="wood-frame" style={{ background: '#e8dcc4', padding: '2.5rem', position: 'relative', textAlign: 'left' }}>
+              <div className="wood-frame landing-hero-panel" style={{ background: '#e8dcc4', padding: '2.5rem', position: 'relative', textAlign: 'left' }}>
                 <div style={{
                   position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%) rotate(2deg)',
                   background: '#c6463d', color: '#fff', fontFamily: 'Bangers, cursive',
@@ -353,9 +372,10 @@ export function LandingPage() {
               </div>
 
               {/* Mascote */}
-              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+              <div className="landing-mascot" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
                 <div style={{ position: 'absolute', inset: 0, background: '#d4c4a4', borderRadius: '50%', filter: 'blur(60px)', opacity: 0.2 }} />
                 <img src="/assets/mascot_map.png" alt="Zye – mascote do Dozero VTT"
+                  width={460} height={460}
                   className="animate-float"
                   style={{ position: 'relative', zIndex: 2, maxHeight: 460, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(8px 12px 20px rgba(0,0,0,0.75))' }}
                 />
@@ -374,7 +394,7 @@ export function LandingPage() {
 
         {/* ── 3. LOBBY / TAVERNA ── */}
         <section id="lobby" style={{ padding: '4rem 0', background: '#2c1e16', borderTop: '8px solid #4a3320', borderBottom: '8px solid #4a3320', position: 'relative' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem' }}>
+          <div className="landing-shell" style={{ maxWidth: 1280, margin: '0 auto', padding: '0 1.5rem' }}>
 
             {/* Título */}
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
@@ -390,21 +410,22 @@ export function LandingPage() {
             <div className="paper-panel" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
 
               {/* Stats + Busca */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div className="landing-lobby-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
 
                 {/* Indicadores */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div className="landing-stat-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <StatBadge color="#6d8a2d" label="Jogadores Online" value={`${stats.activePlayersCount} Heróis`} />
                   <StatBadge color="#c6463d" label="Mesas Ativas" value={`${stats.activeTablesCount} Aventuras`} />
                   <StatBadge color="#d6a32b" label="Mestres" value={`${stats.mastersCount} Mestres`} />
                 </div>
 
                 {/* Busca + botão */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div className="landing-search-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ position: 'relative' }}>
                     <Search style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#6b4c34' }} />
                     <input
                       type="text" placeholder="Buscar mesa ou sistema..."
+                      aria-label="Buscar mesa ou sistema" name="campaign-search" autoComplete="off"
                       value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                       style={{
                         background: '#d4c4a4', border: '2px solid #4a3320', borderRadius: 8,
@@ -415,13 +436,12 @@ export function LandingPage() {
                   </div>
                   <button 
                     onClick={() => {
-                      const cleaned = resetCampaignsCache();
-                      setCampaigns(cleaned);
-                      toast.success('Cache das mesas limpo com sucesso!');
-                      loadCampaignsList();
+                      void loadCampaignsList();
+                      toast.success('Mesas atualizadas.');
                     }} 
                     className="btn-rpg"
                     title="Limpar Cache e Sincronizar Mesas"
+                    aria-label="Atualizar mesas"
                     style={{ background: '#4a3320', color: '#e8dcc4', border: '2px solid #2c1e16', padding: '0.5rem', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                     <RotateCcw style={{ width: 16, height: 16 }} />
                   </button>
@@ -433,11 +453,10 @@ export function LandingPage() {
               </div>
 
               {/* Filtros */}
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              <div className="landing-filters" style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {([
                   ['all',    `Todas (${campaigns.length})`],
                   ['mine',   `👑 Minhas (${campaigns.filter(c => user?.id && c.owner_id === user.id).length})`],
-                  ['public', `🌍 Públicas (${campaigns.filter(c => c.is_public !== false).length})`],
                 ] as const).map(([mode, label]) => (
                   <button key={mode} onClick={() => setFilterMode(mode)}
                     style={{
@@ -452,6 +471,16 @@ export function LandingPage() {
                 ))}
               </div>
             </div>
+
+            {pendingInvites.length > 0 && (
+              <section className="paper-panel" style={{ padding: '1rem', marginBottom: '1rem', border: '2px solid #d6a32b' }}>
+                <strong style={{ color: '#4a3320' }}>Convites recebidos</strong>
+                {pendingInvites.map(invite => <div key={invite.id} style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                  <span style={{ flex: 1 }}>{invite.campaign?.name || 'Mesa privada'} · {invite.role === 'gm' ? 'Mestre auxiliar' : invite.role === 'spectator' ? 'Espectador' : 'Jogador'}</span>
+                  <button className="btn-rpg btn-yellow" onClick={() => void acceptInvite(invite.id)}>Aceitar</button>
+                </div>)}
+              </section>
+            )}
 
             {/* Grid de Campanhas */}
             {loadingCampaigns ? (
@@ -468,19 +497,19 @@ export function LandingPage() {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              <div className="landing-campaign-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
                 {filteredCampaigns.map(camp => {
                   const isOwner = !!(user?.id && camp.owner_id === user.id);
                   const activePlayers = camp.active_players_count || (camp.is_closed ? 0 : 3);
                   return (
-                    <div key={camp.id} className="paper-panel"
+                    <article key={camp.id} className="paper-panel landing-campaign-card"
                       style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '4px solid #4a3320', transition: 'transform 0.2s' }}
                       onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-6px)')}
                       onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
 
                       {/* Capa */}
                       <div style={{ position: 'relative', height: 176, background: '#2c1e16', overflow: 'hidden', borderBottom: '4px solid #4a3320' }}>
-                        <img src={camp.cover_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80'}
+                        <img src={camp.cover_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80'} loading="lazy"
                           alt={camp.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9, transition: 'transform 0.3s' }}
                           onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
                           onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
@@ -494,11 +523,6 @@ export function LandingPage() {
                         <div style={{ position: 'absolute', top: 10, right: 10, background: '#c6463d', color: '#fff', padding: '3px 10px', borderRadius: 6, fontSize: '0.75rem', fontFamily: 'Bangers, cursive', border: '1px solid black' }}>
                           {camp.system}
                         </div>
-                        {camp.pass_code && (
-                          <div style={{ position: 'absolute', bottom: 10, left: 10, background: '#d6a32b', color: '#2c1e16', padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Lock style={{ width: 10, height: 10 }} /> Requer Senha
-                          </div>
-                        )}
                         {isOwner && (
                           <div style={{ position: 'absolute', bottom: 10, right: 10, background: '#2d7c8a', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem', fontFamily: 'Bangers, cursive' }}>
                             👑 Você é o Mestre
@@ -527,6 +551,9 @@ export function LandingPage() {
                           </IconBtn>
                           {isOwner && (
                             <>
+                              <IconBtn onClick={() => window.location.assign(`/vtt.html?room=${encodeURIComponent(camp.room_code)}&panel=manage`)} title="Gerenciar mesa">
+                                <Crown style={{ width: 14, height: 14 }} />
+                              </IconBtn>
                               <IconBtn onClick={e => handleOpenEdit(camp, e)} title="Editar">
                                 <Edit3 style={{ width: 14, height: 14 }} />
                               </IconBtn>
@@ -537,7 +564,7 @@ export function LandingPage() {
                           )}
                         </div>
                       </div>
-                    </div>
+                    </article>
                   );
                 })}
               </div>
@@ -593,7 +620,7 @@ export function LandingPage() {
               <p style={{ color: '#4a3320', fontWeight: 700, maxWidth: 450, margin: '0 auto 1.5rem' }}>
                 Sem assinaturas caras ou configurações complexas. Entre em uma mesa agora ou convide seu grupo.
               </p>
-              <button onClick={() => user ? scrollToSection('lobby') : setAuthModalOpen(true)}
+              <button onClick={() => user ? scrollToSection('lobby') : openLogin()}
                 className="btn-rpg btn-red" style={{ fontSize: '1.4rem', padding: '0.9rem 3rem' }}>
                 {user ? 'EXPLORAR MESAS AGORA' : 'CRIAR MINHA CONTA GRÁTIS'}
               </button>
@@ -652,12 +679,11 @@ export function LandingPage() {
               {([
                 ['Nome da Campanha *', 'text', 'name', 'Ex: A Mina Perdida de Phandelver', true],
                 ['Sistema de Regras', 'text', 'system', 'D&D 5e, Tormenta20, PF2e...', false],
-                ['URL da Capa', 'text', 'cover_url', 'https://...', false],
-                ['Senha de Acesso (Opcional)', 'text', 'pass_code', 'Deixe em branco para mesa livre', false],
+                ['URL da Capa', 'url', 'cover_url', 'https://exemplo.com/capa.jpg', false],
               ] as const).map(([label, type, field, placeholder, required]) => (
                 <div key={field}>
                   <label style={{ display: 'block', fontFamily: 'Bangers, cursive', color: '#2c1e16', marginBottom: 4 }}>{label}</label>
-                  <input type={type} required={required} placeholder={placeholder}
+                  <input id={`campaign-${field}`} name={field} type={type} required={required} placeholder={placeholder}
                     value={formData[field as keyof typeof formData] as string}
                     onChange={e => setFormData({ ...formData, [field]: e.target.value })}
                     style={{ width: '100%', background: '#d4c4a4', border: '2px solid #4a3320', borderRadius: 6, padding: '8px 12px', fontWeight: 700, fontSize: '0.85rem', boxSizing: 'border-box', outline: 'none' }}
@@ -673,7 +699,6 @@ export function LandingPage() {
               </div>
               <div style={{ display: 'flex', gap: '1.5rem' }}>
                 {([
-                  ['is_public', 'Visível no Mural Público'],
                   ['is_closed', 'Mesa Fechada / Trancada'],
                 ] as const).map(([field, label]) => (
                   <label key={field} style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '0.85rem', color: '#4a3320', cursor: 'pointer' }}>
@@ -687,30 +712,6 @@ export function LandingPage() {
               <button type="submit" className="btn-rpg btn-yellow" style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}>
                 {editingCampId ? 'Salvar Alterações' : 'Criar Mesa Agora'}
               </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL: SENHA DA SALA ── */}
-      {promptRoom && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', padding: 16 }}>
-          <div className="paper-panel" style={{ maxWidth: 380, width: '100%', padding: '2rem', textAlign: 'center', position: 'relative' }}>
-            <button onClick={() => setPromptRoom(null)}
-              style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, background: '#c6463d', color: '#fff', border: '2px solid black', borderRadius: 6, cursor: 'pointer', fontFamily: 'Bangers, cursive' }}>
-              X
-            </button>
-            <Lock style={{ width: 40, height: 40, color: '#c6463d', margin: '0 auto 0.5rem' }} />
-            <h3 style={{ fontFamily: 'Bangers, cursive', fontSize: '1.75rem', color: '#2c1e16', marginBottom: '0.25rem' }}>Mesa Protegida</h3>
-            <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#4a3320', marginBottom: '1rem' }}>
-              Informe o passe secreto de "{promptRoom.name}":
-            </p>
-            <form onSubmit={handleConfirmPasswordJoin} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <input type="password" required autoFocus placeholder="Senha da sala..."
-                value={enteredPass} onChange={e => setEnteredPass(e.target.value)}
-                style={{ width: '100%', background: '#d4c4a4', border: '2px solid #4a3320', borderRadius: 6, padding: '10px 12px', textAlign: 'center', fontWeight: 700, boxSizing: 'border-box', outline: 'none' }}
-              />
-              <button type="submit" className="btn-rpg btn-red" style={{ width: '100%', padding: '0.65rem' }}>Destrancar e Jogar</button>
             </form>
           </div>
         </div>

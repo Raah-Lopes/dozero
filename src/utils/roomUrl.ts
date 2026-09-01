@@ -2,21 +2,21 @@
 
 const VERCEL_BASE = 'https://dozero-vert.vercel.app';
 
-export const getRoomUrl = (roomCode: string, passCode?: string): string => {
+export const getRoomUrl = (roomCode: string): string => {
   const pathname = window.location.pathname.endsWith('.html')
     ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))
     : window.location.pathname.replace(/\/$/, '');
   const base = `${window.location.origin}${pathname}/vtt.html?room=${encodeURIComponent(roomCode)}`;
-  return passCode ? `${base}&pass=${encodeURIComponent(passCode)}` : base;
+  return base;
 };
 
-export const getVercelRoomUrl = (roomCode: string, passCode?: string): string => {
+export const getVercelRoomUrl = (roomCode: string): string => {
   const base = `${VERCEL_BASE}/vtt.html?room=${encodeURIComponent(roomCode)}`;
-  return passCode ? `${base}&pass=${encodeURIComponent(passCode)}` : base;
+  return base;
 };
 
-export const navigateToRoom = (roomCode: string, passCode?: string): void => {
-  window.location.href = getRoomUrl(roomCode, passCode);
+export const navigateToRoom = (roomCode: string): void => {
+  window.location.href = getRoomUrl(roomCode);
 };
 
 export const getCurrentRoomCode = (): string => {

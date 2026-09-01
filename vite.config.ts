@@ -5,7 +5,6 @@ import tailwindcss from '@tailwindcss/vite'
 import { wikiLocalApi } from './vite-plugins/wiki-api'
 import { youtubeLocalApi } from './vite-plugins/youtube-api'
 import { pollinationsProxy } from './vite-plugins/pollinations-proxy'
-import { yjsWebsocketServer } from './vite-plugins/yjs-server'
 import os from 'os'
 
 function getLocalIP() {
@@ -31,8 +30,7 @@ export default defineConfig({
     react(), 
     wikiLocalApi(), 
     youtubeLocalApi(), 
-    pollinationsProxy(), 
-    yjsWebsocketServer(),
+    pollinationsProxy(),
     visualizer({ open: false, filename: 'stats.html' }),
     VitePWA({
       registerType: 'autoUpdate',
@@ -109,7 +107,6 @@ export default defineConfig({
     host: true, // Always expose to network
     port: 5174,
     strictPort: true, // Force it to use 5174, so we bypass any old Service Workers on 5173
-    allowedHosts: true, // true desativa o bloqueio de Host no Vite (permite qualquer túnel)
     watch: {
       ignored: [
         '**/wikidozero/**',

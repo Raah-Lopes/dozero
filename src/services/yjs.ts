@@ -29,6 +29,9 @@ export let wsProvider: WebsocketProvider | null = null;
 
 function initializeWebsocketProvider() {
   if (wsProvider) return;
+  // O servidor local y-websocket não valida JWT; só pode ser usado quando o
+  // desenvolvedor o habilita conscientemente em uma instalação isolada.
+  if (import.meta.env.VITE_ENABLE_INSECURE_YJS_DEV !== 'true') return;
   try {
     if (customWsServer) {
       wsProvider = new WebsocketProvider(customWsServer, roomName, doc);
@@ -54,6 +57,28 @@ function initializeSupabaseRealtime() {
 function initializeRealtimeProvider() {
   initializeWebsocketProvider();
   if (!wsProvider) initializeSupabaseRealtime();
+}
+
+/**
+ * A sincronização de rede só é iniciada depois de a aplicação confirmar que a
+ * sessão autenticada pode abrir esta mesa. O documento local continua sendo a
+ * base offline, mas não é exibido nem enviado antes dessa autorização.
+ */
+export function startAuthorizedRoomSync() {
+  initializeRealtimeProvider();
+  window.setTimeout(() => {
+    if (hasRoomMapContent()) return;
+    import('./roomPersistenceService').then(({ loadRoomSnapshotFromCloud }) => {
+      loadRoomSnapshotFromCloud(roomName);
+    });
+  }, 1200);
+}
+
+export function stopRoomSync() {
+  wsProvider?.destroy();
+  wsProvider = null;
+  supabaseRealtime?.destroy();
+  supabaseRealtime = null;
 }
 
 export const state = {
@@ -143,21 +168,8 @@ indexeddbProvider?.on('synced', () => {
   if (state.tokens.has('goblin_boss')) state.tokens.delete('goblin_boss');
   if (state.tokens.has('omega_sentinel')) state.tokens.delete('omega_sentinel');
 
-  initializeRealtimeProvider();
-
-  // Dá tempo para o peer já conectado responder ao sync inicial. Só então a
-  // máquina sozinha usa o snapshot como fallback, sem retransmiti-lo aos pares.
-  window.setTimeout(() => {
-    if (hasRoomMapContent()) return;
-    import('./roomPersistenceService').then(({ loadRoomSnapshotFromCloud }) => {
-      loadRoomSnapshotFromCloud(roomName);
-    });
-  }, 1200);
 });
 
-if (!indexeddbProvider) {
-  initializeRealtimeProvider();
-}
 
 // Durante o HMR, os módulos são substituídos sem descarregar a página. Sem
 // fechar o canal anterior, o cliente do Supabase tenta acrescentar callbacks

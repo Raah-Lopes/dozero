@@ -55,12 +55,63 @@ html, body {
   border-radius: 0.5rem;
   border: 3px solid #1a110c;
   box-shadow: 4px 4px 0px 0px #1a110c;
-  transition: all 0.1s ease-in-out;
+  transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out, background-color 0.1s ease-in-out;
   cursor: pointer;
   text-decoration: none;
   position: relative;
   overflow: hidden;
   user-select: none;
+}
+
+.landing-logo-button {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.landing-logo-button img { transition: transform 0.2s ease; }
+.landing-logo-button:hover img { transform: scale(1.05); }
+
+.landing-page-body :is(button, input, textarea, select):focus-visible {
+  outline: 3px solid #d6a32b;
+  outline-offset: 3px;
+}
+
+.landing-campaign-card { min-width: 0; }
+.landing-campaign-card:hover { transform: translateY(-6px); }
+
+@media (max-width: 760px) {
+  .landing-shell { padding-inline: 1rem !important; }
+  .landing-nav-inner { height: 64px !important; }
+  .landing-logo-button img { height: 42px !important; width: auto !important; }
+  .landing-nav-desktop { display: none !important; }
+  .landing-nav-mobile { display: flex !important; }
+  #hero { min-height: auto !important; padding: 2.25rem 0 3rem !important; }
+  .landing-hero-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 2.5rem !important; }
+  .landing-hero-panel { padding: 2rem 1.25rem !important; }
+  .landing-hero-panel h1 { font-size: clamp(2.45rem, 13vw, 3.3rem) !important; }
+  .landing-mascot { min-height: 280px !important; order: -1; }
+  .landing-mascot img { width: min(100%, 330px) !important; height: auto !important; max-height: 330px !important; }
+  .landing-lobby-toolbar { align-items: stretch !important; }
+  .landing-stat-list, .landing-search-actions { width: 100%; }
+  .landing-search-actions > * { flex: 1 1 auto; }
+  .landing-search-actions input { width: 100% !important; box-sizing: border-box; }
+  .landing-filters { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; }
+  .landing-filters button { white-space: nowrap; }
+  .landing-campaign-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 1rem !important; }
+  .landing-campaign-card:hover { transform: none; }
+  .paper-panel { box-shadow: 4px 4px 0 rgba(0,0,0,.6); }
+}
+
+@media (max-width: 420px) {
+  .btn-rpg { font-size: 1rem; padding: .55rem .8rem; }
+  .landing-hero-panel > div:last-child .btn-rpg { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
 .btn-rpg:active {

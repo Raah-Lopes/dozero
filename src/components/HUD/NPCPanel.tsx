@@ -49,7 +49,9 @@ export const NPCPanel: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'players' | 'enemies'>('all');
-  const [showOnlyLinked, setShowOnlyLinked] = useState(true);
+  // Tokens rápidos ainda não possuem ficha vinculada. Exibi-los por padrão é
+  // essencial para que o Mestre consiga materializá-los no tabuleiro.
+  const [showOnlyLinked, setShowOnlyLinked] = useState(false);
   const [generatorCategories, setGeneratorCategories] = useState<any[]>([]);
   const [convertingPaths, setConvertingPaths] = useState<Set<string>>(() => new Set());
 
@@ -631,7 +633,7 @@ export const NPCPanel: React.FC = () => {
                   onChange={e => setShowOnlyLinked(e.target.checked)} 
                   style={{ cursor: 'pointer', margin: 0 }}
                 />
-                Fichas Normais
+                Somente fichas vinculadas
               </label>
             </div>
 

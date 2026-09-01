@@ -75,10 +75,10 @@ export function resetCampaignsCache(): CampaignCloudRecord[] {
  * Carrega campanhas com estratégia Local-First (Instantâneo) + Sincronização direta com Supabase
  */
 export async function getCampaigns(userId?: string | null): Promise<CampaignCloudRecord[]> {
-  const localList = getLocalCampaignsCache();
+  const localList = userId ? getLocalCampaignsCache() : [];
 
   if (!isSupabaseConfigured) {
-    return localList;
+    return [];
   }
 
   // Deduplicação de chamadas simultâneas (cache quente em memória de 3s)
@@ -106,7 +106,7 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
 
       if (error) {
         console.warn('[CampaignCloud] Erro ou timeout no banco:', error.message || error);
-        return localList;
+        return [];
       }
 
       if (tableData && tableData.length > 0) {
@@ -132,10 +132,10 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
         return cloudCampaigns;
       }
 
-      return localList;
+      return [];
     } catch (e) {
       console.warn('[CampaignCloud] Usando cache local:', e);
-      return localList;
+      return [];
     } finally {
       inflightGetCampaigns = null;
     }
@@ -165,7 +165,7 @@ export async function createOrUpdateCampaign(
     cover_url: campaign.cover_url || '/assets/vtt_layout_hero.jpg',
     room_code: roomCode,
     pass_code: campaign.pass_code || '',
-    is_public: campaign.is_public !== undefined ? campaign.is_public : true,
+    is_public: false,
     is_closed: campaign.is_closed !== undefined ? campaign.is_closed : false,
     active_players_count: campaign.active_players_count || 1,
     owner_id: userId || undefined,
