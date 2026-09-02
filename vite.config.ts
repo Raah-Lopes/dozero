@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { wikiLocalApi } from './vite-plugins/wiki-api'
 import { youtubeLocalApi } from './vite-plugins/youtube-api'
 import { pollinationsProxy } from './vite-plugins/pollinations-proxy'
+import { supabaseRestProxy } from './vite-plugins/supabase-rest-proxy'
 import os from 'os'
 
 function getLocalIP() {
@@ -31,6 +32,7 @@ export default defineConfig({
     wikiLocalApi(), 
     youtubeLocalApi(), 
     pollinationsProxy(),
+    supabaseRestProxy(),
     visualizer({ open: false, filename: 'stats.html' }),
     VitePWA({
       registerType: 'autoUpdate',

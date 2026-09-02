@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { User, Session } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '../services/supabase';
+import { storagePublicUrl, supabase, isSupabaseConfigured } from '../services/supabase';
 import { convertImageToWebPBlob } from '../utils/imageUtils';
 import { isCloudCoolingDown, noteCloudFailure, noteCloudSuccess } from '../services/cloudHealth';
 
@@ -212,9 +212,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     // 3. Obtém a URL pública do avatar gerado com cache-buster
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
+    const publicUrl = storagePublicUrl('avatars', fileName);
 
     // 4. Salva no perfil do usuário persistente
     await get().updateUserProfile({ 

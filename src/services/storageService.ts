@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { storagePublicUrl, supabase } from './supabase';
 
 const CAMPAIGN_ASSETS_BUCKET = 'campaign-assets';
 
@@ -67,11 +67,7 @@ export async function uploadToSupabaseStorage(
 
     if (error) throw error;
 
-    const { data: publicData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    return publicData?.publicUrl || null;
+    return storagePublicUrl(bucket, data.path);
   } catch (err) {
     console.warn(`[SupabaseStorage] Erro ao enviar ${filename} para bucket ${bucket}:`, err);
     return null;
