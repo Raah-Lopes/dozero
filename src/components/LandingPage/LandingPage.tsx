@@ -20,6 +20,7 @@ import {
 import { toast } from '../UI/Toast';
 import { navigateToRoom, getRoomUrl } from '../../utils/roomUrl';
 import { acceptCampaignInvite, listMyPendingInvites } from '../../services/roomAccessService';
+import { LoadingState } from '../UI/LoadingState';
 
 // ─── inline style helpers ───────────────────────────────────────────────────
 const S = {
@@ -70,6 +71,8 @@ export function LandingPage() {
   
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
+  const isPlatformFounder = !!user?.email && ADMIN_LANDING_EMAILS.has(user.email.toLowerCase());
+  const adminPortalHref = '/vtt.html?room=dozero-mesa-principal-v2&panel=admin';
 
   const openLogin = () => {
     sessionStorage.setItem(ADMIN_REDIRECT_KEY, 'true');
@@ -105,8 +108,8 @@ export function LandingPage() {
   useEffect(() => {
     if (!user?.email || sessionStorage.getItem(ADMIN_REDIRECT_KEY) !== 'true') return;
     sessionStorage.removeItem(ADMIN_REDIRECT_KEY);
-    if (ADMIN_LANDING_EMAILS.has(user.email.toLowerCase())) {
-      window.location.assign('/vtt.html?room=dozero-mesa-principal-v2&panel=admin');
+    if (isPlatformFounder) {
+      window.location.assign(adminPortalHref);
     }
   }, [user?.email]);
 
@@ -116,9 +119,13 @@ export function LandingPage() {
   };
 
   const openPlayerPortal = () => {
-    const campaign = campaigns[0];
-    if (!campaign) { toast.error('Aceite um convite ou entre em uma mesa para abrir seu portal.'); return; }
-    window.location.assign(`/vtt.html?room=${encodeURIComponent(campaign.room_code)}&panel=portal`);
+    // Fundadores são direcionados à Central de Controle. A tela ainda valida
+    // o papel administrativo no Supabase antes de liberar seus dados.
+    if (isPlatformFounder) {
+      window.location.assign(adminPortalHref);
+      return;
+    }
+    window.location.assign('/vtt.html?panel=portal');
   };
 
   const loadCampaignsList = async () => {
@@ -222,7 +229,9 @@ export function LandingPage() {
                   (c.description && c.description.toLowerCase().includes(q));
     if (!match) return false;
     if (filterMode === 'mine') return !!(user?.id && c.owner_id === user.id);
-    return true;
+    // O Mural é a vitrine para jogadores, mas o criador sempre enxerga suas
+    // próprias mesas para poder configurá-las, mesmo que privadas ou fechadas.
+    return (c.is_public === true && c.is_closed !== true) || c.owner_id === user?.id;
   });
 
   // ─── render ───────────────────────────────────────────────────────────────
@@ -266,10 +275,13 @@ export function LandingPage() {
                       <Crown style={{ width: 16, height: 16, color: '#854b17' }} />
                       {user.user_metadata?.username || user.email?.split('@')[0] || 'Meu Herói'}
                     </button>
-                    <button onClick={openPlayerPortal} className="btn-rpg btn-red"
+                    {isPlatformFounder ? <a href={adminPortalHref} className="btn-rpg btn-red"
+                      style={{ fontSize: '0.75rem', padding: '0.3rem 0.7rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                      Meu Portal
+                    </a> : <button onClick={openPlayerPortal} className="btn-rpg btn-red"
                       style={{ fontSize: '0.75rem', padding: '0.3rem 0.7rem' }}>
                       Meu Portal
-                    </button>
+                    </button>}
                     <button onClick={() => signOut()} title="Sair"
                       style={{ background: 'none', border: 'none', color: '#e8dcc4', cursor: 'pointer', padding: 6, lineHeight: 0 }}>
                       <LogOut style={{ width: 20, height: 20 }} />
@@ -485,8 +497,7 @@ export function LandingPage() {
             {/* Grid de Campanhas */}
             {loadingCampaigns ? (
               <div className="paper-panel" style={{ padding: '3rem', textAlign: 'center' }}>
-                <Sparkles style={{ width: 32, height: 32, color: '#c6463d', margin: '0 auto 0.5rem', animation: 'spin 1s linear infinite' }} />
-                <p style={{ fontFamily: 'Bangers, cursive', fontSize: '1.5rem', color: '#4a3320' }}>Consultando os pergaminhos da Taverna...</p>
+                <LoadingState compact label="Consultando os pergaminhos da Taverna…" />
               </div>
             ) : filteredCampaigns.length === 0 ? (
               <div className="paper-panel" style={{ padding: '3rem', textAlign: 'center' }}>

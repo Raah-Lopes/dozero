@@ -35,6 +35,9 @@ export default defineConfig({
     supabaseRestProxy(),
     visualizer({ open: false, filename: 'stats.html' }),
     VitePWA({
+      // A Vercel serve uma SPA atualizada a cada publicação. O service worker
+      // antigo mantinha HTML/preloads de outra versão em alguns navegadores.
+      disable: process.env.VERCEL === '1',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {

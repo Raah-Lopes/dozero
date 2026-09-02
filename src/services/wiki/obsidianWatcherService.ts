@@ -106,6 +106,16 @@ class ObsidianWatcherManager {
   public startWatching(customRepoPath?: string) {
     if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
 
+    // O endpoint SSE existe apenas no servidor Vite local. Em produção a wiki
+    // é servida do acervo empacotado, portanto não tentamos conectar a uma
+    // rota que a Vercel responde como HTML.
+    if (import.meta.env.PROD) {
+      this.stopWatching();
+      this.state.status = 'disabled';
+      this.notifyListeners();
+      return;
+    }
+
     this.stopWatching();
 
     const config = getWikiConfig();

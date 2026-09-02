@@ -1,4 +1,7 @@
 export const reportWebVitals = () => {
+  // Métricas de desenvolvimento não devem poluir o console de quem joga.
+  if (!import.meta.env.DEV) return;
+
   if (typeof window !== 'undefined' && 'web-vital' in window) {
     import('web-vitals').then(({ onCLS, onINP, onFCP, onLCP, onTTFB }) => {
       onCLS(console.log);

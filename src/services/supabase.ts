@@ -91,12 +91,34 @@ const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || defaultUrl;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || defaultKey;
+// Host imutável: não compartilha os cookies acumulados no alias público.
+const API_GATEWAY_ORIGIN = 'https://dozero-ajb4mefwq-dozerorpg.vercel.app';
+const GATEWAY_HEADERS = new Set([
+  'accept',
+  'accept-profile',
+  'apikey',
+  'authorization',
+  'cache-control',
+  'content-type',
+  'prefer',
+  'range',
+  'range-unit',
+  'x-client-info',
+  'x-upsert',
+]);
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
+// O gateway protege a conexão de clientes em redes que encerram o HTTP/2 do
+// Supabase. Só pode ser desativado explicitamente para diagnóstico.
+const shouldUseApiGateway = import.meta.env.VITE_USE_API_GATEWAY !== 'false';
+
 function apiGatewayUrl(route: 'data' | 'storage', resource: string, query: URLSearchParams): URL {
   const localRoute = route === 'data' ? '/data-api' : '/storage-api';
-  const gateway = new URL(import.meta.env.DEV ? localRoute : `/api/${route}`, window.location.origin);
+  const gatewayOrigin = import.meta.env.DEV
+    ? window.location.origin
+    : import.meta.env.VITE_API_GATEWAY_ORIGIN || API_GATEWAY_ORIGIN;
+  const gateway = new URL(import.meta.env.DEV ? localRoute : `/api/${route}`, gatewayOrigin);
   gateway.searchParams.set('path', resource);
   query.forEach((value, key) => gateway.searchParams.append(key, value));
   return gateway;
@@ -105,6 +127,7 @@ function apiGatewayUrl(route: 'data' | 'storage', resource: string, query: URLSe
 /** Builds a same-origin URL for an object in a public Supabase Storage bucket. */
 export function storagePublicUrl(bucket: string, objectPath: string): string {
   if (typeof window === 'undefined') return `${supabaseUrl}/storage/v1/object/public/${bucket}/${objectPath}`;
+  if (!shouldUseApiGateway) return `${supabaseUrl}/storage/v1/object/public/${bucket}/${objectPath}`;
   return apiGatewayUrl('storage', `object/public/${bucket}/${objectPath}`, new URLSearchParams()).toString();
 }
 
@@ -122,19 +145,55 @@ export const restGatewayFetch: typeof fetch = (input, init) => {
   const route = source.startsWith(restPrefix) ? 'data' : source.startsWith(storagePrefix) ? 'storage' : null;
   if (!route) return fetch(input, init);
   const prefix = route === 'data' ? restPrefix : storagePrefix;
-  const gateway = apiGatewayUrl(route, upstream.pathname.slice(new URL(prefix).pathname.length), upstream.searchParams);
+  const destination = shouldUseApiGateway
+    ? apiGatewayUrl(route, upstream.pathname.slice(new URL(prefix).pathname.length), upstream.searchParams)
+    : upstream;
 
-  // supabase-js normally supplies a URL and init, but preserving a Request
-  // keeps the gateway correct for future SDK paths and direct RPC calls too.
+  // Repassar cada cabeçalho recebido faria o gateway herdar cabeçalhos de
+  // telemetria/extensões do navegador. Alguns deles ultrapassam o limite da
+  // Vercel antes mesmo de a Function iniciar (HTTP 494). A API Supabase usa
+  // somente esta lista explícita de cabeçalhos de transporte.
+  const sourceHeaders = new Headers(input instanceof Request ? input.headers : undefined);
+  new Headers(init?.headers).forEach((value, key) => sourceHeaders.set(key, value));
+  const gatewayHeaders = new Headers();
+  sourceHeaders.forEach((value, key) => {
+    if (GATEWAY_HEADERS.has(key.toLowerCase())) gatewayHeaders.set(key, value);
+  });
+
+  // supabase-js normalmente entrega URL e init, mas requests futuros também
+  // permanecem compatíveis com RPC e Storage.
   const requestInit: RequestInit = { ...init };
   if (input instanceof Request) {
     requestInit.method ??= input.method;
-    requestInit.headers ??= input.headers;
     if (requestInit.body === undefined && !['GET', 'HEAD'].includes(input.method)) {
       requestInit.body = input.body;
     }
   }
-  return fetch(gateway, requestInit);
+  requestInit.headers = gatewayHeaders;
+  if (route === 'data' && shouldUseApiGateway && !import.meta.env.DEV) {
+    const body = requestInit.body;
+    if (body !== undefined && typeof body !== 'string') {
+      // supabase-js envia JSON como string; esta barreira preserva a semântica
+      // e evita serializar streams de upload como JSON.
+      return Promise.reject(new TypeError('Unsupported data request body'));
+    }
+    return fetch(destination, {
+      method: 'POST',
+      credentials: 'omit',
+      mode: 'cors',
+      headers: { 'content-type': 'application/vnd.dozero.gateway+json' },
+      body: JSON.stringify({
+        method: requestInit.method || 'GET',
+        headers: Object.fromEntries(gatewayHeaders.entries()),
+        body: body ?? null,
+      }),
+    });
+  }
+  if (destination.origin !== window.location.origin) {
+    requestInit.credentials = 'omit';
+    requestInit.mode = 'cors';
+  }
+  return fetch(destination, requestInit);
 };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

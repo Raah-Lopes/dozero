@@ -106,7 +106,10 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
 
       if (error) {
         console.warn('[CampaignCloud] Erro ou timeout no banco:', error.message || error);
-        return [];
+        // A landing precisa continuar navegável durante indisponibilidades
+        // temporárias do Data API. O cache é mantido por usuário autenticado e
+        // oferece a última lista conhecida de mesas até a sincronização voltar.
+        return localList;
       }
 
       if (tableData && tableData.length > 0) {
@@ -132,10 +135,10 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
         return cloudCampaigns;
       }
 
-      return [];
+      return localList;
     } catch (e) {
       console.warn('[CampaignCloud] Usando cache local:', e);
-      return [];
+      return localList;
     } finally {
       inflightGetCampaigns = null;
     }
@@ -165,10 +168,10 @@ export async function createOrUpdateCampaign(
     cover_url: campaign.cover_url || '/assets/vtt_layout_hero.jpg',
     room_code: roomCode,
     pass_code: campaign.pass_code || '',
-    is_public: false,
+    is_public: campaign.is_public !== undefined ? campaign.is_public : false,
     is_closed: campaign.is_closed !== undefined ? campaign.is_closed : false,
     active_players_count: campaign.active_players_count || 1,
-    owner_id: userId || undefined,
+    owner_id: campaign.owner_id || userId || undefined,
     created_at: campaign.created_at || now,
     updated_at: now,
     last_played_at: now
@@ -197,7 +200,7 @@ export async function createOrUpdateCampaign(
         is_public: record.is_public,
         is_closed: record.is_closed,
         active_players_count: record.active_players_count,
-        owner_id: userId,
+        owner_id: record.owner_id,
         updated_at: record.updated_at
       });
 

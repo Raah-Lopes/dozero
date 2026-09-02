@@ -42,3 +42,4 @@ pnpm-debug.log*
 *.backup
 transcript.txt
 /[99] Descartaveis 
+.vercel

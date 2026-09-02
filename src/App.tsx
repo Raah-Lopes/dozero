@@ -44,6 +44,7 @@ import { useAuthStore } from './store/authStore';
 import { RoomAccessGate } from './components/System/RoomAccessGate';
 import { AdminCommandCenter } from './components/ControlCenter/AdminCommandCenter';
 import { PlayerCommandCenter } from './components/ControlCenter/PlayerCommandCenter';
+import { LoadingState } from './components/UI/LoadingState';
 
 // Workspaces e Modais pesados carregados sob demanda (0ms de impacto inicial no Canvas)
 const WikiViewer = React.lazy(() => import('./components/Wiki/WikiViewer').then(m => ({ default: m.WikiViewer })));
@@ -82,7 +83,8 @@ function App() {
   }, [initAuth]);
   const urlParams = new URLSearchParams(window.location.search);
   const standaloneWidget = urlParams.get('widget');
-  const currentRoom = urlParams.get('room') || 'dozero-mesa-principal-v2';
+  const isAccountPortal = urlParams.get('panel') === 'portal' && !urlParams.get('room');
+  const currentRoom = urlParams.get('room') || (isAccountPortal ? 'default-room' : 'dozero-mesa-principal-v2');
 
   // Auto-backup de sessão periódico no banco Supabase e rastreamento de presença real
   useAutoSaveSession(currentRoom);
@@ -143,7 +145,7 @@ function App() {
     return <RoomAccessGate roomCode={currentRoom}><AdminCommandCenter roomCode={currentRoom} /></RoomAccessGate>;
   }
   if (urlParams.get('panel') === 'portal') {
-    return <RoomAccessGate roomCode={currentRoom}><PlayerCommandCenter roomCode={currentRoom} /></RoomAccessGate>;
+    return <PlayerCommandCenter />;
   }
   if (urlParams.get('panel') === 'manage') {
     return <RoomAccessGate roomCode={currentRoom}><AdminCommandCenter roomCode={currentRoom} scope="campaign" /></RoomAccessGate>;
@@ -152,7 +154,7 @@ function App() {
   if (!isReady) {
     return (
       <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <h1 className="text-gradient animate-fade-in">Loading VTT Ecosystem...</h1>
+        <LoadingState label="Preparando o ecossistema DOZERO…" />
       </div>
     );
   }
@@ -190,7 +192,7 @@ function App() {
       >
         {hasOpenedBrain && (
           <ErrorBoundary componentName="Cérebro Gráfico (Brain)">
-            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#15120e] text-[#d9a441]" role="status">Carregando Cérebro do Mundo…</div>}>
+            <React.Suspense fallback={<LoadingState className="bg-[#15120e]" label="Carregando Cérebro do Mundo…" detail="Lendo entidades e relações da campanha." />}>
               <LivingBrain />
             </React.Suspense>
           </ErrorBoundary>
@@ -201,7 +203,7 @@ function App() {
       <div className={`view-layer wiki-layer ${viewMode === 'wiki' ? 'active' : ''}`}>
         {viewMode === 'wiki' && (
           <ErrorBoundary componentName="Códice Arcanum">
-            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#15120e] text-[#d9a441]" role="status">Abrindo o Códice...</div>}>
+            <React.Suspense fallback={<LoadingState className="bg-[#15120e]" label="Abrindo o Códice…" detail="Organizando os pergaminhos da campanha." />}>
               {showLegacyWiki
                 ? <WikiViewer
                   initialFile={wikiInitialFile}
@@ -226,7 +228,7 @@ function App() {
       <div className={`view-layer theater-layer ${viewMode === 'theater' ? 'active' : ''}`}>
         {viewMode === 'theater' && (
           <ErrorBoundary componentName="Teatro (TheaterView)">
-            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#0d0f14] text-[#818cf8]" role="status">Preparando o Teatro...</div>}>
+            <React.Suspense fallback={<LoadingState className="bg-[#0d0f14]" label="Preparando o Teatro…" detail="Montando o palco da próxima cena." />}>
               <TheaterView />
             </React.Suspense>
           </ErrorBoundary>
@@ -236,7 +238,7 @@ function App() {
       <div className={`view-layer sheets-layer ${viewMode === 'sheets' ? 'active' : ''}`}>
         {viewMode === 'sheets' && (
           <ErrorBoundary componentName="Forja de Fichas Arcanum">
-            <React.Suspense fallback={<div className="h-full w-full grid place-items-center bg-[#0c0911] text-[#e0b054]" role="status">Abrindo a Forja...</div>}>
+            <React.Suspense fallback={<LoadingState className="bg-[#0c0911]" label="Abrindo a Forja…" detail="Preparando as fichas Arcanum." />}>
               <ArcanumSheetsWorkspace
                 campaignId={currentRoom}
                 initialCharacterId={activeCharacterId}

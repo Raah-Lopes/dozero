@@ -4,6 +4,7 @@ import { verifyRoomAccess, type RoomAccess } from '../../services/roomAccessServ
 import { startAuthorizedRoomSync, stopRoomSync } from '../../services/yjs';
 import { useUserStore } from '../../store/user';
 import { AuthModal } from '../Modals/AuthModal';
+import { LoadingState } from '../UI/LoadingState';
 
 export function RoomAccessGate({ roomCode, children }: { roomCode: string; children: React.ReactNode }) {
   const { user, loading, setAuthModalOpen } = useAuthStore();
@@ -58,6 +59,7 @@ export function RoomAccessGate({ roomCode, children }: { roomCode: string; child
 }
 
 function GateScreen({ title, detail, action, actionLabel = 'Entrar' }: { title: string; detail?: string; action?: () => void; actionLabel?: string }) {
+  if (!action && !detail) return <main style={{ minHeight: '100vh', background: '#0d0b09' }}><LoadingState label={title} /></main>;
   return <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: 'radial-gradient(circle at top, #282015, #0d0b09 65%)', color: '#ead9b7' }}>
     <section style={{ width: 'min(440px, 100%)', border: '1px solid #6c5228', borderRadius: 14, padding: 28, background: 'rgba(20,16,12,.94)', boxShadow: '0 22px 60px #0008' }}>
       <p style={{ margin: '0 0 8px', color: '#d9a441', fontSize: 12, letterSpacing: '.12em', textTransform: 'uppercase' }}>DOZERO · Mesa privada</p>

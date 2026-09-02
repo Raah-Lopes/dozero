@@ -1,12 +1,16 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 
-const LOCAL_BOOTSTRAP_ADMINS = new Set(['raphaell.lops@gmail.com', 'rmirraine@gmail.com']);
+const PLATFORM_FOUNDER_EMAILS = new Set(['raphaell.lops@gmail.com', 'rmirraine@gmail.com']);
 const BASE_ROOM_CODE = 'dozero-mesa-principal-v2';
+
+function isPlatformFounder(email?: string | null): boolean {
+  return !!email && PLATFORM_FOUNDER_EMAILS.has(email.toLowerCase());
+}
 
 function canBootstrapBaseRoomLocally(roomCode: string, email?: string | null): boolean {
   if (typeof window === 'undefined') return false;
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  return isLocal && roomCode === BASE_ROOM_CODE && !!email && LOCAL_BOOTSTRAP_ADMINS.has(email.toLowerCase());
+  return isLocal && roomCode === BASE_ROOM_CODE && isPlatformFounder(email);
 }
 
 export type RoomAccess =
@@ -20,10 +24,10 @@ export async function verifyRoomAccess(roomCode: string): Promise<RoomAccess> {
   const user = sessionData.session?.user;
   if (!user) return { allowed: false, reason: 'not_authenticated' };
 
-  // Bootstrap de desenvolvimento: os dois responsáveis confirmados conseguem
-  // administrar a Mesa 0 no localhost mesmo antes da migration alcançar o
-  // projeto remoto. A URL publicada continua dependente de RLS no Supabase.
-  if (canBootstrapBaseRoomLocally(roomCode, user.email)) {
+  // As duas contas fundadoras não devem perder a entrada da Mesa 0 por uma
+  // consulta auxiliar interrompida pela rede. Isto abre apenas a interface;
+  // alterações persistidas continuam verificadas por RLS no Supabase.
+  if ((roomCode === BASE_ROOM_CODE && isPlatformFounder(user.email)) || canBootstrapBaseRoomLocally(roomCode, user.email)) {
     return { allowed: true, campaignId: BASE_ROOM_CODE, role: 'admin' };
   }
 
@@ -45,10 +49,29 @@ export async function verifyRoomAccess(roomCode: string): Promise<RoomAccess> {
 
 export async function getMyPlatformRole(): Promise<'admin' | null> {
   const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user.id;
+  const user = sessionData.session?.user;
+  const userId = user?.id;
   if (!userId) return null;
-  const { data } = await supabase.from('platform_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle();
-  return data?.role === 'admin' ? 'admin' : null;
+
+  // As duas contas fundadoras sempre abrem a Central. O acesso a dados e
+  // operações sensíveis continua protegido pelas políticas RLS no servidor.
+  if (isPlatformFounder(user?.email)) return 'admin';
+
+  // Uma resposta de rede interrompida não pode ser interpretada como perda de
+  // privilégio. Repetimos a leitura antes de concluir que a conta não é admin.
+  let lastError: Error | null = null;
+  for (const delay of [0, 600, 1400]) {
+    if (delay) await new Promise(resolve => window.setTimeout(resolve, delay));
+    const { data, error } = await supabase
+      .from('platform_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle();
+    if (!error) return data?.role === 'admin' ? 'admin' : null;
+    lastError = new Error(error.message);
+  }
+  throw lastError || new Error('Não foi possível confirmar o papel administrativo.');
 }
 
 export async function createCampaignInvite(campaignId: string, email: string, role: 'gm' | 'player' | 'spectator') {
@@ -92,6 +115,15 @@ export async function assignCampaignCharacter(campaignId: string, characterId: s
     assigned_by: assignedBy,
     assigned_at: new Date().toISOString(),
   }, { onConflict: 'campaign_id,character_id' });
+  if (error) throw error;
+}
+
+/** Remove o controlador de uma ficha sem apagar a ficha nem o participante. */
+export async function removeCampaignCharacterAssignment(campaignId: string, characterId: string) {
+  const { error } = await supabase.from('campaign_character_assignments')
+    .delete()
+    .eq('campaign_id', campaignId)
+    .eq('character_id', characterId);
   if (error) throw error;
 }
 

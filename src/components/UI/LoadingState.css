@@ -1,0 +1,33 @@
+.dozero-loading {
+  min-height: 100%;
+  width: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  color: #ede4d0;
+  text-align: center;
+}
+
+.dozero-loading__art { display: flex; align-items: end; justify-content: center; height: 148px; }
+.dozero-loading__art img { display: block; object-fit: contain; filter: drop-shadow(0 9px 13px rgba(0, 0, 0, .45)); }
+.dozero-loading__art img:first-child { height: 140px; width: 92px; object-position: center; }
+.dozero-loading__sleeping-gif {
+  -webkit-mask: url('/mascot/loading/zye-waiting-mask.png') center / contain no-repeat;
+  mask: url('/mascot/loading/zye-waiting-mask.png') center / contain no-repeat;
+}
+.dozero-loading__art img:last-child { height: 112px; width: 112px; margin-left: -15px; }
+.dozero-loading__copy { display: grid; gap: 5px; max-width: 440px; }
+.dozero-loading__copy strong { color: #d9a441; font-family: var(--font-display, Georgia, serif); font-size: 1.1rem; }
+.dozero-loading__copy span { color: #a99f8d; font-size: .82rem; line-height: 1.45; }
+.dozero-loading--compact { min-height: unset; padding: 12px; gap: 6px; }
+.dozero-loading--compact .dozero-loading__art { height: 58px; }
+.dozero-loading--compact .dozero-loading__art img:first-child { height: 58px; width: 38px; }
+.dozero-loading--compact .dozero-loading__art img:last-child { height: 48px; width: 48px; margin-left: -7px; }
+.dozero-loading--compact .dozero-loading__copy strong { font-family: inherit; font-size: .8rem; }
+.dozero-loading--compact .dozero-loading__copy span { font-size: .7rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dozero-loading__art img { animation-play-state: paused; }
+}
