@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { getCampaignMembers, removeCampaignMember, updateCampaignMemberRole } from '../../services/campaignCloudService';
 import { getCampaignIdForRoom } from '../../services/sceneCloudService';
 import { createCampaignInvite, getMyPlatformRole, listAdminAccounts, listCampaignInvites, revokeCampaignInvite, setAccountStatus, setPlatformAdmin } from '../../services/roomAccessService';
+import { supabase } from '../../services/supabase';
 
 type Role = 'gm' | 'player' | 'spectator';
 
@@ -22,11 +23,18 @@ export function ControlCenterModal({ roomCode, onClose }: { roomCode: string; on
     const id = await getCampaignIdForRoom(roomCode);
     if (!id) { setNotice('Mesa não encontrada ou sem acesso.'); return; }
     setCampaignId(id);
-    const [memberRows, inviteRows, platformRole] = await Promise.all([getCampaignMembers(id), listCampaignInvites(id), getMyPlatformRole()]);
+    const [memberRows, inviteRows, platformRole, campaignRow] = await Promise.all([
+      getCampaignMembers(id),
+      listCampaignInvites(id),
+      getMyPlatformRole(),
+      // Busca owner_id para checar se o usuário é dono da mesa
+      supabase.from('campaigns').select('owner_id').eq('id', id).maybeSingle().then(r => r.data),
+    ]);
     setMembers(memberRows); setInvites(inviteRows); setPlatformRole(platformRole);
     if (platformRole === 'admin') setAccounts(await listAdminAccounts());
     const mine = memberRows.find(member => member.user_id === user?.id);
-    setIsManager(platformRole === 'admin' || mine?.role === 'gm');
+    const isOwner = !!user?.id && campaignRow?.owner_id === user.id;
+    setIsManager(platformRole === 'admin' || mine?.role === 'gm' || isOwner);
   }, [roomCode, user?.id]);
   React.useEffect(() => { void reload().catch(() => setNotice('Não foi possível carregar a Central.')); }, [reload]);
   const invite = async (event: React.FormEvent) => {
