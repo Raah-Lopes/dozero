@@ -22,6 +22,7 @@ import { GenealogyTree } from './GenealogyTree';
 import { WikiIndexer, WikiEntry } from '../../services/wiki/WikiIndexer';
 import { LoreWorkspaceSwitcher } from '../Navigation/LoreWorkspaceSwitcher';
 import { WorkspaceChrome } from '../Navigation/WorkspaceChrome';
+import { LoadingState } from '../UI/LoadingState';
 import './wiki.css';
 
 interface TreeNode {
@@ -731,8 +732,7 @@ export const WikiViewer: React.FC<WikiViewerProps> = ({ initialFile, onClose, on
             </div>
           ) : loadingContent ? (
             <div className="wiki-empty-state">
-              <RefreshCw size={32} className="spin" color="var(--accent-primary)" />
-              <p>Carregando Pergaminho...</p>
+              <LoadingState compact label="Carregando Pergaminho…" />
             </div>
           ) : (
             <div className="wiki-markdown" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

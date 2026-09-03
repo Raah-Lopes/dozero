@@ -4,6 +4,7 @@ import { useWiki } from '../../../hooks/useWiki';
 import { pushChatMessage, state } from '../../../store';
 import { loadMarkdownFile } from '../../../utils/githubApi';
 import { Sparkles, MessageCircle, ScrollText, BookOpen } from 'lucide-react';
+import { LoadingState } from '../../UI/LoadingState';
 
 export const LoreMachineWidget: React.FC<{ onClose?: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
   const { index, isLoading } = useWiki();
@@ -173,7 +174,7 @@ export const LoreMachineWidget: React.FC<{ onClose?: () => void; embedded?: bool
   if (isLoading) {
     return (
       <DraggableWindow id="lore-machine" widgetKey="loreMachine" title="A Máquina de Lores" initialX={window.innerWidth / 2 - 200} initialY={100} width={400} height={200} onClose={onClose}>
-        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Sincronizando os arquivos akáshicos...</div>
+        <LoadingState compact label="Sincronizando os arquivos akáshicos…" />
       </DraggableWindow>
     );
   }

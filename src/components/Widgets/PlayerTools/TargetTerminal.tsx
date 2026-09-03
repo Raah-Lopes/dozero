@@ -19,6 +19,7 @@ import { TrendingUp } from 'lucide-react';
 import { convertImageToWebP } from '../../../utils/imageUtils';
 
 import { toast, confirmDialog } from '../../UI/Toast';
+import { LoadingState } from '../../UI/LoadingState';
 interface Macro {
   id: string;
   name: string;
@@ -521,11 +522,7 @@ export const TargetTerminal: React.FC<{ tokenId?: string; wikiPath?: string; isG
     // Mostra loading enquanto a wiki ainda indexa — evita o bug de "ficha não encontrada"
     if (isWikiLoading) {
       return (
-        <div style={{ padding: '1.5rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '14px', height: '14px', border: '2px solid rgba(168,85,247,0.3)', borderTopColor: '#a855f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          Carregando ficha...
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
+        <LoadingState compact label="Carregando ficha…" />
       );
     }
     return <div style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Ficha não encontrada ou deletada.</div>;

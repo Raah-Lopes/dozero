@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { LoadingState } from '../UI/LoadingState';
 import {
   X, Plus, Trash2, Download, User, BookOpen, Sword,
   Shield, Search, Edit2, Check, ChevronRight, Play, Sparkles,
@@ -657,9 +658,7 @@ export const PlayerVaultModal: React.FC<Props> = ({ isOpen, onClose, activeCampa
 
           {/* Lista */}
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '3rem 0', color: '#a1a1aa', fontSize: '0.85rem' }}>
-              Carregando Vault...
-            </div>
+            <LoadingState compact label="Carregando Vault…" />
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', border: '2px dashed #5a4234', borderRadius: '16px', color: '#a1a1aa', fontSize: '0.85rem' }}>
               {search ? 'Nenhum personagem encontrado.' : 'Seu Vault está vazio. Crie seu primeiro personagem!'}

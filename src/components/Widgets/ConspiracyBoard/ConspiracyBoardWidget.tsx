@@ -11,6 +11,7 @@ import { pushChatMessage } from '../../../store';
 import { convertImageToWebP } from '../../../utils/imageUtils';
 import { useWiki } from '../../../hooks/useWiki';
 import { state } from '../../../services/yjs';
+import { LoadingState } from '../../UI/LoadingState';
 
 interface ConspiracyBoardWidgetProps {
   onClose: () => void;
@@ -376,7 +377,7 @@ export const ConspiracyBoardWidget: React.FC<ConspiracyBoardWidgetProps> = ({ on
         
         {isLoading && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
-            <span className="spin" style={{ fontSize: '32px' }}>⏳</span>
+            <LoadingState compact label="Carregando mapa mental…" />
           </div>
         )}
 

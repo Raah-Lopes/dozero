@@ -227,15 +227,33 @@ export async function createOrUpdateCampaign(
  * Exclui uma campanha localmente e no banco de dados do Supabase
  */
 export async function deleteCampaignCloud(id: string, userId?: string | null): Promise<void> {
-  // 1. Remove do cache local
+  // 1. Remove do cache em memória e invalida o TTL
+  cachedCampaignsList = null;
+  lastGetCampaignsTime = 0;
+
+  // 2. Remove do cache local (por ID ou room_code)
   const localList: CampaignCloudRecord[] = JSON.parse(localStorage.getItem(LOCAL_CAMPAIGNS_KEY) || '[]');
-  const filtered = localList.filter(c => c.id !== id);
+  const target = localList.find(c => c.id === id || c.room_code === id);
+  const roomCodeToDelete = target?.room_code || id;
+  const filtered = localList.filter(c => c.id !== id && c.room_code !== id);
   localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(filtered));
 
-  // 2. Remove do Supabase
+  // 3. Limpa chaves auxiliares e banco IndexedDB associado à mesa no PC
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`dozero_wiki_path_${roomCodeToDelete}`);
+      if (window.indexedDB && window.indexedDB.deleteDatabase) {
+        window.indexedDB.deleteDatabase(roomCodeToDelete);
+      }
+    }
+  } catch (err) {
+    console.warn('[CampaignCloud] Erro ao limpar IndexedDB local da mesa:', err);
+  }
+
+  // 4. Remove do Supabase
   if (isSupabaseConfigured && userId) {
     try {
-      const { error } = await supabase.from('campaigns').delete().eq('id', id);
+      const { error } = await supabase.from('campaigns').delete().or(`id.eq.${id},room_code.eq.${id}`);
       if (error) {
         console.warn('[CampaignCloud] Erro ao deletar no Supabase:', error.message);
       }
@@ -243,6 +261,34 @@ export async function deleteCampaignCloud(id: string, userId?: string | null): P
       console.warn('[CampaignCloud] Erro de rede ao deletar campanha:', e);
     }
   }
+}
+
+/**
+ * Tranca ou destranca uma mesa (bloqueia novas entradas sem apagar dados)
+ */
+export async function toggleCampaignLock(campaignId: string, isClosed: boolean, userId?: string | null): Promise<boolean> {
+  cachedCampaignsList = null;
+  lastGetCampaignsTime = 0;
+
+  const localList: CampaignCloudRecord[] = JSON.parse(localStorage.getItem(LOCAL_CAMPAIGNS_KEY) || '[]');
+  const idx = localList.findIndex(c => c.id === campaignId || c.room_code === campaignId);
+  if (idx >= 0) {
+    localList[idx] = { ...localList[idx], is_closed: isClosed, updated_at: new Date().toISOString() };
+    localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(localList));
+  }
+
+  if (isSupabaseConfigured && userId) {
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ is_closed: isClosed, updated_at: new Date().toISOString() })
+        .eq('id', campaignId);
+      return !error;
+    } catch {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**

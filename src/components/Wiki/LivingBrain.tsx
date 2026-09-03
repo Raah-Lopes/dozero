@@ -13,6 +13,7 @@ import { saveMarkdownContent } from '../../utils/githubApi';
 import { state } from '../../services/yjs';
 import { CodexDocument, normalizeCodex } from './Codex/codexModel';
 import { Icone } from './Codex/CodexIcons';
+import { LoadingState } from '../UI/LoadingState';
 
 const SHARED_GRAPH_KEY = '__arcanum_graph_v1__';
 
@@ -197,21 +198,11 @@ export const LivingBrain: React.FC = () => {
         return;
       }
 
-      // Se o códice estiver vazio, busca da Wiki Markdown empacotada
-      let json: { nodes: WikiGraphNodeSource[]; links: WikiGraphLinkSource[] };
-      try {
-        const bundledWikiFiles = await getBundledWikiFiles();
-        json = await WikiIndexer.buildGraph(bundledWikiFiles);
-      } catch {
-        json = { nodes: [], links: [] };
-      }
-
-      if (json.nodes.length === 0) {
-        setWikiNodes([]);
-        setWikiEdges([]);
-        setIsLoading(false);
-        return;
-      }
+      // Se o códice e o grafo compartilhado estiverem vazios, a mesa inicia em branco por padrão
+      setWikiNodes([]);
+      setWikiEdges([]);
+      setIsLoading(false);
+      return;
 
       const typeAliases: Record<string, string> = {
         person: 'personagem',
@@ -411,46 +402,25 @@ export const LivingBrain: React.FC = () => {
 
   if (isLoading && wikiNodes.length === 0) {
     return (
-      <div className="grid h-full w-full place-items-center bg-[#15120e] text-[#ede4d0]" role="status" aria-live="polite">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-[#3b3222] border-t-[#d9a441]" />
-          <strong className="font-display text-lg text-[#d9a441]">Abrindo o Cérebro do Mundo…</strong>
-          <p className="mt-2 text-sm text-[#7f7660]">Lendo entidades e relações da Wiki da campanha.</p>
-        </div>
-      </div>
+      <LoadingState className="bg-[#15120e]" label="Abrindo o Cérebro do Mundo…" detail="Lendo entidades e relações da Wiki da campanha." />
     );
   }
 
-  // Estado vazio gracioso sem travar o usuário nem disparar exceção
-  if (wikiNodes.length === 0) {
-    return (
-      <div className="grid h-full w-full place-items-center bg-[#15120e] px-6 text-[#ede4d0]">
-        <div className="max-w-md rounded-2xl border border-[#3b3222] bg-[#1d1913] p-8 text-center shadow-2xl shadow-black/80">
-          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-[#d9a441]/40 bg-[#d9a441]/10 text-[#d9a441]">
-            <Icone nome="cerebro" tam={30} />
-          </span>
-          <h3 className="font-display text-xl font-bold text-[#ede4d0]">O Cérebro do Mundo aguarda entidades</h3>
-          <p className="mt-2 text-sm text-[#b3a78c]">
-            Nenhuma página ou relação foi encontrada nesta mesa ainda. Abra o Códice para criar personagens, locais e tecer histórias.
-          </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <button
-              onClick={() => setViewMode('wiki')}
-              className="rounded-lg bg-[#d9a441] px-5 py-2.5 text-xs font-bold text-[#241a06] transition hover:bg-[#e8b654]"
-            >
-              Abrir Códice Arcanum
-            </button>
-            <button
-              onClick={() => setViewMode('canvas')}
-              className="rounded-lg border border-[#3b3222] px-4 py-2.5 text-xs font-bold text-[#b3a78c] transition hover:text-[#ede4d0]"
-            >
-              Voltar à Mesa
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleClearGraph = useCallback(() => {
+    const emptyPayload: VaultPayload = {
+      v: 1,
+      nodes: [],
+      edges: [],
+      customTypes: [],
+      savedViews: [],
+    };
+    graphSerialized.current = JSON.stringify(emptyPayload);
+    state.wiki.set(SHARED_GRAPH_KEY, emptyPayload);
+    setSharedGraph(emptyPayload);
+    setWikiNodes([]);
+    setWikiEdges([]);
+    setGraphVersion(v => v + 1);
+  }, []);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -458,6 +428,7 @@ export const LivingBrain: React.FC = () => {
         key={graphVersion}
         initialPayload={graphPayload}
         onPersist={persistGraph}
+        onClearGraph={handleClearGraph}
         onClose={() => setViewMode('canvas')}
         onCreateWikiRelation={handleCreateWikiRelation}
       />

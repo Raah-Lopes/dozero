@@ -16,6 +16,7 @@ import {
   CharacterRecord
 } from '../../../services/characterRepository';
 import { createWikiTokenData } from '../../../services/wiki/wikiTokenAdapter';
+import { LoadingState } from '../../UI/LoadingState';
 
 export const EntityForgeWidget: React.FC<{ onClose?: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
   const { user } = useAuthStore();
@@ -247,9 +248,7 @@ export const EntityForgeWidget: React.FC<{ onClose?: () => void; embedded?: bool
       {activeTab === 'cloud' && (
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {loadingCloud ? (
-            <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '12px' }}>
-              Carregando criaturas da nuvem...
-            </div>
+            <LoadingState compact label="Carregando criaturas da nuvem…" />
           ) : filteredCloud.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2rem 1rem', border: '1px dashed var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', fontSize: '12px' }}>
               Nenhum monstro/NPC cadastrado. Clique na aba "+ Criar" para forjar novas criaturas!
@@ -337,7 +336,7 @@ export const EntityForgeWidget: React.FC<{ onClose?: () => void; embedded?: bool
       {activeTab === 'wiki' && (
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {isWikiLoading ? (
-            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)', fontSize: '12px' }}>Carregando compêndio Wiki...</div>
+            <LoadingState compact label="Carregando compêndio Wiki…" />
           ) : filteredEntities.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)', fontSize: '12px' }}>Nenhuma ficha encontrada na Wiki local.</div>
           ) : (

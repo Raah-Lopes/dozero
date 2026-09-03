@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LoadingState } from '../UI/LoadingState';
 import { 
   X, 
   Plus, 
@@ -239,10 +240,11 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
 
   const handleDelete = async (id: string, campName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Tem certeza que deseja excluir a campanha "${campName}"?`)) {
+    if (confirm(`Tem certeza que deseja excluir a campanha "${campName}"? Esta ação removerá os dados remotos e locais.`)) {
+      setCampaigns(prev => prev.filter(c => c.id !== id && c.room_code !== id));
       await deleteCampaignCloud(id, user?.id);
       toast.info(`Campanha "${campName}" removida.`);
-      loadList();
+      await loadList();
     }
   };
 
@@ -517,9 +519,7 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
               </div>
 
               {membersLoading ? (
-                <div style={{ textAlign: 'center', padding: '2rem 0', color: '#a1a1aa', fontSize: '0.8rem' }}>
-                  Carregando lista de participantes...
-                </div>
+                <LoadingState compact label="Carregando lista de participantes…" />
               ) : members.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2.5rem 1rem', background: 'rgba(255,255,255,0.02)', border: '1px dashed #4a3528', borderRadius: '12px' }}>
                   <Users size={32} style={{ color: '#8c6e5a', marginBottom: '6px' }} />
@@ -805,9 +805,7 @@ export const CampaignLobbyModal: React.FC<Props> = ({ isOpen, onClose, onOpenVau
           /* Grid de Campanhas */
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', marginTop: '6px' }}>
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '3rem 0', color: '#a1a1aa', fontSize: '0.85rem' }}>
-                Carregando suas campanhas...
-              </div>
+              <LoadingState compact label="Carregando suas campanhas…" />
             ) : filteredCampaigns.length === 0 ? (
               <div style={{
                 textAlign: 'center',

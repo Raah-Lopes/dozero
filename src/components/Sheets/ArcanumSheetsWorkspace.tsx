@@ -21,6 +21,7 @@ import { createCharacterFromWiki, findCharacterByWikiPath, integrateCharacter, r
 import { auditCharacter, characterFromMarkdown, normalizeCharacter } from '../../services/characterAudit';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
 import './arcanumWorkspace.css';
+import { LoadingState } from '../UI/LoadingState';
 
 interface Props {
   campaignId: string;
@@ -79,38 +80,49 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
 
   useEffect(() => setScope(initialScope), [initialScope]);
 
-  useEffect(() => {
-    if (loading || personagens.length === 0) return;
+  // Auto-import indiscriminado removido para evitar redundância de fichas e duplicações automáticas na mesa
+  const handleImportWikiCharacters = async () => {
+    if (personagens.length === 0) {
+      toast.info('Nenhum arquivo de personagem encontrado na Wiki para importar.');
+      return;
+    }
     const missing = personagens.filter(personagem =>
       !findCharacterByWikiPath(records.filter(record => record.campaign_id === null), personagem.caminhoArquivo)
       && !importingWikiPaths.current.has(personagem.caminhoArquivo)
     );
-    if (missing.length === 0) return;
+    if (missing.length === 0) {
+      toast.info('Todas as fichas da Wiki já constam no seu Vault.');
+      return;
+    }
 
     missing.forEach(personagem => importingWikiPaths.current.add(personagem.caminhoArquivo));
-    void Promise.all(missing.map(async personagem => {
-      const metadata = {
-        ...personagem,
-        nome: personagem.nome,
-        tipo: personagem.status === 'jogador' ? 'pc' : personagem.status === 'inimigo' ? 'monstro' : 'npc',
-        imagem: personagem.avatar,
-      };
-      const rawContent = WikiIndexer.getRawContent(personagem.caminhoArquivo);
-      const saved = await saveCharacter(
-        createCharacterFromWiki(metadata, personagem.caminhoArquivo, null, user?.id, rawContent),
-        user?.id,
-      );
-      integrateCharacter(saved);
-      return saved;
-    })).then(imported => {
+    try {
+      const imported = await Promise.all(missing.map(async personagem => {
+        const metadata = {
+          ...personagem,
+          nome: personagem.nome,
+          tipo: personagem.status === 'jogador' ? 'pc' : personagem.status === 'inimigo' ? 'monstro' : 'npc',
+          imagem: personagem.avatar,
+        };
+        const rawContent = WikiIndexer.getRawContent(personagem.caminhoArquivo);
+        const saved = await saveCharacter(
+          createCharacterFromWiki(metadata, personagem.caminhoArquivo, null, user?.id, rawContent),
+          user?.id,
+        );
+        integrateCharacter(saved);
+        return saved;
+      }));
+
       setRecords(current => [...imported, ...current].filter((record, index, list) =>
         list.findIndex(item => item.id === record.id) === index
       ));
-      toast.success(`${imported.length} ficha(s) da Wiki integrada(s) ao seu Vault.`);
-    }).finally(() => {
+      toast.success(`${imported.length} ficha(s) da Wiki importada(s) para o Vault.`);
+    } catch {
+      toast.error('Erro ao importar fichas da Wiki.');
+    } finally {
       missing.forEach(personagem => importingWikiPaths.current.delete(personagem.caminhoArquivo));
-    });
-  }, [campaignId, loading, personagens, records, user?.id]);
+    }
+  };
 
   const createSheet = async () => {
     const character = { ...structuredClone(DEFAULT_CHARACTER), name: 'Nova personagem', gallery: [], affiliations: [] };
@@ -304,11 +316,12 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
           <button className={scope === 'vault' ? 'active' : ''} onClick={() => setScope('vault')}><UserRound size={15} /> Meu Vault</button>
         </div>
         <button className="arcanum-create" onClick={() => void createSheet()}><Plus size={16} /> Criar ficha Arcanum</button>
+        <button className="arcanum-create" onClick={() => void handleImportWikiCharacters()} title="Importar entidades de personagens da Wiki que ainda não constam no Vault"><BookOpen size={16} /> Importar da Wiki</button>
         <button className="arcanum-create" onClick={() => importRef.current?.click()}><FileUp size={16} /> Converter Markdown</button>
         <input ref={importRef} type="file" accept=".md,.markdown,text/markdown" hidden onChange={event => { void importMarkdown(event.target.files?.[0]); event.target.value = ''; }} />
       </div>
       <main className="arcanum-card-grid">
-        {loading && <p className="arcanum-empty">Carregando fichas...</p>}
+        {loading && <LoadingState compact label="Carregando fichas…" />}
         {!loading && visibleRecords.length === 0 && <p className="arcanum-empty">Nenhuma ficha neste espaço. A Forja está pronta para a primeira.</p>}
         {visibleRecords.map((record) => {
           const character = characterFromRecord(record);

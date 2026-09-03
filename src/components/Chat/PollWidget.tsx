@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { state } from '../../store';
 import { castVote, PollData } from '../../store/chat';
+import { LoadingState } from '../UI/LoadingState';
 
 interface PollWidgetProps {
   pollId: string;
@@ -27,7 +28,7 @@ export const PollWidget: React.FC<PollWidgetProps> = ({ pollId, playerName }) =>
     return () => state.polls.unobserve(observer);
   }, [pollId]);
 
-  if (!poll) return <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Carregando enquete...</div>;
+  if (!poll) return <LoadingState compact label="Carregando enquete…" />;
 
   const totalVotes = Object.keys(poll.votes).length;
   const myVote = poll.votes[playerName];

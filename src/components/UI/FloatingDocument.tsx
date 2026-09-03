@@ -7,6 +7,7 @@ import { CharacterSheet } from './CharacterSheet';
 import { syncFileToBoardTokens } from '../../services/wiki/syncWiki';
 import * as yaml from 'js-yaml';
 import { Check, Copy } from 'lucide-react';
+import { LoadingState } from './LoadingState';
 
 interface FloatingDocumentProps {
   id: string;
@@ -145,9 +146,7 @@ export const FloatingDocument: React.FC<FloatingDocumentProps> = React.memo(({ i
     >
       <div style={{ padding: '20px', height: '100%', overflowY: 'auto', color: '#e2e8f0', fontFamily: 'var(--font-primary)' }}>
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-            <span className="spin" style={{ display: 'inline-block', fontSize: '24px' }}>⏳</span>
-          </div>
+          <LoadingState compact label="Abrindo documento…" />
         ) : (
           <div className="wiki-content" style={{ lineHeight: '1.6', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>

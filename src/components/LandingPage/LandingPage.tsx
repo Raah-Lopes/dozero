@@ -202,10 +202,11 @@ export function LandingPage() {
 
   const handleDeleteCampaign = async (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(`Excluir a mesa "${name}"?`)) {
+    if (window.confirm(`Excluir definitivamente a mesa "${name}"? Esta ação removerá os dados remotos e locais.`)) {
+      setCampaigns(prev => prev.filter(c => c.id !== id && c.room_code !== id));
       await deleteCampaignCloud(id, user?.id);
-      toast.success('Mesa excluída.');
-      loadCampaignsList();
+      toast.success('Mesa excluída com sucesso.');
+      await loadCampaignsList();
     }
   };
 

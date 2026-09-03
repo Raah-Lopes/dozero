@@ -11,6 +11,7 @@ import {
   CombatEncounterRecord
 } from '../../../services/encounterCloudService';
 import { toast } from '../../UI/Toast';
+import { LoadingState } from '../../UI/LoadingState';
 
 interface EncounterWidgetProps {
   onClose?: () => void;
@@ -358,9 +359,7 @@ export const EncounterWidget: React.FC<EncounterWidgetProps> = ({ onClose, embed
         /* Aba de Encontros Salvos */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, overflowY: 'auto' }}>
           {loadingSaved ? (
-            <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-              Carregando encontros da nuvem...
-            </div>
+            <LoadingState compact label="Carregando encontros da nuvem…" />
           ) : savedEncounters.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2rem 1rem', border: '1px dashed var(--glass-border)', borderRadius: '10px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
               Nenhum encontro salvo na nuvem para esta mesa.

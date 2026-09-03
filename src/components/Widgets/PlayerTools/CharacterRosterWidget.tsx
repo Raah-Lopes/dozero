@@ -9,6 +9,7 @@ import { saveImageToCloud } from '../../../utils/githubApi';
 import { resolveImageUrl, convertImageToWebP } from '../../../utils/imageUtils';
 import { User, Skull, Cpu, Shield, Zap, Sword, Star, Eye, EyeOff } from 'lucide-react';
 import { toast } from '../../UI/Toast';
+import { LoadingState } from '../../UI/LoadingState';
 
 interface CharacterRosterWidgetProps {
   onClose: () => void;
@@ -269,9 +270,7 @@ export const CharacterRosterWidget: React.FC<CharacterRosterWidgetProps> = ({ on
           paddingRight: '8px',
         }}>
           {carregando ? (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
-              Carregando personagens...
-            </div>
+            <div style={{ gridColumn: '1/-1' }}><LoadingState compact label="Carregando personagens…" /></div>
           ) : personagensFiltrados.length === 0 ? (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
               Nenhum personagem encontrado.

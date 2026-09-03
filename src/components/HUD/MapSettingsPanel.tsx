@@ -16,6 +16,7 @@ import { ImagePlus, Trash2, Eye, EyeOff, RefreshCw, MousePointer2, Type, Search,
 import { convertImageToWebP } from '../../utils/imageUtils';
 import { saveImageToCloud } from '../../utils/githubApi';
 import { Tooltip } from '../UI/Tooltip';
+import { LoadingState } from '../UI/LoadingState';
 import { TableSceneManager } from '../UI/TableSceneManager';
 import { useIsGM } from '../../store/user';
 import {
@@ -650,9 +651,7 @@ export const MapSettingsPanel: React.FC = () => {
             </div>
 
             {loadingScenes ? (
-              <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                Carregando cenários...
-              </div>
+              <LoadingState compact label="Carregando cenários…" />
             ) : scenesList.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '1.5rem', border: '1px dashed var(--glass-border)', borderRadius: '8px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
                 Nenhum cenário salvo ainda. Digite um nome acima e clique em "Salvar".

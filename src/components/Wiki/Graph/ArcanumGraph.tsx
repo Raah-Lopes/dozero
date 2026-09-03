@@ -70,9 +70,10 @@ export interface ArcanumGraphProps {
   onNodeDoubleClick?: (node: WNode) => void;
   onSaveToWiki?: (nodeId: string, updatedSummary: string) => Promise<void>;
   onCreateWikiRelation?: (sourcePath: string, targetName: string, label: string) => Promise<void>;
+  onClearGraph?: () => void;
 }
 
-function ArcanumInner({ initialNodes, initialEdges, initialPayload, onPersist, onClose, onCreateWikiRelation }: ArcanumGraphProps) {
+function ArcanumInner({ initialNodes, initialEdges, initialPayload, onPersist, onClose, onCreateWikiRelation, onClearGraph }: ArcanumGraphProps) {
   const rf = useReactFlow<WNode, WEdge>();
 
   const [nodes, setNodes] = useState<WNode[]>(() => initialPayload?.nodes || (initialNodes && initialNodes.length > 0 ? initialNodes : BOOT.nodes));
@@ -786,6 +787,20 @@ function ArcanumInner({ initialNodes, initialEdges, initialPayload, onPersist, o
             setSelectedId(null);
             window.setTimeout(() => rf.fitView({ padding: 0.2, minZoom: 0.55, maxZoom: 1.1, duration: 700 }), 80);
             pushToast("Mundo de exemplo renasceu completo!");
+          }}
+          onClearGraph={() => {
+            if (window.confirm("Deseja realmente limpar todo o Grafo e começar a mesa em branco? Todos os nós e laços serão removidos.")) {
+              setNodes([]);
+              setEdges([]);
+              setHidden(new Set());
+              setIsolate(null);
+              setSelectedTag(null);
+              setPath(null);
+              setSelectedId(null);
+              persistPayload({ v: 1, nodes: [], edges: [], customTypes, savedViews });
+              if (onClearGraph) onClearGraph();
+              pushToast("O Grafo foi completamente limpo. Você está no marco zero!");
+            }
           }}
           onOpenStats={() => setModal({ kind: "stats" })}
           onExportDB={handleExportDB}

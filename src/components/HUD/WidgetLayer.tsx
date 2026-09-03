@@ -6,6 +6,7 @@ import { useCommandRegistry } from '../../store';
 import { ShieldAlert } from 'lucide-react';
 import { AppProvider as SoundboardProvider } from '../Soundboard/store';
 import { FloatingVoiceHUD } from './FloatingVoiceHUD';
+import { LoadingState } from '../UI/LoadingState';
 
 // Lazy loading individual widgets
 const OracleWidgetV2 = React.lazy(() => import('../Widgets/Generators/OracleWidgetV2').then(m => ({ default: m.OracleWidgetV2 })));
@@ -41,8 +42,8 @@ const VoiceRoomWidget = React.lazy(() => import('../Widgets/System/VoiceRoomWidg
 const RadioWidget = React.lazy(() => import('../Widgets/System/RadioWidget').then(m => ({ default: m.RadioWidget })));
 
 const FallbackLoader = () => (
-  <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'rgba(15,23,42,0.92)', padding: '8px 16px', borderRadius: '8px', color: '#ffd980', zIndex: 9999, border: '1px solid rgba(217,164,65,0.35)', backdropFilter: 'blur(8px)', fontSize: '0.8rem', fontWeight: 600, pointerEvents: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-    Carregando módulo…
+  <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'rgba(15,23,42,0.92)', borderRadius: '8px', zIndex: 9999, border: '1px solid rgba(217,164,65,0.35)', backdropFilter: 'blur(8px)', pointerEvents: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+    <LoadingState compact label="Carregando módulo…" />
   </div>
 );
 

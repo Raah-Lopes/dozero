@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Users, X, UserPlus, Trash2, Crown } from 'lucide-react';
+import { Shield, Users, X, UserPlus, Trash2, Crown, Settings2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { getCampaignMembers, removeCampaignMember, updateCampaignMemberRole } from '../../services/campaignCloudService';
 import { getCampaignIdForRoom } from '../../services/sceneCloudService';
@@ -48,6 +48,13 @@ export function ControlCenterModal({ roomCode, onClose }: { roomCode: string; on
       <header style={{ padding: '18px 22px', borderBottom: '1px solid #42321e', display: 'flex', alignItems: 'center', gap: 12 }}><Shield color="#d9a441" /><div style={{ flex: 1 }}><strong>Central de Controle</strong><div style={{ color: '#9d907d', fontSize: 12 }}>Permissões, convites e equipe da mesa</div></div><button className="btn" onClick={onClose} aria-label="Fechar"><X size={18} /></button></header>
       <div style={{ padding: 22, display: 'grid', gap: 22 }}>
         {notice && <div role="status" style={{ padding: 10, borderRadius: 7, background: '#342817', color: '#f0ca79' }}>{notice}</div>}
+        {isManager && <section style={{ border: '1px solid #72552a', borderRadius: 10, padding: 14, background: '#20180f' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+            <Settings2 size={18} color="#d9a441" />
+            <div style={{ flex: 1 }}><strong>Configuração geral da mesa</strong><small style={{ display: 'block', color: '#9d907d', marginTop: 3 }}>Capa, visibilidade, bloqueio, convites e fichas desta campanha.</small></div>
+            <button className="btn btn-primary" onClick={() => window.location.assign(`/vtt.html?room=${encodeURIComponent(roomCode)}&panel=manage`)}>Abrir painel completo</button>
+          </div>
+        </section>}
         <section><h2 style={{ fontSize: 16, margin: '0 0 12px', display: 'flex', gap: 8, alignItems: 'center' }}><Users size={17} /> Pessoas desta mesa</h2>
           <div style={{ display: 'grid', gap: 8 }}>{members.map(member => <div key={member.user_id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 10, border: '1px solid #3d3021', borderRadius: 8 }}><div style={{ flex: 1 }}><strong>{member.profile?.full_name || member.profile?.username || 'Usuário'}</strong><small style={{ display: 'block', color: '#9d907d' }}>{member.user_id === user?.id ? 'Você' : 'Membro'}</small></div>{isManager ? <select value={member.role} onChange={e => void changeRole(member, e.target.value as Role)}><option value="gm">Mestre auxiliar</option><option value="player">Jogador</option><option value="spectator">Espectador</option></select> : <span>{member.role}</span>}{isManager && member.user_id !== user?.id && <button className="btn" onClick={() => void remove(member)} aria-label="Remover membro"><Trash2 size={16} /></button>}</div>)}</div>
         </section>

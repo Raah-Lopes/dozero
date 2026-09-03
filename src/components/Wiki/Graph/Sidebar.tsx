@@ -20,6 +20,7 @@ interface SidebarProps {
   onDeleteView: (id: string) => void;
   onSaveView: () => void;
   onRestore: () => void;
+  onClearGraph?: () => void;
   onOpenStats: () => void;
   onExportDB: () => void;
   onImportDB: (file: File) => void;
@@ -486,7 +487,16 @@ export default function Sidebar(p: SidebarProps) {
             </div>
 
             <div className="p-3 rounded-xl bg-ink-850 border border-ink-700 space-y-2">
-              <span className="font-mono text-[10px] uppercase text-ember font-bold block">Mundo de Exemplo</span>
+              <span className="font-mono text-[10px] uppercase text-ember font-bold block">Reiniciar ou Exemplo</span>
+              {p.onClearGraph && (
+                <button
+                  type="button"
+                  onClick={p.onClearGraph}
+                  className="w-full flex items-center justify-center gap-1.5 p-2 rounded-xl bg-red-950/40 hover:bg-red-900 border border-red-800/60 text-red-200 font-bold text-[11px] transition-colors"
+                >
+                  <ITrash className="w-3.5 h-3.5" /> Limpar Tudo (Começar do Zero)
+                </button>
+              )}
               <button
                 type="button"
                 onClick={p.onRestore}

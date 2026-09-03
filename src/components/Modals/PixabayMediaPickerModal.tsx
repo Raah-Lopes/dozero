@@ -15,6 +15,7 @@ import { addTheaterAsset } from '../../store';
 import { useSceneState } from '../Theater/hooks/useSceneState';
 import { Tooltip } from '../UI/Tooltip';
 import { toast } from '../UI/Toast';
+import { LoadingState } from '../UI/LoadingState';
 
 export interface PixabayMediaSelection {
   type: 'image' | 'video';
@@ -339,8 +340,7 @@ export const PixabayMediaPickerModal: React.FC<Props> = ({
         <div className="pixabay-results-body">
           {loading && (
             <div className="pixabay-loading-state">
-              <RefreshCw size={32} className="spin-icon" color="#38bdf8" />
-              <p>Buscando mídias em alta resolução no Pixabay...</p>
+              <LoadingState compact label="Buscando mídias em alta resolução no Pixabay…" />
             </div>
           )}
 

@@ -5,6 +5,7 @@ import { useSceneState } from './hooks/useSceneState';
 import { toggleCastCondition } from '../../store';
 import { saveMarkdownContent, loadMarkdownFile } from '../../utils/githubApi';
 import { syncTokenFieldToWiki } from '../../services/wiki/syncWiki';
+import { LoadingState } from '../UI/LoadingState';
 
 const CONDITIONS = [
   { id: 'burning',    label: '🔥', title: 'Queimando',    color: '#f97316' },
@@ -254,7 +255,7 @@ export const CastPanel: React.FC<CastPanelProps> = ({ type }) => {
       {/* Cast list */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
         {loading && (
-          <div style={{ color: '#374151', textAlign: 'center', padding: '20px', fontSize: '0.8rem' }}>Carregando...</div>
+          <LoadingState compact label="Carregando elenco…" />
         )}
         {!loading && members.length === 0 && (
           <div style={{ color: '#374151', textAlign: 'center', padding: '12px', fontSize: '0.8rem', fontStyle: 'italic' }}>
