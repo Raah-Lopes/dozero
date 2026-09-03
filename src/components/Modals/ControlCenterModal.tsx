@@ -51,7 +51,7 @@ export function ControlCenterModal({ roomCode, onClose }: { roomCode: string; on
       await reload();
     } catch { setNotice('A alteração administrativa não foi aceita.'); }
   };
-  return <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Central de controle" onMouseDown={onClose} style={{ zIndex: 10020, padding: 16, overflow: 'auto' }}>
+  return <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Central de controle" onMouseDown={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10000000, padding: 16, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)' }}>
     <section onMouseDown={event => event.stopPropagation()} style={{ width: 'min(860px,100%)', margin: 'auto', background: '#15110d', border: '1px solid #72552a', borderRadius: 14, color: '#eadfca', boxShadow: '0 24px 80px #000c' }}>
       <header style={{ padding: '18px 22px', borderBottom: '1px solid #42321e', display: 'flex', alignItems: 'center', gap: 12 }}><Shield color="#d9a441" /><div style={{ flex: 1 }}><strong>Central de Controle</strong><div style={{ color: '#9d907d', fontSize: 12 }}>Permissões, convites e equipe da mesa</div></div><button className="btn" onClick={onClose} aria-label="Fechar"><X size={18} /></button></header>
       <div style={{ padding: 22, display: 'grid', gap: 22 }}>

@@ -118,16 +118,10 @@ function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: W
   return { nodes: clusteredNodes, edges: mappedEdges };
 }
 
-/** Mantém o layout manual do grafo, mas nunca esconde entidades novas do Códice. */
+/** Mantém o layout manual do grafo e respeita exclusões intencionais. */
 function mergeCodexIntoGraph(saved: VaultPayload, codex: CodexDocument, repoPath: string): VaultPayload {
-  const fromCodex = buildGraphFromCodex(codex, repoPath);
-  const nodeIds = new Set(saved.nodes.map((node) => node.id));
-  const edgeIds = new Set(saved.edges.map((edge) => edge.id));
-  return {
-    ...saved,
-    nodes: [...saved.nodes, ...fromCodex.nodes.filter((node) => !nodeIds.has(node.id))],
-    edges: [...saved.edges, ...fromCodex.edges.filter((edge) => !edgeIds.has(edge.id))],
-  };
+  // Se o usuário explicitamente salvou um grafo (mesmo vazio), o estado do grafo é a fonte de verdade absoluta
+  return saved;
 }
 
 /**
@@ -416,10 +410,15 @@ export const LivingBrain: React.FC = () => {
     };
     graphSerialized.current = JSON.stringify(emptyPayload);
     state.wiki.set(SHARED_GRAPH_KEY, emptyPayload);
+    // Também limpa o códice compartilhado para não ressuscitar entidades
+    const emptyCodex = { version: 1, notes: [], types: [], folders: [], relations: [], savedViews: [], updatedAt: new Date().toISOString() };
+    state.wiki.set('__codex_v1__', emptyCodex);
+    Vault.clear();
     setSharedGraph(emptyPayload);
     setWikiNodes([]);
     setWikiEdges([]);
     setGraphVersion(v => v + 1);
+    window.dispatchEvent(new CustomEvent('codex-updated'));
   }, []);
 
   return (
