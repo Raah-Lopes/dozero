@@ -1,0 +1,8 @@
+# Dependências e arquivos locais são recriados durante o build da Vercel.
+node_modules/
+.git/
+dist/
+
+# Instaladores de ferramentas de mapa não fazem parte do VTT publicado.
+SOUND/Dungeondraft/
+SOUND/Dungeondraft-1.2.0.1/

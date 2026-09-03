@@ -43,3 +43,19 @@ pnpm-debug.log*
 transcript.txt
 /[99] Descartaveis 
 .vercel
+
+# Espaços de trabalho e artefatos locais (não fazem parte do produto publicado)
+tmp/
+/PAINEL DE CONTROLE NOVO/
+.agents/skills/*.7z
+.obsidian/workspace.json
+local-assets/
+/.obsidian/
+*.tsbuildinfo
+/vite.config.d.ts
+
+# Acervos locais de campanhas e anexos; o produto usa dados por campanha.
+/wikidozero/[[]1] 🏕️ Campanha Principal/
+/wikidozero/[[]3] 📎 Anexos/
+/wikidozero/[[]99] 🗑️ Descartaveis & Stubs/
+/wikidozero/Campanhas/
