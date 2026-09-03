@@ -318,6 +318,13 @@ export function GMToolbar() {
                 tooltip="Jogadores & Mesa"
                 description="Convites, QR Code, participantes conectados e permissões"
               />
+              <ToolButton
+                icon={<Settings2 size={19} />}
+                active={activeModal === 'controlCenter'}
+                onClick={() => setActiveModal(activeModal === 'controlCenter' ? 'none' : 'controlCenter')}
+                tooltip="Gerenciamento geral"
+                description="Administre a mesa: capa, visibilidade, bloqueio, fichas, convites e permissões"
+              />
               <ToolButton 
                 icon={<MessageSquare size={19} />} 
                 active={openWindows.chatWindow} 
