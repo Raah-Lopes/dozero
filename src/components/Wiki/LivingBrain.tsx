@@ -14,6 +14,7 @@ import { state } from '../../services/yjs';
 import { CodexDocument, normalizeCodex } from './Codex/codexModel';
 import { Icone } from './Codex/CodexIcons';
 import { LoadingState } from '../UI/LoadingState';
+import { Vault } from './Graph/world';
 
 const SHARED_GRAPH_KEY = '__arcanum_graph_v1__';
 
@@ -394,12 +395,6 @@ export const LivingBrain: React.FC = () => {
     }
   };
 
-  if (isLoading && wikiNodes.length === 0) {
-    return (
-      <LoadingState className="bg-[#15120e]" label="Abrindo o Cérebro do Mundo…" detail="Lendo entidades e relações da Wiki da campanha." />
-    );
-  }
-
   const handleClearGraph = useCallback(() => {
     const emptyPayload: VaultPayload = {
       v: 1,
@@ -420,6 +415,12 @@ export const LivingBrain: React.FC = () => {
     setGraphVersion(v => v + 1);
     window.dispatchEvent(new CustomEvent('codex-updated'));
   }, []);
+
+  if (isLoading && wikiNodes.length === 0) {
+    return (
+      <LoadingState className="bg-[#15120e]" label="Abrindo o Cérebro do Mundo…" detail="Lendo entidades e relações da Wiki da campanha." />
+    );
+  }
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
