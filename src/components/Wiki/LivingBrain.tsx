@@ -53,18 +53,30 @@ const getBundledWikiFiles = async (): Promise<Record<string, string>> => {
 
 function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: WNode[]; edges: WEdge[] } {
   if (!codex || codex.notes.length === 0) return { nodes: [], edges: [] };
-  const typeAliases: Record<string, string> = {
-    person: 'personagem',
-    place: 'local',
-    faction: 'organizacao',
-    item: 'item',
-    event: 'evento',
-    creature: 'criatura',
-    lore: 'conceito',
-  };
+  setWikiNodes([]);
+      setWikiEdges([]);
+      setIsLoading(false);
+      return;
 
-  const mappedNodes: WNode[] = codex.notes.map((note) => {
-    const rawType = String(note.typeId || '').toLowerCase();
+    } catch (err) {
+      console.error(err);
+      setError("Erro ao carregar os dados do grafo.");
+      setIsLoading(false);
+    }
+  }, [wikiNodes.length]); // Fecha corretamente o useCallback
+
+  // Renderização da tela
+  if (isLoading) return <LoadingState />;
+  if (error) return <div className="text-red-500">{error}</div>;
+
+  return (
+    <ArcanumGraph 
+      key={graphVersion}
+      initialNodes={wikiNodes} 
+      initialEdges={wikiEdges} 
+    />
+  );
+};
     const matchedType = DEFAULT_TYPES.find((t) => t.id === (typeAliases[rawType] || rawType)) || DEFAULT_TYPES[0];
     const shape: NodeShape = (matchedType.shape || 'circle') as NodeShape;
 
