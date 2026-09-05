@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, isSupabaseConfigured, supabaseAnonKey } from './supabase';
 
 export interface CampaignCloudRecord {
   id: string;
@@ -79,7 +79,7 @@ async function getPublicCampaignFallback(): Promise<CampaignCloudRecord[]> {
     url.searchParams.set('select', 'id,name,system,description,cover_url,room_code,is_public,is_closed,active_players_count,owner_id,created_at,updated_at,last_played_at');
     url.searchParams.set('is_public', 'eq.true');
     url.searchParams.set('is_closed', 'eq.false');
-    const response = await fetch(url, { headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '' }, credentials: 'omit' });
+    const response = await fetch(url, { headers: { apikey: supabaseAnonKey }, credentials: 'omit' });
     if (!response.ok) return [];
     return await response.json() as CampaignCloudRecord[];
   } catch {
