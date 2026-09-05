@@ -69,7 +69,7 @@ export function AdminCommandCenter({ roomCode, scope = 'platform' }: { roomCode:
   const [inviteEmail, setInviteEmail] = React.useState('');
   const [inviteRole, setInviteRole] = React.useState<'gm' | 'player' | 'spectator'>('player');
   const [platformAllowed, setPlatformAllowed] = React.useState<boolean | null>(scope === 'campaign' ? true : null);
-  const isLocalFounder = !!user?.email && ['raphaell.lops@gmail.com', 'rmirraine@gmail.com'].includes(user.email.toLowerCase()) && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const isFounder = !!user?.email && ['raphaell.lops@gmail.com', 'rmirraine@gmail.com'].includes(user.email.toLowerCase());
   const visibleNav = scope === 'platform' ? nav : nav.filter(item => item.id !== 'accounts');
   const selectedCampaign = campaigns.find(item => item.id === selectedCampaignId) || campaigns.find(item => item.room_code === roomCode) || campaigns[0];
 
@@ -93,14 +93,14 @@ export function AdminCommandCenter({ roomCode, scope = 'platform' }: { roomCode:
         listCampaignCharacterAssignments(selected.id),
       ]);
       setMembers(memberRows); setAccounts(accountRows); setVault(dedupeCharacterRecords(vaultRows)); setCampaignSheets(dedupeCharacterRecords(sheetRows)); setInvites(inviteRows); setAssignments(assignmentRows);
-      const allowed = role === 'admin' || isLocalFounder;
+      const allowed = role === 'admin' || isFounder;
       setPlatformAllowed(scope === 'campaign' || allowed);
       if (scope === 'platform' && !allowed) setNotice('Esta área é exclusiva para administradores da plataforma.');
     } catch {
-      if (scope === 'platform') setPlatformAllowed(null);
+      if (scope === 'platform') setPlatformAllowed(isFounder);
       setNotice('A central abriu, mas os dados remotos não responderam agora. Tente atualizar em alguns instantes.');
     }
-  }, [isLocalFounder, roomCode, scope, selectedCampaignId, user?.id]);
+  }, [isFounder, roomCode, scope, selectedCampaignId, user?.id]);
 
   React.useEffect(() => { void reload(); }, [reload]);
   const activeCount = campaigns.filter(campaign => !campaign.is_closed).length;
