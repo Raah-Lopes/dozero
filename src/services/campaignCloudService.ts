@@ -71,6 +71,26 @@ export function resetCampaignsCache(): CampaignCloudRecord[] {
   return defaults;
 }
 
+async function getPublicCampaignFallback(): Promise<CampaignCloudRecord[]> {
+  try {
+    const url = new URL(`${import.meta.env.VITE_SUPABASE_URL || 'https://pgyvtcgpaqzqqwwawixf.supabase.co'}/rest/v1/campaigns`);
+    url.searchParams.set('select', 'id,name,system,description,cover_url,room_code,is_public,is_closed,active_players_count,owner_id,created_at,updated_at,last_played_at');
+    url.searchParams.set('is_public', 'eq.true');
+    url.searchParams.set('is_closed', 'eq.false');
+    const response = await fetch(url, { headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '' } });
+    if (!response.ok) return [];
+    return await response.json() as CampaignCloudRecord[];
+  } catch {
+    return [];
+  }
+}
+
+function mergeCampaigns(...lists: CampaignCloudRecord[][]): CampaignCloudRecord[] {
+  const merged = new Map<string, CampaignCloudRecord>();
+  lists.flat().forEach(campaign => merged.set(campaign.id || campaign.room_code, campaign));
+  return [...merged.values()];
+}
+
 /**
  * Carrega campanhas com estratégia Local-First (Instantâneo) + Sincronização direta com Supabase
  */
@@ -129,16 +149,17 @@ export async function getCampaigns(userId?: string | null): Promise<CampaignClou
           last_played_at: row.last_played_at
         }));
 
-        localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(cloudCampaigns));
-        cachedCampaignsList = cloudCampaigns;
+        const visibleCampaigns = mergeCampaigns(localList, cloudCampaigns);
+        localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(visibleCampaigns));
+        cachedCampaignsList = visibleCampaigns;
         lastGetCampaignsTime = Date.now();
-        return cloudCampaigns;
+        return visibleCampaigns;
       }
 
-      return localList;
+      return mergeCampaigns(localList, await getPublicCampaignFallback());
     } catch (e) {
       console.warn('[CampaignCloud] Usando cache local:', e);
-      return localList;
+      return mergeCampaigns(localList, await getPublicCampaignFallback());
     } finally {
       inflightGetCampaigns = null;
     }
