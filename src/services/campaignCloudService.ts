@@ -73,11 +73,13 @@ export function resetCampaignsCache(): CampaignCloudRecord[] {
 
 async function getPublicCampaignFallback(): Promise<CampaignCloudRecord[]> {
   try {
-    const url = new URL(`${import.meta.env.VITE_SUPABASE_URL || 'https://pgyvtcgpaqzqqwwawixf.supabase.co'}/rest/v1/campaigns`);
+    const gatewayPath = import.meta.env.DEV ? '/data-api' : '/api/data';
+    const url = new URL(gatewayPath, window.location.origin);
+    url.searchParams.set('path', 'campaigns');
     url.searchParams.set('select', 'id,name,system,description,cover_url,room_code,is_public,is_closed,active_players_count,owner_id,created_at,updated_at,last_played_at');
     url.searchParams.set('is_public', 'eq.true');
     url.searchParams.set('is_closed', 'eq.false');
-    const response = await fetch(url, { headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '' } });
+    const response = await fetch(url, { headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '' }, credentials: 'omit' });
     if (!response.ok) return [];
     return await response.json() as CampaignCloudRecord[];
   } catch {
