@@ -109,10 +109,9 @@ const GATEWAY_HEADERS = new Set([
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-// O PostgREST nativo preserva melhor a sessão JWT e o RLS. O gateway continua
-// disponível para ambientes que precisarem dele, mas só é ativado
-// explicitamente para evitar que uma falha intermediária esconda as mesas.
-const shouldUseApiGateway = import.meta.env.VITE_USE_API_GATEWAY === 'true';
+// O gateway contorna resets de conexão ao Supabase em algumas redes. Ele
+// aponta para o alias atual e envia somente o JWT necessário para o RLS.
+const shouldUseApiGateway = import.meta.env.VITE_USE_API_GATEWAY !== 'false';
 
 function apiGatewayUrl(route: 'data' | 'storage', resource: string, query: URLSearchParams): URL {
   const localRoute = route === 'data' ? '/data-api' : '/storage-api';
