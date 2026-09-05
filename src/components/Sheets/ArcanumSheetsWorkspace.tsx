@@ -5,6 +5,7 @@ import { DEFAULT_CHARACTER, type Character, type RollResult } from './Arcanum/li
 import { usePersonagens } from '../../hooks/usePersonagens';
 import {
   deleteCharacter,
+  dedupeCharacterRecords,
   getCampaignCharacters,
   getLocalCharacters,
   getVaultCharacters,
@@ -51,7 +52,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
       const value = record as Partial<CharacterRecord>;
       return value.campaign_id === campaignId;
     }) as CharacterRecord[];
-    const all = [...sharedCampaign, ...campaign, ...vault].filter((record, index, list) => list.findIndex((item) => item.id === record.id) === index);
+    const all = dedupeCharacterRecords([...sharedCampaign, ...campaign, ...vault]);
     setRecords(all);
     setActive((current) => all.find((record) => record.id === (initialCharacterId || current?.id)) || null);
     setLoading(false);
@@ -113,9 +114,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
         return saved;
       }));
 
-      setRecords(current => [...imported, ...current].filter((record, index, list) =>
-        list.findIndex(item => item.id === record.id) === index
-      ));
+      setRecords(current => dedupeCharacterRecords([...imported, ...current]));
       toast.success(`${imported.length} ficha(s) da Wiki importada(s) para o Vault.`);
     } catch {
       toast.error('Erro ao importar fichas da Wiki.');
@@ -183,7 +182,7 @@ export function ArcanumSheetsWorkspace({ campaignId, initialCharacterId, initial
       const saved = await saveCharacter({ name: character.name, type: 'npc', campaign_id: scope === 'campaign' ? campaignId : null, avatar_url: character.avatar, notes_markdown: character.notes, data: { sheetKind: ARCANUM_SHEET_KIND, sheetVersion: 1, wikiPath: '', character } }, user?.id);
       if (saved.campaign_id) state.sheets.set(saved.id, saved);
       integrateCharacter(saved);
-      setRecords(current => [saved, ...current]); setActive(saved);
+      setRecords(current => dedupeCharacterRecords([saved, ...current])); setActive(saved);
       toast.success('Ficha Markdown convertida para o Arcanum.');
     } catch { toast.error('Não foi possível converter este arquivo Markdown.'); }
   };

@@ -39,6 +39,23 @@ export function getLocalCharacters(): CharacterRecord[] {
   return readLocal();
 }
 
+/** Remove duplicatas visuais sem apagar registros persistidos. */
+export function dedupeCharacterRecords(records: CharacterRecord[]): CharacterRecord[] {
+  const seen = new Set<string>();
+  return records.filter(record => {
+    const sourceId = record.data?.sourceCharacterId;
+    const wikiPath = record.data?.wikiPath;
+    const key = typeof sourceId === 'string' && sourceId
+      ? `source:${sourceId}`
+      : typeof wikiPath === 'string' && wikiPath
+        ? `wiki:${wikiPath}`
+        : `id:${record.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function upsertLocal(record: CharacterRecord) {
   const list = readLocal();
   const idx = list.findIndex(c => c.id === record.id);
@@ -60,6 +77,7 @@ const cachedCampaignList = new Map<string, CharacterRecord[]>();
 
 // Fila de debounce para upserts remotos
 const pendingCloudSaves = new Map<string, NodeJS.Timeout>();
+const inflightCharacterImports = new Map<string, Promise<CharacterRecord | null>>();
 const CLOUD_FAILURE_COOLDOWN_MS = 30_000;
 let cloudUnavailableUntil = 0;
 
@@ -263,15 +281,49 @@ export async function importCharacterToCampaign(
   campaignId: string,
   userId?: string | null
 ): Promise<CharacterRecord | null> {
+  const importKey = `${campaignId}:${charId}`;
+  const existingImport = inflightCharacterImports.get(importKey);
+  if (existingImport) return existingImport;
+
+  const importPromise = (async () => {
   const source = readLocal().find(c => c.id === charId);
   if (!source) {
     // Tenta buscar na nuvem
     if (!isSupabaseConfigured) return null;
     const { data, error } = await supabase.from('characters').select('*').eq('id', charId).single();
     if (error || !data) return null;
-    return saveCharacter({ ...(data as CharacterRecord), id: undefined, campaign_id: campaignId }, userId);
+    return importSourceToCampaign(data as CharacterRecord, campaignId, userId);
   }
-  return saveCharacter({ ...source, id: undefined, campaign_id: campaignId }, userId);
+  return importSourceToCampaign(source, campaignId, userId);
+  })();
+
+  inflightCharacterImports.set(importKey, importPromise);
+  try {
+    return await importPromise;
+  } finally {
+    inflightCharacterImports.delete(importKey);
+  }
+}
+
+async function importSourceToCampaign(source: CharacterRecord, campaignId: string, userId?: string | null) {
+  const targetCharacters = await getCampaignCharacters(campaignId, userId);
+  const alreadyImported = targetCharacters.find(character => {
+    const sourceId = character.data?.sourceCharacterId;
+    return sourceId === source.id || (
+      !sourceId &&
+      source.data?.wikiPath &&
+      character.data?.wikiPath === source.data.wikiPath &&
+      character.owner_id === source.owner_id
+    );
+  });
+  if (alreadyImported) return alreadyImported;
+
+  return saveCharacter({
+    ...source,
+    id: undefined,
+    campaign_id: campaignId,
+    data: { ...source.data, sourceCharacterId: source.id },
+  }, userId);
 }
 
 export interface CharacterVersionRecord {

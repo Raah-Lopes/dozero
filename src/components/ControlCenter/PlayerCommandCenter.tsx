@@ -3,7 +3,7 @@ import { BookOpen, DoorOpen, LayoutDashboard, Menu, ScrollText, Swords, User, X 
 import { useAuthStore } from '../../store/authStore';
 import { AuthModal } from '../Modals/AuthModal';
 import { getCampaigns, type CampaignCloudRecord } from '../../services/campaignCloudService';
-import { getCampaignCharacters, getVaultCharacters, type CharacterRecord } from '../../services/characterRepository';
+import { dedupeCharacterRecords, getCampaignCharacters, getVaultCharacters, type CharacterRecord } from '../../services/characterRepository';
 import { LoadingState } from '../UI/LoadingState';
 import './AdminCommandCenter.css';
 
@@ -34,11 +34,12 @@ export function PlayerCommandCenter() {
       ]);
       setCampaigns(rows);
       setVault(ownSheets);
-      setTableSheets(sheetsByCampaign.flat());
+      setTableSheets(dedupeCharacterRecords(sheetsByCampaign.flat()));
     } catch { setNotice('Não foi possível atualizar todos os dados agora. Suas fichas locais continuam preservadas.'); }
   }, [user?.id]);
   React.useEffect(() => { void reload(); }, [reload]);
   const openTable = (campaign: CampaignCloudRecord) => { window.location.assign(`/vtt.html?room=${encodeURIComponent(campaign.room_code)}`); };
+  const visibleSheets = dedupeCharacterRecords([...tableSheets, ...vault]);
 
   if (loading) return <div className="command-center"><LoadingState label="Abrindo o Portal do Aventureiro…" /></div>;
   if (!user) return <div className="command-center command-portal-gate"><section className="command-panel"><span>PORTAL DO AVENTUREIRO</span><h1>Entre para ver suas mesas e fichas.</h1><p className="command-copy">Este portal pertence à sua conta, não a uma mesa específica.</p><button className="command-live" onClick={() => setAuthModalOpen(true)}>Entrar</button></section><AuthModal /></div>;
@@ -48,7 +49,7 @@ export function PlayerCommandCenter() {
     {open ? <button aria-label="Fechar menu" className="command-backdrop" onClick={() => setOpen(false)} /> : null}
     <section className="command-content"><header className="command-topbar"><button className="command-menu" aria-label="Abrir menu" onClick={() => setOpen(true)}><Menu size={20} /></button><div><p>PORTAL DO AVENTUREIRO</p><h1>{nav.find(item => item.id === view)?.label}</h1></div><button className="command-live" onClick={() => void reload()}><ScrollText size={15} />Atualizar</button></header><main>{notice ? <div className="command-notice" role="status">{notice}</div> : null}
       {view === 'portal' ? <><section className="command-hero"><div><span>SUA CONTA · SUAS AVENTURAS</span><h2>Pronto para a próxima sessão.</h2><p>Suas mesas e fichas ficam organizadas aqui, sem depender da Mesa 0 ou de qualquer sala já aberta.</p></div><BookOpen size={54} /></section><section className="command-stats"><Stat label="Mesas liberadas" value={campaigns.length} /><Stat label="Fichas no cofre" value={vault.length} /><Stat label="Fichas em mesas" value={tableSheets.length} /></section></> : null}
-      {view === 'sheets' ? <section className="command-panel"><header><div><span>SEU COFRE</span><h3>Minhas Fichas</h3></div></header><div className="command-sheet-grid">{[...tableSheets, ...vault].length === 0 ? <p className="command-copy">Nenhuma ficha disponível ainda.</p> : [...tableSheets, ...vault].map(sheet => <article className="command-sheet" key={sheet.id}><span>{sheet.campaign_id ? 'NA MESA' : 'NO COFRE'}</span><h4>{sheet.name}</h4><p>{sheet.campaign_id ? 'Ficha atribuída a uma das suas mesas.' : 'Ficha privada guardada no seu cofre.'}</p></article>)}</div></section> : null}
+      {view === 'sheets' ? <section className="command-panel"><header><div><span>SEU COFRE</span><h3>Minhas Fichas</h3></div></header><div className="command-sheet-grid">{visibleSheets.length === 0 ? <p className="command-copy">Nenhuma ficha disponível ainda.</p> : visibleSheets.map(sheet => <article className="command-sheet" key={sheet.id}><span>{sheet.campaign_id ? 'NA MESA' : 'NO COFRE'}</span><h4>{sheet.name}</h4><p>{sheet.campaign_id ? 'Ficha atribuída a uma das suas mesas.' : 'Ficha privada guardada no seu cofre.'}</p></article>)}</div></section> : null}
       {view === 'tables' ? <section className="command-panel command-table"><header><div><span>SUAS MESAS</span><h3>Mesas & Missões</h3></div></header>{campaigns.length === 0 ? <p className="command-copy">Você ainda não possui uma mesa liberada. Peça um convite ao mestre.</p> : campaigns.map(campaign => <div className="command-table-row" key={campaign.id}><div><strong>{campaign.name}</strong><small>{campaign.system}</small></div><span>{campaign.is_closed ? 'Fechada' : 'Disponível'}</span><button className="command-live" disabled={campaign.is_closed} onClick={() => openTable(campaign)}>{campaign.is_closed ? 'Fechada' : 'Entrar'}</button></div>)}</section> : null}
       {view === 'profile' ? <section className="command-panel"><header><div><span>CONTA</span><h3>Meu Perfil</h3></div></header><p className="command-copy">Conectado como {user.email}. Seus dados e fichas privadas permanecem separados das demais contas.</p></section> : null}
     </main></section>

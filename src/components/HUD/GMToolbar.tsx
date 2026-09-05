@@ -4,7 +4,7 @@ import {
   Hexagon, RefreshCcw, Square, Circle, Triangle, Lasso, Eraser, Hand, 
   Pen, ArrowRight, Type, ImageIcon, Undo2, Redo2, ChevronLeft, Settings, 
   Settings2, Layers, LayoutGrid, BookOpen, Film, MessageSquare, ScrollText,
-  LogOut, Menu, Search, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge, BrickWall, BookMarked
+  LogOut, Menu, Search, User as UserIcon, UserCheck, Flame, Swords, Combine, CalendarRange, GitFork, GitMerge, BrickWall, BookMarked, Shield
 } from 'lucide-react';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { useAuthStore } from '../../store/authStore';
@@ -324,6 +324,13 @@ export function GMToolbar() {
                 onClick={() => setActiveModal(activeModal === 'controlCenter' ? 'none' : 'controlCenter')}
                 tooltip="Gerenciamento geral"
                 description="Administre a mesa: capa, visibilidade, bloqueio, fichas, convites e permissões"
+              />
+              <ToolButton
+                icon={<Shield size={19} />}
+                active={false}
+                onClick={() => { window.location.assign('/vtt.html?panel=admin'); }}
+                tooltip="Painel de gerenciamento geral"
+                description="Abra o painel completo de mesas, jogadores, contas e fichas"
               />
               <ToolButton 
                 icon={<MessageSquare size={19} />} 

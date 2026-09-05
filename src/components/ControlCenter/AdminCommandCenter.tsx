@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { createOrUpdateCampaign, deleteCampaignCloud, getCampaigns, getCampaignMembers, removeCampaignMember, toggleCampaignLock, updateCampaignMemberRole } from '../../services/campaignCloudService';
 import type { CampaignCloudRecord } from '../../services/campaignCloudService';
 import { assignCampaignCharacter, createCampaignInvite, getMyPlatformRole, listCampaignCharacterAssignments, listCampaignInvites, listAdminAccounts, removeCampaignCharacterAssignment, revokeCampaignInvite, setAccountStatus, setPlatformAdmin, type CampaignCharacterAssignment } from '../../services/roomAccessService';
-import { getCampaignCharacters, getVaultCharacters, importCharacterFromJson, importCharacterToCampaign, saveCharacter, type CharacterRecord } from '../../services/characterRepository';
+import { dedupeCharacterRecords, getCampaignCharacters, getVaultCharacters, importCharacterFromJson, importCharacterToCampaign, saveCharacter, type CharacterRecord } from '../../services/characterRepository';
 import { exportCharactersJson, printCharacters } from '../../services/characterIntegration';
 import './AdminCommandCenter.css';
 
@@ -92,7 +92,7 @@ export function AdminCommandCenter({ roomCode, scope = 'platform' }: { roomCode:
         listCampaignInvites(selected.id),
         listCampaignCharacterAssignments(selected.id),
       ]);
-      setMembers(memberRows); setAccounts(accountRows); setVault(vaultRows); setCampaignSheets(sheetRows); setInvites(inviteRows); setAssignments(assignmentRows);
+      setMembers(memberRows); setAccounts(accountRows); setVault(dedupeCharacterRecords(vaultRows)); setCampaignSheets(dedupeCharacterRecords(sheetRows)); setInvites(inviteRows); setAssignments(assignmentRows);
       const allowed = role === 'admin' || isLocalFounder;
       setPlatformAllowed(scope === 'campaign' || allowed);
       if (scope === 'platform' && !allowed) setNotice('Esta área é exclusiva para administradores da plataforma.');
