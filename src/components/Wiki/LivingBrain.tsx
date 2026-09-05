@@ -1,7 +1,3 @@
---- src/data/LivingBrain.tsx (原始)
-
-
-+++ src/data/LivingBrain.tsx (修改后)
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ArcanumGraph from './Graph/ArcanumGraph';
 import { getWikiConfig } from '../../store';
@@ -108,7 +104,7 @@ function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: W
 }
 
 /** Mantém o layout manual do grafo e respeita exclusões intencionais. */
-function mergeCodexIntoGraph(saved: VaultPayload, _codex: CodexDocument, _repoPath: string): VaultPayload {
+function mergeCodexIntoGraph(saved: VaultPayload): VaultPayload {
   // Se o usuário explicitamente salvou um grafo (mesmo vazio), o estado do grafo é a fonte de verdade absoluta
   return saved;
 }
@@ -122,26 +118,25 @@ export const LivingBrain: React.FC = () => {
   const initialSharedGraph = useMemo(() => readSharedGraph(), []);
 
   // Carregamento síncrono instantâneo a partir do Códice em memória
-  const initialData = useMemo(() => {
+  const [initialData] = useState(() => {
     try {
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
       if (initialSharedGraph) {
-        const merged = mergeCodexIntoGraph(initialSharedGraph, codex, repoPath);
+        const merged = mergeCodexIntoGraph(initialSharedGraph);
         return { nodes: merged.nodes, edges: merged.edges };
       }
       return buildGraphFromCodex(codex, repoPath);
     } catch {
       return { nodes: [], edges: [] };
     }
-  }, [initialSharedGraph]);
+  });
 
   const [wikiNodes, setWikiNodes] = useState<WNode[]>(initialData.nodes);
   const [wikiEdges, setWikiEdges] = useState<WEdge[]>(initialData.edges);
   const [sharedGraph, setSharedGraph] = useState<VaultPayload | null>(initialSharedGraph);
   const [isLoading, setIsLoading] = useState(initialData.nodes.length === 0);
-  const [error, setError] = useState<string | null>(null);
   const [graphVersion, setGraphVersion] = useState(0);
   const graphSerialized = useRef(initialSharedGraph ? JSON.stringify(initialSharedGraph) : '');
 
@@ -149,8 +144,7 @@ export const LivingBrain: React.FC = () => {
     try {
       const shared = readSharedGraph();
       if (shared) {
-        const config = getWikiConfig();
-        const merged = mergeCodexIntoGraph(shared, normalizeCodex(state.wiki.get('__codex_v1__')), config.repoUrl || 'D:/DOZERO/wikidozero');
+        const merged = mergeCodexIntoGraph(shared);
         const serialized = JSON.stringify(merged);
         if (serialized !== graphSerialized.current) {
           graphSerialized.current = serialized;
@@ -166,11 +160,6 @@ export const LivingBrain: React.FC = () => {
       const config = getWikiConfig();
       const repoPath = config.repoUrl || 'D:/DOZERO/wikidozero';
       const codex = normalizeCodex(state.wiki.get('__codex_v1__'));
-
-      if (!isBackgroundRefresh && codex.notes.length === 0 && wikiNodes.length === 0) {
-        setIsLoading(true);
-      }
-      setError(null);
 
       if (codex.notes.length > 0) {
         const { nodes, edges } = buildGraphFromCodex(codex, repoPath);
@@ -190,10 +179,10 @@ export const LivingBrain: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [wikiNodes.length]);
+  }, []);
 
   useEffect(() => {
-    void fetchGraphData(false);
+    const initialRefreshTimer = window.setTimeout(() => void fetchGraphData(false), 0);
 
     const refresh = () => void fetchGraphData(true);
     let debounceTimer: number;
@@ -201,8 +190,7 @@ export const LivingBrain: React.FC = () => {
       if (event.keysChanged?.has(SHARED_GRAPH_KEY)) {
         const shared = readSharedGraph();
         if (!shared) return;
-        const config = getWikiConfig();
-        const merged = mergeCodexIntoGraph(shared, normalizeCodex(state.wiki.get('__codex_v1__')), config.repoUrl || 'D:/DOZERO/wikidozero');
+        const merged = mergeCodexIntoGraph(shared);
         const serialized = JSON.stringify(merged);
         if (serialized === graphSerialized.current) return;
         graphSerialized.current = serialized;
@@ -223,6 +211,7 @@ export const LivingBrain: React.FC = () => {
     window.addEventListener('codex-updated', refresh);
 
     return () => {
+      window.clearTimeout(initialRefreshTimer);
       window.clearTimeout(debounceTimer);
       window.removeEventListener('wiki-updated', refresh);
       window.removeEventListener('codex-updated', refresh);
