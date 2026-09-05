@@ -193,6 +193,12 @@ export const restGatewayFetch: typeof fetch = (input, init) => {
     requestInit.credentials = 'omit';
     requestInit.mode = 'cors';
   }
+  // O gateway usa o Authorization enviado pelo supabase-js. Cookies do alias
+  // da Vercel não participam da autenticação e podem ultrapassar o limite do
+  // Cloudflare, fazendo todas as leituras retornarem 400.
+  if (shouldUseApiGateway && !import.meta.env.DEV) {
+    requestInit.credentials = 'omit';
+  }
   return fetch(destination, requestInit);
 };
 
