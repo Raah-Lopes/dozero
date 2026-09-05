@@ -1,20 +1,21 @@
+--- src/data/LivingBrain.tsx (原始)
+
+
++++ src/data/LivingBrain.tsx (修改后)
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ArcanumGraph from './Graph/ArcanumGraph';
 import { getWikiConfig } from '../../store';
 import { resolveMediaUrl } from '../../services/wiki/mediaResolver';
 import { DEFAULT_TYPES, type NodeShape, type WEdge, type WNode } from './Graph/core';
-import { Layouts, type VaultPayload } from './Graph/world';
+import { Layouts, Vault, type VaultPayload } from './Graph/world';
 import { TYPE_ORDER } from './Graph/seed';
 import { formatWikiConnection, type WikiConnectionDraft } from '../../utils/wikiConnections';
 import { useWindowManager } from '../../hooks/useWindowManager';
 import { WikiIndexer } from '../../services/wiki/WikiIndexer';
-import type { WikiGraphLinkSource, WikiGraphNodeSource } from '../../services/wiki/wikiGraphData';
 import { saveMarkdownContent } from '../../utils/githubApi';
 import { state } from '../../services/yjs';
 import { CodexDocument, normalizeCodex } from './Codex/codexModel';
-import { Icone } from './Codex/CodexIcons';
 import { LoadingState } from '../UI/LoadingState';
-import { Vault } from './Graph/world';
 
 const SHARED_GRAPH_KEY = '__arcanum_graph_v1__';
 
@@ -32,51 +33,26 @@ function readSharedGraph(): VaultPayload | null {
   };
 }
 
-const getBundledWikiFiles = async (): Promise<Record<string, string>> => {
-  const modules = import.meta.glob('../../../wikidozero/**/*.md', {
-    query: '?raw',
-    import: 'default',
-  });
-  const entries = await Promise.all(
-    Object.entries(modules).map(async ([path, loader]) => {
-      try {
-        const content = (await loader()) as string;
-        const cleanPath = path.replace('../../../wikidozero/', '').replace(/^\.\//, '');
-        return [cleanPath, content] as [string, string];
-      } catch {
-        return null;
-      }
-    })
-  );
-  return Object.fromEntries(entries.filter((e): e is [string, string] => e !== null));
-};
-
 function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: WNode[]; edges: WEdge[] } {
   if (!codex || codex.notes.length === 0) return { nodes: [], edges: [] };
-  setWikiNodes([]);
-      setWikiEdges([]);
-      setIsLoading(false);
-      return;
 
-    } catch (err) {
-      console.error(err);
-      setError("Erro ao carregar os dados do grafo.");
-      setIsLoading(false);
-    }
-  }, [wikiNodes.length]); // Fecha corretamente o useCallback
+  const typeAliases: Record<string, string> = {
+    person: 'personagem',
+    place: 'local',
+    faction: 'organizacao',
+    item: 'item',
+    event: 'evento',
+    creature: 'criatura',
+    lore: 'conceito',
+  };
 
-  // Renderização da tela
-  if (isLoading) return <LoadingState />;
-  if (error) return <div className="text-red-500">{error}</div>;
-
-  return (
-    <ArcanumGraph 
-      key={graphVersion}
-      initialNodes={wikiNodes} 
-      initialEdges={wikiEdges} 
-    />
-  );
-};
+  const mappedNodes: WNode[] = codex.notes.map((note) => {
+    // O tipo pode vir direto da nota ou de `fields`, dependendo do modelo do Códice.
+    const rawType = String(
+      (note as unknown as { type?: string }).type ||
+        (note.fields as unknown as { type?: string } | undefined)?.type ||
+        'conceito'
+    ).toLowerCase();
     const matchedType = DEFAULT_TYPES.find((t) => t.id === (typeAliases[rawType] || rawType)) || DEFAULT_TYPES[0];
     const shape: NodeShape = (matchedType.shape || 'circle') as NodeShape;
 
@@ -132,7 +108,7 @@ function buildGraphFromCodex(codex: CodexDocument, repoPath: string): { nodes: W
 }
 
 /** Mantém o layout manual do grafo e respeita exclusões intencionais. */
-function mergeCodexIntoGraph(saved: VaultPayload, codex: CodexDocument, repoPath: string): VaultPayload {
+function mergeCodexIntoGraph(saved: VaultPayload, _codex: CodexDocument, _repoPath: string): VaultPayload {
   // Se o usuário explicitamente salvou um grafo (mesmo vazio), o estado do grafo é a fonte de verdade absoluta
   return saved;
 }
@@ -209,106 +185,6 @@ export const LivingBrain: React.FC = () => {
       setWikiNodes([]);
       setWikiEdges([]);
       setIsLoading(false);
-      return;
-
-      const typeAliases: Record<string, string> = {
-        person: 'personagem',
-        place: 'local',
-        faction: 'organizacao',
-        item: 'item',
-        event: 'evento',
-        creature: 'criatura',
-        lore: 'conceito',
-      };
-
-      const mappedNodes: WNode[] = json.nodes.map((n: WikiGraphNodeSource) => {
-        const pathLower = String(n.path || '').toLowerCase();
-        const rawGroup = String(n.group || '').toLowerCase();
-        const rawEntity = String(n.entityType || '').toLowerCase();
-
-        let detectedType = rawEntity || rawGroup;
-        if (!detectedType || detectedType === 'conceito') {
-          if (pathLower.includes('personag') || pathLower.includes('npc') || pathLower.includes('jogador')) {
-            detectedType = 'personagem';
-          } else if (pathLower.includes('criatur') || pathLower.includes('monstro') || pathLower.includes('bestiar')) {
-            detectedType = 'criatura';
-          } else if (pathLower.includes('loca') || pathLower.includes('cidade') || pathLower.includes('reino') || pathLower.includes('lugar')) {
-            detectedType = 'local';
-          } else if (pathLower.includes('item') || pathLower.includes('artefato') || pathLower.includes('equip')) {
-            detectedType = 'item';
-          } else if (pathLower.includes('facc') || pathLower.includes('organiza') || pathLower.includes('guild')) {
-            detectedType = 'organizacao';
-          } else if (pathLower.includes('divin') || pathLower.includes('deus') || pathLower.includes('panta')) {
-            detectedType = 'divindade';
-          } else if (pathLower.includes('evento') || pathLower.includes('histor') || pathLower.includes('cronolog')) {
-            detectedType = 'evento';
-          } else if (pathLower.includes('sessa') || pathLower.includes('sessao') || pathLower.includes('resumo') || pathLower.includes('diario')) {
-            detectedType = 'resumo';
-          } else if (pathLower.includes('rota') || pathLower.includes('viagem') || pathLower.includes('mapa')) {
-            detectedType = 'rota';
-          } else if (pathLower.includes('raca') || pathLower.includes('povo') || pathLower.includes('especie')) {
-            detectedType = 'racas';
-          }
-        }
-
-        const matchedType = DEFAULT_TYPES.find((t) => t.id === (typeAliases[detectedType] || detectedType)) || DEFAULT_TYPES[0];
-        const imageUrl = n.avatar ? resolveMediaUrl(n.avatar, repoPath) : undefined;
-        const shape: NodeShape = n.shape || matchedType.shape || 'circle';
-
-        return {
-          id: n.id || n.name,
-          type: 'world',
-          position: { x: 0, y: 0 },
-          data: {
-            label: n.name || n.id,
-            typeId: matchedType.id,
-            summary: n.description || '',
-            icon: matchedType.icon,
-            image: imageUrl,
-            shape,
-            tags: n.tags || [],
-            ficha: {
-              status: n.status || 'Ativo',
-              level: n.level || n.nd,
-              gmNotes: n.gmNotes || '',
-              inventory: n.inventory || '',
-            },
-            wikiPath: n.path || '',
-          },
-        };
-      });
-
-      const clusteredNodes = Layouts.clusterByType(mappedNodes, TYPE_ORDER);
-      const validNodeIds = new Set(clusteredNodes.map((cn) => cn.id));
-      const nameToId = new Map(clusteredNodes.map((cn) => [cn.data.label.toLowerCase(), cn.id]));
-
-      const mappedEdges: WEdge[] = (json.links || [])
-        .map((l: WikiGraphLinkSource, i: number) => {
-          const src = l.source;
-          const tgt = l.target;
-          const resolvedTarget = validNodeIds.has(tgt) ? tgt : nameToId.get(String(tgt).toLowerCase());
-          if (validNodeIds.has(src) && resolvedTarget) {
-            return {
-              id: l.id || `e_${src}_${resolvedTarget}_${i}`,
-              source: src,
-              target: resolvedTarget,
-              type: 'world',
-              data: {
-                label: l.label || '',
-                color: l.color || '#d8b45a',
-                wikiSourcePath: l.sourcePath || src,
-              },
-            };
-          }
-          return null;
-        })
-        .filter(Boolean) as WEdge[];
-
-      setWikiNodes(clusteredNodes);
-      setWikiEdges(mappedEdges);
-      if (!isBackgroundRefresh) {
-        setGraphVersion((version) => version + 1);
-      }
     } catch (err) {
       console.warn('[LivingBrain] Aviso ao atualizar dados do Grafo:', err);
     } finally {
