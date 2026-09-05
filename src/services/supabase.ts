@@ -145,6 +145,10 @@ export const restGatewayFetch: typeof fetch = (input, init) => {
   const storagePrefix = `${supabaseUrl}/storage/v1/`;
   const route = source.startsWith(restPrefix) ? 'data' : source.startsWith(storagePrefix) ? 'storage' : null;
   if (!route) return fetch(input, init);
+  // Sem o gateway, deixe o supabase-js controlar integralmente o request.
+  // Isso preserva todos os cabeçalhos da sessão e evita alterar o JWT durante
+  // o diagnóstico/uso normal do PostgREST nativo.
+  if (!shouldUseApiGateway) return fetch(input, init);
   const prefix = route === 'data' ? restPrefix : storagePrefix;
   const destination = shouldUseApiGateway
     ? apiGatewayUrl(route, upstream.pathname.slice(new URL(prefix).pathname.length), upstream.searchParams)
