@@ -92,7 +92,7 @@ const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || defaultUrl;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || defaultKey;
 // Host imutável: não compartilha os cookies acumulados no alias público.
-const API_GATEWAY_ORIGIN = 'https://dozero-ajb4mefwq-dozerorpg.vercel.app';
+const API_GATEWAY_ORIGIN = 'https://dozero-dozerorpg.vercel.app';
 const GATEWAY_HEADERS = new Set([
   'accept',
   'accept-profile',
