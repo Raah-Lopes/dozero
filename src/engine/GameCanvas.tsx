@@ -15,6 +15,13 @@ import { addMapWall, removeMapWall } from '../store/walls';
 const prevHpMap: Record<string, number> = {};
 let lastTokenClickTime = 0;
 
+// URLs do gateway local usam `/storage-api?path=...` e não terminam na
+// extensão do arquivo. Informe o parser para o Pixi não rejeitar essas imagens.
+const loadImageTexture = (src: string) => Assets.load<Texture>({
+  src,
+  parser: 'texture',
+});
+
 export const GameCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
@@ -1864,7 +1871,7 @@ export const GameCanvas: React.FC = () => {
         pState.forEach(p => {
           if (!propSprites[p.id]) {
             const sprite = new Sprite();
-            Assets.load(p.imageUrl).then(texture => {
+            loadImageTexture(p.imageUrl).then(texture => {
                sprite.texture = texture;
                requestAnimationFrame(renderProps);
             }).catch(console.error);
@@ -2944,7 +2951,7 @@ export const GameCanvas: React.FC = () => {
             bgSprites[id] = sprite;
 
             // Load texture
-            Assets.load(bg.imageUrl).then(texture => {
+            loadImageTexture(bg.imageUrl).then(texture => {
               if (!isDestroyed && bgSprites[id]) {
                 bgSprites[id].texture = texture;
               }
@@ -3653,7 +3660,7 @@ export const GameCanvas: React.FC = () => {
              
              if ((s as any)._lastUrl !== d.imageUrl) {
                 (s as any)._lastUrl = d.imageUrl;
-                Assets.load(d.imageUrl).then(tex => { 
+                loadImageTexture(d.imageUrl).then(tex => {
                   if (!g.destroyed) {
                       s.texture = tex;
                       applyTransform();

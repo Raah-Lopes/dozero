@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { state, triggerClockConsequence, useIsGM } from '../../store';
 import type { TensionClock } from '../../store';
 import { TensionClockWidget } from '../Widgets/GameMaster/TensionClockWidget';
+import { MissionClockWidget } from '../Widgets/GameMaster/MissionClockWidget';
+import { actOnMission } from '../../store/missionClocks';
 
-export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }> = ({ onEditClock }) => {
+export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void; showSimple?: boolean; showMissions?: boolean }> = ({ onEditClock, showSimple = true, showMissions = true }) => {
   const [clocks, setClocks] = useState<TensionClock[]>([]);
   const isGM = useIsGM();
 
@@ -40,7 +42,8 @@ export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }
         if (c.isRunning) {
           const remaining = Math.max(0, c.endTime - now);
           if (remaining <= 0) {
-            triggerClockConsequence(c.id);
+            if (c.mission) actOnMission(c.id, 'expire');
+            else triggerClockConsequence(c.id);
           }
         }
       });
@@ -53,8 +56,10 @@ export const TensionClockManager: React.FC<{ onEditClock: (id: string) => void }
 
   return (
     <>
-      {clocks.map(clock => (
-        <TensionClockWidget key={clock.id} clock={clock} isGM={isGM} onEdit={() => onEditClock(clock.id)} />
+      {clocks.filter(clock => clock.mission ? showMissions : showSimple).map(clock => (
+        clock.mission
+          ? <MissionClockWidget key={clock.id} clock={clock} isGM={isGM} />
+          : <TensionClockWidget key={clock.id} clock={clock} isGM={isGM} onEdit={() => onEditClock(clock.id)} />
       ))}
     </>
   );

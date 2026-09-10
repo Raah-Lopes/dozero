@@ -2,6 +2,14 @@
 
 Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o changelog.
 
+## 2026-09-10 — Atlas de Mapas como página integrada
+
+**Status:** Ativa
+
+**Decisão:** o aplicativo MAPASMUDNI passa a ser o Atlas de Mapas do DOZERO em uma entrada própria do mesmo build. Seus projetos continuam local-first no IndexedDB; ao inserir um mapa no Grid, o Atlas renderiza um WebP sem grade embutida, publica o arquivo no Storage da campanha e deixa uma entrega local idempotente. Após autorizar e carregar a sala, o VTT registra somente a URL durável como fundo no documento Yjs e confirma o consumo da entrega.
+
+**Motivo:** preservar integralmente o editor já construído e sua biblioteca, sem carregar suas ferramentas no Canvas principal nem duplicar o modelo colaborativo da mesa. A grade continua sendo responsabilidade do VTT para manter escala, névoa, tokens e cenas operacionais consistentes.
+
 ## 2026-09-01 — Central de Campanha como orquestradora da mesa
 
 **Status:** Ativa
@@ -149,3 +157,13 @@ Registros curtos de escolhas que afetam trabalhos futuros. Isto não substitui o
 **Motivo:** mantém a liberdade de gerar uma campanha completa sem trocar a revisão humana por uma escrita opaca e potencialmente inconsistente.
 
 **Limite:** provedores e chaves continuam configurados pelo próprio usuário no navegador; a operação depende de uma campanha salva na nuvem para resolver o UUID canônico e usar RAG.
+
+## 2026-09-08 — Missões por etapas nos relógios de tensão
+
+**Status:** Ativa
+
+**Decisão:** missões contra o tempo são uma extensão opcional dos registros no mapa Yjs `clocks`, aproveitando o isolamento de sala, IndexedDB e snapshots existentes. Cada etapa tem objetivo, prazo e consequência narrativa, com resultado cumprido ou expirado. A etapa seguinte começa pausada; o mestre decide quando iniciar. O observador de vencimento permanece montado ao trocar de área da aplicação.
+
+**Motivo:** permitir pressão por tempo real ou avanço manual de tempo narrativo, mantendo espaço para narrar as consequências e evitando que uma reconexão salte várias etapas. As missões não aplicam os modificadores de HP/MP dos relógios simples.
+
+**Limite:** objetivos e consequências integram o documento compartilhado; esconder consequências futuras na interface do jogador não fornece confidencialidade. Escritas do módulo verificam o papel de mestre no store, dentro do limite atual de autorização do transporte Yjs. Colaboração autenticada e persistência remota precisam de validação em uma campanha autorizada.

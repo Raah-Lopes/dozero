@@ -1,5 +1,6 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { getTooltipViewportAdjustment } from './tooltipPosition';
 import './Tooltip.css';
 
 interface TooltipProps {
@@ -14,9 +15,13 @@ export const Tooltip: React.FC<TooltipProps> = ({ label, description, shortcut, 
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const hasAdjustedToViewportRef = useRef(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
 
   const show = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    hasAdjustedToViewportRef.current = false;
     if (wrapRef.current) {
       const rect = wrapRef.current.getBoundingClientRect();
       let top = 0, left = 0;
@@ -49,6 +54,24 @@ export const Tooltip: React.FC<TooltipProps> = ({ label, description, shortcut, 
     };
   }, []);
 
+  useLayoutEffect(() => {
+    if (!visible || !popupRef.current || hasAdjustedToViewportRef.current) return;
+
+    const adjustment = getTooltipViewportAdjustment(
+      popupRef.current.getBoundingClientRect(),
+      window.innerWidth,
+      window.innerHeight
+    );
+
+    hasAdjustedToViewportRef.current = true;
+    if (adjustment.x !== 0 || adjustment.y !== 0) {
+      setCoords((current) => ({
+        top: current.top + adjustment.y,
+        left: current.left + adjustment.x
+      }));
+    }
+  }, [visible, coords]);
+
   const getTransform = () => {
     switch (position) {
       case 'top': return 'translate(-50%, -100%)';
@@ -60,10 +83,11 @@ export const Tooltip: React.FC<TooltipProps> = ({ label, description, shortcut, 
   };
 
   return (
-    <div className="tt-wrap" ref={wrapRef} onPointerEnter={show} onPointerLeave={hide} onFocus={show} onBlur={hide}>
+    <div className="tt-wrap" ref={wrapRef} onPointerEnter={show} onPointerLeave={hide} onFocus={show} onBlur={hide} onClickCapture={hide}>
       {children}
       {visible && createPortal(
         <div 
+          ref={popupRef}
           className="tt-popup" 
           style={{ 
             position: 'fixed', 

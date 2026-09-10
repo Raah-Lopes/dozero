@@ -232,6 +232,16 @@ export function GMToolbar() {
                 tooltip="Central de Campanha"
                 description="Painel operacional com cenas, Códice, IA, fichas, cronologia e diário"
               />
+              <ToolButton
+                icon={<Map size={19} />}
+                active={false}
+                onClick={() => {
+                  const room = new URLSearchParams(window.location.search).get('room');
+                  window.location.assign(`/mapas.html${room ? `?room=${encodeURIComponent(room)}` : ''}`);
+                }}
+                tooltip="Atlas de Mapas"
+                description="Crie, guarde e envie mapas prontos para o Grid"
+              />
               <ToolButton 
                 icon={<BookOpen size={19} />} 
                 active={viewMode === 'wiki'} 

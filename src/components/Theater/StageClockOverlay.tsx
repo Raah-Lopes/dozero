@@ -18,6 +18,7 @@ import {
 } from '../../store';
 import { Tooltip } from '../UI/Tooltip';
 import { toast } from '../UI/Toast';
+import { MissionClockEditor } from '../Widgets/GameMaster/MissionClockEditor';
 
 interface Props {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const StageClockOverlay: React.FC<Props> = ({ isOpen, onClose }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newLabel, setNewLabel] = useState('');
+  const [creatingMission, setCreatingMission] = useState(false);
   const [newMinutes, setNewMinutes] = useState(5);
   const [expiredAlarm, setExpiredAlarm] = useState<string | null>(null);
   const handledExpirations = useRef<Set<string>>(new Set());
@@ -98,6 +100,8 @@ export const StageClockOverlay: React.FC<Props> = ({ isOpen, onClose }) => {
 
   return (
     <div className="theater-stage-clock-overlay" onClick={e => e.stopPropagation()}>
+      {isGM && <button className="theater-clock-tool-btn" onClick={() => setCreatingMission(value => !value)}>{creatingMission ? 'Fechar criação de missão' : 'Nova missão contra o tempo'}</button>}
+      {isGM && creatingMission && <MissionClockEditor onClose={() => setCreatingMission(false)} />}
       {/* Expired Alarm Stage Banner */}
       {expiredAlarm && (
         <div className="theater-clock-alarm-banner">

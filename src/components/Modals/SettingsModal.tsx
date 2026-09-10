@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Save, Settings2, Shield,
-  Check, Loader2, Swords, User, Plug, Palette, Bot, ToyBrick
+  Check, Loader2, Swords, User, Plug, Palette, Bot, ToyBrick, Map
 } from 'lucide-react';
 import { useUserStore } from '../../store';
 import { useRulesEngine } from '../../hooks/useRulesEngine';
@@ -267,6 +267,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialTa
             }}
           >
             {user ? 'Desconectar' : 'Entrar / Cadastrar'}
+          </button>
+        </div>
+      </Field>
+
+      <Field label="Atlas de Mapas" icon={<Map size={13} />} hint="O Atlas abre como uma página própria e mantém seus projetos salvos neste navegador.">
+        <div style={{
+          padding: '12px 14px', borderRadius: '12px',
+          background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
+        }}>
+          <div>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>Criação e biblioteca de mapas</div>
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', opacity: 0.7 }}>Edite mapas e insira o resultado diretamente no Grid da campanha.</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const room = new URLSearchParams(window.location.search).get('room');
+              window.location.assign(`/mapas.html${room ? `?room=${encodeURIComponent(room)}` : ''}`);
+            }}
+            style={{
+              padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--glass-border)',
+              background: 'var(--accent-glow)', color: 'var(--accent-primary)',
+              fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            Abrir Atlas
           </button>
         </div>
       </Field>

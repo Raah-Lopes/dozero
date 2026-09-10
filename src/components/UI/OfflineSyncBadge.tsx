@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Cloud, CloudOff, RefreshCw, AlertTriangle, CheckCircle2, 
-  Trash2, ArrowUpRight, Wifi, WifiOff 
+  Trash2, Wifi, WifiOff
 } from 'lucide-react';
 import { 
   subscribeSyncState, 
@@ -81,12 +81,17 @@ export const OfflineSyncBadge: React.FC = () => {
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
-      <Tooltip label={label} description="Clique para ver o status da rede e fila de sincronização">
+      <Tooltip
+        label={label}
+        description="Clique para ver o status da rede e fila de sincronização"
+      >
         <button
           onClick={() => {
             setQueue(getSyncQueue());
             setIsOpen(!isOpen);
           }}
+          aria-expanded={isOpen}
+          aria-controls="offline-sync-status"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -112,11 +117,16 @@ export const OfflineSyncBadge: React.FC = () => {
       {/* POPOVER DA FILA */}
       {isOpen && (
         <div 
+          id="offline-sync-status"
+          role="dialog"
+          aria-label="Status de sincronização"
           style={{
             position: 'absolute',
-            top: 'calc(100% + 8px)',
+            bottom: 'calc(100% + 8px)',
             right: 0,
-            width: '280px',
+            width: 'min(280px, calc(100vw - 16px))',
+            maxHeight: 'calc(100vh - 56px)',
+            overflowY: 'auto',
             backgroundColor: 'rgba(15, 23, 42, 0.95)',
             border: '1px solid var(--glass-border)',
             borderRadius: '10px',
@@ -137,6 +147,7 @@ export const OfflineSyncBadge: React.FC = () => {
             </div>
             <button 
               onClick={() => setIsOpen(false)}
+              aria-label="Fechar status de sincronização"
               style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '12px' }}
             >
               ✕

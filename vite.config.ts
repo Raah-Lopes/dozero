@@ -87,7 +87,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        vtt: 'vtt.html'
+        vtt: 'vtt.html',
+        mapas: 'mapas.html'
       },
       output: {
         manualChunks(id) {

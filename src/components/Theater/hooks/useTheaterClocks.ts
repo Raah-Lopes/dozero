@@ -9,7 +9,7 @@ export function useTheaterClocks() {
     const handler = () => {
       const arr: TensionClock[] = [];
       for (const [, v] of state.clocks.entries()) {
-        arr.push(v as TensionClock);
+        if (!(v as TensionClock).mission) arr.push(v as TensionClock);
       }
       setClocks(arr.sort((a, b) => a.label.localeCompare(b.label)));
     };

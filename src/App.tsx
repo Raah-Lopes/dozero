@@ -45,6 +45,7 @@ import { RoomAccessGate } from './components/System/RoomAccessGate';
 import { AdminCommandCenter } from './components/ControlCenter/AdminCommandCenter';
 import { PlayerCommandCenter } from './components/ControlCenter/PlayerCommandCenter';
 import { LoadingState } from './components/UI/LoadingState';
+import { MapStudioHandoffConsumer } from './components/System/MapStudioHandoffConsumer';
 
 // Workspaces e Modais pesados carregados sob demanda (0ms de impacto inicial no Canvas)
 const WikiViewer = React.lazy(() => import('./components/Wiki/WikiViewer').then(m => ({ default: m.WikiViewer })));
@@ -178,6 +179,7 @@ function App() {
   return (
     <RoomAccessGate roomCode={currentRoom}>
     <div className="app-container">
+      <MapStudioHandoffConsumer roomCode={currentRoom} />
       <OfflineStatus />
       
       {/* ── Cutscene overlay (Global) ── */}
@@ -268,6 +270,12 @@ function App() {
       </div>
 
       {/* Layer 10: React HUD */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1000 }}>
+        <TensionClockManager showSimple={viewMode === 'canvas'} showMissions={viewMode === 'canvas' || viewMode === 'theater'} onEditClock={(id) => {
+          setEditingClockId(id);
+          setActiveModal('clockConfig');
+        }} />
+      </div>
       {viewMode === 'canvas' && (
         <div className="hud-layer hud-grid">
           <ErrorBoundary componentName="Interface Principal (HUD)">
@@ -311,11 +319,6 @@ function App() {
               </div>
             </DraggableWindow>
           )}
-
-          <TensionClockManager onEditClock={(id) => {
-            setEditingClockId(id);
-            setActiveModal('clockConfig');
-          }} />
 
           {/* Modal Layer */}
           {(activeModal === 'players' || activeModal.startsWith('settings')) && (

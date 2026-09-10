@@ -3,6 +3,7 @@ import {  Timer, Activity, Zap } from 'lucide-react';
 import { DraggableWindow } from '../HUD/DraggableWindow';
 
 import type { TensionClock } from '../../store';
+import { MissionClockEditor } from '../Widgets/GameMaster/MissionClockEditor';
 
 interface ClockConfigModalProps {
   existingClock?: TensionClock;
@@ -11,6 +12,7 @@ interface ClockConfigModalProps {
 }
 
 export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingClock, onClose, onConfirm }) => {
+  const [missionMode, setMissionMode] = useState(false);
   const [label, setLabel] = useState(existingClock ? existingClock.label : 'Bomba Mágica');
   
   const initialMin = existingClock ? Math.floor(existingClock.durationMs / 60000).toString() : '5';
@@ -57,7 +59,9 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
   };
 
   return (
-    <DraggableWindow id="clock-config" title={existingClock ? "Editar Relógio" : "Criar Relógio de Tensão"} initialX={window.innerWidth / 2 - 150} initialY={window.innerHeight / 2 - 200} width={300} onClose={onClose}>
+    <DraggableWindow id="clock-config" title={existingClock ? "Editar Relógio" : "Criar Relógio de Tensão"} initialX={window.innerWidth / 2 - 150} initialY={80} width={missionMode ? 480 : 300} onClose={onClose} dragAnywhere={false}>
+      {!existingClock && <div className="mission-clock"><label>Tipo de relógio<select value={missionMode ? 'mission' : 'simple'} onChange={e => setMissionMode(e.target.value === 'mission')}><option value="simple">Relógio simples</option><option value="mission">Missão contra o tempo</option></select></label></div>}
+      {missionMode ? <MissionClockEditor onClose={onClose} /> :
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -124,7 +128,7 @@ export const ClockConfigModal: React.FC<ClockConfigModalProps> = ({ existingCloc
           {existingClock ? 'Salvar Alterações' : 'Manifestar Relógio'}
         </button>
 
-      </form>
+      </form>}
     </DraggableWindow>
   );
 };

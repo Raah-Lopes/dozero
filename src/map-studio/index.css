@@ -1,0 +1,322 @@
+@import "tailwindcss";
+
+.dz-button {
+  border: 1px solid #665038;
+  padding: 6px 12px;
+  color: #e1bb77;
+  background: #211911;
+  border-radius: 4px;
+}
+.dz-button:hover {
+  background: #3d2e22;
+}
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #e1bb77;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   DOZERO — Tema Arcanum
+   Tinta escura, pergaminho, cobre e âmbar.
+   ============================================================ */
+
+:root {
+  /* Superfícies */
+  --dz-void: #050403 !important;
+  --dz-ink: #0a0806 !important;
+  --dz-graphite: #1a1512 !important;
+  --dz-graphite-2: #221b15 !important;
+  --dz-graphite-3: #2a221b !important;
+  --dz-stone: #3d2e22 !important;
+  --dz-stone-2: #4a3828 !important;
+  --dz-night: #0f1420 !important;
+  --dz-night-2: #1a2030 !important;
+
+  /* Pergaminho (texto) */
+  --dz-parchment: #e8dcc4 !important;
+  --dz-parchment-2: #d4c4a8 !important;
+  --dz-parchment-3: #b8a88c !important;
+  --dz-ash: #7a6f5c !important;
+  --dz-ash-2: #524a3c !important;
+
+  /* Metais (ações) */
+  --dz-copper: #b8863a !important;
+  --dz-amber: #c8954a !important;
+  --dz-amber-2: #d4a55c !important;
+  --dz-amber-glow: #e8b86a !important;
+  --dz-brass: #8a6a3a !important;
+
+  /* Estados */
+  --dz-success: #6b8e4e !important;
+  --dz-success-2: #8ba868 !important;
+  --dz-danger: #a84432 !important;
+  --dz-danger-2: #c45a48 !important;
+  --dz-tension: #c8954a !important;
+  --dz-critical: #a84432 !important;
+
+  /* Tipografia */
+  --font-display: "Cinzel", "Trajan", serif !important;
+  --font-lore: "Cormorant Garamond", "Garamond", serif !important;
+  --font-body: "Inter", system-ui, sans-serif !important;
+  --font-mono: "JetBrains Mono", "Consolas", monospace !important;
+
+  /* Espaçamentos */
+  --dz-radius-sm: 2px !important;
+  --dz-radius: 3px !important;
+  --dz-radius-lg: 4px !important;
+}
+
+* {
+  box-sizing: border-box !important;
+}
+
+html,
+body,
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: #0a0806 !important;
+  color: #e8dcc4 !important;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  font-feature-settings:
+    "tnum" on,
+    "lnum" on !important;
+}
+
+/* ============================================================
+   Tipografia — Hierarquia Arcanum
+   ============================================================ */
+
+.font-display {
+  font-family: "Cinzel", "Trajan", serif !important;
+  letter-spacing: 0.04em !important;
+  font-weight: 500 !important;
+}
+
+.font-lore {
+  font-family: "Cormorant Garamond", "Garamond", serif !important;
+  font-weight: 500 !important;
+}
+
+.font-mono {
+  font-family: "JetBrains Mono", "Consolas", monospace !important;
+  font-feature-settings: "tnum" on !important;
+}
+
+.label-caps {
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #7a6f5c !important;
+}
+
+/* ============================================================
+   Scrollbar — discreto, tinta sobre pergaminho
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0806 !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3d2e22 !important;
+  border-radius: 2px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a3828 !important;
+}
+
+/* ============================================================
+   Inputs e controles — bordas finas, fundo denso
+   ============================================================ */
+
+input[type="text"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  font-family: "Inter", system-ui, sans-serif !important;
+  background: #0a0806 !important;
+  border: 1px solid #3d2e22 !important;
+  color: #e8dcc4 !important;
+  border-radius: 3px !important;
+  padding: 8px 10px !important;
+  font-size: 13px !important;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #c8954a !important;
+  box-shadow: 0 0 0 1px #b8863a !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #7a6f5c !important;
+  opacity: 0.7 !important;
+}
+
+/* ============================================================
+   Range — barra de tensão
+   ============================================================ */
+
+input[type="range"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  height: 4px !important;
+  background: #2a221b !important;
+  border-radius: 2px !important;
+  outline: none !important;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  background: #c8954a !important;
+  border: 1px solid #b8863a !important;
+  cursor: pointer !important;
+  box-shadow: 0 0 0 1px #0a0806 !important;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  background: #c8954a !important;
+  border: 1px solid #b8863a !important;
+  cursor: pointer !important;
+}
+
+/* ============================================================
+   Checkbox — marcador de pergaminho
+   ============================================================ */
+
+input[type="checkbox"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 16px !important;
+  height: 16px !important;
+  border: 1px solid #4a3828 !important;
+  background: #0a0806 !important;
+  border-radius: 2px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease !important;
+}
+
+input[type="checkbox"]:checked {
+  background: #c8954a !important;
+  border-color: #b8863a !important;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 2px !important;
+  left: 4px !important;
+  width: 4px !important;
+  height: 8px !important;
+  border: solid #0a0806 !important;
+  border-width: 0 2px 2px 0 !important;
+  transform: rotate(45deg) !important;
+}
+
+/* ============================================================
+   Botões — hierarquia clara
+   ============================================================ */
+
+button {
+  font-family: "Inter", system-ui, sans-serif !important;
+  cursor: pointer !important;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease !important;
+}
+
+button:focus-visible {
+  outline: 2px solid #c8954a !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================================
+   Animações — respeita prefers-reduced-motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes dz-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes dz-pulse-amber {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(200, 149, 74, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(200, 149, 74, 0);
+  }
+}
+
+.dz-pulse-amber {
+  animation: dz-pulse-amber 2.4s ease-in-out infinite !important;
+}
+
+/* ============================================================
+   React Zoom Pan Pinch — overrides
+   ============================================================ */
+
+.react-transform-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+}

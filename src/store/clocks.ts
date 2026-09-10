@@ -13,6 +13,7 @@ export interface TensionClock {
   hpMod: string; // Ex: '-80%', '+10'
   mpMod: string; // Ex: '-5'
   pausedRemainingMs?: number; // Guarda o tempo exato em que foi pausado
+  mission?: import('./missionClocks').ClockMission;
 }
 
 export function addTensionClock(clock: TensionClock) {
@@ -84,7 +85,7 @@ function applyMod(currentValue: number, modStr: string): number {
 
 export function triggerClockConsequence(id: string) {
   const clock = state.clocks.get(id) as TensionClock;
-  if (!clock) return;
+  if (!clock || !clock.isRunning || clock.mission) return;
 
   // Stop the clock
   state.clocks.set(id, { ...clock, isRunning: false });
