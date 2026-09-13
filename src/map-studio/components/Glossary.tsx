@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { GlossaryEntry, MapLocation } from "../types";
 import LocationIcon from "./LocationIcon";
-import { BookOpen, Plus, Search, X, Edit2, Save, Trash2 } from "lucide-react";
+import { BookOpen, Plus, Search, X, Edit2, Save, Trash2, MapPin } from "lucide-react";
 
 interface GlossaryProps {
   entries: GlossaryEntry[];
@@ -9,6 +9,7 @@ interface GlossaryProps {
   onUpdateEntry: (id: string, updates: Partial<GlossaryEntry>) => void;
   onDeleteEntry: (id: string) => void;
   locations: MapLocation[];
+  onLocateLocation?: (id: string) => void;
 }
 
 export default function Glossary({
@@ -17,6 +18,7 @@ export default function Glossary({
   onUpdateEntry,
   onDeleteEntry,
   locations,
+  onLocateLocation,
 }: GlossaryProps) {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function Glossary({
 
   return (
     <div
-      className="flex-1 overflow-auto"
+      className="flex-1 min-h-0 overflow-auto"
       style={{
         background: `
           radial-gradient(ellipse at top, rgba(200, 149, 74, 0.03) 0%, transparent 60%),
@@ -69,10 +71,10 @@ export default function Glossary({
         `,
       }}
     >
-      <div className="max-w-5xl mx-auto p-10">
+      <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:p-8 lg:p-10">
         {/* Cabeçalho */}
         <div
-          className="flex items-end justify-between mb-10 pb-6 border-b"
+          className="flex flex-wrap items-end justify-between gap-5 mb-8 lg:mb-10 pb-6 border-b"
           style={{ borderColor: "var(--dz-stone)" }}
         >
           <div>
@@ -231,7 +233,7 @@ export default function Glossary({
                         </div>
                       ) : (
                         <>
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex flex-wrap items-center gap-3 mb-2">
                             {linkedLocation && (
                               <LocationIcon
                                 location={linkedLocation}
@@ -254,6 +256,17 @@ export default function Glossary({
                             >
                               {entry.type}
                             </span>
+                            {linkedLocation && onLocateLocation && (
+                              <button
+                                type="button"
+                                onClick={() => onLocateLocation(linkedLocation.id)}
+                                className="dz-button ml-auto inline-flex items-center gap-1.5 text-[11px]"
+                                aria-label={`Localizar ${entry.name} no mapa`}
+                              >
+                                <MapPin size={13} />
+                                Ver no mapa
+                              </button>
+                            )}
                           </div>
                           <p
                             className="font-lore italic text-[14px] leading-relaxed"

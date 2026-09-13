@@ -95,7 +95,8 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             if (id.includes('pixi.js') || id.includes('@pixi')) return 'vendor-canvas';
             if (id.includes('@google/generative-ai')) return 'vendor-ai';
-            if (id.includes('@mdxeditor') || id.includes('lexical')) return 'vendor-editor';
+            // As gramáticas do Prism dependem do núcleo já inicializado; mantenha-os no mesmo chunk do editor.
+            if (id.includes('@mdxeditor') || id.includes('lexical') || id.includes('prismjs')) return 'vendor-editor';
             if (id.includes('mermaid')) return 'vendor-mermaid';
             if (id.includes('d3') || id.includes('@xyflow')) return 'vendor-graph';
             if (id.includes('yjs') || id.includes('y-websocket') || id.includes('y-indexeddb') || id.includes('y-partykit') || id.includes('y-webrtc')) return 'vendor-sync';

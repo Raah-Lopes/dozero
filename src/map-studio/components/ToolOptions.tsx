@@ -1,4 +1,5 @@
 import type { MapAnnotation, Tool } from "../types";
+import { getMapSymbol, mapSymbolGroups } from "../utils/mapSymbols";
 
 export const toolGuidance: Record<Tool, string> = {
   select:
@@ -41,6 +42,8 @@ export default function ToolOptions({
   onMaterial,
   symbol,
   onSymbol,
+  symbolName,
+  onSymbolName,
 }: {
   tool: Tool;
   color: string;
@@ -55,6 +58,8 @@ export default function ToolOptions({
   onMaterial: (value: MapAnnotation["material"]) => void;
   symbol: string;
   onSymbol: (value: string) => void;
+  symbolName: string;
+  onSymbolName: (value: string) => void;
 }) {
   const text = ["addText", "addSymbol"].includes(tool);
   const area = ["draw", "addRectangle", "addCircle"].includes(tool);
@@ -137,33 +142,41 @@ export default function ToolOptions({
         </>
       )}
       {tool === "addSymbol" && (
-        <label>
-          Símbolo{" "}
-          <select
-            aria-label="Símbolo"
-            value={symbol}
-            onChange={(e) => onSymbol(e.target.value)}
-          >
-            {[
-              "🌲",
-              "🌳",
-              "⛰️",
-              "🏰",
-              "🏠",
-              "🪨",
-              "🛏️",
-              "🪑",
-              "🕯️",
-              "💀",
-              "⚓",
-              "📦",
-              "🔥",
-              "🚪",
-            ].map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </label>
+        <>
+          <label>
+            Símbolo{" "}
+            <select
+              aria-label="Símbolo"
+              value={symbol}
+              onChange={(e) => onSymbol(e.target.value)}
+            >
+              {mapSymbolGroups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.symbols.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.value} {item.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <label>
+            Nome/descrição{" "}
+            <input
+              aria-label="Nome ou descrição do símbolo"
+              value={symbolName}
+              onChange={(e) => onSymbolName(e.target.value)}
+              placeholder="Opcional"
+              className="w-48"
+            />
+          </label>
+          <span className="text-stone-400">
+            {getMapSymbol(symbol)?.interaction === "focus"
+              ? "Este marcador aproxima o mapa quando acionado."
+              : "Sem nome, o símbolo não aparece na lista de anotações."}
+          </span>
+        </>
       )}
       <span className="text-stone-400">Para novos desenhos</span>
     </div>

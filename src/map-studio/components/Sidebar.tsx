@@ -17,6 +17,7 @@ import {
   matchesLocation,
   type LocationFilters,
 } from "../utils/locationFilters";
+import { appearsInAnnotationsList } from "../utils/mapSymbols";
 
 
 import CodexHeader from "./CodexHeader";
@@ -69,6 +70,9 @@ export default function Sidebar({
   const filteredLocations = project.locations.filter((loc) =>
     matchesLocation(loc, locationFilters),
   );
+  const listedAnnotations = project.annotations.filter(
+    appearsInAnnotationsList,
+  );
 
   const tabs = [
     {
@@ -81,7 +85,7 @@ export default function Sidebar({
       id: "annotations" as const,
       label: "Anotações",
       icon: <FileText size={12} />,
-      count: project.annotations.length,
+      count: listedAnnotations.length,
     },
     { id: "details" as const, label: "Detalhes", icon: <Info size={12} /> },
   ];
@@ -188,9 +192,9 @@ export default function Sidebar({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto flex">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {/* Left column */}
-        <div className="flex-1 overflow-auto">
+        <div className={`h-full overflow-auto ${activeTab === "details" ? "hidden" : "block"}`}>
           {activeTab === "locations" && (
             <div className="p-3">
               <LocationFiltersPanel
@@ -319,7 +323,7 @@ export default function Sidebar({
 
           {activeTab === "annotations" && (
             <div className="p-3 space-y-1">
-              {project.annotations.map((ann) => (
+              {listedAnnotations.map((ann) => (
                 <div
                   key={ann.id}
                   className="group p-2.5 flex items-center gap-2"
@@ -329,7 +333,9 @@ export default function Sidebar({
                   }}
                 >
                   <span className="text-sm" style={{ color: "var(--dz-copper)" }}>
-                    {ann.type === "text"
+                    {ann.type === "symbol"
+                      ? ann.text || "✦"
+                      : ann.type === "text"
                       ? "✦"
                       : ann.type === "line"
                         ? "―"
@@ -346,7 +352,11 @@ export default function Sidebar({
                       className="text-[12px] truncate"
                       style={{ color: "var(--dz-parchment)" }}
                     >
-                      {ann.type === "text" ? ann.text : `${ann.type}`}
+                      {ann.type === "symbol"
+                        ? ann.name
+                        : ann.type === "text"
+                          ? ann.text
+                          : `${ann.type}`}
                     </p>
                     <p
                       className="font-mono text-[10px] mt-0.5"
@@ -372,7 +382,7 @@ export default function Sidebar({
                   </button>
                 </div>
               ))}
-              {project.annotations.length === 0 && (
+              {listedAnnotations.length === 0 && (
                 <div className="text-center py-10">
                   <ScrollText
                     size={24}
@@ -381,7 +391,7 @@ export default function Sidebar({
                     strokeWidth={1}
                   />
                   <p className="text-[12px]" style={{ color: "var(--dz-ash)" }}>
-                    Nenhuma anotação registrada
+                    Nenhuma anotação nomeada
                   </p>
                 </div>
               )}
@@ -390,14 +400,22 @@ export default function Sidebar({
 
         </div>
 
-        {selectedLocation && (
+        {activeTab === "details" && selectedLocation && (
           <LocationDetailDrawer
             location={selectedLocation}
-            onClose={() => onSelectLocation(null)}
+            onClose={() => {
+              onSelectLocation(null);
+              setActiveTab("locations");
+            }}
             onUpdateLocation={onUpdateLocation}
             onOpenMap={onOpenMap}
             projects={projects}
           />
+        )}
+        {activeTab === "details" && !selectedLocation && (
+          <div className="h-full flex items-center justify-center p-6 text-center text-xs text-stone-500">
+            Selecione um local para consultar e editar seus detalhes.
+          </div>
         )}
       </div>
     </aside>

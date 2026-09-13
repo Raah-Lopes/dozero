@@ -95,6 +95,8 @@ export interface MapAnnotation {
   width?: number;
   height?: number;
   text?: string;
+  name?: string;
+  interaction?: "focus";
   color: string;
   strokeWidth: number;
   fontSize?: number;

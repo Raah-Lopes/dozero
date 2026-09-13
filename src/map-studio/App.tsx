@@ -737,7 +737,11 @@ export default function App({ onBackToVtt, onInsertOnGrid }: MapStudioProps) {
             />
           </div>
         )}
-        <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-auto">
+        <main
+          className={`flex-1 flex flex-col min-w-0 min-h-0 ${
+            currentView === "glossary" ? "overflow-hidden" : "overflow-auto"
+          }`}
+        >
           {currentView === "projects" && (
             <>
               <div className="p-4 flex gap-3 flex-wrap items-center">
@@ -887,29 +891,31 @@ export default function App({ onBackToVtt, onInsertOnGrid }: MapStudioProps) {
           )}
           {currentView === "glossary" && (
             <>
-              <div className="p-3 flex flex-wrap gap-3 items-center">
-                <span>
-                  {activeProject
-                    ? "Códice de " + activeProject.name
-                    : "Códice geral"}
-                </span>
-                <select
-                  aria-label="Projeto do códice"
-                  value={activeProjectId || ""}
-                  onChange={(e) => setActiveProjectId(e.target.value || null)}
-                >
-                  <option value="">Geral (sem projeto)</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                {activeProject && (
-                  <button className="dz-button" onClick={syncGlossary}>
-                    Sincronizar locais
-                  </button>
-                )}
+              <div className="shrink-0 border-b border-[#3d2e22]">
+                <div className="w-full max-w-5xl mx-auto p-3 flex flex-wrap gap-3 items-center">
+                  <span>
+                    {activeProject
+                      ? "Códice de " + activeProject.name
+                      : "Códice geral"}
+                  </span>
+                  <select
+                    aria-label="Projeto do códice"
+                    value={activeProjectId || ""}
+                    onChange={(e) => setActiveProjectId(e.target.value || null)}
+                  >
+                    <option value="">Geral (sem projeto)</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  {activeProject && (
+                    <button className="dz-button" onClick={syncGlossary}>
+                      Sincronizar locais
+                    </button>
+                  )}
+                </div>
               </div>
               <Glossary
                 entries={glossary.filter((e) =>
@@ -919,21 +925,11 @@ export default function App({ onBackToVtt, onInsertOnGrid }: MapStudioProps) {
                 onUpdateEntry={updateEntry}
                 onDeleteEntry={deleteEntry}
                 locations={activeProject?.locations || []}
+                onLocateLocation={(locationId) => {
+                  setCurrentView("editor");
+                  locate(locationId);
+                }}
               />
-              {glossary
-                .filter((e) => e.mapId === activeProjectId && e.locationId)
-                .map((e) => (
-                  <button
-                    className="text-left px-8 py-1 text-amber-300"
-                    key={e.id}
-                    onClick={() => {
-                      setCurrentView("editor");
-                      locate(e.locationId!);
-                    }}
-                  >
-                    Localizar no mapa: {e.name}
-                  </button>
-                ))}
             </>
           )}
           {currentView === "export" &&

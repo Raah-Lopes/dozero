@@ -5,6 +5,12 @@ import {
   TransformComponent,
   ReactZoomPanPinchRef,
 } from "react-zoom-pan-pinch";
+import { getLocationFocusScale } from "../utils/mapViewport";
+import {
+  getMapSymbol,
+  isFocusSymbol,
+  mapSymbolGroups,
+} from "../utils/mapSymbols";
 import { MapProject, MapLocation, MapAnnotation, Tool } from "../types";
 import {
   AnnotationShape,
@@ -106,7 +112,8 @@ export default function MapEditor({
     [fill, setFill] = useState("none"),
     [stroke, setStroke] = useState(3),
     [fontSize, setFontSize] = useState(32),
-    [symbol, setSymbol] = useState("🌲");
+    [symbol, setSymbol] = useState("🌲"),
+    [symbolName, setSymbolName] = useState("");
   const [material, setMaterial] =
     useState<MapAnnotation["material"]>(undefined);
   const [snap, setSnap] = useState(false),
@@ -232,7 +239,7 @@ export default function MapEditor({
         centerAt(
           location.x,
           location.y,
-          Math.max(transform.current?.state.scale || 1, Math.min(1, 1000 / w)),
+          getLocationFocusScale(transform.current?.state.scale || 1),
         ),
       120,
     );
@@ -471,9 +478,12 @@ export default function MapEditor({
       return;
     }
     if (activeTool === "addSymbol") {
+      const symbolDefinition = getMapSymbol(symbol);
       onAddAnnotation({
         ...create("symbol", p),
         text: symbol,
+        name: symbolName.trim() || undefined,
+        interaction: symbolDefinition?.interaction,
         fontSize,
       });
       return;
@@ -598,7 +608,6 @@ export default function MapEditor({
         });
       }
     }
-    if (d) moved.current = true;
     dragging.current = null;
     setDrag(null);
     if (drawing.current) {
@@ -693,6 +702,8 @@ export default function MapEditor({
           onMaterial={setMaterial}
           symbol={symbol}
           onSymbol={setSymbol}
+          symbolName={symbolName}
+          onSymbolName={setSymbolName}
         />
       )}
       {showGridSettings && (
@@ -940,6 +951,7 @@ export default function MapEditor({
                               : "none",
                         }}
                         onClick={(e) => {
+                          moved.current = false;
                           if (
                             activeTool === "select" ||
                             activeTool === "eraser"
@@ -1048,6 +1060,48 @@ export default function MapEditor({
                     </g>
                   );
                 })}
+                {project.annotations
+                  .filter(
+                    (a) =>
+                      isFocusSymbol(a) &&
+                      !a.hidden &&
+                      !project.hiddenLayers?.includes(layerOf(a)),
+                  )
+                  .map((a) => (
+                    <circle
+                      key={`focus-${a.id}`}
+                      role="button"
+                      tabIndex={activeTool === "select" ? 0 : -1}
+                      aria-label={`Aproximar mapa em ${a.name || "ponto marcado"}`}
+                      cx={(a.x * w) / 100}
+                      cy={(a.y * h) / 100 - 8 / view.scale}
+                      r={18 / view.scale}
+                      fill="transparent"
+                      style={{
+                        cursor:
+                          activeTool === "select" ? "zoom-in" : undefined,
+                        pointerEvents:
+                          activeTool === "select" ? "all" : "none",
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        focusOnLocation(a);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          focusOnLocation(a);
+                        }
+                      }}
+                    >
+                      <title>
+                        {a.name
+                          ? `Aproximar em ${a.name}`
+                          : "Aproximar neste ponto"}
+                      </title>
+                    </circle>
+                  ))}
                 {start && cursor && shape(cursor) && (
                   <g pointerEvents="none" opacity=".65">
                     <AnnotationShape a={shape(cursor)!} width={w} height={h} />
@@ -1097,8 +1151,8 @@ export default function MapEditor({
         <div className="absolute bottom-3 left-3 text-xs bg-black/80 p-2 pointer-events-none">
           {w} × {h} px · {project.gridSize} px por célula
         </div>
-        {/* Minimapa posicionado à direita */}
-        <div className="absolute top-2 right-2 flex flex-col gap-2 pointer-events-auto z-20">
+        {/* Minimapa ancorado no canto superior esquerdo da área do mapa */}
+        <div className="absolute top-2 left-2 flex flex-col gap-2 pointer-events-auto z-20">
           <MiniMap
             project={project}
             visibleLocations={visibleLocations}
@@ -1178,7 +1232,7 @@ export default function MapEditor({
                     : ""}{" "}
                   {isLocked(layerOf(selectedAnn)) ? "— bloqueado" : ""}
                 </h3>
-                {["text", "symbol"].includes(selectedAnn.type) && (
+                {selectedAnn.type === "text" && (
                   <input
                     aria-label="Texto selecionado"
                     value={selectedAnn.text || ""}
@@ -1186,6 +1240,45 @@ export default function MapEditor({
                       updateAnn(selectedAnn.id, { text: e.target.value })
                     }
                   />
+                )}
+                {selectedAnn.type === "symbol" && (
+                  <>
+                    <label className="block">
+                      Símbolo
+                      <select
+                        aria-label="Símbolo selecionado"
+                        value={selectedAnn.text || "🌲"}
+                        onChange={(e) => {
+                          const definition = getMapSymbol(e.target.value);
+                          updateAnn(selectedAnn.id, {
+                            text: e.target.value,
+                            interaction: definition?.interaction,
+                          });
+                        }}
+                      >
+                        {mapSymbolGroups.map((group) => (
+                          <optgroup key={group.label} label={group.label}>
+                            {group.symbols.map((item) => (
+                              <option key={item.value} value={item.value}>
+                                {item.value} {item.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      Nome/descrição
+                      <input
+                        aria-label="Nome ou descrição do símbolo selecionado"
+                        value={selectedAnn.name || ""}
+                        onChange={(e) =>
+                          updateAnn(selectedAnn.id, { name: e.target.value })
+                        }
+                        placeholder="Sem nome, fica fora de Anotações"
+                      />
+                    </label>
+                  </>
                 )}
                 <label className="block">
                   Cor{" "}

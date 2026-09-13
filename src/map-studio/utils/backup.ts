@@ -115,6 +115,8 @@ const annotation = (value: any): MapAnnotation => {
     width: num(v.width, 0, 300, 0),
     height: num(v.height, 0, 300, 0),
     text: str(v.text),
+    name: v.name ? str(v.name) : undefined,
+    interaction: v.interaction === "focus" ? "focus" : undefined,
     color: color(v.color, "#c8954a"),
     strokeWidth: num(v.strokeWidth, 0, 200, 2),
     fontSize: num(v.fontSize, 1, 1000, 24),

@@ -1,10 +1,8 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { MapLocation, LocationType } from '../types';
-import LocationIcon from './LocationIcon';
 import LocationIconPicker from './LocationIconPicker';
-import { locationTypes, locationTypeLabel, locationIcons } from '../utils/locationIcons';
-import { LucideIcons } from '../icons/LucideIcons';
+import { locationTypes, locationIcons } from '../utils/locationIcons';
 import Accordion from './Accordion';
 interface LocationDetailDrawerProps {
   location: MapLocation;
@@ -22,9 +20,10 @@ export default function LocationDetailDrawer({
   projects = [],
 }: LocationDetailDrawerProps) {
   return (
-    <aside
-      className="fixed inset-y-0 right-0 w-96 bg-var(--dz-graphite-2) border-l border-stone overflow-y-auto"
-      style={{ borderColor: 'var(--dz-stone)', background: 'var(--dz-graphite-2)' }}
+    <section
+      className="w-full min-w-0 h-full overflow-y-auto"
+      style={{ background: 'var(--dz-graphite-2)' }}
+      aria-label={`Detalhes de ${location.name}`}
     >
       {/* Header with close button */}
       <div className="flex items-center justify-between p-3 border-b" style={{ borderColor: 'var(--dz-stone)' }}>
@@ -86,27 +85,11 @@ export default function LocationDetailDrawer({
             }
             className="w-full mt-1"
           >
-            {locationTypes.map(t => {
-              const item = locationIcons[t];
-              const LucideComp = (LucideIcons as any)[t];
-              return (
-                <option key={t} value={t}>
-                  {LucideComp ? (
-                    <LucideComp size={24} />
-                  ) : (
-                    <LocationIcon
-                      location={{
-                        iconId: t,
-                        icon: item.legacy,
-                        color: item.color,
-                      }}
-                      size={24}
-                    />
-                  )}
-                  {item.label}
-                </option>
-              );
-            })}
+            {locationTypes.map(t => (
+              <option key={t} value={t}>
+                {locationIcons[t].label}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -225,6 +208,6 @@ export default function LocationDetailDrawer({
           </div>
         </Accordion>
       </div>
-    </aside>
+    </section>
   );
 }
